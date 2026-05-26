@@ -1,0 +1,197 @@
+import { ConvexError } from "convex/values";
+
+import { FREE_DAILY_DIAMOND_CAP, FREE_IMAGE_LIMIT } from "./subscriptions";
+
+export const GUEST_STARTER_CREDITS = 1;
+export const ACCOUNT_STARTER_CREDITS = 1;
+
+export function normalizeAnonymousId(value?: string | null) {
+  const normalized = value?.trim();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+export function toGuestUserId(anonymousId: string) {
+  return `guest:${anonymousId}`;
+}
+
+export function createReferralCode(seed?: string | null) {
+  const input = String(seed ?? `guest-${Date.now()}`).trim().toLowerCase();
+  let hash = 5381;
+  for (let index = 0; index < input.length; index += 1) {
+    hash = ((hash << 5) + hash + input.charCodeAt(index)) >>> 0;
+  }
+
+  return `HD${hash.toString(36).toUpperCase().padStart(7, "0").slice(0, 7)}`;
+}
+
+export function buildDefaultUserFields(args: {
+  clerkId?: string;
+  anonymousId?: string;
+  credits?: number;
+  generationCount?: number;
+  referralCode?: string;
+}) {
+  const now = Date.now();
+  const guestId = args.anonymousId ? toGuestUserId(args.anonymousId) : undefined;
+  const referralSeed = args.clerkId ?? args.anonymousId ?? guestId ?? String(now);
+  const startingCredits = Math.max(args.credits ?? GUEST_STARTER_CREDITS, 1);
+
+  return {
+    clerkId: args.clerkId,
+    anonymousId: args.anonymousId,
+    mergedIntoClerkId: undefined,
+    credits: startingCredits,
+    diamondBalance: Math.max(1, Math.min(startingCredits, FREE_DAILY_DIAMOND_CAP)),
+    diamondSources: Array.from({ length: startingCredits }, () => "daily_free" as const),
+    premiumCredits: 0,
+    plan: "free",
+    generationCount: args.generationCount ?? 0,
+    reviewPrompted: false,
+    lastReviewPromptAt: 0,
+    firstDiamondRatingPromptedAt: 0,
+    lastRewardDate: now,
+    streakCount: 0,
+    lastLoginDate: now,
+    lastClaimDate: 0,
+    lastClaimAt: null,
+    nextDiamondClaimAt: 0,
+    canClaimDiamond: false,
+    eliteProUntil: 0,
+    proTrialExpiresAt: null,
+    welcomeDiamondGiven: true,
+    proTrialEndedPaywallPending: false,
+    proTrialEndedPaywallShownAt: 0,
+    onboardingDiamondClaimedAt: 0,
+    firstEntryRewardDismissedAt: 0,
+    referralCode: args.referralCode ?? createReferralCode(referralSeed),
+    referralCount: 0,
+    referralProCount: 0,
+    referredBy: undefined,
+    referralInstallRewardedAt: undefined,
+    referralProRewardedAt: undefined,
+    subscriptionType: "free" as const,
+    subscriptionEntitlement: "free" as const,
+    subscriptionStartedAt: 0,
+    subscriptionEnd: 0,
+    imageLimit: FREE_IMAGE_LIMIT,
+    imageGenerationCount: 0,
+    lastResetDate: 0,
+    expoPushToken: undefined,
+    devicePushToken: undefined,
+    notificationPlatform: undefined,
+    notificationsDeclined: false,
+    notificationsPermissionRequestedAt: 0,
+    notificationsPermissionGrantedAt: 0,
+    proTipNotificationIndex: 0,
+  };
+}
+
+export async function getUserByClerkId(ctx: any, clerkId: string) {
+  return await ctx.db
+    .query("users")
+    .withIndex("by_clerkId", (q: any) => q.eq("clerkId", clerkId))
+    .unique();
+}
+
+export async function getUserByAnonymousId(ctx: any, anonymousId: string) {
+  return await ctx.db
+    .query("users")
+    .withIndex("by_anonymousId", (q: any) => q.eq("anonymousId", anonymousId))
+    .unique();
+}
+
+export async function ensureGuestUser(ctx: any, anonymousId: string) {
+  const normalizedAnonymousId = normalizeAnonymousId(anonymousId);
+  if (!normalizedAnonymousId) {
+    throw new ConvexError("Missing anonymous guest session.");
+  }
+
+  const existing = await getUserByAnonymousId(ctx, normalizedAnonymousId);
+  if (existing) {
+    return existing;
+  }
+
+  const id = await ctx.db.insert(
+    "users",
+    buildDefaultUserFields({
+      anonymousId: normalizedAnonymousId,
+    }),
+  );
+
+  return await ctx.db.get(id);
+}
+
+export async function transferOwnedDocuments(ctx: any, fromUserId: string, toUserId: string) {
+  if (!fromUserId || fromUserId === toUserId) {
+    return;
+  }
+
+  const generations = await ctx.db
+    .query("generations")
+    .withIndex("by_userId", (q: any) => q.eq("userId", fromUserId))
+    .collect();
+
+  for (const generation of generations) {
+    await ctx.db.patch(generation._id, { userId: toUserId });
+  }
+
+  const projects = await ctx.db
+    .query("projects")
+    .withIndex("by_userId", (q: any) => q.eq("userId", fromUserId))
+    .collect();
+
+  for (const project of projects) {
+    await ctx.db.patch(project._id, { userId: toUserId });
+  }
+
+  const feedbackItems = await ctx.db
+    .query("feedback")
+    .withIndex("by_userId", (q: any) => q.eq("userId", fromUserId))
+    .collect();
+
+  for (const feedback of feedbackItems) {
+    await ctx.db.patch(feedback._id, { userId: toUserId });
+  }
+}
+
+export async function resolveViewer(
+  ctx: any,
+  args: {
+    anonymousId?: string | null;
+    createGuest?: boolean;
+    requireViewer?: boolean;
+  } = {},
+) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (identity) {
+    const user = await getUserByClerkId(ctx, identity.subject);
+    return {
+      kind: "account" as const,
+      clerkId: identity.subject,
+      anonymousId: normalizeAnonymousId(args.anonymousId),
+      userId: identity.subject,
+      user,
+    };
+  }
+
+  const anonymousId = normalizeAnonymousId(args.anonymousId);
+  if (!anonymousId) {
+    if (args.requireViewer === false) {
+      return null;
+    }
+    throw new ConvexError("Missing anonymous guest session.");
+  }
+
+  const user = args.createGuest === false ? await getUserByAnonymousId(ctx, anonymousId) : await ensureGuestUser(ctx, anonymousId);
+
+  if (!user && args.requireViewer !== false) {
+    throw new ConvexError("Guest profile not found.");
+  }
+
+  return {
+    kind: "guest" as const,
+    anonymousId,
+    userId: toGuestUserId(anonymousId),
+    user,
+  };
+}
