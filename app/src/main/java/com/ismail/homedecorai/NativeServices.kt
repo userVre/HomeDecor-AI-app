@@ -125,12 +125,23 @@ class HomeDecorRepository(
         palette: String,
         designMode: String,
         customPrompt: String,
+        referenceImageBytes: ByteArray? = null,
+        referenceMimeType: String? = null,
     ): StartGenerationResponse = withContext(Dispatchers.IO) {
         val uploadUrl = services.convex.mutation<String>(
             "generations:createSourceUploadUrl",
             mapOf("anonymousId" to anonymousId),
         )
         val storageId = uploadToStorage(uploadUrl, imageBytes, mimeType)
+        val referenceStorageIds = if (referenceImageBytes != null) {
+            val referenceUploadUrl = services.convex.mutation<String>(
+                "generations:createSourceUploadUrl",
+                mapOf("anonymousId" to anonymousId),
+            )
+            listOf(uploadToStorage(referenceUploadUrl, referenceImageBytes, referenceMimeType ?: "image/jpeg"))
+        } else {
+            emptyList()
+        }
         val args = mutableMapOf<String, Any>(
             "anonymousId" to anonymousId,
             "imageStorageId" to storageId,
@@ -145,6 +156,10 @@ class HomeDecorRepository(
         )
         if (customPrompt.isNotBlank()) {
             args["customPrompt"] = customPrompt
+        }
+        if (referenceStorageIds.isNotEmpty()) {
+            args["referenceImageStorageIds"] = referenceStorageIds
+            args["displayStyle"] = "Reference style transfer"
         }
         val raw = services.convex.mutation<JsonElement>("generations:startGeneration", args)
         json.decodeFromJsonElement<StartGenerationResponse>(raw)

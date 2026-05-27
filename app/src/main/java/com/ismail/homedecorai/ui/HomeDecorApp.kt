@@ -1,8 +1,14 @@
 ﻿package com.ismail.homedecorai.ui
 
 import android.content.Intent
+import android.content.ContentValues
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -85,6 +91,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
@@ -101,6 +108,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.FileProvider
+import com.ismail.homedecorai.BoardItem
+import com.ismail.homedecorai.BuildConfig
 import com.ismail.homedecorai.DecorTool
 import com.ismail.homedecorai.DiamondPack
 import com.ismail.homedecorai.DiscoverSection
@@ -112,7 +122,10 @@ import com.ismail.homedecorai.MainTab
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.WizardStage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import java.net.URL
 
 private val StudioInk = Color(0xFF11140F)
@@ -726,21 +739,34 @@ private fun PhotoStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
+    val context = LocalContext.current
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         viewModel.setPhoto(uri)
     }
+    val referenceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        viewModel.setReferencePhoto(uri)
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        if (saved) {
+            viewModel.setPhoto(pendingCameraUri)
+        }
+    }
     val copy = photoCopy(state.selectedTool)
+    val hasMainPhoto = state.selectedPhotoUri != null || state.selectedExampleLabel != null
+    val hasReferencePhoto = state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null
+    val canContinue = hasMainPhoto && (state.selectedTool.id != "reference" || hasReferencePhoto)
     StepScaffold(
         eyebrow = "Étape 1/${wizardTotalSteps(state.selectedTool)}",
-        title = if (state.selectedPhotoUri == null && state.selectedExampleLabel == null) copy.title else "Photo ajoutée",
+        title = if (!hasMainPhoto) copy.title else "Photo ajoutée",
         body = null,
         buttonLabel = "Continuer",
         buttonIcon = Icons.Rounded.Check,
-        buttonEnabled = state.selectedPhotoUri != null || state.selectedExampleLabel != null,
+        buttonEnabled = canContinue,
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            if (state.selectedPhotoUri == null && state.selectedExampleLabel == null) {
+            if (!hasMainPhoto) {
                 Surface(
                     shape = RoundedCornerShape(26.dp),
                     color = Color(0xFFFAFBFF),
@@ -767,11 +793,11 @@ private fun PhotoStep(
             } else {
                 Card(shape = RoundedCornerShape(24.dp)) {
                     Box(Modifier.fillMaxWidth().aspectRatio(1.18f)) {
-                        Image(
-                            painter = painterResource(selectedExampleImageRes(state)),
+                        UriOrResourceImage(
+                            uri = state.selectedPhotoUri,
+                            imageRes = selectedExampleImageRes(state),
                             contentDescription = "Photo ajoutée",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
                         )
                     }
                 }
@@ -782,11 +808,27 @@ private fun PhotoStep(
                     Spacer(Modifier.width(8.dp))
                     Text("Galerie")
                 }
-                OutlinedButton(onClick = { imageLauncher.launch("image/*") }, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                OutlinedButton(
+                    onClick = {
+                        val uri = createCameraUri(context)
+                        pendingCameraUri = uri
+                        cameraLauncher.launch(uri)
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                ) {
                     Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Caméra")
                 }
+            }
+            if (state.selectedTool.id == "reference") {
+                ReferenceImagePicker(
+                    selectedUri = state.selectedReferenceUri,
+                    selectedExample = state.selectedReferenceExampleLabel,
+                    onImport = { referenceLauncher.launch("image/*") },
+                    onExample = { viewModel.selectReferenceExample("Référence éditoriale") },
+                )
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Photos d'exemple", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -802,6 +844,105 @@ private fun PhotoStep(
             }
         }
     }
+}
+
+@Composable
+private fun ReferenceImagePicker(
+    selectedUri: Uri?,
+    selectedExample: String?,
+    onImport: () -> Unit,
+    onExample: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(8.dp).size(18.dp), tint = StudioBlue)
+            }
+            Column(Modifier.weight(1f)) {
+                Text("Image de référence", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text("Ajoutez le style visuel à appliquer à votre pièce.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = if (selectedUri != null || selectedExample != null) MaterialTheme.colorScheme.primaryContainer else StudioPaper,
+            tonalElevation = 2.dp,
+            modifier = Modifier.fillMaxWidth().border(1.dp, if (selectedUri != null || selectedExample != null) StudioBlue else StudioLine, RoundedCornerShape(22.dp)),
+        ) {
+            Row(
+                Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(Modifier.size(78.dp).clip(RoundedCornerShape(18.dp))) {
+                    UriOrResourceImage(
+                        uri = selectedUri,
+                        imageRes = R.drawable.tool_reference,
+                        contentDescription = "Référence de style",
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(if (selectedUri != null || selectedExample != null) "Référence ajoutée" else "Aucune référence", fontWeight = FontWeight.Black)
+                    Text(
+                        if (selectedUri != null || selectedExample != null) "Le transfert utilisera cette ambiance." else "Importez une image ou utilisez l'exemple.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                Icon(Icons.Rounded.Check, null, tint = if (selectedUri != null || selectedExample != null) StudioBlue else StudioLine)
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(onClick = onImport, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                Icon(Icons.Rounded.Add, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Importer")
+            }
+            OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Exemple")
+            }
+        }
+    }
+}
+
+@Composable
+private fun UriOrResourceImage(
+    uri: Uri?,
+    imageRes: Int,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    var bitmap by remember(uri) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    val context = LocalContext.current
+    LaunchedEffect(uri) {
+        bitmap = null
+        if (uri != null) {
+            bitmap = withContext(Dispatchers.IO) {
+                runCatching {
+                    val sourceBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri))
+                    } else {
+                        context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
+                    }
+                    sourceBitmap?.asImageBitmap()
+                }.getOrNull()
+            }
+        }
+    }
+    if (bitmap != null) {
+        Image(bitmap = bitmap!!, contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
+    } else {
+        Image(painter = painterResource(imageRes), contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
+    }
+}
+
+private fun createCameraUri(context: android.content.Context): Uri {
+    val imageDir = File(context.cacheDir, "camera").apply { mkdirs() }
+    val imageFile = File(imageDir, "homedecor-${System.currentTimeMillis()}.jpg")
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", imageFile)
 }
 
 @Composable
@@ -986,8 +1127,8 @@ private fun WallSurfaceStep(
         eyebrow = "Etape 2/${wizardTotalSteps(state.selectedTool)}",
         title = "Sélectionnez les surfaces à transformer",
         body = null,
-        buttonLabel = "Continuer",
-        buttonEnabled = state.roomType.contains("Mur"),
+        buttonLabel = if (state.roomType == "Mur marqué") "Continuer" else "Marquez le mur pour continuer",
+        buttonEnabled = state.roomType == "Mur marqué",
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1010,10 +1151,10 @@ private fun WallSurfaceStep(
                 SurfacePanel(
                     title = "Surface",
                     icon = Icons.Rounded.Layers,
-                    selected = state.roomType.contains("Mur"),
-                    primary = if (state.roomType.contains("Mur")) "Mur" else "Choisir",
-                    onPrimary = { viewModel.setRoom("Mur") },
-                    onMagic = { viewModel.setRoom("Mur") },
+                    selected = state.roomType == "Mur marqué",
+                    primary = if (state.roomType == "Mur marqué") "Mur" else "Choisir",
+                    onPrimary = { viewModel.setRoom("Mur marqué") },
+                    onMagic = { viewModel.setRoom("Mur marqué") },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -1386,6 +1527,8 @@ private fun ResultStep(
     viewModel: HomeDecorViewModel,
 ) {
     val result = state.board.firstOrNull()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     StepScaffold(
         eyebrow = "Result",
         title = "Concept ${workflowTitle(state.selectedTool)}",
@@ -1405,18 +1548,121 @@ private fun ResultStep(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 FilledIconButton(onClick = viewModel::generate) { Icon(Icons.Rounded.Refresh, contentDescription = "Regenerate") }
-                FilledIconButton(onClick = {}) { Icon(Icons.Rounded.Download, contentDescription = "Save") }
-                FilledIconButton(onClick = {}) { Icon(Icons.Rounded.Share, contentDescription = "Share") }
+                FilledIconButton(
+                    onClick = {
+                        scope.launch {
+                            val saved = saveResultToGallery(context, result)
+                            Toast.makeText(context, if (saved) "Design enregistré dans la galerie." else "Impossible d'enregistrer ce design.", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                ) { Icon(Icons.Rounded.Download, contentDescription = "Enregistrer") }
+                FilledIconButton(
+                    onClick = {
+                        scope.launch {
+                            val shared = shareResult(context, result)
+                            if (!shared) {
+                                Toast.makeText(context, "Impossible de partager ce design pour le moment.", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    },
+                ) { Icon(Icons.Rounded.Share, contentDescription = "Partager") }
             }
         }
+    }
+}
+
+private suspend fun saveResultToGallery(context: android.content.Context, result: BoardItem?): Boolean = withContext(Dispatchers.IO) {
+    runCatching {
+        val displayName = "homedecor-ai-${System.currentTimeMillis()}.jpg"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, displayName)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/HomeDecor AI")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+            val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                ?: return@withContext false
+            context.contentResolver.openOutputStream(uri)?.use { output ->
+                writeResultImage(context, result, output)
+            } ?: return@withContext false
+            values.clear()
+            values.put(MediaStore.Images.Media.IS_PENDING, 0)
+            context.contentResolver.update(uri, values, null, null)
+        } else {
+            val bitmap = resultBitmap(context, result)
+            MediaStore.Images.Media.insertImage(context.contentResolver, bitmap, displayName, "HomeDecor AI") ?: return@withContext false
+        }
+        true
+    }.getOrDefault(false)
+}
+
+private suspend fun shareResult(context: android.content.Context, result: BoardItem?): Boolean = withContext(Dispatchers.IO) {
+    runCatching {
+        val shareDir = File(context.cacheDir, "share").apply { mkdirs() }
+        val file = File(shareDir, "homedecor-ai-${System.currentTimeMillis()}.jpg")
+        FileOutputStream(file).use { output -> writeResultImage(context, result, output) }
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/jpeg"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        withContext(Dispatchers.Main) {
+            context.startActivity(Intent.createChooser(intent, "Partager le design"))
+        }
+        true
+    }.getOrDefault(false)
+}
+
+private fun writeResultImage(context: android.content.Context, result: BoardItem?, output: java.io.OutputStream) {
+    val imageUrl = result?.imageUrl
+    if (!imageUrl.isNullOrBlank()) {
+        URL(imageUrl).openStream().use { input -> input.copyTo(output) }
+        return
+    }
+    resultBitmap(context, result).compress(Bitmap.CompressFormat.JPEG, 94, output)
+}
+
+private fun resultBitmap(context: android.content.Context, result: BoardItem?): Bitmap {
+    val imageRes = result?.imageRes ?: R.drawable.sample_after_luxury
+    return BitmapFactory.decodeResource(context.resources, imageRes)
+}
+
+private fun openAuth(context: android.content.Context) {
+    val authUrl = BuildConfig.APP_URL.trimEnd('/') + "/sign-in"
+    runCatching {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(authUrl)))
+    }.onFailure {
+        Toast.makeText(context, "Impossible d'ouvrir la connexion pour le moment.", Toast.LENGTH_LONG).show()
     }
 }
 
 @Composable
 private fun DiscoverScreen(onTool: (DecorTool) -> Unit) {
     var selectedCluster by remember { mutableStateOf("Intérieurs") }
+    var detailSection by remember { mutableStateOf<DiscoverSection?>(null) }
+    var previewItem by remember { mutableStateOf<GalleryItem?>(null) }
     val clusters = listOf("Intérieurs", "Architecture", "Paysages")
     val sections = HomeDecorCatalog.discoverSections.filter { it.cluster == selectedCluster }
+    val activeDetail = detailSection
+    if (activeDetail != null) {
+        DiscoverDetailScreen(
+            section = activeDetail,
+            onBack = { detailSection = null },
+            onPreview = { previewItem = it },
+            onTool = onTool,
+        )
+        previewItem?.let { item ->
+            DiscoverPreviewDialog(
+                item = item,
+                section = activeDetail,
+                onDismiss = { previewItem = null },
+                onTool = onTool,
+            )
+        }
+        return
+    }
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
         ScreenHeaderPills(title = "Découvrir", trailing = null)
         LazyColumn(
@@ -1425,8 +1671,23 @@ private fun DiscoverScreen(onTool: (DecorTool) -> Unit) {
         ) {
             item { DiscoverHero(section = sections.firstOrNull(), onTool = onTool) }
             item { DiscoverClusterTabs(clusters = clusters, selected = selectedCluster, onSelect = { selectedCluster = it }) }
-            items(sections, key = { it.id }) { section -> DiscoverSectionRow(section = section, onTool = onTool) }
+            items(sections, key = { it.id }) { section ->
+                DiscoverSectionRow(
+                    section = section,
+                    onSeeAll = { detailSection = section },
+                    onPreview = { previewItem = it },
+                )
+            }
         }
+    }
+    previewItem?.let { item ->
+        val section = sections.firstOrNull { candidate -> candidate.items.any { it.id == item.id } } ?: sections.first()
+        DiscoverPreviewDialog(
+            item = item,
+            section = section,
+            onDismiss = { previewItem = null },
+            onTool = onTool,
+        )
     }
 }
 
@@ -1533,15 +1794,14 @@ private fun DiscoverClusterTabs(
 @Composable
 private fun DiscoverSectionRow(
     section: DiscoverSection,
-    onTool: (DecorTool) -> Unit,
+    onSeeAll: () -> Unit,
+    onPreview: (GalleryItem) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(section.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             OutlinedButton(
-                onClick = {
-                    HomeDecorCatalog.tools.firstOrNull { it.id == section.serviceToolId }?.let(onTool)
-                },
+                onClick = onSeeAll,
                 shape = CircleShape,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
             ) {
@@ -1550,12 +1810,97 @@ private fun DiscoverSectionRow(
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(section.items, key = { it.id }) { item ->
-                GalleryCard(item = item, onClick = {
-                    HomeDecorCatalog.tools.firstOrNull { it.id == section.serviceToolId }?.let(onTool)
-                })
+                GalleryCard(item = item, onClick = { onPreview(item) })
             }
         }
     }
+}
+
+@Composable
+private fun DiscoverDetailScreen(
+    section: DiscoverSection,
+    onBack: () -> Unit,
+    onPreview: (GalleryItem) -> Unit,
+    onTool: (DecorTool) -> Unit,
+) {
+    Column(Modifier.fillMaxSize().background(StudioCanvas)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Retour")
+            }
+            Column(Modifier.weight(1f)) {
+                Text(section.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                Text(section.cluster, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            val tool = HomeDecorCatalog.tools.firstOrNull { it.id == section.serviceToolId }
+            Button(
+                onClick = { tool?.let(onTool) },
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(containerColor = StudioMint, contentColor = StudioInk),
+            ) {
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(17.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Créer", fontWeight = FontWeight.Black)
+            }
+        }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(section.items, key = { it.id }) { item ->
+                GalleryCard(item = item, onClick = { onPreview(item) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun DiscoverPreviewDialog(
+    item: GalleryItem,
+    section: DiscoverSection,
+    onDismiss: () -> Unit,
+    onTool: (DecorTool) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = {
+                    HomeDecorCatalog.tools.firstOrNull { it.id == section.serviceToolId }?.let(onTool)
+                    onDismiss()
+                },
+                shape = CircleShape,
+            ) {
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(17.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Créer avec ce style")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss, shape = CircleShape) {
+                Text("Fermer")
+            }
+        },
+        title = { Text(item.category, fontWeight = FontWeight.Black) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Image(
+                    painter = painterResource(item.imageRes),
+                    contentDescription = item.title,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(0.92f).clip(RoundedCornerShape(24.dp)),
+                    contentScale = ContentScale.Crop,
+                )
+                Text(item.title, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        shape = RoundedCornerShape(30.dp),
+    )
 }
 
 @Composable
@@ -1593,6 +1938,7 @@ private fun ElitePassScreen(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
+    val completedDays = completedEliteDays(state)
     ScreenColumn(title = "Pass Elite", subtitle = null, trailing = { CreditPill(state, compact = true, onClick = viewModel::openDiamondStore) }) {
         LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             item {
@@ -1606,7 +1952,7 @@ private fun ElitePassScreen(
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             repeat(7) { index ->
-                                val active = index + 1 < state.eliteStreakDay || (index + 1 == state.eliteStreakDay && state.claimedToday)
+                                val active = index + 1 <= completedDays
                                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Surface(shape = CircleShape, color = if (active) Color.White else Color.White.copy(alpha = 0.18f)) {
                                         Text(
@@ -1664,13 +2010,15 @@ private fun EliteTimelineCard(
     state: HomeDecorUiState,
     onClaim: () -> Unit,
 ) {
+    val completedDays = completedEliteDays(state)
+    val currentDay = (completedDays + 1).coerceIn(1, 7)
     ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFF0F1300))) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Votre série Elite", color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 Surface(shape = CircleShape, color = StudioMint) {
                     Text(
-                        "${(state.eliteStreakDay - 1).coerceAtLeast(0)}/7",
+                        "$completedDays/7",
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
                         color = StudioInk,
                         style = MaterialTheme.typography.labelMedium,
@@ -1679,15 +2027,15 @@ private fun EliteTimelineCard(
                 }
             }
             LinearProgressIndicator(
-                progress = { ((state.eliteStreakDay - 1).coerceAtLeast(0) / 7f).coerceIn(0f, 1f) },
+                progress = { (completedDays / 7f).coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth().height(7.dp).clip(CircleShape),
                 color = StudioBlue,
                 trackColor = Color.White.copy(alpha = 0.86f),
             )
             repeat(7) { index ->
                 val day = index + 1
-                val claimed = day < state.eliteStreakDay || (day == state.eliteStreakDay && state.claimedToday)
-                val current = day == state.eliteStreakDay && !state.claimedToday
+                val claimed = day <= completedDays
+                val current = day == currentDay && !state.claimedToday
                 EliteDayRow(
                     day = day,
                     claimed = claimed,
@@ -1703,6 +2051,13 @@ private fun EliteTimelineCard(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+    }
+}
+
+private fun completedEliteDays(state: HomeDecorUiState): Int {
+    return when {
+        state.viewer.streakCount > 0 -> state.viewer.streakCount.coerceIn(0, 7)
+        else -> (state.eliteStreakDay - 1).coerceIn(0, 7)
     }
 }
 
@@ -1796,14 +2151,14 @@ private fun ProfileScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Button(
-                onClick = {},
+                onClick = { openAuth(context) },
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(containerColor = StudioBlue, contentColor = Color.White),
                 modifier = Modifier.height(48.dp),
             ) {
                 Text("Se connecter", fontWeight = FontWeight.Black)
             }
-            FilledIconButton(onClick = {}, modifier = Modifier.size(48.dp)) {
+            FilledIconButton(onClick = { Toast.makeText(context, "Les paramètres complets arrivent dans la prochaine passe native.", Toast.LENGTH_LONG).show() }, modifier = Modifier.size(48.dp)) {
                 Icon(Icons.Rounded.Settings, contentDescription = "Paramètres")
             }
             Spacer(Modifier.weight(1f))
@@ -1847,8 +2202,10 @@ private fun ProfileScreen(
             }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SettingsRow(Icons.Rounded.Person, "Se connecter avec Clerk", "Pont d'authentification natif prêt", onClick = {})
-                    SettingsRow(Icons.Rounded.Settings, "Langue", "Français", onClick = {})
+                    SettingsRow(Icons.Rounded.Person, "Se connecter avec Clerk", "Retrouver vos designs, crédits et achats", onClick = { openAuth(context) })
+                    SettingsRow(Icons.Rounded.Settings, "Langue", "Français", onClick = {
+                        Toast.makeText(context, "Français activé. Le sélecteur complet sera relié aux fichiers de traduction.", Toast.LENGTH_LONG).show()
+                    })
                     SettingsRow(Icons.Rounded.Star, "Restaurer les achats", "RevenueCat Android SDK", onClick = viewModel::openDiamondStore)
                     SettingsRow(Icons.AutoMirrored.Rounded.ViewQuilt, "Boutique de diamants", "Acheter des crédits de génération", onClick = viewModel::openDiamondStore)
                     SettingsRow(Icons.Rounded.Share, "Partager l'app", "Invitez quelqu'un à essayer HomeDecor AI", onClick = {

@@ -67,6 +67,8 @@ data class HomeDecorUiState(
     val wizardStage: WizardStage = WizardStage.Photo,
     val selectedPhotoUri: Uri? = null,
     val selectedExampleLabel: String? = null,
+    val selectedReferenceUri: Uri? = null,
+    val selectedReferenceExampleLabel: String? = null,
     val roomType: String = "Living Room",
     val style: String = "Warm Modern",
     val palette: String = "Natural oak, soft ivory, deep olive",
@@ -140,7 +142,7 @@ object HomeDecorCatalog {
             title = "Transfert de style de référence",
             description = "Importez une référence visuelle et appliquez son style à votre pièce.",
             imageRes = R.drawable.tool_reference,
-            serviceType = "redesign",
+            serviceType = "reference",
         ),
     )
 
@@ -383,6 +385,8 @@ class HomeDecorViewModel(
                 wizardStage = WizardStage.Photo,
                 selectedPhotoUri = null,
                 selectedExampleLabel = null,
+                selectedReferenceUri = null,
+                selectedReferenceExampleLabel = null,
                 roomType = defaultRoomFor(tool),
                 style = "Moderne",
                 palette = HomeDecorCatalog.palettes.first(),
@@ -403,6 +407,14 @@ class HomeDecorViewModel(
 
     fun selectExamplePhoto(label: String) {
         _uiState.update { it.copy(selectedExampleLabel = label, selectedPhotoUri = null) }
+    }
+
+    fun setReferencePhoto(uri: Uri?) {
+        _uiState.update { it.copy(selectedReferenceUri = uri, selectedReferenceExampleLabel = null) }
+    }
+
+    fun selectReferenceExample(label: String) {
+        _uiState.update { it.copy(selectedReferenceExampleLabel = label, selectedReferenceUri = null) }
     }
 
     fun setRoom(room: String) {
@@ -488,6 +500,7 @@ class HomeDecorViewModel(
                     error(access.message ?: "No Diamonds left. Buy more to continue.")
                 }
                 val source = readSelectedSource(snapshot)
+                val reference = readSelectedReference(snapshot)
                 _uiState.update { it.copy(progressMessage = "Téléverser la photo vers Convex...") }
                 val start = repository.startGeneration(
                     anonymousId = anonymousId,
@@ -499,6 +512,8 @@ class HomeDecorViewModel(
                     palette = snapshot.palette,
                     designMode = snapshot.designMode,
                     customPrompt = snapshot.customPrompt,
+                    referenceImageBytes = reference?.bytes,
+                    referenceMimeType = reference?.mimeType,
                 )
                 _uiState.update { it.copy(progressMessage = "Composer le rendu final avec Azure OpenAI...") }
                 val ready = repository.waitForGeneration(anonymousId, start.generationId)
@@ -554,7 +569,7 @@ class HomeDecorViewModel(
                         val reward = if (isDaySeven) 3 else 1
                         state.copy(
                             diamonds = if (isDaySeven) state.diamonds + reward else (state.diamonds + reward).coerceAtMost(3),
-                            eliteStreakDay = if (isDaySeven) 1 else state.eliteStreakDay + 1,
+                            eliteStreakDay = if (isDaySeven) 7 else state.eliteStreakDay + 1,
                             claimedToday = true,
                             isPro = state.isPro || isDaySeven,
                         )
@@ -571,7 +586,7 @@ class HomeDecorViewModel(
         return when (tool.id) {
             "facade" -> "Villa"
             "garden" -> "Moderne"
-            "paint" -> "Mur"
+            "paint" -> "Surface à marquer"
             "floor" -> "Choix de l'IA"
             "replace" -> "Mur"
             "reference" -> "Transfert équilibré"
@@ -586,21 +601,37 @@ class HomeDecorViewModel(
     )
 
     private fun readSelectedSource(snapshot: HomeDecorUiState): SourceImage {
-        snapshot.selectedPhotoUri?.let { uri ->
-            val bytes = appContext.contentResolver.openInputStream(uri)?.use { stream ->
-                val bitmap = BitmapFactory.decodeStream(stream)
-                    ?: error("Impossible de lire l'image sélectionnée.")
-                bitmap.toJpegBytes()
-            }
-                ?: error("Impossible de lire l'image sélectionnée.")
-            return SourceImage(bytes, "image/jpeg")
-        }
+        snapshot.selectedPhotoUri?.let { uri -> return readUriSource(uri) }
         val resId = exampleImageResFor(snapshot.selectedTool.id)
         val bytes = appContext.resources.openRawResource(resId).use { stream ->
             val bitmap = BitmapFactory.decodeStream(stream)
                 ?: error("Impossible de préparer l'image d'exemple.")
             bitmap.toJpegBytes()
         }
+        return SourceImage(bytes, "image/jpeg")
+    }
+
+    private fun readSelectedReference(snapshot: HomeDecorUiState): SourceImage? {
+        if (snapshot.selectedTool.id != "reference") return null
+        snapshot.selectedReferenceUri?.let { uri -> return readUriSource(uri) }
+        if (snapshot.selectedReferenceExampleLabel != null) {
+            val bytes = appContext.resources.openRawResource(R.drawable.tool_reference).use { stream ->
+                val bitmap = BitmapFactory.decodeStream(stream)
+                    ?: error("Impossible de préparer l'image de référence.")
+                bitmap.toJpegBytes()
+            }
+            return SourceImage(bytes, "image/jpeg")
+        }
+        return null
+    }
+
+    private fun readUriSource(uri: Uri): SourceImage {
+        val bytes = appContext.contentResolver.openInputStream(uri)?.use { stream ->
+            val bitmap = BitmapFactory.decodeStream(stream)
+                ?: error("Impossible de lire l'image sélectionnée.")
+            bitmap.toJpegBytes()
+        }
+            ?: error("Impossible de lire l'image sélectionnée.")
         return SourceImage(bytes, "image/jpeg")
     }
 
@@ -614,13 +645,18 @@ class HomeDecorViewModel(
     private fun friendlyGenerationError(error: Throwable): String {
         val message = error.message.orEmpty()
         return when {
-            "401" in message && "subscription key" in message ->
-                "La génération IA est momentanément indisponible. Vérifiez la configuration Azure OpenAI du backend puis réessayez."
+            "401" in message || "403" in message || "Access denied" in message || "subscription" in message || "Azure" in message || "OpenAI" in message ->
+                "La génération IA est momentanément indisponible. Réessayez dans un instant ou vérifiez la configuration du service."
             "No Diamonds" in message || "Diamonds left" in message ->
                 "Vous n'avez plus de diamants. Rechargez votre solde pour continuer."
             "converted to a JPG or PNG" in message ->
                 "Cette image n'a pas pu être préparée. Essayez une photo JPG ou PNG."
-            message.isNotBlank() -> message
+            "still processing" in message ->
+                "Votre design prend plus de temps que prévu. Retrouvez-le dans le portfolio dans quelques instants."
+            "Generation failed" in message || "Convex" in message || "upload" in message || "API" in message ->
+                "La génération n'a pas pu aboutir. Réessayez avec une autre photo ou dans quelques instants."
+            message.isNotBlank() && message.any { it in 'à'..'ÿ' } -> message
+            message.isNotBlank() -> "La génération n'a pas pu aboutir. Réessayez dans quelques instants."
             else -> "La génération a échoué. Réessayez dans un instant."
         }
     }
