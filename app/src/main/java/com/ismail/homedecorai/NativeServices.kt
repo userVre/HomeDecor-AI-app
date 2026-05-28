@@ -119,6 +119,8 @@ class HomeDecorRepository(
         anonymousId: String,
         imageBytes: ByteArray,
         mimeType: String,
+        maskBytes: ByteArray? = null,
+        maskMimeType: String? = null,
         tool: DecorTool,
         roomType: String,
         style: String,
@@ -133,6 +135,15 @@ class HomeDecorRepository(
             mapOf("anonymousId" to anonymousId),
         )
         val storageId = uploadToStorage(uploadUrl, imageBytes, mimeType)
+        val maskStorageId = if (maskBytes != null) {
+            val maskUploadUrl = services.convex.mutation<String>(
+                "generations:createSourceUploadUrl",
+                mapOf("anonymousId" to anonymousId),
+            )
+            uploadToStorage(maskUploadUrl, maskBytes, maskMimeType ?: "image/png")
+        } else {
+            null
+        }
         val referenceStorageIds = if (referenceImageBytes != null) {
             val referenceUploadUrl = services.convex.mutation<String>(
                 "generations:createSourceUploadUrl",
@@ -154,6 +165,19 @@ class HomeDecorRepository(
             "modeId" to designMode,
             "paletteId" to palette,
         )
+        if (maskStorageId != null) {
+            args["maskStorageId"] = maskStorageId
+            args["targetSurface"] = when (tool.id) {
+                "paint" -> "wall"
+                "floor" -> "floor"
+                "replace" -> "object"
+                else -> roomType
+            }
+        }
+        if (tool.id == "paint" && style.isNotBlank()) {
+            args["targetColor"] = style
+            args["targetColorCategory"] = style
+        }
         if (customPrompt.isNotBlank()) {
             args["customPrompt"] = customPrompt
         }
@@ -163,6 +187,52 @@ class HomeDecorRepository(
         }
         val raw = services.convex.mutation<JsonElement>("generations:startGeneration", args)
         json.decodeFromJsonElement<StartGenerationResponse>(raw)
+    }
+
+    suspend fun setViewerPlanFromRevenueCat(
+        anonymousId: String,
+        plan: String,
+        subscriptionType: String,
+        entitlement: String,
+        purchasedAt: Double?,
+        subscriptionEnd: Double?,
+    ): JsonElement = withContext(Dispatchers.IO) {
+        services.convex.mutation<JsonElement>(
+            "users:setViewerPlanFromRevenueCat",
+            buildMap<String, Any> {
+                put("anonymousId", anonymousId)
+                put("plan", plan)
+                put("subscriptionType", subscriptionType)
+                put("subscriptionEntitlement", entitlement)
+                purchasedAt?.let { put("purchasedAt", it) }
+                subscriptionEnd?.let { put("subscriptionEnd", it) }
+            },
+        )
+    }
+
+    suspend fun fulfillDiamondPurchase(
+        anonymousId: String,
+        packId: String,
+        transactionId: String,
+        productIdentifier: String,
+        packageIdentifier: String?,
+        amount: Double,
+        currencyCode: String,
+        purchasedAt: Double,
+    ): JsonElement = withContext(Dispatchers.IO) {
+        services.convex.mutation<JsonElement>(
+            "users:fulfillDiamondPurchase",
+            buildMap<String, Any> {
+                put("anonymousId", anonymousId)
+                put("packId", packId)
+                put("transactionId", transactionId)
+                put("productIdentifier", productIdentifier)
+                packageIdentifier?.let { put("packageIdentifier", it) }
+                put("amount", amount)
+                put("currencyCode", currencyCode)
+                put("purchasedAt", purchasedAt)
+            },
+        )
     }
 
     suspend fun waitForGeneration(

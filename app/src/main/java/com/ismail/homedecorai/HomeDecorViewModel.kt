@@ -3,6 +3,10 @@
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -51,11 +55,21 @@ data class BoardItem(
     val sourceImageUrl: String? = null,
     val status: String = "ready",
     val errorMessage: String? = null,
+    val prompt: String? = null,
+    val createdAt: Double = 0.0,
 )
 
 data class SelectedPhoto(
     val uri: Uri? = null,
     val exampleLabel: String? = null,
+)
+
+data class MaskPoint(val x: Float, val y: Float)
+
+data class MaskStroke(
+    val points: List<MaskPoint>,
+    val brushSize: Float,
+    val erase: Boolean = false,
 )
 
 data class DiamondPack(
@@ -99,6 +113,12 @@ data class HomeDecorUiState(
     val disclosureAccepted: Boolean = false,
     val isPro: Boolean = false,
     val generationError: String? = null,
+    val maskStrokes: List<MaskStroke> = emptyList(),
+    val undoneMaskStrokes: List<MaskStroke> = emptyList(),
+    val brushSize: Float = 28f,
+    val eraserSelected: Boolean = false,
+    val purchaseMessage: String? = null,
+    val purchaseBusy: Boolean = false,
 )
 
 object HomeDecorCatalog {
@@ -212,32 +232,58 @@ object HomeDecorCatalog {
     )
 
     val floorMaterials = listOf(
-        "Choix de l'IA",
-        "Marbre de Carrare",
-        "Chêne naturel",
-        "Bois de noyer",
-        "Tuile calcaire",
-        "Béton poli",
-        "Bois chevron",
-        "Terrazzo",
+        "Parquet clair",
+        "Parquet foncé",
+        "Marbre",
+        "Béton ciré",
+        "Carrelage moderne",
+        "Pierre naturelle",
+        "Vinyle premium",
+        "Tapis élégant",
     )
 
     val layoutGoals = listOf(
         "Circulation ouverte",
         "Plus de rangement",
+        "Coin bureau",
+        "Espace familial",
+        "Salon plus spacieux",
         "Meilleure lumière",
-        "Zone de travail",
-        "Salon familial",
-        "Prêt à louer",
+        "Réorganisation complète",
     )
 
     val referenceStrengths = listOf(
-        "Transfert équilibré",
-        "Style très fidèle",
-        "Palette subtile",
-        "Matériaux + lumière",
-        "Ambiance mobilier",
-        "Bureau à domicile",
+        "Subtil",
+        "Équilibré",
+        "Fidèle",
+        "Très fidèle",
+    )
+
+    val referenceOptions = listOf(
+        "Palette seulement",
+        "Matériaux",
+        "Mobilier",
+        "Lumière",
+        "Ambiance complète",
+    )
+
+    val paintColors = listOf(
+        "Blanc chaud",
+        "Beige",
+        "Gris clair",
+        "Vert sauge",
+        "Bleu doux",
+        "Terracotta",
+        "Noir élégant",
+    )
+
+    val replaceSuggestions = listOf(
+        "Canapé moderne",
+        "Table en bois",
+        "Lampe design",
+        "Plante intérieure",
+        "Fauteuil minimaliste",
+        "Meuble TV élégant",
     )
 
     val styles = listOf(
@@ -532,13 +578,22 @@ class HomeDecorViewModel(
                 wizardStage = WizardStage.Photo,
                 selectedPhotoUri = null,
                 selectedExampleLabel = null,
+                selectedPhotos = emptyList(),
                 selectedReferenceUri = null,
                 selectedReferenceExampleLabel = null,
-                roomType = defaultRoomFor(tool),
-                style = "Moderne",
-                palette = HomeDecorCatalog.palettes.first(),
+                selectedRooms = emptyList(),
+                selectedStyles = emptyList(),
+                selectedPalettes = emptyList(),
+                roomType = "",
+                style = "",
+                palette = "",
                 designMode = HomeDecorCatalog.designModes.first().first,
                 customPrompt = "",
+                maskStrokes = emptyList(),
+                undoneMaskStrokes = emptyList(),
+                brushSize = 28f,
+                eraserSelected = false,
+                generationError = null,
             )
         }
     }
@@ -549,11 +604,25 @@ class HomeDecorViewModel(
     }
 
     fun setPhoto(uri: Uri?) {
-        _uiState.update { it.copy(selectedPhotoUri = uri, selectedExampleLabel = null) }
+        if (uri == null) return
+        _uiState.update { state ->
+            val next = (state.selectedPhotos + SelectedPhoto(uri = uri)).take(3)
+            state.copy(selectedPhotos = next, selectedPhotoUri = next.firstOrNull()?.uri, selectedExampleLabel = next.firstOrNull()?.exampleLabel)
+        }
     }
 
     fun selectExamplePhoto(label: String) {
-        _uiState.update { it.copy(selectedExampleLabel = label, selectedPhotoUri = null) }
+        _uiState.update { state ->
+            val next = (state.selectedPhotos + SelectedPhoto(exampleLabel = label)).take(3)
+            state.copy(selectedPhotos = next, selectedPhotoUri = next.firstOrNull()?.uri, selectedExampleLabel = next.firstOrNull()?.exampleLabel)
+        }
+    }
+
+    fun removePhoto(index: Int) {
+        _uiState.update { state ->
+            val next = state.selectedPhotos.filterIndexed { slotIndex, _ -> slotIndex != index }
+            state.copy(selectedPhotos = next, selectedPhotoUri = next.firstOrNull()?.uri, selectedExampleLabel = next.firstOrNull()?.exampleLabel)
+        }
     }
 
     fun setReferencePhoto(uri: Uri?) {
@@ -565,15 +634,39 @@ class HomeDecorViewModel(
     }
 
     fun setRoom(room: String) {
+        _uiState.update { state ->
+            if (room in singleRoomSelections) {
+                return@update state.copy(selectedRooms = listOf(room), roomType = room)
+            }
+            val selected = toggleLimited(state.selectedRooms, room, limit = 2)
+            state.copy(selectedRooms = selected, roomType = selected.joinToString(" + "))
+        }
+    }
+
+    fun setRoomTypeText(room: String) {
         _uiState.update { it.copy(roomType = room) }
     }
 
-    fun setStyle(style: String) {
+    fun setStyleText(style: String) {
         _uiState.update { it.copy(style = style) }
     }
 
-    fun setPalette(palette: String) {
+    fun setPaletteText(palette: String) {
         _uiState.update { it.copy(palette = palette) }
+    }
+
+    fun setStyle(style: String) {
+        _uiState.update { state ->
+            val selected = toggleLimited(state.selectedStyles, style, limit = 2)
+            state.copy(selectedStyles = selected, style = selected.joinToString(" + "))
+        }
+    }
+
+    fun setPalette(palette: String) {
+        _uiState.update { state ->
+            val selected = toggleLimited(state.selectedPalettes, palette, limit = 2)
+            state.copy(selectedPalettes = selected, palette = selected.joinToString(" + "))
+        }
     }
 
     fun setDesignMode(mode: String) {
@@ -592,8 +685,196 @@ class HomeDecorViewModel(
         _uiState.update { it.copy(storeVisible = false) }
     }
 
+    fun openPaywall() {
+        _uiState.update { it.copy(paywallVisible = true) }
+    }
+
+    fun closePaywall() {
+        _uiState.update { it.copy(paywallVisible = false) }
+    }
+
+    fun openAuth() {
+        _uiState.update { it.copy(authVisible = true) }
+    }
+
+    fun closeAuth() {
+        _uiState.update { it.copy(authVisible = false) }
+    }
+
+    fun signInWithGooglePreview() {
+        _uiState.update {
+            it.copy(
+                authVisible = false,
+                signedInName = "Compte Google",
+                signedInEmail = "homedecor.user@gmail.com",
+            )
+        }
+    }
+
+    fun openSettings() {
+        _uiState.update { it.copy(settingsVisible = true) }
+    }
+
+    fun closeSettings() {
+        _uiState.update { it.copy(settingsVisible = false) }
+    }
+
     fun buyDiamondPack(pack: DiamondPack) {
-        _uiState.update { it.copy(diamonds = it.diamonds + pack.diamonds, storeVisible = false) }
+        _uiState.update {
+            it.copy(
+                purchaseMessage = "Sélectionnez un pack réel dans Google Play pour ajouter des diamants.",
+                purchaseBusy = false,
+            )
+        }
+    }
+
+    fun setBrushSize(size: Float) {
+        _uiState.update { it.copy(brushSize = size.coerceIn(8f, 72f)) }
+    }
+
+    fun setMaskEraser(enabled: Boolean) {
+        _uiState.update { it.copy(eraserSelected = enabled) }
+    }
+
+    fun addMaskStroke(stroke: MaskStroke) {
+        if (stroke.points.size < 2) return
+        _uiState.update { state ->
+            val next = state.maskStrokes + stroke
+            state.copy(
+                maskStrokes = next,
+                undoneMaskStrokes = emptyList(),
+                roomType = when (state.selectedTool.id) {
+                    "paint" -> "Mur marqué"
+                    "floor" -> "Sol marqué"
+                    "replace" -> "Objet marqué"
+                    else -> state.roomType
+                },
+            )
+        }
+    }
+
+    fun undoMaskStroke() {
+        _uiState.update { state ->
+            val last = state.maskStrokes.lastOrNull() ?: return@update state
+            val remaining = state.maskStrokes.dropLast(1)
+            state.copy(
+                maskStrokes = remaining,
+                undoneMaskStrokes = listOf(last) + state.undoneMaskStrokes,
+                roomType = if (remaining.any { !it.erase }) state.roomType else "",
+            )
+        }
+    }
+
+    fun redoMaskStroke() {
+        _uiState.update { state ->
+            val nextStroke = state.undoneMaskStrokes.firstOrNull() ?: return@update state
+            state.copy(
+                maskStrokes = state.maskStrokes + nextStroke,
+                undoneMaskStrokes = state.undoneMaskStrokes.drop(1),
+            )
+        }
+    }
+
+    fun clearMask() {
+        _uiState.update { it.copy(maskStrokes = emptyList(), undoneMaskStrokes = emptyList(), roomType = "") }
+    }
+
+    fun markMaskWithAutoDetect(target: String) {
+        val stroke = MaskStroke(
+            brushSize = 54f,
+            erase = false,
+            points = when (target) {
+                "floor" -> listOf(MaskPoint(0.18f, 0.70f), MaskPoint(0.42f, 0.63f), MaskPoint(0.78f, 0.70f), MaskPoint(0.88f, 0.92f), MaskPoint(0.12f, 0.92f))
+                "object" -> listOf(MaskPoint(0.36f, 0.46f), MaskPoint(0.64f, 0.46f), MaskPoint(0.68f, 0.68f), MaskPoint(0.32f, 0.68f), MaskPoint(0.36f, 0.46f))
+                else -> listOf(MaskPoint(0.18f, 0.20f), MaskPoint(0.82f, 0.20f), MaskPoint(0.82f, 0.66f), MaskPoint(0.18f, 0.66f), MaskPoint(0.18f, 0.20f))
+            },
+        )
+        addMaskStroke(stroke)
+    }
+
+    fun fulfillDiamondPurchase(
+        packId: String,
+        transactionId: String,
+        productIdentifier: String,
+        packageIdentifier: String?,
+        amount: Double,
+        currencyCode: String,
+        purchasedAt: Double,
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = "Validation de l'achat...") }
+            runCatching {
+                repository.fulfillDiamondPurchase(
+                    anonymousId = anonymousId,
+                    packId = packId,
+                    transactionId = transactionId,
+                    productIdentifier = productIdentifier,
+                    packageIdentifier = packageIdentifier,
+                    amount = amount,
+                    currencyCode = currencyCode,
+                    purchasedAt = purchasedAt,
+                )
+                repository.viewerSummary(anonymousId)
+            }.onSuccess { viewer ->
+                _uiState.update {
+                    it.copy(
+                        viewer = viewer,
+                        diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
+                        purchaseBusy = false,
+                        storeVisible = false,
+                        purchaseMessage = "Achat confirmé. Vos diamants sont disponibles.",
+                    )
+                }
+            }.onFailure {
+                _uiState.update {
+                    it.copy(
+                        purchaseBusy = false,
+                        purchaseMessage = "L'achat a réussi, mais la synchronisation a échoué. Utilisez Restaurer les achats.",
+                    )
+                }
+            }
+        }
+    }
+
+    fun syncSubscriptionFromRevenueCat(
+        plan: String,
+        subscriptionType: String,
+        entitlement: String,
+        purchasedAt: Double?,
+        subscriptionEnd: Double?,
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = "Synchronisation Pro...") }
+            runCatching {
+                repository.setViewerPlanFromRevenueCat(
+                    anonymousId = anonymousId,
+                    plan = plan,
+                    subscriptionType = subscriptionType,
+                    entitlement = entitlement,
+                    purchasedAt = purchasedAt,
+                    subscriptionEnd = subscriptionEnd,
+                )
+                repository.viewerSummary(anonymousId)
+            }.onSuccess { viewer ->
+                _uiState.update {
+                    it.copy(
+                        viewer = viewer,
+                        isPro = viewer.hasProAccess,
+                        diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
+                        paywallVisible = false,
+                        purchaseBusy = false,
+                        purchaseMessage = "Pro activé avec succès.",
+                    )
+                }
+            }.onFailure {
+                _uiState.update {
+                    it.copy(
+                        purchaseBusy = false,
+                        purchaseMessage = "Impossible de synchroniser Pro pour le moment.",
+                    )
+                }
+            }
+        }
     }
 
     fun nextStage() {
@@ -601,7 +882,7 @@ class HomeDecorViewModel(
             state.copy(
                 wizardStage = when (state.wizardStage) {
                     WizardStage.Photo -> WizardStage.Space
-                    WizardStage.Space -> if (state.selectedTool.id == "garden") WizardStage.Refine else WizardStage.Style
+                    WizardStage.Space -> if (state.selectedTool.id in listOf("garden", "layout")) WizardStage.Refine else WizardStage.Style
                     WizardStage.Style -> WizardStage.Refine
                     WizardStage.Refine -> WizardStage.Refine
                     WizardStage.Processing -> WizardStage.Processing
@@ -618,7 +899,7 @@ class HomeDecorViewModel(
                     WizardStage.Photo -> WizardStage.Photo
                     WizardStage.Space -> WizardStage.Photo
                     WizardStage.Style -> WizardStage.Space
-                    WizardStage.Refine -> if (state.selectedTool.id == "garden") WizardStage.Space else WizardStage.Style
+                    WizardStage.Refine -> if (state.selectedTool.id in listOf("garden", "layout")) WizardStage.Space else WizardStage.Style
                     WizardStage.Processing -> WizardStage.Refine
                     WizardStage.Result -> WizardStage.Refine
                 }
@@ -637,7 +918,7 @@ class HomeDecorViewModel(
             _uiState.update {
                 it.copy(
                     wizardStage = WizardStage.Processing,
-                    progressMessage = "Analyser la géométrie architecturale...",
+                    progressMessage = "Préparation de votre transformation...",
                     generationError = null,
                 )
             }
@@ -648,11 +929,14 @@ class HomeDecorViewModel(
                 }
                 val source = readSelectedSource(snapshot)
                 val reference = readSelectedReference(snapshot)
-                _uiState.update { it.copy(progressMessage = "Téléverser la photo vers Convex...") }
+                val mask = readMaskSource(snapshot)
+                _uiState.update { it.copy(progressMessage = "Analyse de l’image...") }
                 val start = repository.startGeneration(
                     anonymousId = anonymousId,
                     imageBytes = source.bytes,
                     mimeType = source.mimeType,
+                    maskBytes = mask?.bytes,
+                    maskMimeType = mask?.mimeType,
                     tool = snapshot.selectedTool,
                     roomType = snapshot.roomType,
                     style = snapshot.style,
@@ -662,8 +946,9 @@ class HomeDecorViewModel(
                     referenceImageBytes = reference?.bytes,
                     referenceMimeType = reference?.mimeType,
                 )
-                _uiState.update { it.copy(progressMessage = "Composer le rendu final avec Azure OpenAI...") }
+                _uiState.update { it.copy(progressMessage = "Application de la nouvelle couleur...") }
                 val ready = repository.waitForGeneration(anonymousId, start.generationId)
+                _uiState.update { it.copy(progressMessage = "Finalisation du rendu...") }
                 ready.toBoardItem() ?: BoardItem(
                     id = start.generationId,
                     toolTitle = snapshot.selectedTool.title,
@@ -672,6 +957,8 @@ class HomeDecorViewModel(
                     imageRes = R.drawable.sample_after_luxury,
                     imageUrl = ready.imageUrl,
                     sourceImageUrl = ready.sourceImageUrl,
+                    prompt = snapshot.customPrompt,
+                    createdAt = System.currentTimeMillis().toDouble(),
                 )
             }.onSuccess { result ->
                 val viewer = repository.viewerSummary(anonymousId)
@@ -726,8 +1013,24 @@ class HomeDecorViewModel(
     }
 
     fun unlockProPreview() {
-        _uiState.update { it.copy(isPro = true, diamonds = it.diamonds + 10) }
+        _uiState.update { it.copy(isPro = true, diamonds = it.diamonds + 10, paywallVisible = false) }
     }
+
+    private fun toggleLimited(current: List<String>, value: String, limit: Int): List<String> {
+        if (value.isBlank()) return current
+        return if (value in current) {
+            current - value
+        } else {
+            (current + value).takeLast(limit)
+        }
+    }
+
+    private val singleRoomSelections = setOf(
+        "Sol marque",
+        "Choix de l'IA",
+        "Mur marqué",
+        "Surface à marquer",
+    )
 
     private fun defaultRoomFor(tool: DecorTool): String {
         return when (tool.id) {
@@ -748,6 +1051,17 @@ class HomeDecorViewModel(
     )
 
     private fun readSelectedSource(snapshot: HomeDecorUiState): SourceImage {
+        val firstPhoto = snapshot.selectedPhotos.firstOrNull()
+        firstPhoto?.uri?.let { uri -> return readUriSource(uri) }
+        firstPhoto?.exampleLabel?.let {
+            val resId = exampleImageResFor(snapshot.selectedTool.id)
+            val bytes = appContext.resources.openRawResource(resId).use { stream ->
+                val bitmap = BitmapFactory.decodeStream(stream)
+                    ?: error("Impossible de préparer l'image d'exemple.")
+                bitmap.toJpegBytes()
+            }
+            return SourceImage(bytes, "image/jpeg")
+        }
         snapshot.selectedPhotoUri?.let { uri -> return readUriSource(uri) }
         val resId = exampleImageResFor(snapshot.selectedTool.id)
         val bytes = appContext.resources.openRawResource(resId).use { stream ->
@@ -772,6 +1086,14 @@ class HomeDecorViewModel(
         return null
     }
 
+    private fun readMaskSource(snapshot: HomeDecorUiState): SourceImage? {
+        if (snapshot.selectedTool.id !in setOf("paint", "floor", "replace")) return null
+        if (snapshot.maskStrokes.none { !it.erase && it.points.size > 1 }) {
+            error("A real mask is required before generating.")
+        }
+        return SourceImage(snapshot.maskStrokes.toMaskPngBytes(), "image/png")
+    }
+
     private fun readUriSource(uri: Uri): SourceImage {
         val bytes = appContext.contentResolver.openInputStream(uri)?.use { stream ->
             val bitmap = BitmapFactory.decodeStream(stream)
@@ -789,9 +1111,41 @@ class HomeDecorViewModel(
         }
     }
 
+    private fun List<MaskStroke>.toMaskPngBytes(): ByteArray {
+        val width = 1024
+        val height = 1024
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
+        }
+        forEach { stroke ->
+            if (stroke.points.size < 2) return@forEach
+            paint.strokeWidth = stroke.brushSize.coerceIn(8f, 96f)
+            paint.color = if (stroke.erase) Color.TRANSPARENT else Color.WHITE
+            paint.xfermode = if (stroke.erase) android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) else null
+            val path = Path().apply {
+                val first = stroke.points.first()
+                moveTo(first.x.coerceIn(0f, 1f) * width, first.y.coerceIn(0f, 1f) * height)
+                stroke.points.drop(1).forEach { point ->
+                    lineTo(point.x.coerceIn(0f, 1f) * width, point.y.coerceIn(0f, 1f) * height)
+                }
+            }
+            canvas.drawPath(path, paint)
+        }
+        return ByteArrayOutputStream().use { output ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+            output.toByteArray()
+        }
+    }
+
     private fun friendlyGenerationError(error: Throwable): String {
         val message = error.message.orEmpty()
         return when {
+            "A real mask" in message ->
+                "Marquez la zone à transformer avant de générer."
             "401" in message || "403" in message || "Access denied" in message || "subscription" in message || "Azure" in message || "OpenAI" in message ->
                 "La génération IA est momentanément indisponible. Réessayez dans un instant ou vérifiez la configuration du service."
             "No Diamonds" in message || "Diamonds left" in message ->
@@ -801,10 +1155,10 @@ class HomeDecorViewModel(
             "still processing" in message ->
                 "Votre design prend plus de temps que prévu. Retrouvez-le dans le portfolio dans quelques instants."
             "Generation failed" in message || "Convex" in message || "upload" in message || "API" in message ->
-                "La génération n'a pas pu aboutir. Réessayez avec une autre photo ou dans quelques instants."
+                "La génération a échoué. Vérifiez votre connexion ou réessayez."
             message.isNotBlank() && message.any { it in 'à'..'ÿ' } -> message
-            message.isNotBlank() -> "La génération n'a pas pu aboutir. Réessayez dans quelques instants."
-            else -> "La génération a échoué. Réessayez dans un instant."
+            message.isNotBlank() -> "La génération a échoué. Vérifiez votre connexion ou réessayez."
+            else -> "La génération a échoué. Vérifiez votre connexion ou réessayez."
         }
     }
 
@@ -818,9 +1172,11 @@ class HomeDecorViewModel(
                 imageRes = R.drawable.sample_after_luxury,
                 imageUrl = imageUrl,
                 sourceImageUrl = sourceImageUrl,
-                status = "failed",
-                errorMessage = errorMessage,
-            )
+            status = "failed",
+            errorMessage = errorMessage,
+            prompt = null,
+            createdAt = createdAt,
+        )
         }
         if (imageUrl.isNullOrBlank()) return null
         return BoardItem(
@@ -833,6 +1189,8 @@ class HomeDecorViewModel(
             sourceImageUrl = sourceImageUrl,
             status = status ?: "ready",
             errorMessage = errorMessage,
+            prompt = null,
+            createdAt = createdAt,
         )
     }
 
