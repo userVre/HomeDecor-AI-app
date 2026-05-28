@@ -53,12 +53,18 @@ data class BoardItem(
     val errorMessage: String? = null,
 )
 
+data class SelectedPhoto(
+    val uri: Uri? = null,
+    val exampleLabel: String? = null,
+)
+
 data class DiamondPack(
     val id: String,
     val title: String,
     val diamonds: Int,
     val price: String,
     val badge: String? = null,
+    val description: String = "",
 )
 
 data class HomeDecorUiState(
@@ -67,11 +73,15 @@ data class HomeDecorUiState(
     val wizardStage: WizardStage = WizardStage.Photo,
     val selectedPhotoUri: Uri? = null,
     val selectedExampleLabel: String? = null,
+    val selectedPhotos: List<SelectedPhoto> = emptyList(),
     val selectedReferenceUri: Uri? = null,
     val selectedReferenceExampleLabel: String? = null,
-    val roomType: String = "Living Room",
-    val style: String = "Warm Modern",
-    val palette: String = "Natural oak, soft ivory, deep olive",
+    val selectedRooms: List<String> = emptyList(),
+    val selectedStyles: List<String> = emptyList(),
+    val selectedPalettes: List<String> = emptyList(),
+    val roomType: String = "",
+    val style: String = "",
+    val palette: String = "",
     val designMode: String = "Preserve Layout",
     val customPrompt: String = "",
     val progressMessage: String = "Preparing your studio...",
@@ -79,6 +89,11 @@ data class HomeDecorUiState(
     val eliteStreakDay: Int = 1,
     val claimedToday: Boolean = false,
     val storeVisible: Boolean = false,
+    val paywallVisible: Boolean = false,
+    val authVisible: Boolean = false,
+    val settingsVisible: Boolean = false,
+    val signedInName: String? = null,
+    val signedInEmail: String? = null,
     val viewer: ViewerSummary = ViewerSummary(),
     val board: List<BoardItem> = emptyList(),
     val disclosureAccepted: Boolean = false,
@@ -179,6 +194,14 @@ object HomeDecorCatalog {
         "Jardin avant",
     )
 
+    val gardenStyles = listOf(
+        "Noël",
+        "Moderne",
+        "Tropicale",
+        "Minimaliste",
+        "Méditerranéen",
+    )
+
     val maskTargets = listOf(
         "Mur",
         "Sol",
@@ -257,10 +280,10 @@ object HomeDecorCatalog {
     )
 
     val diamondPacks = listOf(
-        DiamondPack("starter", "Pack Découverte", 10, "19,80 MAD"),
-        DiamondPack("designer", "Pack Designer", 30, "49,65 MAD", "POPULAIRE"),
-        DiamondPack("architect", "Pack Architecte", 100, "129,25 MAD"),
-        DiamondPack("estate", "Pack Studio", 250, "249,00 MAD", "MEILLEURE OFFRE"),
+        DiamondPack("starter", "Découverte", 10, "19,80 MAD", description = "Pour tester plusieurs idées sans engagement."),
+        DiamondPack("designer", "Designer", 30, "49,65 MAD", "POPULAIRE", "Le meilleur équilibre pour explorer une pièce complète."),
+        DiamondPack("architect", "Architecte", 100, "129,25 MAD", description = "Pensé pour les séries de concepts et variantes."),
+        DiamondPack("estate", "Studio", 250, "249,00 MAD", "MEILLEURE OFFRE", "Crédits profonds pour gros projets et portfolios."),
     )
 
     val gallery = tools.mapIndexed { index, tool ->
@@ -282,6 +305,10 @@ object HomeDecorCatalog {
                 GalleryItem("kitchen-1", "Cuisine 1", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen1),
                 GalleryItem("kitchen-2", "Cuisine 2", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen2),
                 GalleryItem("kitchen-3", "Cuisine 3", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen3),
+                GalleryItem("kitchen-4", "Cuisine 4", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen4),
+                GalleryItem("kitchen-5", "Cuisine 5", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen5),
+                GalleryItem("kitchen-6", "Cuisine 6", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen6),
+                GalleryItem("kitchen-7", "Cuisine 7", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen7),
             ),
         ),
         DiscoverSection(
@@ -293,6 +320,10 @@ object HomeDecorCatalog {
                 GalleryItem("living-1", "Salon 1", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom1),
                 GalleryItem("living-2", "Salon 2", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom2),
                 GalleryItem("living-3", "Salon 3", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom3),
+                GalleryItem("living-4", "Salon 4", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom4),
+                GalleryItem("living-5", "Salon 5", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom5),
+                GalleryItem("living-6", "Salon 6", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom6),
+                GalleryItem("living-7", "Salon 7", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom7),
             ),
         ),
         DiscoverSection(
@@ -304,7 +335,63 @@ object HomeDecorCatalog {
                 GalleryItem("bedroom-1", "Chambre 1", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom1),
                 GalleryItem("bedroom-2", "Chambre 2", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom2),
                 GalleryItem("bedroom-3", "Chambre 3", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom3),
+                GalleryItem("bedroom-4", "Chambre 4", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom4),
+                GalleryItem("bedroom-5", "Chambre 5", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom5),
+                GalleryItem("bedroom-6", "Chambre 6", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom6),
+                GalleryItem("bedroom-7", "Chambre 7", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom7),
             ),
+        ),
+        DiscoverSection(
+            id = "bathroom",
+            title = "Salle de bain",
+            cluster = "Intérieurs",
+            serviceToolId = "interior",
+            items = listOf(GalleryItem("bathroom-1", "Salle de bain", "Salle de bain", R.drawable.assets_media_discover_home_homebathroom)),
+        ),
+        DiscoverSection(
+            id = "dining",
+            title = "Salle à manger",
+            cluster = "Intérieurs",
+            serviceToolId = "interior",
+            items = listOf(GalleryItem("dining-1", "Salle à manger", "Salle à manger", R.drawable.assets_media_discover_home_homediningroom)),
+        ),
+        DiscoverSection(
+            id = "home-office",
+            title = "Bureau à domicile",
+            cluster = "Intérieurs",
+            serviceToolId = "interior",
+            items = listOf(
+                GalleryItem("office-1", "Bureau à domicile", "Bureau", R.drawable.assets_media_discover_home_homehomeoffice),
+                GalleryItem("office-2", "Étude lumineuse", "Bureau", R.drawable.assets_media_discover_home_homestudy),
+            ),
+        ),
+        DiscoverSection(
+            id = "library",
+            title = "Bibliothèque",
+            cluster = "Intérieurs",
+            serviceToolId = "interior",
+            items = listOf(GalleryItem("library-1", "Bibliothèque", "Bibliothèque", R.drawable.assets_media_discover_home_homelibrary)),
+        ),
+        DiscoverSection(
+            id = "hall",
+            title = "Entrée / couloir",
+            cluster = "Intérieurs",
+            serviceToolId = "interior",
+            items = listOf(GalleryItem("hall-1", "Couloir", "Entrée", R.drawable.assets_media_discover_home_homehall)),
+        ),
+        DiscoverSection(
+            id = "gaming",
+            title = "Salle de jeux",
+            cluster = "Intérieurs",
+            serviceToolId = "interior",
+            items = listOf(GalleryItem("gaming-1", "Salle de jeux", "Loisir", R.drawable.assets_media_discover_home_homegamingroom)),
+        ),
+        DiscoverSection(
+            id = "laundry",
+            title = "Blanchisserie",
+            cluster = "Intérieurs",
+            serviceToolId = "interior",
+            items = listOf(GalleryItem("laundry-1", "Blanchisserie", "Service", R.drawable.assets_media_discover_home_homelaundry)),
         ),
         DiscoverSection(
             id = "villa",
@@ -315,6 +402,10 @@ object HomeDecorCatalog {
                 GalleryItem("villa-1", "Villa 1", "Villa", R.drawable.assets_media_discover_exterior_exteriormodernvilla),
                 GalleryItem("villa-2", "Villa 2", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior1),
                 GalleryItem("villa-3", "Villa 3", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior2),
+                GalleryItem("villa-4", "Villa 4", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior3),
+                GalleryItem("villa-5", "Villa 5", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior4),
+                GalleryItem("villa-6", "Villa 6", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior5),
+                GalleryItem("villa-7", "Villa 7", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior6),
             ),
         ),
         DiscoverSection(
@@ -329,6 +420,45 @@ object HomeDecorCatalog {
             ),
         ),
         DiscoverSection(
+            id = "residential",
+            title = "Résidentiel",
+            cluster = "Architecture",
+            serviceToolId = "facade",
+            items = listOf(
+                GalleryItem("residential-1", "Maison avec piscine", "Résidentiel", R.drawable.assets_media_discover_exterior_exteriorpoolhouse),
+                GalleryItem("residential-2", "Manoir en pierre", "Résidentiel", R.drawable.assets_media_discover_exterior_exteriorstonemanor),
+                GalleryItem("residential-3", "Façade 7", "Résidentiel", R.drawable.assets_media_discover_generated_exterior_exterior7),
+            ),
+        ),
+        DiscoverSection(
+            id = "wall-scenes",
+            title = "Murs",
+            cluster = "Intérieurs",
+            serviceToolId = "paint",
+            items = listOf(
+                GalleryItem("wall-1", "Ivoire doux", "Mur", R.drawable.assets_media_discover_wallscenes_softivorykitchen),
+                GalleryItem("wall-2", "Vert sauge", "Mur", R.drawable.assets_media_discover_wallscenes_sagegreensuite),
+                GalleryItem("wall-3", "Bleu nuit", "Mur", R.drawable.assets_media_discover_wallscenes_midnightnavybedroom),
+                GalleryItem("wall-4", "Charbon galerie", "Mur", R.drawable.assets_media_discover_wallscenes_gallerycharcoallounge),
+                GalleryItem("wall-5", "Terre cuite", "Mur", R.drawable.assets_media_discover_wallscenes_terracottadining),
+                GalleryItem("wall-6", "Rose poudré", "Mur", R.drawable.assets_media_discover_wallscenes_dustyroseretreat),
+            ),
+        ),
+        DiscoverSection(
+            id = "floors",
+            title = "Sols",
+            cluster = "Intérieurs",
+            serviceToolId = "floor",
+            items = listOf(
+                GalleryItem("floor-1", "Chêne naturel", "Sol", R.drawable.assets_media_discover_floorscenes_naturaloakparquet),
+                GalleryItem("floor-2", "Noyer", "Sol", R.drawable.assets_media_discover_floorscenes_heritagewalnutplank),
+                GalleryItem("floor-3", "Marbre", "Sol", R.drawable.assets_media_discover_floorscenes_polishedcarraramarble),
+                GalleryItem("floor-4", "Béton poli", "Sol", R.drawable.assets_media_discover_floorscenes_industrialgrayconcrete),
+                GalleryItem("floor-5", "Chevron", "Sol", R.drawable.assets_media_discover_floorscenes_walnutchevron),
+                GalleryItem("floor-6", "Terre cuite", "Sol", R.drawable.assets_media_discover_floorscenes_terracottaateliertile),
+            ),
+        ),
+        DiscoverSection(
             id = "garden",
             title = "Jardin",
             cluster = "Paysages",
@@ -337,6 +467,23 @@ object HomeDecorCatalog {
                 GalleryItem("garden-1", "Jardin 1", "Jardin", R.drawable.assets_media_discover_garden_gardenfiresidepatio),
                 GalleryItem("garden-2", "Jardin 2", "Jardin", R.drawable.assets_media_discover_generated_garden_garden1),
                 GalleryItem("garden-3", "Jardin 3", "Jardin", R.drawable.assets_media_discover_generated_garden_garden2),
+                GalleryItem("garden-4", "Jardin 4", "Jardin", R.drawable.assets_media_discover_generated_garden_garden3),
+                GalleryItem("garden-5", "Jardin 5", "Jardin", R.drawable.assets_media_discover_generated_garden_garden4),
+                GalleryItem("garden-6", "Jardin 6", "Jardin", R.drawable.assets_media_discover_generated_garden_garden5),
+                GalleryItem("garden-7", "Jardin 7", "Jardin", R.drawable.assets_media_discover_generated_garden_garden6),
+            ),
+        ),
+        DiscoverSection(
+            id = "outdoor-spaces",
+            title = "Espaces extérieurs",
+            cluster = "Paysages",
+            serviceToolId = "garden",
+            items = listOf(
+                GalleryItem("outdoor-1", "Cour arrière", "Paysage", R.drawable.assets_media_discover_garden_gardenbackyard),
+                GalleryItem("outdoor-2", "Terrasse", "Paysage", R.drawable.assets_media_discover_garden_gardenterrace),
+                GalleryItem("outdoor-3", "Patio", "Paysage", R.drawable.assets_media_discover_garden_gardenpatio),
+                GalleryItem("outdoor-4", "Piscine", "Paysage", R.drawable.assets_media_discover_garden_gardenswimmingpool),
+                GalleryItem("outdoor-5", "Entrée villa", "Paysage", R.drawable.assets_media_discover_garden_gardenvillaentry),
             ),
         ),
     )
