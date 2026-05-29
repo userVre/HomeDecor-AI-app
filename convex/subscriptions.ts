@@ -6,11 +6,12 @@ export const FREE_IMAGE_LIMIT = 1;
 export const INITIAL_FREE_DIAMONDS = 0;
 export const FREE_DAILY_DIAMOND_CAP = 3;
 export const WEEKLY_IMAGE_LIMIT = Number.MAX_SAFE_INTEGER;
+export const MONTHLY_IMAGE_LIMIT = Number.MAX_SAFE_INTEGER;
 export const YEARLY_MONTHLY_IMAGE_LIMIT = Number.MAX_SAFE_INTEGER;
 export const FREE_REFILL_INTERVAL_MS = DAY_MS;
 
-export type SubscriptionType = "weekly" | "yearly" | "free";
-export type SubscriptionEntitlement = "weekly_pro" | "annual_pro" | "free";
+export type SubscriptionType = "weekly" | "monthly" | "yearly" | "free";
+export type SubscriptionEntitlement = "weekly_pro" | "monthly_pro" | "annual_pro" | "free";
 export type BillingPlan = "free" | "trial" | "pro";
 export type GenerationQualityTier = "free" | "standard_hd" | "premium";
 export type GenerationSpeedTier = "standard" | "pro" | "ultra";
@@ -56,14 +57,14 @@ export function toFiniteNumber(value: number | bigint | null | undefined, fallba
 }
 
 function normalizeSubscriptionType(input?: string | null): SubscriptionType {
-  if (input === "weekly" || input === "yearly") {
+  if (input === "weekly" || input === "monthly" || input === "yearly") {
     return input;
   }
   return "free";
 }
 
 function normalizeSubscriptionEntitlement(input?: string | null): SubscriptionEntitlement {
-  if (input === "weekly_pro" || input === "annual_pro") {
+  if (input === "weekly_pro" || input === "monthly_pro" || input === "annual_pro") {
     return input;
   }
   return "free";
@@ -137,6 +138,9 @@ function resolveSubscriptionWindow(subscriptionType: SubscriptionType, anchor: n
   if (subscriptionType === "weekly") {
     return resolveWeeklyWindow(anchor, now);
   }
+  if (subscriptionType === "monthly") {
+    return resolveMonthlyWindow(anchor, now);
+  }
   if (subscriptionType === "yearly") {
     return resolveMonthlyWindow(anchor, now);
   }
@@ -160,12 +164,14 @@ function getSubscriptionAnchor(user: SubscriptionLikeUser, now: number) {
 export function getGenerationLimit(subscriptionType: SubscriptionType) {
   if (subscriptionType === "free") return FREE_IMAGE_LIMIT;
   if (subscriptionType === "weekly") return WEEKLY_IMAGE_LIMIT;
+  if (subscriptionType === "monthly") return MONTHLY_IMAGE_LIMIT;
   if (subscriptionType === "yearly") return YEARLY_MONTHLY_IMAGE_LIMIT;
   return FREE_IMAGE_LIMIT;
 }
 
 export function getSubscriptionEndForType(subscriptionType: SubscriptionType, purchasedAt: number) {
   if (subscriptionType === "weekly") return purchasedAt + WEEK_MS;
+  if (subscriptionType === "monthly") return buildMonthlyAnniversary(purchasedAt, 1);
   if (subscriptionType === "yearly") return purchasedAt + YEAR_MS;
   return 0;
 }
@@ -361,8 +367,13 @@ export function deriveSubscriptionState(user: SubscriptionLikeUser, now: number)
     patch.imageGenerationCount = 0;
     patch.lastResetDate = 0;
     patch.plan = "free";
-  } else if (subscriptionType === "weekly" || subscriptionType === "yearly") {
-    const expectedEntitlement = subscriptionType === "weekly" ? "weekly_pro" : "annual_pro";
+  } else if (subscriptionType === "weekly" || subscriptionType === "monthly" || subscriptionType === "yearly") {
+    const expectedEntitlement =
+      subscriptionType === "weekly"
+        ? "weekly_pro"
+        : subscriptionType === "monthly"
+          ? "monthly_pro"
+          : "annual_pro";
     imageLimit = getGenerationLimit(subscriptionType);
     subscriptionStartedAt = getSubscriptionAnchor(user, now);
     if (subscriptionEntitlement !== expectedEntitlement) {
@@ -542,9 +553,11 @@ export function buildSubscriptionPatch(args: {
   const nextEntitlement =
     args.subscriptionType === "weekly"
       ? "weekly_pro"
-      : args.subscriptionType === "yearly"
-        ? "annual_pro"
-        : "free";
+      : args.subscriptionType === "monthly"
+        ? "monthly_pro"
+        : args.subscriptionType === "yearly"
+          ? "annual_pro"
+          : "free";
   const nextEnd =
     args.subscriptionType === "free"
       ? 0

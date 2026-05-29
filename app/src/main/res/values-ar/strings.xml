@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HomeDecor AI</string>
+    <string name="settings">الإعدادات</string>
+    <string name="language">اللغة</string>
+    <string name="language_current">Arabic</string>
+    <string name="language_picker_title">اختر اللغة</string>
+    <string name="toast_language_selected">تم اختيار العربية.</string>
+    <string name="close">إغلاق</string>
+    <string name="back">رجوع</string>
+</resources>

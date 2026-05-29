@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,10 +18,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
+import java.util.Calendar
 import java.util.UUID
 
 enum class MainTab { Tools, Create, Discover, ElitePass, Profile }
 enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
+enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
 
 data class DecorTool(
     val id: String,
@@ -72,6 +75,44 @@ data class MaskStroke(
     val erase: Boolean = false,
 )
 
+fun List<MaskStroke>.hasVisibleMaskPaint(): Boolean {
+    val bitmap = toMaskBitmap(size = 128)
+    for (x in 0 until bitmap.width step 2) {
+        for (y in 0 until bitmap.height step 2) {
+            if (android.graphics.Color.alpha(bitmap.getPixel(x, y)) > 0) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+private fun List<MaskStroke>.toMaskBitmap(size: Int): Bitmap {
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+    }
+    val strokeScale = size / 1024f
+    forEach { stroke ->
+        if (stroke.points.size < 2) return@forEach
+        paint.strokeWidth = stroke.brushSize.coerceIn(8f, 96f) * strokeScale
+        paint.color = if (stroke.erase) Color.TRANSPARENT else Color.WHITE
+        paint.xfermode = if (stroke.erase) android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) else null
+        val path = Path().apply {
+            val first = stroke.points.first()
+            moveTo(first.x.coerceIn(0f, 1f) * size, first.y.coerceIn(0f, 1f) * size)
+            stroke.points.drop(1).forEach { point ->
+                lineTo(point.x.coerceIn(0f, 1f) * size, point.y.coerceIn(0f, 1f) * size)
+            }
+        }
+        canvas.drawPath(path, paint)
+    }
+    return bitmap
+}
+
 data class DiamondPack(
     val id: String,
     val title: String,
@@ -98,10 +139,15 @@ data class HomeDecorUiState(
     val palette: String = "",
     val designMode: String = "Preserve Layout",
     val customPrompt: String = "",
-    val progressMessage: String = "Preparing your studio...",
+    val layoutConstraints: String = "",
+    val mobilierADeplacer: String = "",
+    val progressMessage: String = "",
     val diamonds: Int = 1,
     val eliteStreakDay: Int = 1,
     val claimedToday: Boolean = false,
+    val elitePassSyncState: ElitePassSyncState = ElitePassSyncState.Loading,
+    val elitePassSyncMessage: String = "",
+    val eliteLastClaimWasDaySeven: Boolean = false,
     val storeVisible: Boolean = false,
     val paywallVisible: Boolean = false,
     val authVisible: Boolean = false,
@@ -278,12 +324,12 @@ object HomeDecorCatalog {
     )
 
     val replaceSuggestions = listOf(
-        "Canapé moderne",
-        "Table en bois",
-        "Lampe design",
-        "Plante intérieure",
-        "Fauteuil minimaliste",
-        "Meuble TV élégant",
+        "Canapé beige moderne",
+        "Table basse en bois clair",
+        "Suspension noire minimaliste",
+        "Grande plante en pot",
+        "Fauteuil bouclé crème",
+        "Meuble TV noyer épuré",
     )
 
     val styles = listOf(
@@ -545,24 +591,44 @@ class HomeDecorViewModel(
         preferences.edit().putString(KEY_ANONYMOUS_ID, it).apply()
     }
     private val _uiState = MutableStateFlow(
-        HomeDecorUiState(disclosureAccepted = preferences.getBoolean(KEY_DISCLOSURE_ACCEPTED, false))
+        HomeDecorUiState(
+            progressMessage = text(R.string.progress_preparing_studio),
+            elitePassSyncMessage = text(R.string.elite_pass_sync_initial),
+            disclosureAccepted = preferences.getBoolean(KEY_DISCLOSURE_ACCEPTED, false),
+        )
     )
     val uiState: StateFlow<HomeDecorUiState> = _uiState.asStateFlow()
 
+    private fun text(@StringRes resId: Int): String = appContext.getString(resId)
+
     init {
         viewModelScope.launch {
-            val viewer = runCatching { repository.bootstrapViewer(anonymousId) }
-                .getOrElse { repository.viewerSummary(anonymousId) }
-            val archive = repository.archive(anonymousId).mapNotNull { it.toBoardItem() }
-            _uiState.update {
-                it.copy(
-                    viewer = viewer,
-                    diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
-                    isPro = viewer.hasProAccess,
-                    eliteStreakDay = (viewer.streakCount + 1).coerceIn(1, 7),
-                    board = archive,
-                )
-            }
+            runCatching { repository.bootstrapViewer(anonymousId) }
+                .recoverCatching { repository.viewerSummary(anonymousId) }
+                .onSuccess { viewer ->
+                    val archive = repository.archive(anonymousId).mapNotNull { it.toBoardItem() }
+                    _uiState.update {
+                        it.copy(
+                            viewer = viewer,
+                            diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
+                            isPro = viewer.hasProAccess,
+                            eliteStreakDay = viewer.nextElitePassDay(),
+                            claimedToday = viewer.claimedWithinLocalDay(),
+                            eliteLastClaimWasDaySeven = viewer.wasDaySevenEliteClaim(),
+                            elitePassSyncState = ElitePassSyncState.Synced,
+                            elitePassSyncMessage = text(R.string.elite_pass_synced),
+                            board = archive,
+                        )
+                    }
+                }
+                .onFailure {
+                    _uiState.update {
+                        it.copy(
+                            elitePassSyncState = ElitePassSyncState.LocalOnly,
+                            elitePassSyncMessage = text(R.string.elite_pass_local_sync),
+                        )
+                    }
+                }
         }
     }
 
@@ -589,6 +655,8 @@ class HomeDecorViewModel(
                 palette = "",
                 designMode = HomeDecorCatalog.designModes.first().first,
                 customPrompt = "",
+                layoutConstraints = "",
+                mobilierADeplacer = "",
                 maskStrokes = emptyList(),
                 undoneMaskStrokes = emptyList(),
                 brushSize = 28f,
@@ -618,6 +686,27 @@ class HomeDecorViewModel(
         }
     }
 
+    fun setPrimaryPhoto(uri: Uri?) {
+        if (uri == null) return
+        _uiState.update {
+            it.copy(
+                selectedPhotos = listOf(SelectedPhoto(uri = uri)),
+                selectedPhotoUri = uri,
+                selectedExampleLabel = null,
+            )
+        }
+    }
+
+    fun selectPrimaryExamplePhoto(label: String) {
+        _uiState.update {
+            it.copy(
+                selectedPhotos = listOf(SelectedPhoto(exampleLabel = label)),
+                selectedPhotoUri = null,
+                selectedExampleLabel = label,
+            )
+        }
+    }
+
     fun removePhoto(index: Int) {
         _uiState.update { state ->
             val next = state.selectedPhotos.filterIndexed { slotIndex, _ -> slotIndex != index }
@@ -638,7 +727,8 @@ class HomeDecorViewModel(
             if (room in singleRoomSelections) {
                 return@update state.copy(selectedRooms = listOf(room), roomType = room)
             }
-            val selected = toggleLimited(state.selectedRooms, room, limit = 2)
+            val limit = if (state.selectedTool.id == "layout") 7 else 2
+            val selected = toggleLimited(state.selectedRooms, room, limit = limit)
             state.copy(selectedRooms = selected, roomType = selected.joinToString(" + "))
         }
     }
@@ -653,6 +743,10 @@ class HomeDecorViewModel(
 
     fun setPaletteText(palette: String) {
         _uiState.update { it.copy(palette = palette) }
+    }
+
+    fun setMobilierADeplacerText(text: String) {
+        _uiState.update { it.copy(mobilierADeplacer = text) }
     }
 
     fun setStyle(style: String) {
@@ -674,11 +768,44 @@ class HomeDecorViewModel(
     }
 
     fun setCustomPrompt(prompt: String) {
-        _uiState.update { it.copy(customPrompt = prompt) }
+        _uiState.update { state ->
+            if (state.selectedTool.id == "replace") {
+                val selectedSuggestion = HomeDecorCatalog.replaceSuggestions.firstOrNull { it == prompt }
+                state.copy(
+                    customPrompt = prompt,
+                    selectedStyles = selectedSuggestion?.let(::listOf).orEmpty(),
+                    style = selectedSuggestion.orEmpty(),
+                )
+            } else {
+                state.copy(customPrompt = prompt)
+            }
+        }
+    }
+
+    fun selectReplacementSuggestion(suggestion: String) {
+        _uiState.update {
+            it.copy(
+                selectedStyles = listOf(suggestion),
+                style = suggestion,
+                customPrompt = suggestion,
+            )
+        }
+    }
+
+    fun setLayoutConstraints(text: String) {
+        _uiState.update { it.copy(layoutConstraints = text) }
     }
 
     fun openDiamondStore() {
-        _uiState.update { it.copy(storeVisible = true) }
+        _uiState.update {
+            it.copy(
+                storeVisible = true,
+                paywallVisible = false,
+                authVisible = false,
+                settingsVisible = false,
+                purchaseMessage = null,
+            )
+        }
     }
 
     fun closeDiamondStore() {
@@ -686,7 +813,15 @@ class HomeDecorViewModel(
     }
 
     fun openPaywall() {
-        _uiState.update { it.copy(paywallVisible = true) }
+        _uiState.update {
+            it.copy(
+                paywallVisible = true,
+                authVisible = false,
+                storeVisible = false,
+                settingsVisible = false,
+                purchaseMessage = null,
+            )
+        }
     }
 
     fun closePaywall() {
@@ -694,7 +829,14 @@ class HomeDecorViewModel(
     }
 
     fun openAuth() {
-        _uiState.update { it.copy(authVisible = true) }
+        _uiState.update {
+            it.copy(
+                authVisible = true,
+                paywallVisible = false,
+                storeVisible = false,
+                settingsVisible = false,
+            )
+        }
     }
 
     fun closeAuth() {
@@ -712,7 +854,14 @@ class HomeDecorViewModel(
     }
 
     fun openSettings() {
-        _uiState.update { it.copy(settingsVisible = true) }
+        _uiState.update {
+            it.copy(
+                settingsVisible = true,
+                storeVisible = false,
+                paywallVisible = false,
+                authVisible = false,
+            )
+        }
     }
 
     fun closeSettings() {
@@ -722,7 +871,7 @@ class HomeDecorViewModel(
     fun buyDiamondPack(pack: DiamondPack) {
         _uiState.update {
             it.copy(
-                purchaseMessage = "Sélectionnez un pack réel dans Google Play pour ajouter des diamants.",
+                purchaseMessage = text(R.string.select_real_pack_google_play),
                 purchaseBusy = false,
             )
         }
@@ -744,9 +893,9 @@ class HomeDecorViewModel(
                 maskStrokes = next,
                 undoneMaskStrokes = emptyList(),
                 roomType = when (state.selectedTool.id) {
-                    "paint" -> "Mur marqué"
-                    "floor" -> "Sol marqué"
-                    "replace" -> "Objet marqué"
+                    "paint" -> text(R.string.mask_wall_marked)
+                    "floor" -> text(R.string.mask_floor_marked)
+                    "replace" -> text(R.string.mask_object_marked)
                     else -> state.roomType
                 },
             )
@@ -802,7 +951,7 @@ class HomeDecorViewModel(
         purchasedAt: Double,
     ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = "Validation de l'achat...") }
+            _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = text(R.string.purchase_validating)) }
             runCatching {
                 repository.fulfillDiamondPurchase(
                     anonymousId = anonymousId,
@@ -821,15 +970,14 @@ class HomeDecorViewModel(
                         viewer = viewer,
                         diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
                         purchaseBusy = false,
-                        storeVisible = false,
-                        purchaseMessage = "Achat confirmé. Vos diamants sont disponibles.",
+                        purchaseMessage = text(R.string.diamond_purchase_confirmed),
                     )
                 }
             }.onFailure {
                 _uiState.update {
                     it.copy(
                         purchaseBusy = false,
-                        purchaseMessage = "L'achat a réussi, mais la synchronisation a échoué. Utilisez Restaurer les achats.",
+                        purchaseMessage = text(R.string.diamond_purchase_sync_failed),
                     )
                 }
             }
@@ -844,7 +992,7 @@ class HomeDecorViewModel(
         subscriptionEnd: Double?,
     ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = "Synchronisation Pro...") }
+            _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = text(R.string.pro_syncing)) }
             runCatching {
                 repository.setViewerPlanFromRevenueCat(
                     anonymousId = anonymousId,
@@ -863,14 +1011,14 @@ class HomeDecorViewModel(
                         diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
                         paywallVisible = false,
                         purchaseBusy = false,
-                        purchaseMessage = "Pro activé avec succès.",
+                        purchaseMessage = text(R.string.pro_activated_success),
                     )
                 }
             }.onFailure {
                 _uiState.update {
                     it.copy(
                         purchaseBusy = false,
-                        purchaseMessage = "Impossible de synchroniser Pro pour le moment.",
+                        purchaseMessage = text(R.string.pro_sync_failed),
                     )
                 }
             }
@@ -881,8 +1029,8 @@ class HomeDecorViewModel(
         _uiState.update { state ->
             state.copy(
                 wizardStage = when (state.wizardStage) {
-                    WizardStage.Photo -> WizardStage.Space
-                    WizardStage.Space -> if (state.selectedTool.id in listOf("garden", "layout")) WizardStage.Refine else WizardStage.Style
+                    WizardStage.Photo -> if (state.selectedTool.id == "reference") WizardStage.Style else WizardStage.Space
+                    WizardStage.Space -> if (state.selectedTool.id == "garden") WizardStage.Refine else WizardStage.Style
                     WizardStage.Style -> WizardStage.Refine
                     WizardStage.Refine -> WizardStage.Refine
                     WizardStage.Processing -> WizardStage.Processing
@@ -898,17 +1046,54 @@ class HomeDecorViewModel(
                 wizardStage = when (state.wizardStage) {
                     WizardStage.Photo -> WizardStage.Photo
                     WizardStage.Space -> WizardStage.Photo
-                    WizardStage.Style -> WizardStage.Space
+                    WizardStage.Style -> if (state.selectedTool.id == "reference") WizardStage.Photo else WizardStage.Space
                     WizardStage.Refine -> if (state.selectedTool.id in listOf("garden", "layout")) WizardStage.Space else WizardStage.Style
-                    WizardStage.Processing -> WizardStage.Refine
-                    WizardStage.Result -> WizardStage.Refine
+                    WizardStage.Processing -> if (state.selectedTool.id == "layout") WizardStage.Space else WizardStage.Refine
+                    WizardStage.Result -> if (state.selectedTool.id == "layout") WizardStage.Space else WizardStage.Refine
                 }
             )
         }
     }
 
+    private fun ViewerSummary.claimedWithinLocalDay(now: Long = System.currentTimeMillis()): Boolean {
+        val claimedAt = lastClaimAt?.toLong() ?: return false
+        if (claimedAt <= 0 || claimedAt > now) return false
+        val claimDay = Calendar.getInstance().apply { timeInMillis = claimedAt }
+        val currentDay = Calendar.getInstance().apply { timeInMillis = now }
+        return claimDay.get(Calendar.YEAR) == currentDay.get(Calendar.YEAR) &&
+            claimDay.get(Calendar.DAY_OF_YEAR) == currentDay.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun ViewerSummary.wasDaySevenEliteClaim(now: Long = System.currentTimeMillis()): Boolean {
+        val trialActive = (proTrialExpiresAt ?: 0.0) > now
+        return status == "day7_claimed" || (claimedWithinLocalDay(now) && streakCount == 0 && trialActive)
+    }
+
+    private fun ViewerSummary.nextElitePassDay(now: Long = System.currentTimeMillis()): Int {
+        if (wasDaySevenEliteClaim(now)) return 7
+        return (streakCount + 1).coerceIn(1, 7)
+    }
+
+    private fun hasReferenceFlowImages(snapshot: HomeDecorUiState): Boolean {
+        val hasRoom = snapshot.selectedPhotos.firstOrNull() != null ||
+            snapshot.selectedPhotoUri != null ||
+            snapshot.selectedExampleLabel != null
+        val hasReference = snapshot.selectedReferenceUri != null ||
+            snapshot.selectedReferenceExampleLabel != null
+        return hasRoom && hasReference
+    }
+
     fun generate() {
         val snapshot = _uiState.value
+        if (snapshot.selectedTool.id == "reference" && !hasReferenceFlowImages(snapshot)) {
+            _uiState.update {
+                it.copy(
+                    wizardStage = WizardStage.Photo,
+                    generationError = text(R.string.reference_missing_error),
+                )
+            }
+            return
+        }
         if (snapshot.diamonds <= 0 && !snapshot.isPro) {
             _uiState.update { it.copy(selectedTab = MainTab.ElitePass) }
             return
@@ -918,19 +1103,38 @@ class HomeDecorViewModel(
             _uiState.update {
                 it.copy(
                     wizardStage = WizardStage.Processing,
-                    progressMessage = "Préparation de votre transformation...",
+                    progressMessage = text(R.string.processing_transform),
                     generationError = null,
                 )
             }
             runCatching {
                 val access = repository.canUserGenerate(anonymousId)
                 if (!access.allowed && access.shouldTriggerPaywall) {
-                    error(access.message ?: "No Diamonds left. Buy more to continue.")
+                    error(access.message ?: text(R.string.no_diamonds_error_token))
                 }
                 val source = readSelectedSource(snapshot)
                 val reference = readSelectedReference(snapshot)
                 val mask = readMaskSource(snapshot)
-                _uiState.update { it.copy(progressMessage = "Analyse de l’image...") }
+                val generationPrompt = when (snapshot.selectedTool.id) {
+                    "layout" -> buildString {
+                        append("Focused space-planning task, not a normal redesign. Re-arrange existing furniture and propose a practical room layout to gain more space and fluid circulation. Preserve the exact architectural shell, camera angle, walls, windows, doors, fixed cabinetry, flooring, wall finishes, and room structure. Do not change the decor style unless needed for small staging consistency.")
+                        if (snapshot.roomType.isNotBlank()) append(" Planning goals: ").append(snapshot.roomType).append(".")
+                        if (snapshot.layoutConstraints.isNotBlank()) append(" Constraints: ").append(snapshot.layoutConstraints).append(".")
+                        if (snapshot.style.isNotBlank()) append(" Number of people: ").append(snapshot.style).append(".")
+                        if (snapshot.palette.isNotBlank()) append(" Mobilier a garder: ").append(snapshot.palette).append(".")
+                        if (snapshot.mobilierADeplacer.isNotBlank()) append(" Mobilier a deplacer: ").append(snapshot.mobilierADeplacer).append(".")
+                        if (snapshot.customPrompt.isNotBlank()) append(" Custom notes: ").append(snapshot.customPrompt).append(".")
+                    }
+                    "reference" -> buildString {
+                        append("Reference style transfer. Use the first image as Votre piece and the second image as Image de reference.")
+                        if (snapshot.style.isNotBlank()) append(" Transfer strength: ").append(snapshot.style).append(".")
+                        if (snapshot.palette.isNotBlank()) append(" Transfer options: ").append(snapshot.palette).append(".")
+                        append(" Preserve the source room structure, camera angle, openings, and proportions.")
+                        if (snapshot.customPrompt.isNotBlank()) append(" Additional notes: ").append(snapshot.customPrompt).append(".")
+                    }
+                    else -> snapshot.customPrompt
+                }
+                _uiState.update { it.copy(progressMessage = text(R.string.progress_analyzing_image)) }
                 val start = repository.startGeneration(
                     anonymousId = anonymousId,
                     imageBytes = source.bytes,
@@ -942,13 +1146,13 @@ class HomeDecorViewModel(
                     style = snapshot.style,
                     palette = snapshot.palette,
                     designMode = snapshot.designMode,
-                    customPrompt = snapshot.customPrompt,
+                    customPrompt = generationPrompt,
                     referenceImageBytes = reference?.bytes,
                     referenceMimeType = reference?.mimeType,
                 )
-                _uiState.update { it.copy(progressMessage = "Application de la nouvelle couleur...") }
+                _uiState.update { it.copy(progressMessage = text(R.string.progress_applying_color)) }
                 val ready = repository.waitForGeneration(anonymousId, start.generationId)
-                _uiState.update { it.copy(progressMessage = "Finalisation du rendu...") }
+                _uiState.update { it.copy(progressMessage = text(R.string.progress_finalizing_render)) }
                 ready.toBoardItem() ?: BoardItem(
                     id = start.generationId,
                     toolTitle = snapshot.selectedTool.title,
@@ -957,7 +1161,7 @@ class HomeDecorViewModel(
                     imageRes = R.drawable.sample_after_luxury,
                     imageUrl = ready.imageUrl,
                     sourceImageUrl = ready.sourceImageUrl,
-                    prompt = snapshot.customPrompt,
+                    prompt = generationPrompt,
                     createdAt = System.currentTimeMillis().toDouble(),
                 )
             }.onSuccess { result ->
@@ -974,7 +1178,11 @@ class HomeDecorViewModel(
                 val message = friendlyGenerationError(error)
                 _uiState.update {
                     it.copy(
-                        wizardStage = WizardStage.Refine,
+                        wizardStage = when (snapshot.selectedTool.id) {
+                            "layout" -> WizardStage.Space
+                            "reference" -> WizardStage.Style
+                            else -> WizardStage.Refine
+                        },
                         generationError = message,
                         progressMessage = message,
                     )
@@ -985,27 +1193,38 @@ class HomeDecorViewModel(
 
     fun claimDiamond() {
         viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    elitePassSyncState = ElitePassSyncState.Syncing,
+                    elitePassSyncMessage = text(R.string.reward_syncing),
+                )
+            }
             runCatching { repository.claimDailyDiamond(anonymousId) }
                 .onSuccess { viewer ->
                     _uiState.update {
                         it.copy(
                             viewer = viewer,
                             diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
-                            eliteStreakDay = (viewer.streakCount + 1).coerceIn(1, 7),
-                            claimedToday = !viewer.canClaimDiamond,
+                            eliteStreakDay = viewer.nextElitePassDay(),
+                            claimedToday = viewer.claimedWithinLocalDay() || viewer.status == "already_claimed",
+                            eliteLastClaimWasDaySeven = viewer.wasDaySevenEliteClaim(),
+                            elitePassSyncState = ElitePassSyncState.Synced,
+                            elitePassSyncMessage = when (viewer.status) {
+                                "day7_claimed" -> text(R.string.reward_day7_synced)
+                                "claimed" -> text(R.string.reward_synced)
+                                "already_claimed" -> text(R.string.reward_already_claimed)
+                                "at_cap" -> text(R.string.daily_balance_full)
+                                else -> text(R.string.elite_pass_synced)
+                            },
                             isPro = viewer.hasProAccess,
                         )
                     }
                 }
                 .onFailure {
-                    _uiState.update { state ->
-                        val isDaySeven = state.eliteStreakDay >= 7
-                        val reward = if (isDaySeven) 3 else 1
-                        state.copy(
-                            diamonds = if (isDaySeven) state.diamonds + reward else (state.diamonds + reward).coerceAtMost(3),
-                            eliteStreakDay = if (isDaySeven) 7 else state.eliteStreakDay + 1,
-                            claimedToday = true,
-                            isPro = state.isPro || isDaySeven,
+                    _uiState.update {
+                        it.copy(
+                            elitePassSyncState = ElitePassSyncState.Error,
+                            elitePassSyncMessage = text(R.string.reward_claim_unconfirmed),
                         )
                     }
                 }
@@ -1057,7 +1276,7 @@ class HomeDecorViewModel(
             val resId = exampleImageResFor(snapshot.selectedTool.id)
             val bytes = appContext.resources.openRawResource(resId).use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream)
-                    ?: error("Impossible de préparer l'image d'exemple.")
+                    ?: error(text(R.string.prepare_example_failed))
                 bitmap.toJpegBytes()
             }
             return SourceImage(bytes, "image/jpeg")
@@ -1066,7 +1285,7 @@ class HomeDecorViewModel(
         val resId = exampleImageResFor(snapshot.selectedTool.id)
         val bytes = appContext.resources.openRawResource(resId).use { stream ->
             val bitmap = BitmapFactory.decodeStream(stream)
-                ?: error("Impossible de préparer l'image d'exemple.")
+                ?: error(text(R.string.prepare_example_failed))
             bitmap.toJpegBytes()
         }
         return SourceImage(bytes, "image/jpeg")
@@ -1078,7 +1297,7 @@ class HomeDecorViewModel(
         if (snapshot.selectedReferenceExampleLabel != null) {
             val bytes = appContext.resources.openRawResource(R.drawable.tool_reference).use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream)
-                    ?: error("Impossible de préparer l'image de référence.")
+                    ?: error(text(R.string.prepare_reference_failed))
                 bitmap.toJpegBytes()
             }
             return SourceImage(bytes, "image/jpeg")
@@ -1088,8 +1307,8 @@ class HomeDecorViewModel(
 
     private fun readMaskSource(snapshot: HomeDecorUiState): SourceImage? {
         if (snapshot.selectedTool.id !in setOf("paint", "floor", "replace")) return null
-        if (snapshot.maskStrokes.none { !it.erase && it.points.size > 1 }) {
-            error("A real mask is required before generating.")
+        if (!snapshot.maskStrokes.hasVisibleMaskPaint()) {
+            error(text(R.string.real_mask_required_error))
         }
         return SourceImage(snapshot.maskStrokes.toMaskPngBytes(), "image/png")
     }
@@ -1097,10 +1316,10 @@ class HomeDecorViewModel(
     private fun readUriSource(uri: Uri): SourceImage {
         val bytes = appContext.contentResolver.openInputStream(uri)?.use { stream ->
             val bitmap = BitmapFactory.decodeStream(stream)
-                ?: error("Impossible de lire l'image sélectionnée.")
+                ?: error(text(R.string.read_selected_image_failed))
             bitmap.toJpegBytes()
         }
-            ?: error("Impossible de lire l'image sélectionnée.")
+            ?: error(text(R.string.read_selected_image_failed))
         return SourceImage(bytes, "image/jpeg")
     }
 
@@ -1112,29 +1331,7 @@ class HomeDecorViewModel(
     }
 
     private fun List<MaskStroke>.toMaskPngBytes(): ByteArray {
-        val width = 1024
-        val height = 1024
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeCap = Paint.Cap.ROUND
-            strokeJoin = Paint.Join.ROUND
-        }
-        forEach { stroke ->
-            if (stroke.points.size < 2) return@forEach
-            paint.strokeWidth = stroke.brushSize.coerceIn(8f, 96f)
-            paint.color = if (stroke.erase) Color.TRANSPARENT else Color.WHITE
-            paint.xfermode = if (stroke.erase) android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) else null
-            val path = Path().apply {
-                val first = stroke.points.first()
-                moveTo(first.x.coerceIn(0f, 1f) * width, first.y.coerceIn(0f, 1f) * height)
-                stroke.points.drop(1).forEach { point ->
-                    lineTo(point.x.coerceIn(0f, 1f) * width, point.y.coerceIn(0f, 1f) * height)
-                }
-            }
-            canvas.drawPath(path, paint)
-        }
+        val bitmap = toMaskBitmap(size = 1024)
         return ByteArrayOutputStream().use { output ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
             output.toByteArray()
@@ -1144,21 +1341,21 @@ class HomeDecorViewModel(
     private fun friendlyGenerationError(error: Throwable): String {
         val message = error.message.orEmpty()
         return when {
-            "A real mask" in message ->
-                "Marquez la zone à transformer avant de générer."
+            text(R.string.real_mask_required_error) in message ->
+                text(R.string.mark_area_before_generate)
             "401" in message || "403" in message || "Access denied" in message || "subscription" in message || "Azure" in message || "OpenAI" in message ->
-                "La génération IA est momentanément indisponible. Réessayez dans un instant ou vérifiez la configuration du service."
+                text(R.string.ai_generation_unavailable)
             "No Diamonds" in message || "Diamonds left" in message ->
-                "Vous n'avez plus de diamants. Rechargez votre solde pour continuer."
+                text(R.string.no_diamonds_recharge)
             "converted to a JPG or PNG" in message ->
-                "Cette image n'a pas pu être préparée. Essayez une photo JPG ou PNG."
+                text(R.string.image_prepare_failed)
             "still processing" in message ->
-                "Votre design prend plus de temps que prévu. Retrouvez-le dans le portfolio dans quelques instants."
+                text(R.string.design_processing_delayed)
             "Generation failed" in message || "Convex" in message || "upload" in message || "API" in message ->
-                "La génération a échoué. Vérifiez votre connexion ou réessayez."
+                text(R.string.generation_failed_retry)
             message.isNotBlank() && message.any { it in 'à'..'ÿ' } -> message
-            message.isNotBlank() -> "La génération a échoué. Vérifiez votre connexion ou réessayez."
-            else -> "La génération a échoué. Vérifiez votre connexion ou réessayez."
+            message.isNotBlank() -> text(R.string.generation_failed_retry)
+            else -> text(R.string.generation_failed_retry)
         }
     }
 

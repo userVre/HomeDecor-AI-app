@@ -56,13 +56,20 @@ async function syncDailyStreakState(ctx: any, user: any, now: number) {
   const lastLoginDate = toFiniteNumber(user?.lastLoginDate);
   const lastClaimAt = getLastClaimAt(user);
   const nextStreakCount = resolveDisplayStreakCount(currentStreak, lastClaimAt, now);
-  const canClaimDiamond = false;
   const nextProTrialExpiresAt = Math.max(toFiniteNumber(user?.proTrialExpiresAt), 0);
   const normalizedProTrialExpiresAt = nextProTrialExpiresAt > 0 && nextProTrialExpiresAt <= now ? null : nextProTrialExpiresAt || null;
   const hasActivePaidSubscription =
     (user?.subscriptionType === "weekly" || user?.subscriptionType === "yearly")
     && toFiniteNumber(user?.subscriptionEnd) > now;
   const diamondBalance = getDailyDiamondBalance(user);
+  const elapsedSinceClaim = lastClaimAt > 0 ? now - lastClaimAt : Number.POSITIVE_INFINITY;
+  const missedClaim = lastClaimAt > 0 && elapsedSinceClaim > MISSED_DAILY_CLAIM_RESET_MS;
+  const nextClaimStreak = (missedClaim ? 0 : currentStreak) + 1;
+  const isDay7Claim = nextClaimStreak >= 7;
+  const canClaimDiamond =
+    (lastClaimAt <= 0 || elapsedSinceClaim >= DAY_MS)
+    && (diamondBalance < DAILY_CLAIM_BALANCE_CAP || isDay7Claim);
+  const nextDiamondClaimAt = lastClaimAt > 0 && elapsedSinceClaim < DAY_MS ? lastClaimAt + DAY_MS : 0;
 
   const patch = omitUndefined({
     streakCount: nextStreakCount,
@@ -70,7 +77,7 @@ async function syncDailyStreakState(ctx: any, user: any, now: number) {
     lastClaimDate: typeof user?.lastClaimDate === "number" ? undefined : 0,
     lastClaimAt: user?.lastClaimAt === undefined ? lastClaimAt : undefined,
     diamondBalance: typeof user?.diamondBalance === "number" && user.diamondBalance === diamondBalance ? undefined : diamondBalance,
-    nextDiamondClaimAt: toFiniteNumber(user?.nextDiamondClaimAt) !== 0 ? 0 : undefined,
+    nextDiamondClaimAt: toFiniteNumber(user?.nextDiamondClaimAt) !== nextDiamondClaimAt ? nextDiamondClaimAt : undefined,
     canClaimDiamond,
     eliteProUntil: toFiniteNumber(user?.eliteProUntil) !== 0 ? 0 : undefined,
     proTrialExpiresAt: user?.proTrialExpiresAt !== normalizedProTrialExpiresAt ? normalizedProTrialExpiresAt : undefined,
@@ -109,7 +116,7 @@ const DIAMOND_PACK_COUNTS = {
 const TEST_DIAMOND_GRANT_COUNT = 10;
 const REFERRAL_INSTALL_REWARD_DIAMONDS = 1;
 const REFERRAL_PRO_REWARD_DIAMONDS = 5;
-const DAILY_CLAIM_BALANCE_CAP = 2;
+const DAILY_CLAIM_BALANCE_CAP = FREE_DAILY_DIAMOND_CAP;
 const MISSED_DAILY_CLAIM_RESET_MS = 26 * 60 * 60 * 1000;
 type DiamondSource = "daily_free" | "purchased_pack" | "referral";
 const DIAMOND_SOURCES = new Set<DiamondSource>(["daily_free", "purchased_pack", "referral"]);
@@ -218,6 +225,29 @@ function getLastClaimAt(user: any) {
 function getDailyDiamondBalance(user: any) {
   const fallback = Math.min(Math.max(toFiniteNumber(user?.credits, INITIAL_FREE_DIAMONDS), 0), FREE_DAILY_DIAMOND_CAP);
   return Math.max(toFiniteNumber(user?.diamondBalance, fallback), 0);
+}
+
+function getDailyClaimPreview(user: any, now: number) {
+  const lastClaimAt = getLastClaimAt(user);
+  const elapsedSinceClaim = lastClaimAt > 0 ? now - lastClaimAt : Number.POSITIVE_INFINITY;
+  const missedClaim = lastClaimAt > 0 && elapsedSinceClaim > MISSED_DAILY_CLAIM_RESET_MS;
+  const baseStreak = missedClaim ? 0 : Math.max(toFiniteNumber(user?.streakCount), 0);
+  const nextClaimStreak = baseStreak + 1;
+  const isDay7Claim = nextClaimStreak >= 7;
+  const diamondBalance = getDailyDiamondBalance(user);
+  const timeEligible = lastClaimAt <= 0 || elapsedSinceClaim >= DAY_MS;
+  const canClaimDiamond = timeEligible && (diamondBalance < DAILY_CLAIM_BALANCE_CAP || isDay7Claim);
+  return {
+    lastClaimAt,
+    elapsedSinceClaim,
+    missedClaim,
+    baseStreak,
+    nextClaimStreak,
+    isDay7Claim,
+    diamondBalance,
+    canClaimDiamond,
+    nextDiamondClaimAt: timeEligible ? 0 : lastClaimAt + DAY_MS,
+  };
 }
 
 function buildWelcomeDiamondPatch(user: any) {
@@ -339,7 +369,9 @@ function buildViewerResponse(user: any) {
     return null;
   }
 
-  const state = deriveSubscriptionState(user, Date.now());
+  const now = Date.now();
+  const state = deriveSubscriptionState(user, now);
+  const claimPreview = getDailyClaimPreview({ ...user, diamondBalance: state.diamondBalance }, now);
   return {
     ...user,
     credits: state.remaining,
@@ -358,8 +390,15 @@ function buildViewerResponse(user: any) {
     lastLoginDate: state.lastLoginDate,
     lastClaimDate: state.lastClaimDate,
     lastClaimAt: state.lastClaimAt,
-    nextDiamondClaimAt: state.nextDiamondClaimAt,
-    canClaimDiamond: state.canClaimDiamond,
+    nextDiamondClaimAt: claimPreview.nextDiamondClaimAt,
+    canClaimDiamond: claimPreview.canClaimDiamond,
+    claimStatus: claimPreview.canClaimDiamond
+      ? claimPreview.isDay7Claim
+        ? "day7_available"
+        : "available"
+      : claimPreview.diamondBalance >= DAILY_CLAIM_BALANCE_CAP && !claimPreview.isDay7Claim
+        ? "at_cap"
+        : "locked",
     eliteProUntil: state.eliteProUntil,
     proTrialExpiresAt: state.proTrialExpiresAt,
     shouldShowProTrialEndedPaywall: Boolean(user.proTrialEndedPaywallPending),
@@ -407,10 +446,11 @@ function buildDiamondStateResponse(user: any) {
 
   const now = Date.now();
   const state = deriveSubscriptionState(user, now);
-  const diamondBalance = getDailyDiamondBalance({ ...user, diamondBalance: state.diamondBalance });
-  const lastClaimAt = Math.max(state.lastClaimAt, state.lastClaimDate);
-  const nextEligibleAt = 0;
-  const canClaimDiamond = false;
+  const claimPreview = getDailyClaimPreview({ ...user, diamondBalance: state.diamondBalance }, now);
+  const diamondBalance = claimPreview.diamondBalance;
+  const lastClaimAt = claimPreview.lastClaimAt;
+  const nextEligibleAt = claimPreview.nextDiamondClaimAt;
+  const canClaimDiamond = claimPreview.canClaimDiamond;
 
   return {
     userId: user.clerkId ?? (user.anonymousId ? toGuestUserId(user.anonymousId) : String(user._id)),
@@ -423,11 +463,13 @@ function buildDiamondStateResponse(user: any) {
     lastClaimAt,
     lastClaimDate: state.lastClaimDate,
     nextEligibleAt,
-    nextDiamondClaimAt: 0,
+    nextDiamondClaimAt: claimPreview.nextDiamondClaimAt,
     canClaimDiamond,
-    claimStatus: diamondBalance >= FREE_DAILY_DIAMOND_CAP
+    claimStatus: diamondBalance >= FREE_DAILY_DIAMOND_CAP && !claimPreview.isDay7Claim
       ? "already_at_cap"
-      : "disabled",
+      : canClaimDiamond
+        ? claimPreview.isDay7Claim ? "day7_available" : "available"
+        : "locked",
     dailyClaimLockedMessage: diamondBalance >= FREE_DAILY_DIAMOND_CAP
       ? "Come back after you design!"
       : null,
@@ -478,7 +520,12 @@ async function claimDailyDiamondHandler(ctx: any, args: { anonymousId?: string }
     };
   }
 
-  if (currentDiamondBalance >= DAILY_CLAIM_BALANCE_CAP) {
+  const missedClaim = lastClaimAt > 0 && elapsedSinceClaim > MISSED_DAILY_CLAIM_RESET_MS;
+  const baseStreak = missedClaim ? 0 : Math.max(toFiniteNumber(user.streakCount), 0);
+  const nextClaimStreak = baseStreak + 1;
+  const isDay7Claim = nextClaimStreak >= 7;
+
+  if (currentDiamondBalance >= DAILY_CLAIM_BALANCE_CAP && !isDay7Claim) {
     return {
       status: "at_cap" as const,
       granted: false,
@@ -497,10 +544,6 @@ async function claimDailyDiamondHandler(ctx: any, args: { anonymousId?: string }
     };
   }
 
-  const missedClaim = lastClaimAt > 0 && elapsedSinceClaim > MISSED_DAILY_CLAIM_RESET_MS;
-  const baseStreak = missedClaim ? 0 : Math.max(toFiniteNumber(user.streakCount), 0);
-  const nextClaimStreak = baseStreak + 1;
-  const isDay7Claim = nextClaimStreak >= 7;
   const creditsAdded = isDay7Claim ? 3 : 1;
   const nextCredits = currentCredits + creditsAdded;
   const nextDiamondBalance = currentDiamondBalance + creditsAdded;
@@ -1074,8 +1117,8 @@ async function persistRevenueCatPlanForUser(
 export const setPlanFromRevenueCat = mutationGeneric({
   args: {
     plan: v.string(),
-    subscriptionType: v.optional(v.union(v.literal("weekly"), v.literal("yearly"), v.literal("free"))),
-    subscriptionEntitlement: v.optional(v.union(v.literal("weekly_pro"), v.literal("annual_pro"), v.literal("free"))),
+    subscriptionType: v.optional(v.union(v.literal("weekly"), v.literal("monthly"), v.literal("yearly"), v.literal("free"))),
+    subscriptionEntitlement: v.optional(v.union(v.literal("weekly_pro"), v.literal("monthly_pro"), v.literal("annual_pro"), v.literal("free"))),
     purchasedAt: v.optional(v.number()),
     subscriptionEnd: v.optional(v.number()),
   },
@@ -1096,8 +1139,8 @@ export const setViewerPlanFromRevenueCat = mutationGeneric({
   args: {
     anonymousId: v.optional(v.string()),
     plan: v.string(),
-    subscriptionType: v.optional(v.union(v.literal("weekly"), v.literal("yearly"), v.literal("free"))),
-    subscriptionEntitlement: v.optional(v.union(v.literal("weekly_pro"), v.literal("annual_pro"), v.literal("free"))),
+    subscriptionType: v.optional(v.union(v.literal("weekly"), v.literal("monthly"), v.literal("yearly"), v.literal("free"))),
+    subscriptionEntitlement: v.optional(v.union(v.literal("weekly_pro"), v.literal("monthly_pro"), v.literal("annual_pro"), v.literal("free"))),
     purchasedAt: v.optional(v.number()),
     subscriptionEnd: v.optional(v.number()),
     pricingTier: v.optional(v.string()),
@@ -1188,8 +1231,8 @@ export const syncRevenueCatSubscriptionInternal = mutationGeneric({
   args: {
     clerkId: v.string(),
     plan: v.union(v.literal("free"), v.literal("trial"), v.literal("pro")),
-    subscriptionType: v.union(v.literal("weekly"), v.literal("yearly"), v.literal("free")),
-    subscriptionEntitlement: v.optional(v.union(v.literal("weekly_pro"), v.literal("annual_pro"), v.literal("free"))),
+    subscriptionType: v.union(v.literal("weekly"), v.literal("monthly"), v.literal("yearly"), v.literal("free")),
+    subscriptionEntitlement: v.optional(v.union(v.literal("weekly_pro"), v.literal("monthly_pro"), v.literal("annual_pro"), v.literal("free"))),
     purchasedAt: v.optional(v.number()),
     subscriptionEnd: v.optional(v.number()),
     internalToken: v.optional(v.string()),

@@ -14,12 +14,14 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +52,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.Help
 import androidx.compose.material.icons.automirrored.rounded.ViewQuilt
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -61,7 +65,6 @@ import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Explore
-import androidx.compose.material.icons.rounded.Help
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Landscape
 import androidx.compose.material.icons.rounded.Language
@@ -72,12 +75,10 @@ import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.RateReview
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Redo
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Undo
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -85,6 +86,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -124,6 +126,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -132,10 +135,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.content.FileProvider
 import com.ismail.homedecorai.BoardItem
+import com.ismail.homedecorai.AppLocale
 import com.ismail.homedecorai.BuildConfig
 import com.ismail.homedecorai.DecorTool
 import com.ismail.homedecorai.DiamondPack
 import com.ismail.homedecorai.DiscoverSection
+import com.ismail.homedecorai.ElitePassSyncState
 import com.ismail.homedecorai.GalleryItem
 import com.ismail.homedecorai.HomeDecorCatalog
 import com.ismail.homedecorai.HomeDecorUiState
@@ -146,10 +151,12 @@ import com.ismail.homedecorai.MaskStroke
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.SelectedPhoto
 import com.ismail.homedecorai.WizardStage
+import com.ismail.homedecorai.hasVisibleMaskPaint
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.Package
 import com.revenuecat.purchases.PackageType
+import com.revenuecat.purchases.PurchaseParams
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.PurchasesError
 import com.revenuecat.purchases.interfaces.PurchaseCallback
@@ -163,53 +170,263 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 
-private val StudioInk = Color(0xFF11140F)
-private val StudioBlue = Color(0xFF435BFF)
-private val StudioGreen = Color(0xFF26763A)
-private val StudioMint = Color(0xFF94EFE0)
-private val StudioMoss = Color(0xFF5B6B74)
-private val StudioRose = Color(0xFFE85D76)
-private val StudioCanvas = Color(0xFFFCFCFF)
+private val StudioInk = Color(0xFF171A18)
+private val StudioBlue = Color(0xFF2F5EBA)
+private val StudioGreen = StudioBlue
+private val StudioMoss = Color(0xFF60645F)
+private val StudioRose = Color(0xFFB3261E)
+private val StudioCanvas = Color(0xFFF5F4F0)
 private val StudioPaper = Color(0xFFFFFFFF)
-private val StudioMist = Color(0xFFF0F2FF)
-private val StudioLine = Color(0xFFD9DEEA)
-private val StudioBlack = Color(0xFF080A07)
-private val StudioGold = Color(0xFFD8AE48)
-private val StudioSky = Color(0xFF59C9F7)
-private val StudioViolet = Color(0xFF7367F0)
+private val StudioMist = Color(0xFFE9EBE4)
+private val StudioLine = Color(0xFFD6D9D1)
+private val StudioBlack = Color(0xFF121411)
+private val StudioGold = Color(0xFFB78632)
+private val StudioSky = StudioBlue
+private val StudioViolet = StudioBlue
+private val StudioPrimaryContainer = Color(0xFFE8EEF9)
+private val StudioProContainer = Color(0xFFFFF3D9)
+private val StudioErrorContainer = Color(0xFFFFEDEA)
+
+private fun studioStateContainer(selected: Boolean): Color = if (selected) StudioPrimaryContainer else StudioPaper
+private fun studioStateBorder(selected: Boolean): Color = if (selected) StudioBlue else StudioLine
+private fun studioStateElevation(selected: Boolean) = if (selected) 4.dp else 1.dp
+private fun studioStateIconContainer(selected: Boolean): Color = if (selected) StudioBlue else StudioMist
+@Composable
+private fun studioStateIconContent(selected: Boolean): Color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+
+private data class StepCopy(
+    @StringRes val titleRes: Int,
+    @StringRes val bodyRes: Int,
+    val options: List<String> = emptyList(),
+)
+
+@StringRes
+private fun tabLabelRes(tab: MainTab): Int = when (tab) {
+    MainTab.Tools -> R.string.nav_tools
+    MainTab.ElitePass -> R.string.nav_elite_pass
+    MainTab.Discover -> R.string.nav_discover
+    MainTab.Profile -> R.string.nav_profile
+    MainTab.Create -> R.string.workflow_interior
+}
+
+@StringRes
+private fun toolTitleRes(tool: DecorTool): Int = when (tool.id) {
+    "interior" -> R.string.tool_interior_title
+    "facade" -> R.string.tool_facade_title
+    "garden" -> R.string.tool_garden_title
+    "paint" -> R.string.tool_paint_title
+    "floor" -> R.string.tool_floor_title
+    "layout" -> R.string.tool_layout_title
+    "replace" -> R.string.tool_replace_title
+    "reference" -> R.string.tool_reference_title
+    else -> R.string.app_name
+}
+
+@StringRes
+private fun toolDescriptionRes(tool: DecorTool): Int = when (tool.id) {
+    "interior" -> R.string.tool_interior_description
+    "facade" -> R.string.tool_facade_description
+    "garden" -> R.string.tool_garden_description
+    "paint" -> R.string.tool_paint_description
+    "floor" -> R.string.tool_floor_description
+    "layout" -> R.string.tool_layout_description
+    "replace" -> R.string.tool_replace_description
+    "reference" -> R.string.tool_reference_description
+    else -> R.string.tool_interior_description
+}
+
+@StringRes
+private fun workflowTitleRes(tool: DecorTool): Int = when (tool.id) {
+    "interior" -> R.string.workflow_interior
+    "facade" -> R.string.workflow_exterior
+    "garden" -> R.string.workflow_garden
+    "paint" -> R.string.workflow_paint
+    "floor" -> R.string.workflow_floor
+    "layout" -> R.string.workflow_layout
+    "replace" -> R.string.workflow_replace
+    "reference" -> R.string.workflow_reference
+    else -> toolTitleRes(tool)
+}
+
+@Composable
+private fun localizedToolTitle(tool: DecorTool): String = stringResource(toolTitleRes(tool))
+
+@Composable
+private fun localizedToolDescription(tool: DecorTool): String = stringResource(toolDescriptionRes(tool))
+
+@Composable
+private fun localizedWorkflowTitle(tool: DecorTool): String = stringResource(workflowTitleRes(tool))
+
+@StringRes
+private fun optionLabelRes(label: String): Int? = when (label) {
+    "Suggestion IA" -> R.string.option_ai_suggestion
+    "Salon" -> R.string.option_room_living_room
+    "Chambre à coucher" -> R.string.option_room_bedroom
+    "Cuisine" -> R.string.option_room_kitchen
+    "Salle de bain" -> R.string.option_room_bathroom
+    "Bureau à domicile" -> R.string.option_room_home_office
+    "Salle à manger" -> R.string.option_room_dining_room
+    "Chambre d'enfant" -> R.string.option_room_child_room
+    "Cinéma maison" -> R.string.option_room_home_cinema
+    "Salle de jeux" -> R.string.option_room_game_room
+    "Entrée / couloir" -> R.string.option_room_entry_hall
+    "Bibliothèque" -> R.string.option_room_library
+    "Blanchisserie" -> R.string.option_room_laundry
+    "Appartement" -> R.string.option_building_apartment
+    "Maison" -> R.string.option_building_house
+    "Immeuble de bureaux" -> R.string.option_building_office
+    "Résidentiel" -> R.string.option_building_residential
+    "Vente au détail" -> R.string.option_building_retail
+    "Villa" -> R.string.option_building_villa
+    "Noël" -> R.string.option_garden_christmas
+    "Moderne" -> R.string.option_style_modern
+    "Luxe" -> R.string.option_style_luxury
+    "Japandi" -> R.string.option_style_japandi
+    "Cyberpunk" -> R.string.option_style_cyberpunk
+    "Tropicale" -> R.string.option_style_tropical
+    "Minimaliste" -> R.string.option_style_minimalist
+    "Scandinave" -> R.string.option_style_scandinavian
+    "Bohème" -> R.string.option_style_bohemian
+    "Midcentury" -> R.string.option_style_midcentury
+    "Art Deco" -> R.string.option_style_art_deco
+    "Côtier" -> R.string.option_style_coastal
+    "Rustique" -> R.string.option_style_rustic
+    "Vintage" -> R.string.option_style_vintage
+    "Méditerranéen" -> R.string.option_style_mediterranean
+    "Glam" -> R.string.option_style_glam
+    "Campagne française" -> R.string.option_style_french_country
+    "Mur" -> R.string.option_mask_wall
+    "Sol" -> R.string.option_mask_floor
+    "Sofa" -> R.string.option_mask_sofa
+    "Table" -> R.string.option_mask_table
+    "Cabinet" -> R.string.option_mask_cabinet
+    "Éclairage" -> R.string.option_mask_lighting
+    "Parquet clair" -> R.string.option_floor_light_wood
+    "Parquet foncé" -> R.string.option_floor_dark_wood
+    "Marbre" -> R.string.option_floor_marble
+    "Béton ciré" -> R.string.option_floor_polished_concrete
+    "Carrelage moderne" -> R.string.option_floor_modern_tile
+    "Pierre naturelle" -> R.string.option_floor_natural_stone
+    "Vinyle premium" -> R.string.option_floor_premium_vinyl
+    "Tapis élégant" -> R.string.option_floor_elegant_carpet
+    "Circulation ouverte" -> R.string.option_layout_open_flow
+    "Plus de rangement" -> R.string.option_layout_more_storage
+    "Coin bureau" -> R.string.option_layout_office_corner
+    "Espace familial" -> R.string.option_layout_family_space
+    "Salon plus spacieux" -> R.string.option_layout_larger_living_room
+    "Meilleure lumière" -> R.string.option_layout_better_light
+    "Réorganisation complète" -> R.string.option_layout_full_reorg
+    "Subtil" -> R.string.option_reference_subtle
+    "Équilibré" -> R.string.option_reference_balanced
+    "Fidèle" -> R.string.option_reference_faithful
+    "Très fidèle" -> R.string.option_reference_very_faithful
+    "Palette seulement" -> R.string.option_reference_palette_only
+    "Matériaux" -> R.string.option_reference_materials
+    "Mobilier" -> R.string.option_reference_furniture
+    "Lumière" -> R.string.option_reference_light
+    "Ambiance complète" -> R.string.option_reference_full_mood
+    "Blanc chaud" -> R.string.option_paint_warm_white
+    "Beige" -> R.string.option_paint_beige
+    "Gris clair" -> R.string.option_paint_light_gray
+    "Vert sauge" -> R.string.option_paint_sage_green
+    "Bleu doux" -> R.string.option_paint_soft_blue
+    "Terracotta" -> R.string.option_paint_terracotta
+    "Noir élégant" -> R.string.option_paint_elegant_black
+    "Canapé beige moderne" -> R.string.option_replace_sofa
+    "Table basse en bois clair" -> R.string.option_replace_coffee_table
+    "Suspension noire minimaliste" -> R.string.option_replace_black_pendant
+    "Grande plante en pot" -> R.string.option_replace_potted_plant
+    "Fauteuil bouclé crème" -> R.string.option_replace_boucle_armchair
+    "Meuble TV noyer épuré" -> R.string.option_replace_tv_unit
+    "Mélange organisé" -> R.string.option_palette_curated_mix
+    "Gris millénaire" -> R.string.option_palette_millennial_gray
+    "Mirage en terre cuite" -> R.string.option_palette_terracotta_mirage
+    "Teintes forestières" -> R.string.option_palette_forest_tones
+    "Verger de pêchers" -> R.string.option_palette_peach_orchard
+    "Fleur fuchsia" -> R.string.option_palette_fuchsia_bloom
+    "Gemme d'émeraude" -> R.string.option_palette_emerald_gem
+    "Brise pastel" -> R.string.option_palette_pastel_breeze
+    "Brume océanique" -> R.string.option_palette_ocean_mist
+    "Crépuscule de velours" -> R.string.option_palette_velvet_twilight
+    "Rêve d'améthyste" -> R.string.option_palette_amethyst_dream
+    "Fuchsia Noir" -> R.string.option_palette_fuchsia_noir
+    "Conserver la structure" -> R.string.option_design_preserve
+    "Rénover librement" -> R.string.option_design_free
+    else -> null
+}
+
+@Composable
+private fun localizedOption(label: String): String = optionLabelRes(label)?.let { stringResource(it) } ?: label
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HomeDecorApp(viewModel: HomeDecorViewModel) {
+fun HomeDecorApp(
+    viewModel: HomeDecorViewModel,
+    currentLanguageTag: String,
+    onLanguageSelected: (String) -> Unit,
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     MaterialExpressiveTheme(
         colorScheme = expressiveLightColorScheme().copy(
             primary = StudioBlue,
             onPrimary = Color.White,
-            primaryContainer = Color(0xFFE7EAFF),
-            onPrimaryContainer = Color(0xFF16226E),
+            primaryContainer = StudioPrimaryContainer,
+            onPrimaryContainer = StudioInk,
             secondary = StudioMoss,
-            tertiary = StudioRose,
+            tertiary = StudioGold,
+            onTertiary = StudioInk,
+            tertiaryContainer = StudioProContainer,
+            onTertiaryContainer = StudioInk,
+            error = StudioRose,
+            errorContainer = StudioErrorContainer,
             surface = StudioCanvas,
             surfaceContainer = StudioPaper,
             surfaceContainerHigh = StudioMist,
             background = StudioCanvas,
             onSurface = StudioInk,
-            onSurfaceVariant = Color(0xFF606575),
+            onSurfaceVariant = Color(0xFF62665F),
             outlineVariant = StudioLine,
         ),
     ) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            AppScaffold(state = state, viewModel = viewModel)
+            AppScaffold(
+                state = state,
+                viewModel = viewModel,
+                currentLanguageTag = currentLanguageTag,
+                onLanguageSelected = onLanguageSelected,
+            )
         }
     }
 }
 
 @Composable
+private fun studioPrimaryButtonColors() = ButtonDefaults.buttonColors(
+    containerColor = StudioBlue,
+    contentColor = Color.White,
+    disabledContainerColor = StudioMist,
+    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+)
+
+@Composable
+private fun studioProButtonColors() = ButtonDefaults.buttonColors(
+    containerColor = StudioGold,
+    contentColor = StudioInk,
+    disabledContainerColor = Color.White.copy(alpha = 0.14f),
+    disabledContentColor = Color.White.copy(alpha = 0.62f),
+)
+
+@Composable
 private fun AppScaffold(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
+    currentLanguageTag: String,
+    onLanguageSelected: (String) -> Unit,
 ) {
+    val modalVisible = state.storeVisible ||
+        state.paywallVisible ||
+        state.authVisible ||
+        state.settingsVisible ||
+        !state.disclosureAccepted
     BackHandler(enabled = state.storeVisible) {
         viewModel.closeDiamondStore()
     }
@@ -225,7 +442,7 @@ private fun AppScaffold(
     Scaffold(
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            if (state.selectedTab != MainTab.Create && !state.storeVisible) {
+            if (state.selectedTab != MainTab.Create && !modalVisible) {
             NavigationBar(
                 modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars),
                 tonalElevation = 0.dp,
@@ -236,10 +453,10 @@ private fun AppScaffold(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, "Outils", viewModel::selectTab)
-                    NavItem(MainTab.ElitePass, state.selectedTab, Icons.Rounded.Star, "Pass Elite", viewModel::selectTab)
-                    NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, "Découvrir", viewModel::selectTab)
-                    NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Person, "Profil", viewModel::selectTab)
+                    NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, stringResource(tabLabelRes(MainTab.Tools)), viewModel::selectTab)
+                    NavItem(MainTab.ElitePass, state.selectedTab, Icons.Rounded.Star, stringResource(tabLabelRes(MainTab.ElitePass)), viewModel::selectTab)
+                    NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, stringResource(tabLabelRes(MainTab.Discover)), viewModel::selectTab)
+                    NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
                 }
             }
             }
@@ -256,36 +473,36 @@ private fun AppScaffold(
                 }
             }
 
-            if (state.storeVisible) {
-                DiamondStoreSheet(
-                    state = state,
-                    onClose = viewModel::closeDiamondStore,
-                    onPack = viewModel::buyDiamondPack,
-                    onFulfill = viewModel::fulfillDiamondPurchase,
-                )
-            }
-
-            if (state.paywallVisible) {
-                PaywallSheet(
-                    state = state,
-                    onClose = viewModel::closePaywall,
-                    onSubscription = viewModel::syncSubscriptionFromRevenueCat,
-                    onStore = viewModel::openDiamondStore,
-                )
-            }
-
-            if (state.authVisible) {
-                AuthSheet(
-                    onClose = viewModel::closeAuth,
-                    onGoogle = viewModel::signInWithGooglePreview,
-                )
-            }
-
-            if (state.settingsVisible) {
-                SettingsSheet(
-                    onClose = viewModel::closeSettings,
-                    onStore = viewModel::openDiamondStore,
-                )
+            when {
+                state.storeVisible -> {
+                    DiamondStoreSheet(
+                        state = state,
+                        onClose = viewModel::closeDiamondStore,
+                        onFulfill = viewModel::fulfillDiamondPurchase,
+                    )
+                }
+                state.paywallVisible -> {
+                    PaywallSheet(
+                        state = state,
+                        onClose = viewModel::closePaywall,
+                        onSubscription = viewModel::syncSubscriptionFromRevenueCat,
+                        onStore = viewModel::openDiamondStore,
+                    )
+                }
+                state.authVisible -> {
+                    AuthSheet(
+                        onClose = viewModel::closeAuth,
+                        onGoogle = viewModel::signInWithGooglePreview,
+                    )
+                }
+                state.settingsVisible -> {
+                    SettingsSheet(
+                        onClose = viewModel::closeSettings,
+                        onStore = viewModel::openDiamondStore,
+                        currentLanguageTag = currentLanguageTag,
+                        onLanguageSelected = onLanguageSelected,
+                    )
+                }
             }
 
             if (!state.disclosureAccepted) {
@@ -318,13 +535,13 @@ private fun NavItem(
                 .width(50.dp)
                 .height(30.dp)
                 .clip(CircleShape)
-                .background(if (selected) StudioMint else Color.Transparent),
+                .background(if (selected) StudioPrimaryContainer else Color.Transparent),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 icon,
                 contentDescription = label,
-                tint = if (selected) StudioInk else Color(0xFF49454F),
+                tint = if (selected) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp),
             )
         }
@@ -333,7 +550,7 @@ private fun NavItem(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.labelSmall,
-            color = if (selected) StudioInk else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (selected) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
         )
     }
@@ -406,18 +623,18 @@ private fun ToolsHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             CreditPill(state, compact = true, onClick = onCredits)
-            Text("Outils", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.nav_tools), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
             Surface(
                 onClick = onPass,
                 shape = CircleShape,
-                color = StudioMint,
+                color = if (state.isPro) StudioProContainer else StudioPrimaryContainer,
                 tonalElevation = 1.dp,
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(if (state.isPro) "Pro" else "Passer à Pro", fontWeight = FontWeight.Bold)
+                    Text(if (state.isPro) stringResource(R.string.pro) else stringResource(R.string.upgrade_to_pro), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -438,7 +655,7 @@ private fun CreditPill(
     Surface(
         onClick = { onClick?.invoke() },
         shape = CircleShape,
-        color = if (state.isPro) MaterialTheme.colorScheme.primaryContainer else StudioPaper,
+        color = if (state.isPro) StudioProContainer else StudioPaper,
         tonalElevation = 2.dp,
         modifier = Modifier.border(1.dp, StudioLine, CircleShape),
     ) {
@@ -447,8 +664,8 @@ private fun CreditPill(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            Icon(Icons.Rounded.Diamond, null, Modifier.size(17.dp), tint = StudioBlue)
-            Text(if (state.isPro) "PRO" else "${state.diamonds}", fontWeight = FontWeight.Bold)
+            Icon(Icons.Rounded.Diamond, null, Modifier.size(17.dp), tint = if (state.isPro) StudioGold else StudioBlue)
+            Text(if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}", fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -471,6 +688,8 @@ private fun ToolCard(
     tool: DecorTool,
     onClick: () -> Unit,
 ) {
+    val title = localizedToolTitle(tool)
+    val description = localizedToolDescription(tool)
     ElevatedCard(
         onClick = onClick,
         shape = RoundedCornerShape(28.dp),
@@ -479,7 +698,7 @@ private fun ToolCard(
         Box(Modifier.fillMaxWidth().height(394.dp)) {
             Image(
                 painter = painterResource(tool.imageRes),
-                contentDescription = tool.title,
+                contentDescription = title,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
@@ -512,7 +731,7 @@ private fun ToolCard(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    tool.title,
+                    title,
                     color = Color.White,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
@@ -520,7 +739,7 @@ private fun ToolCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    tool.description,
+                    description,
                     color = Color.White.copy(alpha = 0.84f),
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 2,
@@ -530,84 +749,69 @@ private fun ToolCard(
                     Button(
                         onClick = onClick,
                         shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = StudioMint, contentColor = StudioInk),
+                        colors = studioPrimaryButtonColors(),
                         modifier = Modifier.height(46.dp),
                         contentPadding = PaddingValues(horizontal = 18.dp),
                     ) {
                         Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(17.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Essayez ceci", fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.try_this), fontWeight = FontWeight.Black)
                     }
-                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.18f)) {
-                    Text(
-                            tool.serviceType,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            color = Color.White,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                    )
-                }
                 }
             }
         }
     }
 }
 
-private data class StepCopy(
-    val title: String,
-    val body: String,
-    val options: List<String> = emptyList(),
-)
-
 private fun photoCopy(tool: DecorTool): StepCopy {
     return when (tool.id) {
-        "facade" -> StepCopy("Extérieur", "Redessinez et embellissez votre maison.")
-        "garden" -> StepCopy("Jardin", "Transformez votre extérieur en espace prêt à vivre.")
-        "floor" -> StepCopy("Changer le sol", "Importez une photo de votre pièce")
-        "paint" -> StepCopy("Peindre les murs", "Importez une photo de votre pièce")
-        "layout" -> StepCopy("Agencement intelligent", "Optimisez l’espace et la circulation de votre pièce")
-        "replace" -> StepCopy("Remplacer un objet", "Importez une photo contenant l’objet à modifier")
-        "reference" -> StepCopy("Style de référence", "Importez la pièce à transformer")
-        else -> StepCopy("Intérieur", "Utilisez une photo nette, bien éclairée et prise assez large.")
+        "facade" -> StepCopy(R.string.step_photo_facade_title, R.string.step_photo_facade_body)
+        "garden" -> StepCopy(R.string.step_photo_garden_title, R.string.step_photo_garden_body)
+        "floor" -> StepCopy(R.string.step_photo_floor_title, R.string.step_photo_floor_body)
+        "paint" -> StepCopy(R.string.step_photo_paint_title, R.string.step_photo_paint_body)
+        "layout" -> StepCopy(R.string.step_photo_layout_title, R.string.step_photo_layout_body)
+        "replace" -> StepCopy(R.string.step_photo_replace_title, R.string.step_photo_replace_body)
+        "reference" -> StepCopy(R.string.step_photo_reference_title, R.string.step_photo_reference_body)
+        else -> StepCopy(R.string.step_photo_interior_title, R.string.step_photo_interior_body)
     }
 }
 
 private fun stepTwoCopy(tool: DecorTool): StepCopy {
     return when (tool.id) {
         "facade" -> StepCopy(
-            "Choisissez le type de bâtiment",
-            "Sélectionnez la forme architecturale que vous souhaitez repenser.",
+            R.string.step_building_type_title,
+            R.string.step_building_type_body,
             HomeDecorCatalog.buildingTypes,
         )
         "garden" -> StepCopy(
-            "Choisissez votre style",
-            "Choisissez un style signature pour façonner votre vision du design.",
+            R.string.step_choose_style_title,
+            R.string.step_choose_style_body,
             listOf("Suggestion IA") + HomeDecorCatalog.gardenStyles,
         )
         "paint" -> StepCopy(
-            "Sélectionnez les surfaces à transformer",
-            "Peignez un masque sur les murs ou surfaces à transformer.",
+            R.string.step_paint_surfaces_title,
+            R.string.step_paint_surfaces_body,
         )
         "floor" -> StepCopy(
-            "Marquez le sol",
-            "Peignez un masque sur le sol à remplacer.",
+            R.string.step_mark_floor_title,
+            R.string.step_mark_floor_body,
         )
         "layout" -> StepCopy(
-            "Choisissez votre objectif",
-            "Optimisez l'agencement sans perdre la structure de la pièce.",
+            R.string.step_layout_goal_title,
+            R.string.step_layout_goal_body,
             HomeDecorCatalog.layoutGoals,
         )
         "replace" -> StepCopy(
-            "Marquez l'objet",
-            "Masquez l'objet à remplacer et gardez le reste de la photo intact.",
+            R.string.step_mark_object_title,
+            R.string.step_mark_object_body,
         )
         "reference" -> StepCopy(
-            "Ajoutez une référence",
-            "Importez une image avec le style à appliquer.",
+            R.string.step_add_reference_title,
+            R.string.step_add_reference_body,
         )
         else -> StepCopy(
-            "Choisissez votre espace",
-            "Sélectionnez le type de pièce pour adapter le rendu à l'espace.",
+            R.string.step_choose_space_title,
+            R.string.step_choose_space_body,
             HomeDecorCatalog.rooms,
         )
     }
@@ -616,28 +820,28 @@ private fun stepTwoCopy(tool: DecorTool): StepCopy {
 private fun stepThreeCopy(tool: DecorTool): StepCopy {
     return when (tool.id) {
         "paint" -> StepCopy(
-            "Choisissez une couleur",
-            "Sélectionnez une couleur ou décrivez l’ambiance souhaitée.",
+            R.string.step_choose_color_title,
+            R.string.step_choose_color_body,
             HomeDecorCatalog.paintColors,
         )
         "floor" -> StepCopy(
-            "Choisissez le matériau",
-            "Choisissez un matériau. L'IA l'appliquera en respectant la perspective, la lumière et les meubles.",
+            R.string.step_choose_material_title,
+            R.string.step_choose_material_body,
             HomeDecorCatalog.floorMaterials,
         )
         "replace" -> StepCopy(
-            "Décrivez le remplacement",
-            "Choisissez ce qui doit remplacer l'objet masqué.",
+            R.string.step_describe_replacement_title,
+            R.string.step_describe_replacement_body,
             HomeDecorCatalog.replaceSuggestions,
         )
         "reference" -> StepCopy(
-            "Intensité du transfert",
-            "Choisissez à quel point le style de référence doit guider le rendu.",
+            R.string.step_transfer_strength_title,
+            R.string.step_transfer_strength_body,
             HomeDecorCatalog.referenceStrengths,
         )
         else -> StepCopy(
-            "Choisissez votre style",
-            "Choisissez l'ambiance que vous voulez appliquer à la pièce.",
+            R.string.step_choose_style_title,
+            R.string.step_style_body,
             listOf("Suggestion IA") + HomeDecorCatalog.styles,
         )
     }
@@ -645,12 +849,12 @@ private fun stepThreeCopy(tool: DecorTool): StepCopy {
 
 private fun stepFourCopy(tool: DecorTool): StepCopy {
     return when (tool.id) {
-        "facade", "garden", "paint" -> StepCopy("Harmonie des couleurs", "Choisissez une palette avant de générer.")
-        "floor" -> StepCopy("Décrivez votre vision", "Décrivez le sol souhaité : matière, teinte, finition et ambiance.")
-        "replace" -> StepCopy("Vérifiez l'édition", "Confirmez le remplacement avant de générer.")
-        "reference" -> StepCopy("Vérifiez le transfert", "Confirmez la référence et le style avant de générer.")
-        "layout" -> StepCopy("Mode de design", "Choisissez le niveau de transformation.")
-        else -> StepCopy("Mode de design", "Choisissez un mode et une harmonie de couleurs.")
+        "facade", "garden", "paint" -> StepCopy(R.string.step_color_harmony_title, R.string.step_color_harmony_body)
+        "floor" -> StepCopy(R.string.step_describe_vision_title, R.string.step_describe_floor_body)
+        "replace" -> StepCopy(R.string.step_review_edit_title, R.string.step_review_edit_body)
+        "reference" -> StepCopy(R.string.step_review_transfer_title, R.string.step_review_transfer_body)
+        "layout" -> StepCopy(R.string.step_design_mode_title, R.string.step_design_mode_body)
+        else -> StepCopy(R.string.step_design_mode_title, R.string.step_design_mode_color_body)
     }
 }
 
@@ -668,14 +872,19 @@ private fun CreateScreen(
         )
         AnimatedContent(targetState = state.wizardStage, label = "wizard", modifier = Modifier.weight(1f)) { stage ->
             when (stage) {
-                WizardStage.Photo -> PhotoStep(state = state, viewModel = viewModel)
+                WizardStage.Photo -> if (state.selectedTool.id == "reference") {
+                    ReferenceImagesStep(state = state, viewModel = viewModel)
+                } else {
+                    PhotoStep(state = state, viewModel = viewModel)
+                }
                 WizardStage.Space -> when (state.selectedTool.id) {
                     "floor" -> FloorMaskStep(state = state, viewModel = viewModel)
                     "paint" -> WallSurfaceStep(state = state, viewModel = viewModel)
                     "replace" -> ObjectMaskStep(state = state, viewModel = viewModel)
                     "reference" -> ReferencePhotoStep(state = state, viewModel = viewModel)
+                    "layout" -> LayoutPlanningStep(state = state, viewModel = viewModel)
                     else -> ChoiceStep(
-                    eyebrow = "Étape 2/${wizardTotalSteps(state.selectedTool)}",
+                    eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
                     copy = stepTwoCopy(state.selectedTool),
                     selected = state.selectedRooms,
                     onSelect = viewModel::setRoom,
@@ -687,7 +896,7 @@ private fun CreateScreen(
                 WizardStage.Style -> when (state.selectedTool.id) {
                     "paint", "floor", "replace", "reference" -> SpecializedGenerateStep(state = state, viewModel = viewModel)
                     else -> ChoiceStep(
-                        eyebrow = "Étape 3/${wizardTotalSteps(state.selectedTool)}",
+                        eyebrow = stringResource(R.string.step_count_format, 3, wizardTotalSteps(state.selectedTool)),
                         copy = stepThreeCopy(state.selectedTool),
                         selected = state.selectedStyles,
                         onSelect = viewModel::setStyle,
@@ -724,13 +933,13 @@ private fun DesignStepHeader(
             ) {
                 if (step > 1) {
                     IconButton(onClick = onBack, modifier = Modifier.size(44.dp)) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 } else {
                     CreditPill(state, compact = false, onClick = onCredits)
                 }
                 Text(
-                    workflowTitle(state.selectedTool),
+                    localizedWorkflowTitle(state.selectedTool),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
@@ -738,12 +947,12 @@ private fun DesignStepHeader(
                     modifier = Modifier.padding(horizontal = 12.dp).weight(1f),
                 )
                 IconButton(onClick = onClose, modifier = Modifier.size(44.dp)) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Close")
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(5.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    "Étape $step/$totalSteps",
+                    stringResource(R.string.step_count_format, step, totalSteps),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium,
@@ -793,7 +1002,7 @@ private fun StepScaffold(
                 onClick = onButton,
                 enabled = buttonEnabled,
                 shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = StudioBlue, contentColor = Color.White),
+                colors = studioPrimaryButtonColors(),
                 modifier = Modifier.fillMaxWidth().padding(20.dp).height(58.dp),
             ) {
                 Text(buttonLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -809,25 +1018,28 @@ private fun PhotoStep(
 ) {
     val context = LocalContext.current
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    val isLayoutTool = state.selectedTool.id == "layout"
     val imageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        viewModel.setPhoto(uri)
+        if (isLayoutTool) viewModel.setPrimaryPhoto(uri) else viewModel.setPhoto(uri)
     }
     val referenceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         viewModel.setReferencePhoto(uri)
     }
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         if (saved) {
-            viewModel.setPhoto(pendingCameraUri)
+            if (isLayoutTool) viewModel.setPrimaryPhoto(pendingCameraUri) else viewModel.setPhoto(pendingCameraUri)
         }
     }
     val copy = photoCopy(state.selectedTool)
+    val copyTitle = stringResource(copy.titleRes)
+    val copyBody = stringResource(copy.bodyRes)
     val hasMainPhoto = state.selectedPhotos.isNotEmpty()
     val canContinue = hasMainPhoto
     StepScaffold(
-        eyebrow = "Étape 1/${wizardTotalSteps(state.selectedTool)}",
-        title = if (!hasMainPhoto) copy.title else "Photo ajoutée",
-        body = if (!hasMainPhoto) copy.body else null,
-        buttonLabel = "Continuer",
+        eyebrow = stringResource(R.string.step_count_format, 1, wizardTotalSteps(state.selectedTool)),
+        title = if (!hasMainPhoto) copyTitle else stringResource(R.string.photo_added),
+        body = if (!hasMainPhoto) copyBody else null,
+        buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
         buttonEnabled = canContinue,
         onButton = viewModel::nextStage,
@@ -836,24 +1048,24 @@ private fun PhotoStep(
             if (!hasMainPhoto) {
                 Surface(
                     shape = RoundedCornerShape(26.dp),
-                    color = Color(0xFFFAFBFF),
-                    modifier = Modifier.fillMaxWidth().height(292.dp).border(1.dp, Color(0xFFBFC5D6), RoundedCornerShape(26.dp)),
+                    color = StudioPaper,
+                    modifier = Modifier.fillMaxWidth().height(292.dp).border(1.dp, StudioLine, RoundedCornerShape(26.dp)),
                 ) {
                     Column(
                         Modifier.padding(22.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        Text(copy.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                        Text(copyTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                         Spacer(Modifier.height(12.dp))
-                        Text(copy.body, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(copyBody, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.height(18.dp))
                         Button(
                             onClick = { imageLauncher.launch("image/*") },
                             shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = StudioBlack, contentColor = Color.White),
+                            colors = studioPrimaryButtonColors(),
                         ) {
-                            Text("Importer +")
+                            Text(if (isLayoutTool) stringResource(R.string.import_photo) else stringResource(R.string.import_plus))
                         }
                     }
                 }
@@ -864,22 +1076,24 @@ private fun PhotoStep(
                         UriOrResourceImage(
                             uri = firstPhoto.uri,
                             imageRes = selectedPhotoImageRes(state, firstPhoto),
-                            contentDescription = "Photo ajoutée",
+                            contentDescription = stringResource(R.string.photo_added),
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
                 }
-                SelectedPhotoStrip(
-                    state = state,
-                    onAdd = { imageLauncher.launch("image/*") },
-                    onRemove = viewModel::removePhoto,
-                )
+                if (!isLayoutTool) {
+                    SelectedPhotoStrip(
+                        state = state,
+                        onAdd = { imageLauncher.launch("image/*") },
+                        onRemove = viewModel::removePhoto,
+                    )
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = { imageLauncher.launch("image/*") }, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
                     Icon(Icons.Rounded.Add, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Galerie")
+                    Text(stringResource(R.string.gallery))
                 }
                 OutlinedButton(
                     onClick = {
@@ -892,20 +1106,23 @@ private fun PhotoStep(
                 ) {
                     Icon(Icons.Rounded.PhotoCamera, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Caméra")
+                    Text(stringResource(R.string.camera))
                 }
             }
             OutlinedButton(
-                onClick = { viewModel.selectExamplePhoto(examplesForTool(state.selectedTool).first().label) },
+                onClick = {
+                    val example = examplesForTool(state.selectedTool).first().label
+                    if (isLayoutTool) viewModel.selectPrimaryExamplePhoto(example) else viewModel.selectExamplePhoto(example)
+                },
                 shape = CircleShape,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
             ) {
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Utiliser un exemple")
+                Text(stringResource(R.string.use_example))
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Photos d'exemple", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.example_photos), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(examplesForTool(state.selectedTool), key = { "example-${it.label}" }) { photo ->
                         ExamplePhotoCard(
@@ -915,6 +1132,153 @@ private fun PhotoStep(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReferenceImagesStep(
+    state: HomeDecorUiState,
+    viewModel: HomeDecorViewModel,
+) {
+    val context = LocalContext.current
+    var pendingRoomCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingReferenceCameraUri by remember { mutableStateOf<Uri?>(null) }
+    val roomLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        viewModel.setPrimaryPhoto(uri)
+    }
+    val referenceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        viewModel.setReferencePhoto(uri)
+    }
+    val roomCameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        if (saved) viewModel.setPrimaryPhoto(pendingRoomCameraUri)
+    }
+    val referenceCameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        if (saved) viewModel.setReferencePhoto(pendingReferenceCameraUri)
+    }
+    val roomPhoto = state.selectedPhotos.firstOrNull()
+    val hasRoom = roomPhoto != null
+    val hasReference = state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null
+    StepScaffold(
+        eyebrow = stringResource(R.string.step_count_format, 1, wizardTotalSteps(state.selectedTool)),
+        title = stringResource(R.string.reference_two_images_title),
+        body = stringResource(R.string.reference_two_images_body),
+        buttonLabel = stringResource(R.string.continue_action),
+        buttonIcon = Icons.Rounded.Check,
+        buttonEnabled = hasRoom && hasReference,
+        onButton = viewModel::nextStage,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            ReferenceDualImagePicker(
+                title = stringResource(R.string.your_room),
+                body = stringResource(R.string.your_room_body),
+                selected = hasRoom,
+                selectedText = roomPhoto?.exampleLabel ?: stringResource(R.string.photo_added),
+                uri = roomPhoto?.uri,
+                imageRes = roomPhoto?.let { selectedPhotoImageRes(state, it) } ?: examplesForTool(state.selectedTool).first().imageRes,
+                contentDescription = stringResource(R.string.your_room),
+                onGallery = { roomLauncher.launch("image/*") },
+                onCamera = {
+                    val uri = createCameraUri(context)
+                    pendingRoomCameraUri = uri
+                    roomCameraLauncher.launch(uri)
+                },
+                onExample = { viewModel.selectPrimaryExamplePhoto(examplesForTool(state.selectedTool).first().label) },
+            )
+            ReferenceDualImagePicker(
+                title = stringResource(R.string.reference_image),
+                body = stringResource(R.string.reference_image_body),
+                selected = hasReference,
+                selectedText = state.selectedReferenceExampleLabel ?: stringResource(R.string.reference_added),
+                uri = state.selectedReferenceUri,
+                imageRes = R.drawable.tool_reference,
+                contentDescription = stringResource(R.string.reference_image),
+                onGallery = { referenceLauncher.launch("image/*") },
+                onCamera = {
+                    val uri = createCameraUri(context)
+                    pendingReferenceCameraUri = uri
+                    referenceCameraLauncher.launch(uri)
+                },
+                onExample = { viewModel.selectReferenceExample(context.getString(R.string.editorial_reference)) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReferenceDualImagePicker(
+    title: String,
+    body: String,
+    selected: Boolean,
+    selectedText: String,
+    uri: Uri?,
+    imageRes: Int,
+    contentDescription: String,
+    onGallery: () -> Unit,
+    onCamera: () -> Unit,
+    onExample: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(26.dp),
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(26.dp)),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(shape = CircleShape, color = studioStateIconContainer(selected)) {
+                    Icon(
+                        if (selected) Icons.Rounded.Check else Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.padding(9.dp).size(19.dp),
+                        tint = studioStateIconContent(selected),
+                    )
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(
+                        if (selected) selectedText else body,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(172.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(StudioMist),
+            ) {
+                UriOrResourceImage(
+                    uri = uri,
+                    imageRes = imageRes,
+                    contentDescription = contentDescription,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                if (!selected) {
+                    Box(Modifier.matchParentSize().background(Color.White.copy(alpha = 0.58f)))
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = onGallery, shape = CircleShape, modifier = Modifier.weight(1f).height(46.dp)) {
+                    Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(7.dp))
+                    Text(stringResource(R.string.gallery))
+                }
+                OutlinedButton(onClick = onCamera, shape = CircleShape, modifier = Modifier.weight(1f).height(46.dp)) {
+                    Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(7.dp))
+                    Text(stringResource(R.string.camera))
+                }
+            }
+            OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(46.dp)) {
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.example))
             }
         }
     }
@@ -939,7 +1303,7 @@ private fun SelectedPhotoStrip(
                     UriOrResourceImage(
                         uri = slot.uri,
                         imageRes = selectedPhotoImageRes(state, slot),
-                        contentDescription = "Photo ${index + 1}",
+                        contentDescription = stringResource(R.string.photo_number, index + 1),
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -949,7 +1313,7 @@ private fun SelectedPhotoStrip(
                     color = Color(0xFF4A4D57),
                     modifier = Modifier.align(Alignment.TopEnd).size(24.dp),
                 ) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Supprimer la photo", modifier = Modifier.padding(4.dp), tint = Color.White)
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.remove_photo), modifier = Modifier.padding(4.dp), tint = Color.White)
                 }
             }
         }
@@ -963,7 +1327,7 @@ private fun SelectedPhotoStrip(
                     modifier = Modifier.width(72.dp).height(64.dp).border(1.dp, StudioLine, RoundedCornerShape(16.dp)),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Add, contentDescription = "Ajouter une photo", tint = StudioInk)
+                        Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.add_photo), tint = StudioInk)
                     }
                 }
             }
@@ -984,15 +1348,15 @@ private fun ReferenceImagePicker(
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(8.dp).size(18.dp), tint = StudioBlue)
             }
             Column(Modifier.weight(1f)) {
-                Text("Image de référence", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                Text("Ajoutez le style visuel à appliquer à votre pièce.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.reference_picker_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.reference_picker_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Surface(
             shape = RoundedCornerShape(22.dp),
-            color = if (selectedUri != null || selectedExample != null) MaterialTheme.colorScheme.primaryContainer else StudioPaper,
+            color = studioStateContainer(selectedUri != null || selectedExample != null),
             tonalElevation = 2.dp,
-            modifier = Modifier.fillMaxWidth().border(1.dp, if (selectedUri != null || selectedExample != null) StudioBlue else StudioLine, RoundedCornerShape(22.dp)),
+            modifier = Modifier.fillMaxWidth().border(1.dp, studioStateBorder(selectedUri != null || selectedExample != null), RoundedCornerShape(22.dp)),
         ) {
             Row(
                 Modifier.padding(14.dp),
@@ -1003,14 +1367,14 @@ private fun ReferenceImagePicker(
                     UriOrResourceImage(
                         uri = selectedUri,
                         imageRes = R.drawable.tool_reference,
-                        contentDescription = "Référence de style",
+                        contentDescription = stringResource(R.string.style_reference),
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(if (selectedUri != null || selectedExample != null) "Référence ajoutée" else "Aucune référence", fontWeight = FontWeight.Black)
+                    Text(if (selectedUri != null || selectedExample != null) stringResource(R.string.reference_added) else stringResource(R.string.no_reference), fontWeight = FontWeight.Black)
                     Text(
-                        if (selectedUri != null || selectedExample != null) "Le transfert utilisera cette ambiance." else "Importez une image ou utilisez l'exemple.",
+                        if (selectedUri != null || selectedExample != null) stringResource(R.string.reference_picker_selected_body) else stringResource(R.string.reference_picker_empty_body),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -1022,12 +1386,12 @@ private fun ReferenceImagePicker(
             OutlinedButton(onClick = onImport, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
                 Icon(Icons.Rounded.Add, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Importer")
+                Text(stringResource(R.string.import_action))
             }
             OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Exemple")
+                Text(stringResource(R.string.example))
             }
         }
     }
@@ -1080,8 +1444,8 @@ private fun ExamplePhotoCard(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
         color = StudioPaper,
-        tonalElevation = if (selected) 4.dp else 1.dp,
-        modifier = Modifier.width(112.dp).height(104.dp).border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(18.dp)),
+        tonalElevation = studioStateElevation(selected),
+        modifier = Modifier.width(112.dp).height(104.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
     ) {
         Box {
             Image(
@@ -1126,9 +1490,9 @@ private fun ChoiceStep(
 ) {
     StepScaffold(
         eyebrow = eyebrow,
-        title = copy.title,
-        body = copy.body,
-        buttonLabel = "Continuer",
+        title = stringResource(copy.titleRes),
+        body = stringResource(copy.bodyRes),
+        buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
         buttonEnabled = selected.isNotEmpty(),
         onButton = onContinue,
@@ -1186,10 +1550,10 @@ private fun ReferencePhotoStep(
     }
     val hasReference = state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null
     StepScaffold(
-        eyebrow = "Étape 2/${wizardTotalSteps(state.selectedTool)}",
-        title = "Ajoutez une référence",
-        body = "Importez une image avec le style à appliquer",
-        buttonLabel = "Continuer",
+        eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
+        title = stringResource(R.string.step_add_reference_title),
+        body = stringResource(R.string.step_add_reference_body),
+        buttonLabel = stringResource(R.string.continue_action),
         buttonEnabled = hasReference,
         onButton = viewModel::nextStage,
     ) {
@@ -1198,13 +1562,13 @@ private fun ReferencePhotoStep(
                 selectedUri = state.selectedReferenceUri,
                 selectedExample = state.selectedReferenceExampleLabel,
                 onImport = { referenceLauncher.launch("image/*") },
-                onExample = { viewModel.selectReferenceExample("Référence éditoriale") },
+                onExample = { viewModel.selectReferenceExample(context.getString(R.string.editorial_reference)) },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = { referenceLauncher.launch("image/*") }, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
                     Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Galerie")
+                    Text(stringResource(R.string.gallery))
                 }
                 OutlinedButton(
                     onClick = {
@@ -1217,17 +1581,17 @@ private fun ReferencePhotoStep(
                 ) {
                     Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Caméra")
+                    Text(stringResource(R.string.camera))
                 }
             }
             OutlinedButton(
-                onClick = { viewModel.selectReferenceExample("Référence éditoriale") },
+                onClick = { viewModel.selectReferenceExample(context.getString(R.string.editorial_reference)) },
                 shape = CircleShape,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
             ) {
                 Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Utiliser un exemple")
+                Text(stringResource(R.string.use_example))
             }
         }
     }
@@ -1241,10 +1605,15 @@ private fun FloorMaskStep(
     MaskEditorStep(
         state = state,
         viewModel = viewModel,
-        title = "Marquez le sol",
-        disabledLabel = "Marquez le sol pour continuer",
+        title = stringResource(R.string.mask_floor_title),
+        body = stringResource(R.string.mask_floor_body),
+        disabledLabel = stringResource(R.string.mask_floor_disabled),
         target = "floor",
-        imageDescription = "Sol à transformer",
+        imageDescription = stringResource(R.string.mask_floor_description),
+        emptyStateTitle = stringResource(R.string.mask_floor_empty_title),
+        emptyStateBody = stringResource(R.string.mask_floor_empty_body),
+        polishedControls = true,
+        allowAutoDetect = false,
     )
 }
 
@@ -1256,10 +1625,15 @@ private fun WallSurfaceStep(
     MaskEditorStep(
         state = state,
         viewModel = viewModel,
-        title = "Sélectionnez les surfaces à transformer",
-        disabledLabel = "Marquez le mur pour continuer",
+        title = stringResource(R.string.mask_wall_title),
+        body = stringResource(R.string.mask_wall_body),
+        disabledLabel = stringResource(R.string.mask_wall_disabled),
         target = "wall",
-        imageDescription = "Mur à transformer",
+        imageDescription = stringResource(R.string.mask_wall_description),
+        emptyStateTitle = stringResource(R.string.mask_wall_empty_title),
+        emptyStateBody = stringResource(R.string.mask_wall_empty_body),
+        polishedControls = true,
+        allowAutoDetect = false,
     )
 }
 
@@ -1271,10 +1645,14 @@ private fun ObjectMaskStep(
     MaskEditorStep(
         state = state,
         viewModel = viewModel,
-        title = "Marquez l’objet",
-        disabledLabel = "Marquez l’objet pour continuer",
+        title = stringResource(R.string.mask_object_title),
+        body = stringResource(R.string.mask_object_body),
+        disabledLabel = stringResource(R.string.mask_object_disabled),
         target = "object",
-        imageDescription = "Objet à remplacer",
+        imageDescription = stringResource(R.string.mask_object_description),
+        emptyStateTitle = stringResource(R.string.mask_object_empty_title),
+        emptyStateBody = stringResource(R.string.mask_object_empty_body),
+        polishedControls = true,
     )
 }
 
@@ -1283,16 +1661,29 @@ private fun MaskEditorStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
     title: String,
+    body: String? = null,
     disabledLabel: String,
     target: String,
     imageDescription: String,
+    emptyStateTitle: String? = null,
+    emptyStateBody: String? = null,
+    polishedControls: Boolean = false,
+    allowAutoDetect: Boolean = target != "object",
 ) {
-    val hasMask = state.maskStrokes.any { !it.erase && it.points.size > 1 }
+    val requiresVisibleMask = target in setOf("floor", "wall", "object")
+    val isSurfaceMask = target in setOf("floor", "wall")
+    val hasMask = remember(state.maskStrokes, target) {
+        if (requiresVisibleMask) {
+            state.maskStrokes.hasVisibleMaskPaint()
+        } else {
+            state.maskStrokes.any { !it.erase && it.points.size > 1 }
+        }
+    }
     StepScaffold(
-        eyebrow = "Étape 2/${wizardTotalSteps(state.selectedTool)}",
+        eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
         title = title,
-        body = null,
-        buttonLabel = if (hasMask) "Continuer" else disabledLabel,
+        body = body,
+        buttonLabel = if (hasMask) stringResource(R.string.continue_action) else disabledLabel,
         buttonEnabled = hasMask,
         onButton = viewModel::nextStage,
     ) {
@@ -1300,30 +1691,105 @@ private fun MaskEditorStep(
             MaskCanvas(
                 state = state,
                 imageDescription = imageDescription,
+                emptyStateTitle = emptyStateTitle,
+                emptyStateBody = emptyStateBody,
+                hasVisibleMask = hasMask,
                 onStroke = viewModel::addMaskStroke,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ToolToggle("Brush", Icons.Rounded.Brush, !state.eraserSelected) { viewModel.setMaskEraser(false) }
-                ToolToggle("Eraser", Icons.Rounded.Delete, state.eraserSelected) { viewModel.setMaskEraser(true) }
-                FilledIconButton(onClick = viewModel::undoMaskStroke, enabled = state.maskStrokes.isNotEmpty()) {
-                    Icon(Icons.Rounded.Undo, contentDescription = "Annuler")
+            if (polishedControls) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (isSurfaceMask) {
+                        Text(
+                            if (target == "floor") stringResource(R.string.mask_required_floor)
+                            else stringResource(R.string.mask_required_wall),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ToolToggle(
+                            label = if (isSurfaceMask) stringResource(R.string.mask_mark) else stringResource(R.string.mask_brush),
+                            contentDescription = stringResource(R.string.mask_add),
+                            icon = Icons.Rounded.Brush,
+                            selected = !state.eraserSelected,
+                            modifier = Modifier.weight(1f),
+                        ) { viewModel.setMaskEraser(false) }
+                        ToolToggle(
+                            label = if (isSurfaceMask) stringResource(R.string.mask_remove) else stringResource(R.string.mask_eraser),
+                            contentDescription = stringResource(R.string.mask_remove),
+                            icon = Icons.Rounded.Delete,
+                            selected = state.eraserSelected,
+                            modifier = Modifier.weight(1f),
+                        ) { viewModel.setMaskEraser(true) }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        MaskActionButton(
+                            label = stringResource(R.string.undo),
+                            icon = Icons.AutoMirrored.Rounded.ArrowBack,
+                            enabled = state.maskStrokes.isNotEmpty(),
+                            onClick = viewModel::undoMaskStroke,
+                            modifier = Modifier.weight(1f),
+                        )
+                        MaskActionButton(
+                            label = stringResource(R.string.redo),
+                            icon = Icons.AutoMirrored.Rounded.ArrowForward,
+                            enabled = state.undoneMaskStrokes.isNotEmpty(),
+                            onClick = viewModel::redoMaskStroke,
+                            modifier = Modifier.weight(1f),
+                        )
+                        MaskActionButton(
+                            label = stringResource(R.string.clear),
+                            contentDescription = stringResource(R.string.clear_full_mask),
+                            icon = Icons.Rounded.Close,
+                            enabled = state.maskStrokes.isNotEmpty(),
+                            onClick = viewModel::clearMask,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
-                FilledIconButton(onClick = viewModel::redoMaskStroke, enabled = state.undoneMaskStrokes.isNotEmpty()) {
-                    Icon(Icons.Rounded.Redo, contentDescription = "Rétablir")
-                }
-                FilledIconButton(onClick = viewModel::clearMask, enabled = state.maskStrokes.isNotEmpty()) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Effacer le masque")
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ToolToggle(stringResource(R.string.mask_brush), Icons.Rounded.Brush, !state.eraserSelected, contentDescription = stringResource(R.string.mask_add)) { viewModel.setMaskEraser(false) }
+                    ToolToggle(stringResource(R.string.mask_eraser), Icons.Rounded.Delete, state.eraserSelected, contentDescription = stringResource(R.string.mask_remove)) { viewModel.setMaskEraser(true) }
+                    FilledIconButton(onClick = viewModel::undoMaskStroke, enabled = state.maskStrokes.isNotEmpty()) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.undo))
+                    }
+                    FilledIconButton(onClick = viewModel::redoMaskStroke, enabled = state.undoneMaskStrokes.isNotEmpty()) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = stringResource(R.string.redo))
+                    }
+                    FilledIconButton(onClick = viewModel::clearMask, enabled = state.maskStrokes.isNotEmpty()) {
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.clear_mask))
+                    }
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Taille du pinceau", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.brush_size), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        "${state.brushSize.toInt()} px",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
                 Slider(value = state.brushSize, onValueChange = viewModel::setBrushSize, valueRange = 8f..72f)
+                if (isSurfaceMask) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(stringResource(R.string.precise), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.wide), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
-            if (target != "object") {
+            if (allowAutoDetect) {
                 OutlinedButton(onClick = { viewModel.markMaskWithAutoDetect(target) }, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                     Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(if (target == "floor") "Auto-détecter le sol" else "Auto-détecter le mur")
+                    Text(if (target == "floor") stringResource(R.string.auto_detect_floor) else stringResource(R.string.auto_detect_wall))
                 }
             }
         }
@@ -1331,17 +1797,61 @@ private fun MaskEditorStep(
 }
 
 @Composable
-private fun ToolToggle(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
+private fun ToolToggle(
+    label: String,
+    icon: ImageVector,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    contentDescription: String = label,
+    onClick: () -> Unit,
+) {
     Surface(
         onClick = onClick,
         shape = CircleShape,
         color = if (selected) StudioBlue else StudioPaper,
-        tonalElevation = if (selected) 4.dp else 1.dp,
-        modifier = Modifier.height(48.dp).border(1.dp, if (selected) StudioBlue else StudioLine, CircleShape),
+        tonalElevation = studioStateElevation(selected),
+        modifier = modifier.height(48.dp).border(1.dp, studioStateBorder(selected), CircleShape),
     ) {
         Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp), tint = if (selected) Color.White else StudioInk)
-            Text(label, color = if (selected) Color.White else StudioInk, fontWeight = FontWeight.Bold)
+            Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(18.dp), tint = if (selected) Color.White else StudioInk)
+            Text(label, color = if (selected) Color.White else StudioInk, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun MaskActionButton(
+    label: String,
+    icon: ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String = label,
+) {
+    val contentColor = if (enabled) StudioInk else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.52f)
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(18.dp),
+        color = if (enabled) StudioPaper else StudioMist.copy(alpha = 0.72f),
+        tonalElevation = if (enabled) 1.dp else 0.dp,
+        modifier = modifier.height(50.dp).border(1.dp, if (enabled) StudioLine else StudioLine.copy(alpha = 0.6f), RoundedCornerShape(18.dp)),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(17.dp), tint = contentColor)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -1350,10 +1860,14 @@ private fun ToolToggle(label: String, icon: ImageVector, selected: Boolean, onCl
 private fun MaskCanvas(
     state: HomeDecorUiState,
     imageDescription: String,
+    emptyStateTitle: String? = null,
+    emptyStateBody: String? = null,
+    hasVisibleMask: Boolean? = null,
     onStroke: (MaskStroke) -> Unit,
 ) {
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     var livePoints by remember { mutableStateOf<List<MaskPoint>>(emptyList()) }
+    val hasMask = hasVisibleMask ?: state.maskStrokes.any { !it.erase && it.points.size > 1 }
     fun Offset.toMaskPoint(): MaskPoint {
         val width = canvasSize.width.coerceAtLeast(1).toFloat()
         val height = canvasSize.height.coerceAtLeast(1).toFloat()
@@ -1404,6 +1918,23 @@ private fun MaskCanvas(
                 drawStroke(MaskStroke(it, state.brushSize, state.eraserSelected))
             }
         }
+        if (!hasMask && emptyStateTitle != null) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = StudioBlack.copy(alpha = 0.78f),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(14.dp)
+                    .fillMaxWidth(),
+            ) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(emptyStateTitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    if (!emptyStateBody.isNullOrBlank()) {
+                        Text(emptyStateBody, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1419,23 +1950,23 @@ private fun SurfacePanel(
 ) {
     Surface(
         shape = RoundedCornerShape(22.dp),
-        color = if (selected) Color(0xFFF2FAFF) else StudioPaper,
-        tonalElevation = if (selected) 4.dp else 1.dp,
-        modifier = modifier.height(146.dp).border(1.dp, if (selected) Color(0xFF59C9F7) else StudioLine, RoundedCornerShape(22.dp)),
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
+        modifier = modifier.height(146.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(22.dp)),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Surface(shape = CircleShape, color = StudioPaper) {
                     Icon(icon, null, Modifier.padding(8.dp).size(18.dp), tint = StudioInk)
                 }
-                Text(title, fontWeight = FontWeight.Black, color = if (selected) Color(0xFF4BBFEB) else StudioInk)
+                Text(title, fontWeight = FontWeight.Black, color = if (selected) StudioBlue else StudioInk)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = onPrimary,
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selected) StudioBlack else StudioPaper,
+                        containerColor = if (selected) StudioBlue else StudioPaper,
                         contentColor = if (selected) Color.White else StudioInk,
                     ),
                     contentPadding = PaddingValues(horizontal = 14.dp),
@@ -1458,26 +1989,27 @@ private fun StyleChoiceCard(
     onClick: () -> Unit,
     large: Boolean = false,
 ) {
+    val displayLabel = localizedOption(label)
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        color = StudioPaper,
-        tonalElevation = if (selected) 5.dp else 1.dp,
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
         modifier = Modifier
             .fillMaxWidth()
             .height(if (large) 162.dp else 164.dp)
-            .border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(18.dp)),
+            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
     ) {
         Column {
             Box(Modifier.fillMaxWidth().height(if (large) 100.dp else 108.dp), contentAlignment = Alignment.Center) {
                 if (label == "Suggestion IA") {
-                    Surface(shape = RoundedCornerShape(22.dp), color = StudioMist, tonalElevation = 1.dp) {
+                Surface(shape = RoundedCornerShape(22.dp), color = StudioMist, tonalElevation = 1.dp) {
                         Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(18.dp).size(34.dp), tint = StudioBlue)
                     }
                 } else {
                     Image(
                         painter = painterResource(choiceImageRes(label)),
-                        contentDescription = label,
+                        contentDescription = displayLabel,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                     )
@@ -1490,7 +2022,7 @@ private fun StyleChoiceCard(
             }
             Box(Modifier.fillMaxWidth().height(if (large) 62.dp else 56.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    label,
+                    displayLabel,
                     modifier = Modifier.padding(horizontal = 8.dp),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Black,
@@ -1509,12 +2041,13 @@ private fun ExpressiveChoiceChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val displayLabel = localizedOption(label)
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else StudioPaper,
-        tonalElevation = if (selected) 4.dp else 1.dp,
-        modifier = modifier.height(78.dp).border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(18.dp)),
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
+        modifier = modifier.height(78.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
     ) {
         Row(
             Modifier.padding(horizontal = 10.dp),
@@ -1522,20 +2055,20 @@ private fun ExpressiveChoiceChip(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Box(
-                modifier = Modifier.size(36.dp).clip(CircleShape).background(if (selected) StudioBlue else StudioMist),
+                modifier = Modifier.size(36.dp).clip(CircleShape).background(studioStateIconContainer(selected)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     if (selected) Icons.Rounded.Check else choiceIcon(label),
                     null,
                     Modifier.size(if (selected) 17.dp else 19.dp),
-                    tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = studioStateIconContent(selected),
                 )
             }
             Text(
-                label,
+                displayLabel,
                 modifier = Modifier.weight(1f),
-                style = if (label.length > 12) {
+                style = if (displayLabel.length > 12) {
                     MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, lineHeight = 18.sp)
                 } else {
                     MaterialTheme.typography.titleMedium
@@ -1568,28 +2101,149 @@ private fun choiceIcon(label: String): ImageVector {
 }
 
 @Composable
+private fun LayoutPlanningStep(
+    state: HomeDecorUiState,
+    viewModel: HomeDecorViewModel,
+) {
+    val firstPhoto = state.selectedPhotos.firstOrNull()
+    StepScaffold(
+        eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
+        title = stringResource(R.string.layout_plan_title),
+        body = stringResource(R.string.layout_plan_body),
+        buttonLabel = stringResource(R.string.layout_generate),
+        buttonIcon = Icons.AutoMirrored.Rounded.ViewQuilt,
+        buttonEnabled = state.selectedRooms.isNotEmpty(),
+        onButton = viewModel::generate,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            if (!state.generationError.isNullOrBlank()) {
+                Surface(shape = RoundedCornerShape(18.dp), color = StudioErrorContainer) {
+                    Text(
+                        state.generationError,
+                        modifier = Modifier.padding(14.dp),
+                        color = StudioRose,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = StudioPaper,
+                tonalElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
+            ) {
+                Row(
+                    Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Box(Modifier.size(86.dp).clip(RoundedCornerShape(18.dp))) {
+                        UriOrResourceImage(
+                            uri = firstPhoto?.uri,
+                            imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
+                            contentDescription = stringResource(R.string.room_photo),
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.room_photo), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.room_photo_layout_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioGreen, modifier = Modifier.size(22.dp))
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                HomeDecorCatalog.layoutGoals.chunked(2).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { option ->
+                            ExpressiveChoiceChip(
+                                label = option,
+                                selected = option in state.selectedRooms,
+                                onClick = { viewModel.setRoom(option) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = state.layoutConstraints,
+                    onValueChange = viewModel::setLayoutConstraints,
+                    label = { Text(stringResource(R.string.constraints)) },
+                    placeholder = { Text(stringResource(R.string.constraints_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    shape = RoundedCornerShape(18.dp),
+                )
+                OutlinedTextField(
+                    value = state.palette,
+                    onValueChange = viewModel::setPaletteText,
+                    label = { Text(stringResource(R.string.furniture_to_keep)) },
+                    placeholder = { Text(stringResource(R.string.furniture_to_keep_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = state.mobilierADeplacer,
+                    onValueChange = viewModel::setMobilierADeplacerText,
+                    label = { Text(stringResource(R.string.furniture_to_move)) },
+                    placeholder = { Text(stringResource(R.string.furniture_to_move_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = state.style,
+                    onValueChange = viewModel::setStyleText,
+                    label = { Text(stringResource(R.string.people_count)) },
+                    placeholder = { Text(stringResource(R.string.people_count_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = state.customPrompt,
+                    onValueChange = viewModel::setCustomPrompt,
+                    label = { Text(stringResource(R.string.custom_notes)) },
+                    placeholder = { Text(stringResource(R.string.custom_notes_placeholder)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    shape = RoundedCornerShape(18.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun RefineStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
     if (state.selectedTool.id == "layout") {
         StepScaffold(
-            eyebrow = "Étape 3/${wizardTotalSteps(state.selectedTool)}",
-            title = "Ajoutez des détails",
-            body = "Précisez les contraintes pour optimiser l’espace sans perdre vos priorités.",
-            buttonLabel = "Générer",
+            eyebrow = stringResource(R.string.step_count_format, 3, wizardTotalSteps(state.selectedTool)),
+            title = stringResource(R.string.add_details_title),
+            body = stringResource(R.string.add_details_body),
+            buttonLabel = stringResource(R.string.generate),
             buttonEnabled = state.selectedRooms.isNotEmpty(),
             onButton = viewModel::generate,
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                OutlinedTextField(value = state.roomType, onValueChange = viewModel::setRoomTypeText, label = { Text("Type de pièce") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp))
-                OutlinedTextField(value = state.style, onValueChange = viewModel::setStyleText, label = { Text("Nombre de personnes") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp))
-                OutlinedTextField(value = state.palette, onValueChange = viewModel::setPaletteText, label = { Text("Mobilier à garder / mobilier à déplacer") }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp))
+                OutlinedTextField(value = state.roomType, onValueChange = viewModel::setRoomTypeText, label = { Text(stringResource(R.string.room_type)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
+                OutlinedTextField(value = state.style, onValueChange = viewModel::setStyleText, label = { Text(stringResource(R.string.people_count)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
+                OutlinedTextField(value = state.palette, onValueChange = viewModel::setPaletteText, label = { Text(stringResource(R.string.furniture_to_keep)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
+                OutlinedTextField(value = state.mobilierADeplacer, onValueChange = viewModel::setMobilierADeplacerText, label = { Text(stringResource(R.string.furniture_to_move)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
                 OutlinedTextField(
                     value = state.customPrompt,
                     onValueChange = viewModel::setCustomPrompt,
-                    label = { Text("Contraintes importantes") },
-                    placeholder = { Text("Exemple : garder le canapé, ajouter un bureau, améliorer la circulation") },
+                    label = { Text(stringResource(R.string.important_constraints)) },
+                    placeholder = { Text(stringResource(R.string.important_constraints_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
                     shape = RoundedCornerShape(18.dp),
@@ -1600,21 +2254,21 @@ private fun RefineStep(
     }
     val copy = stepFourCopy(state.selectedTool)
     StepScaffold(
-        eyebrow = "Étape ${wizardStepNumber(state.wizardStage, state.selectedTool)}/${wizardTotalSteps(state.selectedTool)}",
-        title = copy.title,
-        body = copy.body,
-        buttonLabel = "Générer mon design",
+        eyebrow = stringResource(R.string.step_count_format, wizardStepNumber(state.wizardStage, state.selectedTool), wizardTotalSteps(state.selectedTool)),
+        title = stringResource(copy.titleRes),
+        body = stringResource(copy.bodyRes),
+        buttonLabel = stringResource(R.string.generate_my_design),
         buttonIcon = Icons.Rounded.AutoAwesome,
         buttonEnabled = state.selectedPalettes.isNotEmpty(),
         onButton = viewModel::generate,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
             if (!state.generationError.isNullOrBlank()) {
-                Surface(shape = RoundedCornerShape(18.dp), color = Color(0xFFFFE8EA)) {
+                Surface(shape = RoundedCornerShape(18.dp), color = StudioErrorContainer) {
                     Text(
                         state.generationError,
                         modifier = Modifier.padding(14.dp),
-                        color = Color(0xFF9D1D2E),
+                        color = StudioRose,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -1622,7 +2276,7 @@ private fun RefineStep(
             }
             if (state.selectedTool.id !in listOf("facade", "garden", "paint")) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Mode de design", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         HomeDecorCatalog.designModes.forEach { (mode, description) ->
                             ModeCard(
@@ -1637,7 +2291,7 @@ private fun RefineStep(
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Harmonie des couleurs", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.step_color_harmony_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.fillMaxWidth().height(548.dp),
@@ -1657,19 +2311,64 @@ private fun RefineStep(
             OutlinedTextField(
                 value = state.customPrompt,
                 onValueChange = viewModel::setCustomPrompt,
-                label = { Text("Décrivez votre vision") },
-                placeholder = { Text("Optionnel : texture, matière ou ambiance.") },
+                label = { Text(stringResource(R.string.describe_vision_label)) },
+                placeholder = { Text(stringResource(R.string.describe_vision_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 4,
                 shape = RoundedCornerShape(18.dp),
             )
             Surface(shape = RoundedCornerShape(22.dp), color = StudioBlack) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Brief design", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("${state.roomType.ifBlank { "Espace à choisir" }} / ${state.style.ifBlank { "Style à choisir" }}", color = Color.White.copy(alpha = 0.82f))
+                    Text(stringResource(R.string.design_brief), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("${state.roomType.ifBlank { stringResource(R.string.space_to_choose) }} / ${state.style.ifBlank { stringResource(R.string.style_to_choose) }}", color = Color.White.copy(alpha = 0.82f))
                     Text(state.designMode, color = Color.White.copy(alpha = 0.82f))
-                    Text(state.palette.ifBlank { "Palette à choisir" }, color = Color.White.copy(alpha = 0.72f))
+                    Text(state.palette.ifBlank { stringResource(R.string.palette_to_choose) }, color = Color.White.copy(alpha = 0.72f))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColorSwatchCard(
+    label: String,
+    color: Color,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val displayLabel = localizedOption(label)
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
+        modifier = modifier.height(72.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(color)
+                    .border(1.dp, StudioLine, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (selected) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (color == Color(0xFFFAF9F6) || color == Color(0xFFE2E2E2)) Color.Black else Color.White,
+                    )
+                }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
             }
         }
     }
@@ -1680,55 +2379,108 @@ private fun SpecializedGenerateStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val copy = stepThreeCopy(state.selectedTool)
+    val stepCopy = stepThreeCopy(state.selectedTool)
+    val stepTitle = stringResource(stepCopy.titleRes)
+    val stepBody = stringResource(stepCopy.bodyRes)
     val selected = state.selectedStyles
     val requiresPrompt = state.selectedTool.id == "replace"
+    val requiresMask = state.selectedTool.id in setOf("paint", "floor", "replace")
+    val hasRequiredMask = remember(state.maskStrokes, state.selectedTool.id) {
+        if (state.selectedTool.id in setOf("paint", "floor", "replace")) {
+            state.maskStrokes.hasVisibleMaskPaint()
+        } else {
+            state.maskStrokes.any { !it.erase && it.points.size > 1 }
+        }
+    }
+    val hasReferenceImages = state.selectedTool.id != "reference" ||
+        (state.selectedPhotos.firstOrNull() != null &&
+            (state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null))
     val canGenerate = when (state.selectedTool.id) {
         "replace" -> state.customPrompt.isNotBlank() || selected.isNotEmpty()
-        "reference" -> selected.isNotEmpty()
+        "reference" -> selected.isNotEmpty() && hasReferenceImages
         else -> selected.isNotEmpty() || state.customPrompt.isNotBlank()
     }
     StepScaffold(
-        eyebrow = "Étape 3/${wizardTotalSteps(state.selectedTool)}",
-        title = copy.title,
-        body = copy.body,
-        buttonLabel = "Générer",
-        buttonEnabled = canGenerate && (!requiresPrompt || state.customPrompt.isNotBlank() || selected.isNotEmpty()),
+        eyebrow = stringResource(R.string.step_count_format, wizardStepNumber(state.wizardStage, state.selectedTool), wizardTotalSteps(state.selectedTool)),
+        title = stepTitle,
+        body = stepBody,
+        buttonLabel = if (requiresMask && !hasRequiredMask) {
+            when (state.selectedTool.id) {
+                "floor" -> stringResource(R.string.paint_mask_before_generate_floor)
+                "replace" -> stringResource(R.string.paint_mask_before_generate_replace)
+                else -> stringResource(R.string.paint_mask_before_generate_wall)
+            }
+        } else if (state.selectedTool.id == "reference" && !hasReferenceImages) {
+            stringResource(R.string.add_both_images)
+        } else {
+            stringResource(R.string.generate)
+        },
+        buttonEnabled = canGenerate && (!requiresMask || hasRequiredMask) && (!requiresPrompt || state.customPrompt.isNotBlank() || selected.isNotEmpty()),
         onButton = viewModel::generate,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (!state.generationError.isNullOrBlank()) {
-                Surface(shape = RoundedCornerShape(18.dp), color = Color(0xFFFFE8EA)) {
+                Surface(shape = RoundedCornerShape(18.dp), color = StudioErrorContainer) {
                     Text(
                         state.generationError,
                         modifier = Modifier.padding(14.dp),
-                        color = Color(0xFF9D1D2E),
+                        color = StudioRose,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                copy.options.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        row.forEach { option ->
-                            ExpressiveChoiceChip(
-                                label = option,
-                                selected = option in selected,
-                                onClick = {
-                                    viewModel.setStyle(option)
-                                    if (state.selectedTool.id == "replace" && state.customPrompt.isBlank()) {
-                                        viewModel.setCustomPrompt(option)
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                            )
+                if (state.selectedTool.id == "paint") {
+                    val swatchColors = mapOf(
+                        "Blanc chaud" to Color(0xFFFAF9F6),
+                        "Beige" to Color(0xFFE8D8C8),
+                        "Gris clair" to Color(0xFFE2E2E2),
+                        "Vert sauge" to Color(0xFF8FA382),
+                        "Bleu doux" to Color(0xFF8CA1C4),
+                        "Terracotta" to Color(0xFFD36135),
+                        "Noir élégant" to Color(0xFF1F2421)
+                    )
+                    stepCopy.options.chunked(2).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            row.forEach { option ->
+                                ColorSwatchCard(
+                                    label = option,
+                                    color = swatchColors[option] ?: Color.LightGray,
+                                    selected = option in selected,
+                                    onClick = { viewModel.setStyle(option) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            if (row.size == 1) Spacer(Modifier.weight(1f))
                         }
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                }
+            } else {
+                if (state.selectedTool.id == "replace") {
+                    Text(stringResource(R.string.replacement_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                }
+                    stepCopy.options.chunked(2).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            row.forEach { option ->
+                                ExpressiveChoiceChip(
+                                    label = option,
+                                    selected = option in selected,
+                                    onClick = {
+                                        if (state.selectedTool.id == "replace") {
+                                            viewModel.selectReplacementSuggestion(option)
+                                        } else {
+                                            viewModel.setStyle(option)
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            if (row.size == 1) Spacer(Modifier.weight(1f))
+                        }
                     }
                 }
             }
             if (state.selectedTool.id == "reference") {
-                Text("Options du transfert", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.transfer_options), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                 HomeDecorCatalog.referenceOptions.chunked(2).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.forEach { option ->
@@ -1746,13 +2498,18 @@ private fun SpecializedGenerateStep(
             OutlinedTextField(
                 value = state.customPrompt,
                 onValueChange = viewModel::setCustomPrompt,
+                label = if (state.selectedTool.id == "replace") {
+                    { Text(stringResource(R.string.replacement_object)) }
+                } else {
+                    null
+                },
                 placeholder = {
                     Text(
                         when (state.selectedTool.id) {
-                            "paint" -> "Décrivez la couleur ou l’ambiance souhaitée"
-                            "floor" -> "Décrivez le style du sol souhaité"
-                            "replace" -> "Exemple : remplacer ce canapé par un canapé beige moderne"
-                            else -> "Ajoutez une instruction optionnelle"
+                            "paint" -> stringResource(R.string.prompt_paint)
+                            "floor" -> stringResource(R.string.prompt_floor)
+                            "replace" -> stringResource(R.string.prompt_replace)
+                            else -> stringResource(R.string.prompt_optional)
                         },
                     )
                 },
@@ -1760,11 +2517,16 @@ private fun SpecializedGenerateStep(
                 minLines = if (state.selectedTool.id == "replace") 4 else 3,
                 shape = RoundedCornerShape(18.dp),
             )
-            Surface(shape = RoundedCornerShape(22.dp), color = StudioBlack) {
-                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                    Text("Brief envoyé au backend", color = Color.White, fontWeight = FontWeight.Black)
-                    Text("serviceType: ${state.selectedTool.serviceType}", color = Color.White.copy(alpha = 0.8f))
-                    Text(selected.joinToString(" + ").ifBlank { state.customPrompt.ifBlank { "Sélection requise" } }, color = Color.White.copy(alpha = 0.8f))
+            if (state.selectedTool.id == "replace") {
+                Surface(shape = RoundedCornerShape(22.dp), color = StudioBlack) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Text(stringResource(R.string.replacement_summary), color = Color.White, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.mask_ready, if (hasRequiredMask) stringResource(R.string.yes) else stringResource(R.string.to_complete)), color = Color.White.copy(alpha = 0.8f))
+                        Text(
+                            state.customPrompt.ifBlank { stringResource(R.string.describe_new_object) },
+                            color = Color.White.copy(alpha = 0.8f),
+                        )
+                    }
                 }
             }
         }
@@ -1782,17 +2544,17 @@ private fun ModeCard(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(22.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else StudioPaper,
-        tonalElevation = if (selected) 4.dp else 1.dp,
-        modifier = modifier.height(188.dp).border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(22.dp)),
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
+        modifier = modifier.height(188.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(22.dp)),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Surface(shape = CircleShape, color = if (selected) StudioBlue else StudioMist) {
+            Surface(shape = CircleShape, color = studioStateIconContainer(selected)) {
                 Icon(
                     if (title.contains("Renovation")) Icons.Rounded.AutoAwesome else Icons.Rounded.Brush,
                     contentDescription = null,
                     modifier = Modifier.padding(10.dp).size(22.dp),
-                    tint = if (selected) Color.White else StudioInk,
+                    tint = studioStateIconContent(selected),
                 )
             }
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 2)
@@ -1814,15 +2576,16 @@ private fun PaletteChoiceCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val displayLabel = localizedOption(label)
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        color = StudioPaper,
-        tonalElevation = if (selected) 5.dp else 1.dp,
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
         modifier = modifier
             .width(96.dp)
             .height(142.dp)
-            .border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(18.dp)),
+            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
     ) {
         Column {
             if (label == "Suggestion IA") {
@@ -1837,7 +2600,7 @@ private fun PaletteChoiceCard(
                 }
             }
             Text(
-                label,
+                displayLabel,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
@@ -1859,11 +2622,69 @@ private fun ProcessingStep(message: String) {
             Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.padding(22.dp).size(46.dp), tint = StudioGreen)
         }
         Spacer(Modifier.height(22.dp))
-        Text("Préparation de votre transformation...", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.processing_transform), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
         Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         LinearProgressIndicator(Modifier.fillMaxWidth(0.78f).height(8.dp).clip(CircleShape))
     }
+}
+
+@Composable
+private fun LayoutResultSummary(state: HomeDecorUiState) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = StudioPrimaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue),
+        modifier = Modifier.fillMaxWidth(),
+        tonalElevation = 2.dp,
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.layout_changes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioBlue)
+            Text(
+                layoutChangeSummary(state),
+                style = MaterialTheme.typography.bodyLarge,
+                color = StudioInk,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(stringResource(R.string.layout_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioBlue)
+            layoutSuggestions(state).forEach { suggestion ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+                    Icon(Icons.Rounded.Check, null, Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
+                    Text(suggestion, style = MaterialTheme.typography.bodyMedium, color = StudioInk)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun layoutChangeSummary(state: HomeDecorUiState): String {
+    val goals = state.roomType.ifBlank { stringResource(R.string.layout_default_goals) }
+    val keep = state.palette.ifBlank { stringResource(R.string.layout_default_keep) }
+    val move = state.mobilierADeplacer.ifBlank { stringResource(R.string.layout_default_move) }
+    val people = state.style.ifBlank { stringResource(R.string.layout_default_people) }
+    val constraints = state.layoutConstraints.ifBlank { stringResource(R.string.layout_default_constraints) }
+    return stringResource(R.string.layout_summary_format, goals, keep, move, people, constraints)
+}
+
+@Composable
+private fun layoutSuggestions(state: HomeDecorUiState): List<String> {
+    val suggestions = mutableListOf<String>()
+    if (state.layoutConstraints.isNotBlank()) {
+        suggestions += stringResource(R.string.layout_suggestion_constraints)
+    }
+    if (state.palette.isNotBlank()) {
+        suggestions += stringResource(R.string.layout_suggestion_keep)
+    }
+    if (state.mobilierADeplacer.isNotBlank()) {
+        suggestions += stringResource(R.string.layout_suggestion_move)
+    }
+    if (state.style.isNotBlank()) {
+        suggestions += stringResource(R.string.layout_suggestion_people)
+    }
+    suggestions += stringResource(R.string.layout_suggestion_openings)
+    suggestions += stringResource(R.string.layout_suggestion_vertical_storage)
+    return suggestions.take(4)
 }
 
 @Composable
@@ -1875,10 +2696,10 @@ private fun ResultStep(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     StepScaffold(
-        eyebrow = "Result",
-        title = "Votre résultat",
-        body = "Rendu enregistré dans votre espace de travail.",
-        buttonLabel = "Nouvelle création",
+        eyebrow = stringResource(R.string.result),
+        title = stringResource(R.string.your_result),
+        body = stringResource(R.string.result_saved_workspace),
+        buttonLabel = stringResource(R.string.new_creation),
         buttonIcon = Icons.Rounded.Check,
         onButton = { viewModel.startTool(state.selectedTool) },
     ) {
@@ -1887,48 +2708,54 @@ private fun ResultStep(
                 NetworkOrResourceImage(
                     imageUrl = result?.imageUrl,
                     imageRes = result?.imageRes ?: R.drawable.sample_after_luxury,
-                    contentDescription = "Image générée",
+                    contentDescription = stringResource(R.string.generated_image),
                     modifier = Modifier.fillMaxWidth().aspectRatio(1f),
                 )
             }
-            Text("Avant / après", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                    NetworkOrResourceImage(
-                        imageUrl = result?.sourceImageUrl,
-                        imageRes = selectedExampleImageRes(state),
-                        contentDescription = "Avant",
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                    )
+            if (state.selectedTool.id == "layout") {
+                LayoutResultSummary(state)
+            } else {
+                Text(stringResource(R.string.before_after), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
+                        NetworkOrResourceImage(
+                            imageUrl = result?.sourceImageUrl,
+                            imageRes = selectedExampleImageRes(state),
+                            contentDescription = stringResource(R.string.before),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    }
+                    Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
+                        NetworkOrResourceImage(
+                            imageUrl = result?.imageUrl,
+                            imageRes = result?.imageRes ?: R.drawable.sample_after_luxury,
+                            contentDescription = stringResource(R.string.after),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    }
                 }
-                Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                    NetworkOrResourceImage(
-                        imageUrl = result?.imageUrl,
-                        imageRes = result?.imageRes ?: R.drawable.sample_after_luxury,
-                        contentDescription = "Après",
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                    )
+                if (state.selectedTool.id == "reference") {
+                    Text(stringResource(R.string.reference), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Card(shape = RoundedCornerShape(20.dp)) {
+                        UriOrResourceImage(
+                            uri = state.selectedReferenceUri,
+                            imageRes = R.drawable.tool_reference,
+                            contentDescription = stringResource(R.string.reference_image),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1.4f),
+                        )
+                    }
                 }
             }
-            if (state.selectedTool.id == "reference") {
-                Text("Référence", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                Card(shape = RoundedCornerShape(20.dp)) {
-                    UriOrResourceImage(
-                        uri = state.selectedReferenceUri,
-                        imageRes = R.drawable.tool_reference,
-                        contentDescription = "Image de référence",
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1.4f),
-                    )
-                }
-            }
-            Surface(shape = RoundedCornerShape(22.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp))) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Métadonnées", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                    Text("Service : ${workflowTitle(state.selectedTool)}")
-                    Text("Style : ${(state.style.ifBlank { state.palette }).ifBlank { "Choix IA" }}")
-                    Text("Prompt : ${state.customPrompt.ifBlank { "Aucun prompt personnalisé" }}")
-                    Text("Statut : ${result?.status ?: "ready"}")
-                    Text("Date : ${java.text.DateFormat.getDateTimeInstance().format(java.util.Date((result?.createdAt ?: System.currentTimeMillis().toDouble()).toLong()))}")
+            if (state.selectedTool.id != "layout") {
+                Surface(shape = RoundedCornerShape(22.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp))) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(stringResource(R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.metadata_service, localizedWorkflowTitle(state.selectedTool)))
+                        Text(stringResource(R.string.metadata_style, (state.style.ifBlank { state.palette }).ifBlank { stringResource(R.string.ai_choice) }))
+                        Text(stringResource(R.string.metadata_prompt, state.customPrompt.ifBlank { stringResource(R.string.no_custom_prompt) }))
+                        Text(stringResource(R.string.metadata_status, result?.status ?: "ready"))
+                        Text(stringResource(R.string.metadata_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date((result?.createdAt ?: System.currentTimeMillis().toDouble()).toLong()))))
+                    }
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1936,7 +2763,7 @@ private fun ResultStep(
                     onClick = {
                         scope.launch {
                             val saved = saveResultToGallery(context, result)
-                            Toast.makeText(context, if (saved) "Design enregistré dans la galerie." else "Impossible d'enregistrer ce design.", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, if (saved) context.getString(R.string.toast_design_saved) else context.getString(R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
                         }
                     },
                     shape = CircleShape,
@@ -1944,14 +2771,14 @@ private fun ResultStep(
                 ) {
                     Icon(Icons.Rounded.Save, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Enregistrer")
+                    Text(stringResource(R.string.save))
                 }
                 OutlinedButton(
                     onClick = {
                         scope.launch {
                             val shared = shareResult(context, result)
                             if (!shared) {
-                                Toast.makeText(context, "Impossible de partager ce design pour le moment.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.toast_share_failed), Toast.LENGTH_LONG).show()
                             }
                         }
                     },
@@ -1960,25 +2787,26 @@ private fun ResultStep(
                 ) {
                     Icon(Icons.Rounded.Share, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Partager")
+                    Text(stringResource(R.string.share))
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(onClick = { scope.launch { saveResultToGallery(context, result) } }, shape = CircleShape, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.Download, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Télécharger")
+                    Text(stringResource(R.string.download))
                 }
                 OutlinedButton(onClick = viewModel::generate, shape = CircleShape, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Réessayer")
+                    Text(stringResource(R.string.retry))
                 }
             }
         }
     }
 }
 
+@Suppress("DEPRECATION")
 private suspend fun saveResultToGallery(context: android.content.Context, result: BoardItem?): Boolean = withContext(Dispatchers.IO) {
     runCatching {
         val displayName = "homedecor-ai-${System.currentTimeMillis()}.jpg"
@@ -2017,7 +2845,7 @@ private suspend fun shareResult(context: android.content.Context, result: BoardI
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         withContext(Dispatchers.Main) {
-            context.startActivity(Intent.createChooser(intent, "Partager le design"))
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_design_chooser)))
         }
         true
     }.getOrDefault(false)
@@ -2042,7 +2870,7 @@ private fun openAuth(context: android.content.Context) {
     runCatching {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(authUrl)))
     }.onFailure {
-        Toast.makeText(context, "Impossible d'ouvrir la connexion pour le moment.", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, context.getString(R.string.auth_open_failed), Toast.LENGTH_LONG).show()
     }
 }
 
@@ -2072,7 +2900,7 @@ private fun DiscoverScreen(onTool: (DecorTool) -> Unit) {
         return
     }
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
-        ScreenHeaderPills(title = "Découvrir", trailing = null)
+        ScreenHeaderPills(title = stringResource(R.string.nav_discover), trailing = null)
         LazyColumn(
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
@@ -2144,7 +2972,7 @@ private fun DiscoverHero(
                 modifier = Modifier.align(Alignment.BottomStart).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Surface(shape = CircleShape, color = StudioMint) {
+                Surface(shape = CircleShape, color = StudioPrimaryContainer) {
                     Text(
                         section.cluster,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -2154,7 +2982,7 @@ private fun DiscoverHero(
                     )
                 }
                 Text(section.title, color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                Text("Inspiration prête à transformer en création", color = Color.White.copy(alpha = 0.84f), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.discover_hero_body), color = Color.White.copy(alpha = 0.84f), style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -2172,9 +3000,9 @@ private fun DiscoverClusterTabs(
             Surface(
                 onClick = { onSelect(cluster) },
                 shape = CircleShape,
-                color = if (active) StudioBlack else StudioPaper,
+                color = if (active) StudioPrimaryContainer else StudioPaper,
                 tonalElevation = if (active) 4.dp else 1.dp,
-                modifier = Modifier.border(1.dp, if (active) StudioBlack else StudioLine, CircleShape),
+                modifier = Modifier.border(1.dp, if (active) StudioBlue else StudioLine, CircleShape),
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
@@ -2189,9 +3017,9 @@ private fun DiscoverClusterTabs(
                         },
                         null,
                         Modifier.size(17.dp),
-                        tint = if (active) Color.White else StudioBlue,
+                        tint = StudioBlue,
                     )
-                    Text(cluster, color = if (active) Color.White else StudioInk, fontWeight = FontWeight.Bold)
+                    Text(cluster, color = if (active) StudioBlue else StudioInk, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -2212,7 +3040,7 @@ private fun DiscoverSectionRow(
                 shape = CircleShape,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
             ) {
-                Text("Voir tout")
+                Text(stringResource(R.string.see_all))
             }
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -2237,21 +3065,20 @@ private fun DiscoverDetailScreen(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Retour")
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
             }
             Column(Modifier.weight(1f)) {
                 Text(section.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                Text(section.cluster, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.discover_detail_subtitle, section.cluster.lowercase()), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            val tool = HomeDecorCatalog.tools.firstOrNull { it.id == section.serviceToolId }
-            Button(
-                onClick = { tool?.let(onTool) },
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = StudioMint, contentColor = StudioInk),
-            ) {
-                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(17.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Créer", fontWeight = FontWeight.Black)
+            Surface(shape = CircleShape, color = StudioPrimaryContainer, tonalElevation = 2.dp) {
+                Text(
+                    stringResource(R.string.ideas_count, section.items.size),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    color = StudioBlue,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
+                )
             }
         }
         LazyVerticalGrid(
@@ -2286,12 +3113,12 @@ private fun DiscoverPreviewDialog(
             ) {
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(17.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Créer avec ce style")
+                Text(stringResource(R.string.create_with_style))
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss, shape = CircleShape) {
-                Text("Fermer")
+                Text(stringResource(R.string.close))
             }
         },
         title = { Text(item.category, fontWeight = FontWeight.Black) },
@@ -2334,8 +3161,133 @@ private fun GalleryCard(
                 Text(item.title, color = Color.White.copy(alpha = 0.76f), style = MaterialTheme.typography.labelMedium, maxLines = 1)
             }
             Surface(modifier = Modifier.align(Alignment.TopEnd).padding(10.dp), shape = CircleShape, color = Color.White.copy(alpha = 0.9f)) {
-                Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(8.dp).size(16.dp), tint = StudioBlue)
+                Icon(Icons.Rounded.Visibility, contentDescription = stringResource(R.string.preview), Modifier.padding(8.dp).size(16.dp), tint = StudioBlue)
             }
+        }
+    }
+}
+
+private data class ElitePassPresentation(
+    val claimedDays: Int,
+    val currentDay: Int,
+    val claimedToday: Boolean,
+    val canClaimToday: Boolean,
+    val daySevenAvailable: Boolean,
+    val atCap: Boolean,
+    val syncing: Boolean,
+    val progress: Float,
+    val footer: String,
+)
+
+@Composable
+private fun elitePassPresentation(state: HomeDecorUiState): ElitePassPresentation {
+    val daySevenClaimed = state.eliteLastClaimWasDaySeven
+    val confirmedDays = if (daySevenClaimed) 7 else state.viewer.streakCount.coerceIn(0, 7)
+    val syncing = state.elitePassSyncState == ElitePassSyncState.Syncing || state.elitePassSyncState == ElitePassSyncState.Loading
+    val claimedToday = state.claimedToday && state.elitePassSyncState != ElitePassSyncState.Error
+    val currentDay = when {
+        daySevenClaimed -> 7
+        claimedToday -> confirmedDays.coerceIn(1, 7)
+        else -> (confirmedDays + 1).coerceIn(1, 7)
+    }
+    val canClaimToday = state.viewer.canClaimDiamond &&
+        !claimedToday &&
+        state.elitePassSyncState != ElitePassSyncState.LocalOnly &&
+        state.elitePassSyncState != ElitePassSyncState.Error
+    val daySevenAvailable = canClaimToday && currentDay == 7
+    val lockedByTime = state.viewer.nextDiamondClaimAt > System.currentTimeMillis()
+    val atCap = !claimedToday && !canClaimToday && !lockedByTime && state.diamonds >= 3 && !daySevenAvailable
+    val footer = when {
+        syncing -> stringResource(R.string.elite_footer_syncing)
+        claimedToday && daySevenClaimed -> stringResource(R.string.elite_footer_day7_confirmed)
+        claimedToday -> stringResource(R.string.elite_footer_reward_confirmed)
+        daySevenAvailable -> stringResource(R.string.elite_footer_day7_available)
+        canClaimToday -> stringResource(R.string.elite_footer_diamond_available)
+        state.elitePassSyncState == ElitePassSyncState.Error -> state.elitePassSyncMessage
+        state.elitePassSyncState == ElitePassSyncState.LocalOnly -> state.elitePassSyncMessage
+        atCap -> stringResource(R.string.elite_footer_balance_full)
+        else -> stringResource(R.string.elite_footer_next_window)
+    }
+    return ElitePassPresentation(
+        claimedDays = confirmedDays,
+        currentDay = currentDay,
+        claimedToday = claimedToday,
+        canClaimToday = canClaimToday,
+        daySevenAvailable = daySevenAvailable,
+        atCap = atCap,
+        syncing = syncing,
+        progress = (confirmedDays / 7f).coerceIn(0f, 1f),
+        footer = footer,
+    )
+}
+
+@Composable
+private fun EliteSyncPill(state: HomeDecorUiState) {
+    val (label, color, contentColor) = when (state.elitePassSyncState) {
+        ElitePassSyncState.Loading -> Triple(stringResource(R.string.elite_sync), Color.White.copy(alpha = 0.14f), Color.White)
+        ElitePassSyncState.Syncing -> Triple(stringResource(R.string.elite_sync), StudioGold, StudioInk)
+        ElitePassSyncState.Synced -> Triple(stringResource(R.string.elite_sync_ok), Color.White.copy(alpha = 0.16f), Color.White)
+        ElitePassSyncState.LocalOnly -> Triple(stringResource(R.string.elite_local), Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.82f))
+        ElitePassSyncState.Error -> Triple(stringResource(R.string.elite_resync), StudioErrorContainer, StudioRose)
+    }
+    Surface(shape = CircleShape, color = color) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (state.elitePassSyncState == ElitePassSyncState.Syncing || state.elitePassSyncState == ElitePassSyncState.Loading) {
+                CircularProgressIndicator(modifier = Modifier.size(12.dp), color = contentColor, strokeWidth = 2.dp)
+            }
+            Text(label, color = contentColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun EliteStatusStrip(pass: ElitePassPresentation) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        EliteMetricPill(
+            label = stringResource(R.string.today),
+            value = when {
+                pass.claimedToday -> stringResource(R.string.claimed)
+                pass.canClaimToday -> stringResource(R.string.available)
+                else -> stringResource(R.string.locked)
+            },
+            highlighted = pass.canClaimToday,
+            modifier = Modifier.weight(1f),
+        )
+        EliteMetricPill(
+            label = stringResource(R.string.streak),
+            value = "${pass.claimedDays}/7",
+            highlighted = false,
+            modifier = Modifier.weight(1f),
+        )
+        EliteMetricPill(
+            label = "J7",
+            value = stringResource(R.string.day7_bonus),
+            highlighted = pass.daySevenAvailable,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun EliteMetricPill(
+    label: String,
+    value: String,
+    highlighted: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = if (highlighted) StudioGold.copy(alpha = 0.24f) else Color.White.copy(alpha = 0.10f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (highlighted) StudioGold.copy(alpha = 0.62f) else Color.White.copy(alpha = 0.08f)),
+        modifier = modifier,
+    ) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 9.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(label, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(value, color = if (highlighted) StudioGold else Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -2345,49 +3297,78 @@ private fun ElitePassScreen(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val completedDays = completedEliteDays(state)
-    ScreenColumn(title = "Pass Elite", subtitle = null, trailing = { CreditPill(state, compact = true, onClick = viewModel::openDiamondStore) }) {
+    val pass = elitePassPresentation(state)
+    ScreenColumn(title = stringResource(R.string.nav_elite_pass), subtitle = null, trailing = { CreditPill(state, compact = true, onClick = viewModel::openDiamondStore) }) {
         LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             item {
-                ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioBlack)) {
-                    Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text("PASS QUOTIDIEN", color = Color(0xFFD6B65D), fontWeight = FontWeight.Bold)
-                        Text("Pass Elite", color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFF151713))) {
+                    Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.weight(1f)) {
+                                Text(stringResource(R.string.daily_pass), color = StudioGold, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                Text(stringResource(R.string.nav_elite_pass), color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                            }
+                            EliteSyncPill(state)
+                        }
                         Text(
-                            "Récupérez 1 diamant gratuit chaque jour. Le 7e jour, débloquez 24h Pro et 3 diamants pour continuer à créer.",
+                            stringResource(R.string.elite_intro),
                             color = Color.White.copy(alpha = 0.78f),
+                            style = MaterialTheme.typography.bodyMedium,
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             repeat(7) { index ->
-                                val active = index + 1 <= completedDays
-                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Surface(shape = CircleShape, color = if (active) Color.White else Color.White.copy(alpha = 0.18f)) {
+                                val day = index + 1
+                                val claimed = day <= pass.claimedDays
+                                val today = day == pass.currentDay && pass.canClaimToday
+                                val isProDay = day == 7
+                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = when {
+                                            claimed -> Color.White
+                                            today -> StudioGold
+                                            isProDay -> Color.White.copy(alpha = 0.18f)
+                                            else -> Color.White.copy(alpha = 0.10f)
+                                        },
+                                    ) {
                                         Text(
-                                            "${index + 1}",
+                                            "$day",
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                                            color = if (active) StudioBlack else Color.White,
+                                            color = if (claimed || today) StudioBlack else Color.White.copy(alpha = 0.76f),
                                             fontWeight = FontWeight.Black,
                                         )
                                     }
-                                    Text(if (index == 6) "Pro" else "+1", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text(if (isProDay) stringResource(R.string.pro) else "+1", color = if (isProDay) StudioGold else Color.White.copy(alpha = 0.68f), style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
+                        EliteStatusStrip(pass)
                         Button(
                             onClick = viewModel::claimDiamond,
-                            enabled = !state.claimedToday && (state.diamonds < 3 || state.eliteStreakDay >= 7),
+                            enabled = pass.canClaimToday && !pass.syncing,
                             shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = StudioBlack),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (pass.daySevenAvailable) StudioGold else Color.White,
+                                contentColor = StudioBlack,
+                                disabledContainerColor = Color.White.copy(alpha = 0.16f),
+                                disabledContentColor = Color.White.copy(alpha = 0.62f),
+                            ),
                             modifier = Modifier.fillMaxWidth().height(54.dp),
                         ) {
-                            Icon(Icons.Rounded.Star, null)
+                            if (pass.syncing) {
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = StudioInk, strokeWidth = 2.dp)
+                            } else {
+                                Icon(if (pass.daySevenAvailable) Icons.Rounded.Star else Icons.Rounded.Diamond, null)
+                            }
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 when {
-                                    state.claimedToday -> "Réclamé aujourd'hui"
-                                    state.diamonds >= 3 && state.eliteStreakDay < 7 -> "Plafond quotidien atteint"
-                                    state.eliteStreakDay >= 7 -> "Réclamer J7 Pro"
-                                    else -> "Réclamer"
+                                    pass.syncing -> stringResource(R.string.elite_syncing)
+                                    pass.claimedToday -> stringResource(R.string.claim_today)
+                                    pass.atCap -> stringResource(R.string.daily_balance_full)
+                                    pass.daySevenAvailable -> stringResource(R.string.claim_d7_pro)
+                                    pass.canClaimToday -> stringResource(R.string.claim_diamond)
+                                    else -> stringResource(R.string.locked_today)
                                 },
                                 fontWeight = FontWeight.Black,
                             )
@@ -2404,7 +3385,7 @@ private fun ElitePassScreen(
                 ) {
                     Icon(Icons.Rounded.Star, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Ouvrir la boutique de diamants")
+                    Text(stringResource(R.string.open_diamond_store))
                 }
             }
             item { PaywallCard(onUnlock = viewModel::unlockProPreview) }
@@ -2417,15 +3398,17 @@ private fun EliteTimelineCard(
     state: HomeDecorUiState,
     onClaim: () -> Unit,
 ) {
-    val completedDays = completedEliteDays(state)
-    val currentDay = (completedDays + 1).coerceIn(1, 7)
-    ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFF0F1300))) {
+    val pass = elitePassPresentation(state)
+    ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFF111410))) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Votre série Elite", color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                Surface(shape = CircleShape, color = StudioMint) {
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.your_elite_streak), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.future_days_locked), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelMedium)
+                }
+                Surface(shape = CircleShape, color = StudioProContainer) {
                     Text(
-                        "$completedDays/7",
+                        "${pass.claimedDays}/7",
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
                         color = StudioInk,
                         style = MaterialTheme.typography.labelMedium,
@@ -2434,24 +3417,26 @@ private fun EliteTimelineCard(
                 }
             }
             LinearProgressIndicator(
-                progress = { (completedDays / 7f).coerceIn(0f, 1f) },
+                progress = { pass.progress },
                 modifier = Modifier.fillMaxWidth().height(7.dp).clip(CircleShape),
-                color = StudioBlue,
-                trackColor = Color.White.copy(alpha = 0.86f),
+                color = StudioGold,
+                trackColor = Color.White.copy(alpha = 0.18f),
             )
             repeat(7) { index ->
                 val day = index + 1
-                val claimed = day <= completedDays
-                val current = day == currentDay && !state.claimedToday
+                val claimed = day <= pass.claimedDays
+                val current = day == pass.currentDay && pass.canClaimToday
                 EliteDayRow(
                     day = day,
                     claimed = claimed,
                     current = current,
+                    syncing = pass.syncing,
+                    completedDays = pass.claimedDays,
                     onClaim = onClaim,
                 )
             }
             Text(
-                if (state.claimedToday) "Revenez demain pour avancer vers le bonus Pro." else "Réclamez aujourd'hui pour avancer vers le bonus Pro.",
+                pass.footer,
                 color = Color.White.copy(alpha = 0.78f),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -2461,67 +3446,72 @@ private fun EliteTimelineCard(
     }
 }
 
-private fun completedEliteDays(state: HomeDecorUiState): Int {
-    return when {
-        state.viewer.streakCount > 0 -> state.viewer.streakCount.coerceIn(0, 7)
-        else -> (state.eliteStreakDay - 1).coerceIn(0, 7)
-    }
-}
-
 @Composable
 private fun EliteDayRow(
     day: Int,
     claimed: Boolean,
     current: Boolean,
+    syncing: Boolean,
+    completedDays: Int,
     onClaim: () -> Unit,
 ) {
+    val locked = !claimed && !current
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = when {
-            current -> Color(0xFF3A3214)
+            current -> Color(0xFF332B12)
             claimed -> Color.White.copy(alpha = 0.10f)
-            day == 7 -> Color(0xFF302A12)
-            else -> Color(0xFF1E1418)
+            day == 7 -> Color(0xFF211C12)
+            else -> Color.White.copy(alpha = 0.055f)
         },
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = if (current) 0.18f else 0.10f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (current) StudioGold.copy(alpha = 0.58f) else Color.White.copy(alpha = 0.10f)),
     ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Surface(shape = CircleShape, color = if (claimed || current) Color(0xFFD8AE48) else Color.White.copy(alpha = 0.10f)) {
+            Surface(shape = CircleShape, color = if (claimed || current) StudioGold else Color.White.copy(alpha = 0.10f)) {
                 Icon(
-                    if (claimed) Icons.Rounded.Check else if (day == 7) Icons.Rounded.Star else Icons.AutoMirrored.Rounded.ViewQuilt,
+                    when {
+                        claimed -> Icons.Rounded.Check
+                        locked -> Icons.Rounded.Lock
+                        day == 7 -> Icons.Rounded.Star
+                        else -> Icons.AutoMirrored.Rounded.ViewQuilt
+                    },
                     null,
                     Modifier.padding(9.dp).size(18.dp),
                     tint = if (claimed || current) Color.White else Color.White.copy(alpha = 0.48f),
                 )
             }
             Column(Modifier.weight(1f)) {
-                Text(if (day == 7) "J7 Pro" else "J$day", color = if (day == 7) Color(0xFFD8AE48) else Color.White, fontWeight = FontWeight.Black)
+                Text(if (day == 7) stringResource(R.string.day_7_pro) else stringResource(R.string.day_format, day), color = if (day == 7) StudioGold else Color.White, fontWeight = FontWeight.Black)
+                val daysLeft = day - completedDays
                 Text(
                     when {
-                        claimed -> "Réclamé"
-                        current -> "Disponible aujourd'hui"
-                        else -> "Dans ${day - 1} jours"
+                        claimed -> stringResource(R.string.claimed)
+                        current -> stringResource(R.string.available_today)
+                        day == 7 -> stringResource(R.string.pro_bonus_locked)
+                        daysLeft <= 1 -> stringResource(R.string.locked_until_tomorrow)
+                        else -> stringResource(R.string.locked_day_format, day)
                     },
-                    color = if (current) Color(0xFFD8AE48) else Color.White.copy(alpha = 0.68f),
+                    color = if (current) StudioGold else Color.White.copy(alpha = 0.68f),
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
             if (current) {
                 Button(
                     onClick = onClaim,
+                    enabled = !syncing,
                     shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD8AE48), contentColor = StudioInk),
+                    colors = studioProButtonColors(),
                     contentPadding = PaddingValues(horizontal = 14.dp),
                     modifier = Modifier.height(38.dp),
                 ) {
-                    Text(if (day == 7) "+3 + Pro" else "+1", fontWeight = FontWeight.Black)
+                    Text(if (syncing) stringResource(R.string.ellipsis) else if (day == 7) stringResource(R.string.day7_bonus) else "+1", fontWeight = FontWeight.Black)
                 }
             } else if (day == 7) {
-                Text("+3 + Pro", color = Color(0xFFD8AE48), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.day7_bonus), color = StudioGold, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -2531,12 +3521,12 @@ private fun EliteDayRow(
 private fun PaywallCard(onUnlock: () -> Unit) {
     ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper)) {
         Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("Débloquez des designs illimités", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-            FeatureRow(Icons.Rounded.AutoAwesome, "Traitement IA prioritaire")
-            FeatureRow(Icons.Rounded.Download, "Exports propres en haute qualité")
-            FeatureRow(Icons.Rounded.Diamond, "Générations sans friction")
+            Text(stringResource(R.string.unlock_unlimited_designs), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+            FeatureRow(Icons.Rounded.AutoAwesome, stringResource(R.string.feature_priority_ai))
+            FeatureRow(Icons.Rounded.Download, stringResource(R.string.feature_clean_exports))
+            FeatureRow(Icons.Rounded.Diamond, stringResource(R.string.feature_frictionless_generations))
             Button(onClick = onUnlock, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(54.dp)) {
-                Text("Passer à Pro")
+                Text(stringResource(R.string.upgrade_to_pro))
             }
         }
     }
@@ -2549,73 +3539,193 @@ private fun ProfileScreen(
 ) {
     val context = LocalContext.current
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            FilledIconButton(onClick = viewModel::openSettings, modifier = Modifier.size(48.dp)) {
-                Icon(Icons.Rounded.Settings, contentDescription = "Paramètres")
-            }
-            Spacer(Modifier.weight(1f))
-            if (state.signedInName == null) {
-                Button(
-                    onClick = viewModel::openAuth,
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = StudioBlue, contentColor = Color.White),
-                    modifier = Modifier.height(48.dp),
-                ) {
-                    Text("Se connecter", fontWeight = FontWeight.Black)
+        ScreenHeaderPills(
+            title = stringResource(R.string.nav_profile),
+            trailing = {
+                FilledIconButton(onClick = viewModel::openSettings, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings))
                 }
-            } else {
-                Surface(shape = CircleShape, color = StudioPaper, tonalElevation = 2.dp, modifier = Modifier.border(1.dp, StudioLine, CircleShape)) {
-                    Row(
-                        Modifier.padding(start = 6.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            },
+        )
+        LazyColumn(
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            item {
+                AccountHeaderSection(
+                    state = state,
+                    onSignIn = viewModel::openAuth,
+                    onStore = viewModel::openDiamondStore,
+                    onPaywall = viewModel::openPaywall,
+                )
+            }
+            item {
+                ProfileSignInStateSection(
+                    signedIn = state.signedInName != null,
+                    email = state.signedInEmail,
+                    onSignIn = viewModel::openAuth,
+                )
+            }
+            item {
+                PortfolioHistorySection(
+                    state = state,
+                    onCreate = { viewModel.selectTab(MainTab.Tools) },
+                )
+            }
+            item {
+                PurchasesSection(
+                    state = state,
+                    onStore = viewModel::openDiamondStore,
+                    onPaywall = viewModel::openPaywall,
+                )
+            }
+            item {
+                ProfileSettingsSection(
+                    onSettings = viewModel::openSettings,
+                    onShare = {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_app_text))
+                        }
+                        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_app_chooser)))
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccountHeaderSection(
+    state: HomeDecorUiState,
+    onSignIn: () -> Unit,
+    onStore: () -> Unit,
+    onPaywall: () -> Unit,
+) {
+    ElevatedCard(
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Surface(shape = CircleShape, color = if (state.isPro) StudioProContainer else StudioPrimaryContainer) {
+                    Icon(Icons.Rounded.Person, null, Modifier.padding(16.dp).size(28.dp), tint = if (state.isPro) StudioGold else StudioBlue)
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(state.signedInName ?: stringResource(R.string.profile_personal_space), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(
+                        state.signedInEmail ?: stringResource(R.string.profile_sign_in_sync),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                ProfileInfoPill(
+                    icon = Icons.Rounded.Diamond,
+                    label = stringResource(R.string.diamonds_count, state.diamonds),
+                    modifier = Modifier.weight(1f),
+                )
+                ProfileInfoPill(
+                    icon = Icons.Rounded.Star,
+                    label = if (state.isPro) stringResource(R.string.active_pro) else stringResource(R.string.free_plan),
+                    modifier = Modifier.weight(1f),
+                    accent = state.isPro,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                if (state.signedInName == null) {
+                    Button(
+                        onClick = onSignIn,
+                        shape = CircleShape,
+                        colors = studioPrimaryButtonColors(),
+                        modifier = Modifier.weight(1f).height(50.dp),
                     ) {
-                        Surface(shape = CircleShape, color = StudioMint) {
-                            Text(
-                                state.signedInName.take(1),
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                                color = StudioInk,
-                                fontWeight = FontWeight.Black,
-                            )
-                        }
-                        Column {
-                            Text(state.signedInName, fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelLarge)
-                            Text(state.signedInEmail.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                        }
+                        Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Black)
                     }
+                } else if (!state.isPro) {
+                    Button(
+                        onClick = onPaywall,
+                        shape = CircleShape,
+                        colors = studioPrimaryButtonColors(),
+                        modifier = Modifier.weight(1f).height(50.dp),
+                    ) {
+                        Text(stringResource(R.string.upgrade_to_pro), fontWeight = FontWeight.Black)
+                    }
+                }
+                OutlinedButton(
+                    onClick = onStore,
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).height(50.dp),
+                ) {
+                    Icon(Icons.Rounded.Diamond, null, Modifier.size(17.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.diamonds), fontWeight = FontWeight.Black)
                 }
             }
         }
-        LazyColumn(contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            item { PortfolioHeader() }
-            if (state.board.isEmpty()) {
-                item { EmptyPortfolio(onCreate = { viewModel.selectTab(MainTab.Tools) }) }
-            } else {
-                item {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        modifier = Modifier.height(((state.board.size + 1) / 2 * 226).dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        userScrollEnabled = false,
-                    ) {
-                        items(state.board, key = { it.id }) { item ->
-                            BoardCard(item = item)
-                        }
-                    }
+    }
+}
+
+@Composable
+private fun ProfileInfoPill(
+    icon: ImageVector,
+    label: String,
+    modifier: Modifier = Modifier,
+    accent: Boolean = false,
+) {
+    Surface(
+        shape = CircleShape,
+        color = if (accent) StudioProContainer else StudioPrimaryContainer,
+        modifier = modifier,
+    ) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(icon, null, Modifier.size(17.dp), tint = if (accent) StudioGold else StudioBlue)
+            Text(label, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun ProfileSignInStateSection(
+    signedIn: Boolean,
+    email: String?,
+    onSignIn: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProfileSectionTitle(icon = Icons.Rounded.Lock, title = stringResource(R.string.connection_state))
+        ElevatedCard(
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Surface(shape = CircleShape, color = if (signedIn) StudioPrimaryContainer else StudioMist) {
+                    Icon(if (signedIn) Icons.Rounded.Check else Icons.Rounded.Lock, null, Modifier.padding(10.dp).size(20.dp), tint = if (signedIn) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
-            item {
-                if (!state.isPro) {
-                    Button(onClick = viewModel::openPaywall, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(54.dp)) {
-                        Text("Passer à Pro")
+                Column(Modifier.weight(1f)) {
+                    Text(if (signedIn) stringResource(R.string.account_connected) else stringResource(R.string.local_session), fontWeight = FontWeight.Black)
+                    Text(
+                        email ?: stringResource(R.string.local_creations_body),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (!signedIn) {
+                    OutlinedButton(onClick = onSignIn, shape = CircleShape) {
+                        Text(stringResource(R.string.connection))
                     }
                 }
             }
@@ -2624,42 +3734,168 @@ private fun ProfileScreen(
 }
 
 @Composable
-private fun PortfolioHeader() {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Surface(shape = CircleShape, color = StudioMint) {
-            Icon(Icons.AutoMirrored.Rounded.ViewQuilt, null, Modifier.padding(8.dp).size(20.dp), tint = StudioInk)
+private fun PortfolioHistorySection(
+    state: HomeDecorUiState,
+    onCreate: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProfileSectionTitle(icon = Icons.AutoMirrored.Rounded.ViewQuilt, title = stringResource(R.string.portfolio_history))
+        if (state.board.isEmpty()) {
+            EmptyPortfolio(onCreate = onCreate)
+        } else {
+            val rows = ((state.board.size + 1) / 2).coerceAtLeast(1)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.height((rows * 226).dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                userScrollEnabled = false,
+            ) {
+                items(state.board, key = { it.id }) { item ->
+                    BoardCard(item = item)
+                }
+            }
         }
-        Text("Mon portfolio de concepts", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
     }
+}
+
+@Composable
+private fun PurchasesSection(
+    state: HomeDecorUiState,
+    onStore: () -> Unit,
+    onPaywall: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProfileSectionTitle(icon = Icons.Rounded.Diamond, title = stringResource(R.string.purchases))
+        ElevatedCard(
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+        ) {
+            Column(Modifier.padding(6.dp)) {
+                ProfileActionRow(
+                    icon = Icons.Rounded.Diamond,
+                    title = stringResource(R.string.diamonds),
+                    subtitle = stringResource(R.string.credits_available, state.diamonds),
+                    action = stringResource(R.string.store),
+                    onClick = onStore,
+                )
+                ProfileActionRow(
+                    icon = Icons.Rounded.Star,
+                    title = stringResource(R.string.nav_elite_pass),
+                    subtitle = if (state.isPro) stringResource(R.string.active_pro_access) else stringResource(R.string.clean_exports_and_generations),
+                    action = if (state.isPro) stringResource(R.string.manage) else stringResource(R.string.view),
+                    onClick = onPaywall,
+                )
+                state.purchaseMessage?.takeIf { it.isNotBlank() }?.let { message ->
+                    Text(
+                        message,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileSettingsSection(
+    onSettings: () -> Unit,
+    onShare: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProfileSectionTitle(icon = Icons.Rounded.Settings, title = stringResource(R.string.settings))
+        ElevatedCard(
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+        ) {
+            Column(Modifier.padding(6.dp)) {
+                ProfileActionRow(
+                    icon = Icons.Rounded.Settings,
+                    title = stringResource(R.string.preferences),
+                    subtitle = stringResource(R.string.preferences_subtitle),
+                    action = stringResource(R.string.open),
+                    onClick = onSettings,
+                )
+                ProfileActionRow(
+                    icon = Icons.Rounded.Share,
+                    title = stringResource(R.string.share_app),
+                    subtitle = stringResource(R.string.share_app_subtitle),
+                    action = stringResource(R.string.share),
+                    onClick = onShare,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileSectionTitle(
+    icon: ImageVector,
+    title: String,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+            Icon(icon, null, Modifier.padding(8.dp).size(18.dp), tint = StudioBlue)
+        }
+        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+    }
+}
+
+@Composable
+private fun ProfileActionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    action: String,
+    onClick: () -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text(title, fontWeight = FontWeight.Bold) },
+        supportingContent = { Text(subtitle, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        leadingContent = {
+            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                Icon(icon, contentDescription = null, tint = StudioBlue, modifier = Modifier.padding(9.dp).size(20.dp))
+            }
+        },
+        trailingContent = {
+            OutlinedButton(onClick = onClick, shape = CircleShape, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp)) {
+                Text(action, fontWeight = FontWeight.Bold, maxLines = 1)
+            }
+        },
+    )
 }
 
 @Composable
 private fun EmptyPortfolio(onCreate: () -> Unit) {
-    Box(Modifier.fillMaxWidth().height(540.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Box(contentAlignment = Alignment.Center) {
-                Surface(shape = CircleShape, color = Color(0xFFE0E5FF)) {
-                    Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(30.dp).size(42.dp), tint = StudioBlue)
-                }
-                Surface(shape = CircleShape, color = StudioMint, modifier = Modifier.align(Alignment.BottomEnd)) {
-                    Icon(Icons.Rounded.Check, null, Modifier.padding(6.dp).size(14.dp), tint = StudioInk)
-                }
+    ElevatedCard(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(24.dp).size(36.dp), tint = StudioBlue)
             }
-            Text("Votre portfolio est vide", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+            Text(stringResource(R.string.empty_portfolio_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             Text(
-                "Générez votre premier design pour commencer votre collection.",
+                stringResource(R.string.empty_portfolio_body),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.fillMaxWidth(0.74f),
+                modifier = Modifier.fillMaxWidth(0.86f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
             Button(
                 onClick = onCreate,
                 shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = StudioBlue, contentColor = Color.White),
-                modifier = Modifier.fillMaxWidth(0.92f).height(54.dp),
+                colors = studioPrimaryButtonColors(),
+                modifier = Modifier.fillMaxWidth().height(54.dp),
             ) {
-                Text("Créer mon premier design", fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.create_design), fontWeight = FontWeight.Black)
             }
         }
     }
@@ -2677,8 +3913,8 @@ private fun SettingsRow(
             headlineContent = { Text(title, fontWeight = FontWeight.Bold) },
             supportingContent = { Text(subtitle) },
             leadingContent = {
-                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                    Icon(icon, contentDescription = null, tint = StudioGreen, modifier = Modifier.padding(9.dp).size(20.dp))
+        Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+            Icon(icon, contentDescription = null, tint = StudioBlue, modifier = Modifier.padding(9.dp).size(20.dp))
                 }
             },
         )
@@ -2745,8 +3981,8 @@ private fun FeatureRow(
     text: String,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-            Icon(icon, contentDescription = null, tint = StudioGreen, modifier = Modifier.padding(8.dp).size(18.dp))
+        Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+            Icon(icon, contentDescription = null, tint = StudioBlue, modifier = Modifier.padding(8.dp).size(18.dp))
         }
         Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
     }
@@ -2760,34 +3996,46 @@ private fun PaywallSheet(
     onStore: () -> Unit,
 ) {
     val context = LocalContext.current
+    val modalTapBlocker = remember { MutableInteractionSource() }
     var offering by remember { mutableStateOf<Offering?>(null) }
-    var loading by remember { mutableStateOf(false) }
+    var offeringsLoading by remember { mutableStateOf(true) }
+    var purchasing by remember { mutableStateOf(false) }
+    var restoring by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(Unit) {
+        offeringsLoading = true
+        message = null
         if (!Purchases.isConfigured) {
-            message = "Les abonnements sont momentanément indisponibles."
+            offeringsLoading = false
+            message = context.getString(R.string.subscriptions_unavailable)
             return@LaunchedEffect
         }
         Purchases.sharedInstance.getOfferings(object : ReceiveOfferingsCallback {
             override fun onReceived(offerings: com.revenuecat.purchases.Offerings) {
                 offering = offerings.current ?: offerings.all.values.firstOrNull()
+                offeringsLoading = false
+                if (offering == null) {
+                    message = context.getString(R.string.no_subscription_available)
+                }
             }
 
             override fun onError(error: PurchasesError) {
-                message = "Impossible de charger les prix pour le moment."
+                offeringsLoading = false
+                message = context.getString(R.string.load_prices_failed)
             }
         })
     }
     fun buy(packageToPurchase: Package?, subscriptionType: String, entitlement: String) {
         val activity = context.findActivity()
         if (packageToPurchase == null || activity == null || !Purchases.isConfigured) {
-            message = "Ce plan n'est pas disponible pour le moment."
+            message = context.getString(R.string.plan_unavailable)
             return
         }
-        loading = true
-        Purchases.sharedInstance.purchasePackage(activity, packageToPurchase, object : PurchaseCallback {
+        purchasing = true
+        message = null
+        Purchases.sharedInstance.purchase(PurchaseParams.Builder(activity, packageToPurchase).build(), object : PurchaseCallback {
             override fun onCompleted(storeTransaction: StoreTransaction, customerInfo: CustomerInfo) {
-                loading = false
+                purchasing = false
                 val active = customerInfo.entitlements.active.values.firstOrNull()
                 onSubscription(
                     "pro",
@@ -2799,19 +4047,29 @@ private fun PaywallSheet(
             }
 
             override fun onError(error: PurchasesError, userCancelled: Boolean) {
-                loading = false
-                message = if (userCancelled) "Achat annulé." else "L'achat a échoué. Réessayez."
+                purchasing = false
+                message = if (userCancelled) context.getString(R.string.purchase_cancelled) else context.getString(R.string.purchase_failed)
             }
         })
     }
     val monthlyPackage = offering?.monthly ?: offering?.availablePackages?.firstOrNull { it.packageType == PackageType.MONTHLY }
     val yearlyPackage = offering?.annual ?: offering?.availablePackages?.firstOrNull { it.packageType == PackageType.ANNUAL }
-    Box(Modifier.fillMaxSize().background(StudioCanvas)) {
+    val purchaseBusy = purchasing || restoring || state.purchaseBusy
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(StudioCanvas)
+            .clickable(
+                interactionSource = modalTapBlocker,
+                indication = null,
+                onClick = {},
+            ),
+    ) {
         IconButton(
             onClick = onClose,
             modifier = Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp).size(48.dp),
         ) {
-            Icon(Icons.Rounded.Close, contentDescription = "Fermer")
+            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
         }
         LazyColumn(
             contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 92.dp, bottom = 28.dp),
@@ -2819,12 +4077,12 @@ private fun PaywallSheet(
         ) {
             item {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer, tonalElevation = 6.dp) {
+                    Surface(shape = CircleShape, color = StudioProContainer, tonalElevation = 6.dp) {
                         Icon(Icons.Rounded.Diamond, null, Modifier.padding(20.dp).size(38.dp), tint = StudioInk)
                     }
-                    Text("Passez à Pro", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.paywall_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                     Text(
-                        "Créez plus vite, exportez proprement et gardez vos concepts premium sans friction.",
+                        stringResource(R.string.paywall_subtitle),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
@@ -2833,84 +4091,138 @@ private fun PaywallSheet(
             item {
                 ElevatedCard(shape = RoundedCornerShape(28.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioBlack)) {
                     Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text("PRO", color = StudioMint, fontWeight = FontWeight.Black)
-                        Text("Création premium", color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                        FeatureRowOnDark(Icons.Rounded.AutoAwesome, "Générations illimitées ou limite mensuelle supérieure")
-                        FeatureRowOnDark(Icons.Rounded.Refresh, "Rendus plus rapides")
-                        FeatureRowOnDark(Icons.Rounded.Star, "Styles premium")
-                        FeatureRowOnDark(Icons.Rounded.Save, "Historique complet")
-                        FeatureRowOnDark(Icons.Rounded.Download, "Sans filigrane si applicable")
+                        Text(stringResource(R.string.pro_upper), color = StudioGold, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.premium_creation), color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                        FeatureRowOnDark(Icons.Rounded.AutoAwesome, stringResource(R.string.paywall_feature_generations))
+                        FeatureRowOnDark(Icons.Rounded.Refresh, stringResource(R.string.paywall_feature_fast))
+                        FeatureRowOnDark(Icons.Rounded.Star, stringResource(R.string.paywall_feature_styles))
+                        FeatureRowOnDark(Icons.Rounded.Save, stringResource(R.string.paywall_feature_history))
+                        FeatureRowOnDark(Icons.Rounded.Download, stringResource(R.string.paywall_feature_watermark))
+                        if (offeringsLoading) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = StudioGold, strokeWidth = 2.dp)
+                                Text(stringResource(R.string.loading_prices), color = Color.White.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
                         if (message != null || state.purchaseMessage != null) {
-                            Text(message ?: state.purchaseMessage.orEmpty(), color = StudioMint, style = MaterialTheme.typography.bodyMedium)
+                            Text(message ?: state.purchaseMessage.orEmpty(), color = StudioGold, style = MaterialTheme.typography.bodyMedium)
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Button(
-                                onClick = { buy(monthlyPackage, "weekly", "weekly_pro") },
-                                enabled = !loading && monthlyPackage != null,
-                                shape = CircleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = StudioMint, contentColor = StudioInk),
+                            PlanChoiceButton(
+                                title = stringResource(R.string.monthly),
+                                price = monthlyPackage?.product?.price?.formatted,
+                                loading = offeringsLoading,
+                                enabled = !offeringsLoading && !purchaseBusy && monthlyPackage != null,
+                                onClick = { buy(monthlyPackage, "monthly", "monthly_pro") },
                                 modifier = Modifier.weight(1f).height(56.dp),
-                            ) {
-                                Text(monthlyPackage?.product?.price?.formatted ?: "Mensuel", fontWeight = FontWeight.Black)
-                            }
-                            Button(
+                            )
+                            PlanChoiceButton(
+                                title = stringResource(R.string.yearly),
+                                price = yearlyPackage?.product?.price?.formatted,
+                                loading = offeringsLoading,
+                                enabled = !offeringsLoading && !purchaseBusy && yearlyPackage != null,
                                 onClick = { buy(yearlyPackage, "yearly", "annual_pro") },
-                                enabled = !loading && yearlyPackage != null,
-                                shape = CircleShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = StudioMint, contentColor = StudioInk),
                                 modifier = Modifier.weight(1f).height(56.dp),
-                            ) {
-                                Text(yearlyPackage?.product?.price?.formatted ?: "Annuel", fontWeight = FontWeight.Black)
-                            }
+                            )
                         }
                         Button(
-                            onClick = { buy(yearlyPackage ?: monthlyPackage, if (yearlyPackage != null) "yearly" else "weekly", if (yearlyPackage != null) "annual_pro" else "weekly_pro") },
-                            enabled = !loading && (yearlyPackage != null || monthlyPackage != null),
+                            onClick = { buy(yearlyPackage ?: monthlyPackage, if (yearlyPackage != null) "yearly" else "monthly", if (yearlyPackage != null) "annual_pro" else "monthly_pro") },
+                            enabled = !offeringsLoading && !purchaseBusy && (yearlyPackage != null || monthlyPackage != null),
                             shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = StudioMint, contentColor = StudioInk),
+                            colors = studioProButtonColors(),
                             modifier = Modifier.fillMaxWidth().height(56.dp),
                         ) {
-                            Text(if (loading) "Chargement..." else if (state.isPro) "Pro activé" else "Continuer", fontWeight = FontWeight.Black)
+                            Text(
+                                when {
+                                    purchaseBusy -> stringResource(R.string.processing_ellipsis)
+                                    offeringsLoading -> stringResource(R.string.loading_ellipsis)
+                                    state.isPro -> stringResource(R.string.pro_activated)
+                                    yearlyPackage != null -> stringResource(R.string.continue_yearly)
+                                    monthlyPackage != null -> stringResource(R.string.continue_monthly)
+                                    else -> stringResource(R.string.prices_unavailable)
+                                },
+                                fontWeight = FontWeight.Black,
+                            )
                         }
                         OutlinedButton(
                             onClick = {
                                 if (!Purchases.isConfigured) {
-                                    message = "Restauration indisponible pour le moment."
+                                    message = context.getString(R.string.restore_unavailable)
                                 } else {
-                                    loading = true
+                                    restoring = true
+                                    message = null
                                     Purchases.sharedInstance.restorePurchases(object : ReceiveCustomerInfoCallback {
                                         override fun onReceived(customerInfo: CustomerInfo) {
-                                            loading = false
+                                            restoring = false
                                             val active = customerInfo.entitlements.active.values.firstOrNull()
                                             if (active != null) {
-                                                onSubscription("pro", if (active.identifier.contains("annual")) "yearly" else "weekly", active.identifier, active.latestPurchaseDate.time.toDouble(), active.expirationDate?.time?.toDouble())
+                                                onSubscription("pro", if (active.identifier.contains("annual")) "yearly" else "monthly", active.identifier, active.latestPurchaseDate.time.toDouble(), active.expirationDate?.time?.toDouble())
                                             } else {
-                                                message = "Aucun achat Pro actif trouvé."
+                                                message = context.getString(R.string.no_active_pro_purchase)
                                             }
                                         }
 
                                         override fun onError(error: PurchasesError) {
-                                            loading = false
-                                            message = "La restauration a échoué. Réessayez."
+                                            restoring = false
+                                            message = context.getString(R.string.restore_failed)
                                         }
                                     })
                                 }
                             },
+                            enabled = !purchaseBusy,
                             shape = CircleShape,
                             modifier = Modifier.fillMaxWidth().height(50.dp),
                         ) {
-                            Text("Restaurer les achats")
+                            Text(if (restoring) stringResource(R.string.restoring) else stringResource(R.string.restore_purchases))
                         }
                     }
                 }
             }
             item {
-                OutlinedButton(onClick = onStore, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(54.dp)) {
+                OutlinedButton(
+                    onClick = onStore,
+                    enabled = !purchaseBusy,
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                ) {
                     Icon(Icons.Rounded.Diamond, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Acheter des diamants seulement")
+                    Text(stringResource(R.string.buy_diamonds_only))
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun PlanChoiceButton(
+    title: String,
+    price: String?,
+    loading: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = CircleShape,
+        colors = studioProButtonColors(),
+        contentPadding = PaddingValues(horizontal = 10.dp),
+        modifier = modifier,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, fontWeight = FontWeight.Black, maxLines = 1)
+            Text(
+                when {
+                    loading -> stringResource(R.string.loading_ellipsis)
+                    price != null -> price
+                    else -> stringResource(R.string.unavailable)
+                },
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -2919,7 +4231,7 @@ private fun PaywallSheet(
 private fun FeatureRowOnDark(icon: ImageVector, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.12f)) {
-            Icon(icon, contentDescription = null, tint = StudioMint, modifier = Modifier.padding(8.dp).size(18.dp))
+            Icon(icon, contentDescription = null, tint = StudioGold, modifier = Modifier.padding(8.dp).size(18.dp))
         }
         Text(text, color = Color.White.copy(alpha = 0.86f), fontWeight = FontWeight.SemiBold)
     }
@@ -2932,22 +4244,32 @@ private fun AuthSheet(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    Box(Modifier.fillMaxSize().background(StudioCanvas)) {
+    val modalTapBlocker = remember { MutableInteractionSource() }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(StudioCanvas)
+            .clickable(
+                interactionSource = modalTapBlocker,
+                indication = null,
+                onClick = {},
+            ),
+    ) {
         IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp).size(48.dp)) {
-            Icon(Icons.Rounded.Close, contentDescription = "Fermer")
+            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
         }
         Column(
             Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Surface(shape = CircleShape, color = Color(0xFFE0E5FF), tonalElevation = 5.dp) {
+            Surface(shape = CircleShape, color = StudioPrimaryContainer, tonalElevation = 5.dp) {
                 Icon(Icons.Rounded.Diamond, null, Modifier.padding(18.dp).size(38.dp), tint = StudioInk)
             }
             Spacer(Modifier.height(20.dp))
-            Text("Bon retour.", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text(stringResource(R.string.auth_welcome), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Text(
-                "Connectez-vous pour retrouver vos designs, vos crédits et votre historique.",
+                stringResource(R.string.auth_subtitle),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
@@ -2955,20 +4277,20 @@ private fun AuthSheet(
             ElevatedCard(shape = RoundedCornerShape(18.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioMist)) {
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     OutlinedButton(onClick = onGoogle, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(54.dp)) {
-                        Text("G", color = Color(0xFF4285F4), fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.google_initial), color = Color(0xFF4285F4), fontWeight = FontWeight.Black)
                         Spacer(Modifier.width(10.dp))
-                        Text("Continuer avec Google")
+                        Text(stringResource(R.string.continue_with_google))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Box(Modifier.weight(1f).height(1.dp).background(StudioLine))
-                        Text("ou", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.or), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Box(Modifier.weight(1f).height(1.dp).background(StudioLine))
                     }
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         leadingIcon = { Icon(Icons.Rounded.Email, null) },
-                        placeholder = { Text("Courriel") },
+                        placeholder = { Text(stringResource(R.string.email)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                     )
@@ -2977,7 +4299,7 @@ private fun AuthSheet(
                         onValueChange = { password = it },
                         leadingIcon = { Icon(Icons.Rounded.Lock, null) },
                         trailingIcon = { Icon(Icons.Rounded.Visibility, null) },
-                        placeholder = { Text("Mot de passe") },
+                        placeholder = { Text(stringResource(R.string.password)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                     )
@@ -2987,10 +4309,10 @@ private fun AuthSheet(
                         shape = CircleShape,
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                     ) {
-                        Text("Se connecter")
+                        Text(stringResource(R.string.sign_in))
                     }
                     Text(
-                        "Vos données sont protégées et ne sont jamais partagées.",
+                        stringResource(R.string.auth_privacy_note),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
@@ -3005,9 +4327,22 @@ private fun AuthSheet(
 private fun SettingsSheet(
     onClose: () -> Unit,
     onStore: () -> Unit,
+    currentLanguageTag: String,
+    onLanguageSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    Box(Modifier.fillMaxSize().background(StudioCanvas)) {
+    val modalTapBlocker = remember { MutableInteractionSource() }
+    var languagePickerVisible by remember { mutableStateOf(false) }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(StudioCanvas)
+            .clickable(
+                interactionSource = modalTapBlocker,
+                indication = null,
+                onClick = {},
+            ),
+    ) {
         Column(Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -3015,32 +4350,93 @@ private fun SettingsSheet(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 IconButton(onClick = onClose) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Retour")
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-                Text("Paramètres", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
             }
             LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                item { Text("Paramètres complets arrivent dans la prochaine passe native.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                item { SettingsRow(Icons.Rounded.Language, "Langue", "Français", onClick = { Toast.makeText(context, "Français sélectionné.", Toast.LENGTH_LONG).show() }) }
-                item { SettingsRow(Icons.Rounded.RateReview, "Feedback", "Envoyer une suggestion à l'équipe", onClick = { openUrl(context, "mailto:support@homedecor.ai?subject=HomeDecor%20AI%20Feedback") }) }
-                item { SettingsRow(Icons.Rounded.Help, "FAQ", "Questions fréquentes sur les designs IA", onClick = { showToast(context, "FAQ : importez une photo, choisissez vos options, puis générez un concept.") }) }
-                item { SettingsRow(Icons.Rounded.Star, "Restaurer les achats", "Récupérer vos abonnements et packs", onClick = { showToast(context, "Restauration RevenueCat à relier au compte Play Store.") }) }
-                item { SettingsRow(Icons.Rounded.Diamond, "Boutique de diamants", "Acheter des crédits de génération", onClick = onStore) }
                 item {
-                    SettingsRow(Icons.Rounded.Share, "Partager l'app", "Invitez quelqu'un à essayer HomeDecor AI", onClick = {
+                    SettingsRow(
+                        Icons.Rounded.Language,
+                        stringResource(R.string.language),
+                        AppLocale.labelFor(currentLanguageTag),
+                        onClick = { languagePickerVisible = true },
+                    )
+                }
+                item { SettingsRow(Icons.Rounded.RateReview, stringResource(R.string.feedback), stringResource(R.string.feedback_subtitle), onClick = { openUrl(context, "mailto:support@homedecor.ai?subject=HomeDecor%20AI%20Feedback") }) }
+                item { SettingsRow(Icons.AutoMirrored.Rounded.Help, stringResource(R.string.faq), stringResource(R.string.faq_subtitle), onClick = { showToast(context, context.getString(R.string.faq_toast)) }) }
+                item { SettingsRow(Icons.Rounded.Star, stringResource(R.string.restore_purchases), stringResource(R.string.restore_purchases_subtitle), onClick = { showToast(context, context.getString(R.string.restore_purchases_toast)) }) }
+                item { SettingsRow(Icons.Rounded.Diamond, stringResource(R.string.diamond_store), stringResource(R.string.diamond_store_subtitle), onClick = onStore) }
+                item {
+                    SettingsRow(Icons.Rounded.Share, stringResource(R.string.share_app), stringResource(R.string.share_app_subtitle), onClick = {
                         val intent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, "Essayez HomeDecor AI pour transformer intérieurs, extérieurs, jardins, murs et sols.")
+                            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_app_long_text))
                         }
-                        context.startActivity(Intent.createChooser(intent, "Partager HomeDecor AI"))
+                        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_app_chooser)))
                     })
                 }
-                item { SettingsRow(Icons.Rounded.Policy, "Conditions d'utilisation", "Règles d'utilisation et avertissement IA", onClick = { openUrl(context, "${BuildConfig.APP_URL}/terms") }) }
-                item { SettingsRow(Icons.Rounded.Policy, "Politique de confidentialité", "Données, images et compte utilisateur", onClick = { openUrl(context, "${BuildConfig.APP_URL}/privacy") }) }
-                item { SettingsRow(Icons.Rounded.Delete, "Supprimer le compte", "Demande de suppression de compte", onClick = { showToast(context, "La suppression complète sera reliée à Clerk dans la passe native suivante.") }) }
+                item { SettingsRow(Icons.Rounded.Policy, stringResource(R.string.terms), stringResource(R.string.terms_subtitle), onClick = { openUrl(context, "${BuildConfig.APP_URL}/terms") }) }
+                item { SettingsRow(Icons.Rounded.Policy, stringResource(R.string.privacy_policy), stringResource(R.string.privacy_subtitle), onClick = { openUrl(context, "${BuildConfig.APP_URL}/privacy") }) }
+                item { SettingsRow(Icons.Rounded.Delete, stringResource(R.string.delete_account), stringResource(R.string.delete_account_subtitle), onClick = { openUrl(context, "mailto:support@homedecor.ai?subject=Suppression%20du%20compte%20HomeDecor%20AI") }) }
             }
         }
     }
+    if (languagePickerVisible) {
+        LanguagePickerDialog(
+            currentLanguageTag = currentLanguageTag,
+            onLanguageSelected = { languageTag ->
+                onLanguageSelected(languageTag)
+                val localizedContext = AppLocale.wrap(context, languageTag)
+                Toast.makeText(
+                    localizedContext,
+                    localizedContext.getString(R.string.toast_language_selected),
+                    Toast.LENGTH_LONG,
+                ).show()
+                languagePickerVisible = false
+            },
+            onDismiss = { languagePickerVisible = false },
+        )
+    }
+}
+
+@Composable
+private fun LanguagePickerDialog(
+    currentLanguageTag: String,
+    onLanguageSelected: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.language_picker_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppLocale.supportedLanguages.forEach { language ->
+                    val selected = language.tag == currentLanguageTag
+                    Surface(
+                        color = if (selected) StudioPrimaryContainer else Color.Transparent,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(language.label, fontWeight = FontWeight.Bold) },
+                            trailingContent = {
+                                if (selected) {
+                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue)
+                                }
+                            },
+                            modifier = Modifier.clickable { onLanguageSelected(language.tag) },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss, shape = CircleShape) {
+                Text(stringResource(R.string.close))
+            }
+        },
+    )
 }
 
 private fun showToast(context: android.content.Context, message: String) {
@@ -3051,7 +4447,7 @@ private fun openUrl(context: android.content.Context, url: String) {
     runCatching {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }.onFailure {
-        showToast(context, "Impossible d'ouvrir ce lien pour le moment.")
+        showToast(context, context.getString(R.string.open_link_failed))
     }
 }
 
@@ -3065,47 +4461,71 @@ private tailrec fun android.content.Context.findActivity(): Activity? = when (th
 private fun DiamondStoreSheet(
     state: HomeDecorUiState,
     onClose: () -> Unit,
-    onPack: (DiamondPack) -> Unit,
     onFulfill: (String, String, String, String?, Double, String, Double) -> Unit,
 ) {
     val context = LocalContext.current
+    val scrimTapBlocker = remember { MutableInteractionSource() }
+    val sheetTapBlocker = remember { MutableInteractionSource() }
     var packages by remember { mutableStateOf<List<Package>>(emptyList()) }
+    var storeLoading by remember { mutableStateOf(true) }
     var loadingPack by remember { mutableStateOf<String?>(null) }
+    var successPack by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(Unit) {
+        storeLoading = true
+        message = null
         if (!Purchases.isConfigured) {
-            message = "Les achats sont momentanément indisponibles."
+            storeLoading = false
+            message = context.getString(R.string.store_purchases_unavailable)
             return@LaunchedEffect
         }
         Purchases.sharedInstance.getOfferings(object : ReceiveOfferingsCallback {
             override fun onReceived(offerings: com.revenuecat.purchases.Offerings) {
-                packages = (offerings.current?.availablePackages ?: emptyList()) + offerings.all.values.flatMap { it.availablePackages }
+                packages = ((offerings.current?.availablePackages ?: emptyList()) + offerings.all.values.flatMap { it.availablePackages })
+                    .distinctBy { "${it.identifier}:${it.product.id}" }
+                storeLoading = false
+                if (packages.isEmpty()) {
+                    message = context.getString(R.string.store_no_packs)
+                }
             }
 
             override fun onError(error: PurchasesError) {
-                message = "Impossible de charger les packs pour le moment."
+                storeLoading = false
+                message = context.getString(R.string.store_load_packs_failed)
             }
         })
     }
     fun packageFor(pack: DiamondPack): Package? {
-        val needles = listOf(pack.id, pack.title.lowercase(), "diamond", "diamonds", "credit")
+        val aliases = when (pack.id) {
+            "starter" -> listOf("starter", "start", "decouverte", "découverte", "10")
+            "designer" -> listOf("designer", "30")
+            "architect" -> listOf("architect", "architecte", "100")
+            "estate" -> listOf("estate", "studio", "250", "300")
+            else -> listOf(pack.id, pack.title.lowercase(), pack.diamonds.toString())
+        }
         return packages.firstOrNull { pkg ->
             val haystack = "${pkg.identifier} ${pkg.product.id} ${pkg.product.title} ${pkg.product.description}".lowercase()
-            pack.id in haystack || (needles.any { it in haystack } && pack.title.lowercase().split(" ").any { it in haystack })
-        } ?: packages.firstOrNull { pkg -> pack.id in pkg.identifier.lowercase() || pack.id in pkg.product.id.lowercase() }
+            aliases.any { it in haystack } && ("diamond" in haystack || "diamant" in haystack || "credit" in haystack || "crédit" in haystack)
+        } ?: packages.firstOrNull { pkg ->
+            val haystack = "${pkg.identifier} ${pkg.product.id}".lowercase()
+            pack.id in haystack || pack.diamonds.toString() in haystack
+        }
     }
     fun buy(pack: DiamondPack) {
         val productPackage = packageFor(pack)
         val activity = context.findActivity()
         if (productPackage == null || activity == null || !Purchases.isConfigured) {
-            onPack(pack)
-            message = "Pack indisponible dans Google Play pour le moment."
+            message = context.getString(R.string.pack_unavailable_google)
             return
         }
         loadingPack = pack.id
-        Purchases.sharedInstance.purchasePackage(activity, productPackage, object : PurchaseCallback {
+        successPack = null
+        message = null
+        Purchases.sharedInstance.purchase(PurchaseParams.Builder(activity, productPackage).build(), object : PurchaseCallback {
             override fun onCompleted(storeTransaction: StoreTransaction, customerInfo: CustomerInfo) {
                 loadingPack = null
+                successPack = pack.id
+                message = context.getString(R.string.purchase_google_confirmed)
                 onFulfill(
                     pack.id,
                     storeTransaction.orderId ?: storeTransaction.purchaseToken,
@@ -3119,7 +4539,8 @@ private fun DiamondStoreSheet(
 
             override fun onError(error: PurchasesError, userCancelled: Boolean) {
                 loadingPack = null
-                message = if (userCancelled) "Achat annulé." else "L'achat a échoué. Réessayez."
+                successPack = null
+                message = if (userCancelled) context.getString(R.string.purchase_cancelled) else context.getString(R.string.purchase_failed)
             }
         })
     }
@@ -3127,14 +4548,24 @@ private fun DiamondStoreSheet(
         Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.34f))
-            .clickable { onClose() },
+            .clickable(
+                interactionSource = scrimTapBlocker,
+                indication = null,
+                onClick = onClose,
+            ),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
             color = StudioCanvas,
             tonalElevation = 8.dp,
-            modifier = Modifier.fillMaxWidth().clickable { },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = sheetTapBlocker,
+                    indication = null,
+                    onClick = {},
+                ),
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 28.dp),
@@ -3159,32 +4590,42 @@ private fun DiamondStoreSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+                            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
                                 Icon(Icons.Rounded.Diamond, null, Modifier.padding(12.dp).size(26.dp), tint = StudioBlue)
                             }
                             Column(Modifier.weight(1f)) {
-                                Text("Solde actuel", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                                Text("${state.diamonds} diamants", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.current_balance), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                                Text(stringResource(R.string.diamonds_amount, state.diamonds), color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             IconButton(onClick = onClose) {
-                                Icon(Icons.Rounded.Close, contentDescription = "Close")
+                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
                             }
                         }
                     }
                 }
                 item {
-                    Text("Obtenir plus de crédits", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.get_more_credits), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                }
+                if (storeLoading) {
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = StudioBlue, strokeWidth = 2.dp)
+                            Text(stringResource(R.string.loading_packs), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
                 if (message != null || state.purchaseMessage != null) {
                     item {
                         Text(message ?: state.purchaseMessage.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                items(HomeDecorCatalog.diamondPacks.take(3), key = { it.id }) { pack ->
+                items(HomeDecorCatalog.diamondPacks, key = { it.id }) { pack ->
                     val productPackage = packageFor(pack)
                     DiamondPackRow(
-                        pack = pack.copy(price = productPackage?.product?.price?.formatted ?: pack.price),
-                        loading = loadingPack == pack.id || state.purchaseBusy,
+                        pack = pack.copy(price = productPackage?.product?.price?.formatted ?: stringResource(R.string.unavailable)),
+                        unavailable = !storeLoading && productPackage == null,
+                        loading = storeLoading || loadingPack == pack.id || state.purchaseBusy,
+                        success = successPack == pack.id,
                         onClick = { buy(pack) },
                     )
                 }
@@ -3196,11 +4637,14 @@ private fun DiamondStoreSheet(
 @Composable
 private fun DiamondPackRow(
     pack: DiamondPack,
+    unavailable: Boolean = false,
     loading: Boolean = false,
+    success: Boolean = false,
     onClick: () -> Unit,
 ) {
     ElevatedCard(
         onClick = onClick,
+        enabled = !loading && !unavailable,
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
         modifier = Modifier.fillMaxWidth().height(108.dp),
@@ -3210,17 +4654,17 @@ private fun DiamondPackRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
                 Icon(Icons.Rounded.Diamond, null, Modifier.padding(10.dp).size(22.dp), tint = StudioBlue)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Pack ${pack.title}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.pack_title, pack.title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (pack.badge != null) {
-                    Surface(shape = CircleShape, color = Color(0xFFFFE2E6)) {
+                    Surface(shape = CircleShape, color = StudioErrorContainer) {
                         Text(
                             pack.badge,
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                            color = Color(0xFFE83E54),
+                            color = StudioRose,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
@@ -3228,20 +4672,31 @@ private fun DiamondPackRow(
                         )
                     }
                 }
-                Text("${pack.diamonds} diamants", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (pack.description.isNotBlank()) {
+                Text(stringResource(R.string.diamonds_amount, pack.diamonds), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (success) {
+                    Text(stringResource(R.string.purchase_confirmed), color = StudioBlue, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                } else if (pack.description.isNotBlank()) {
                     Text(pack.description, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             Button(
                 onClick = onClick,
-                enabled = !loading,
+                enabled = !loading && !unavailable,
                 shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = StudioBlue, contentColor = Color.White),
+                colors = studioPrimaryButtonColors(),
                 modifier = Modifier.widthIn(min = 106.dp).height(44.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp),
             ) {
-                Text(if (loading) "..." else pack.price, fontWeight = FontWeight.Black)
+                Text(
+                    when {
+                        loading -> "..."
+                        unavailable -> stringResource(R.string.unavailable)
+                        else -> pack.price
+                    },
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }
@@ -3251,13 +4706,13 @@ private fun DiamondPackRow(
 private fun FirstLaunchDisclosure(onAccept: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
-        title = { Text("Concepts générés par l'IA") },
+        title = { Text(stringResource(R.string.disclosure_title)) },
         text = {
-            Text("HomeDecor AI génère des visuels d'inspiration. Vérifiez toujours les mesures, les modifications structurelles, les permis, les prix et la disponibilité des produits avant de construire ou d'acheter.")
+            Text(stringResource(R.string.disclosure_body))
         },
         confirmButton = {
             Button(onClick = onAccept, shape = CircleShape) {
-                Text("J'ai compris")
+                Text(stringResource(R.string.understood))
             }
         },
     )
@@ -3267,8 +4722,8 @@ private fun wizardStepNumber(stage: WizardStage, tool: DecorTool? = null): Int {
     return when (stage) {
         WizardStage.Photo -> 1
         WizardStage.Space -> 2
-        WizardStage.Style -> 3
-        WizardStage.Refine -> if (tool?.id in listOf("garden", "paint")) 3 else 4
+        WizardStage.Style -> if (tool?.id == "reference") 2 else 3
+        WizardStage.Refine -> if (tool?.id in listOf("reference", "layout")) 2 else if (tool?.id in listOf("garden", "paint")) 3 else 4
         WizardStage.Processing -> wizardTotalSteps(tool)
         WizardStage.Result -> wizardTotalSteps(tool)
     }
@@ -3277,6 +4732,8 @@ private fun wizardStepNumber(stage: WizardStage, tool: DecorTool? = null): Int {
 private fun wizardTotalSteps(tool: DecorTool?): Int {
     return when (tool?.id) {
         "garden" -> 3
+        "reference" -> 2
+        "layout" -> 2
         else -> 4
     }
 }
