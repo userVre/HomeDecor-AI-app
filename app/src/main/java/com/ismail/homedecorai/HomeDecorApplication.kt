@@ -14,7 +14,9 @@ class HomeDecorApplication : Application() {
         services = NativeServices()
 
         if (BuildConfig.REVENUECAT_ANDROID_API_KEY.isNotBlank()) {
-            Purchases.logLevel = LogLevel.DEBUG
+            if (BuildConfig.DEBUG) {
+                Purchases.logLevel = LogLevel.DEBUG
+            }
             Purchases.configure(
                 PurchasesConfiguration.Builder(this, BuildConfig.REVENUECAT_ANDROID_API_KEY).build()
             )

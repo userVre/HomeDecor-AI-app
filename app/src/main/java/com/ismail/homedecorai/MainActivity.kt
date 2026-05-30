@@ -18,7 +18,7 @@ import com.ismail.homedecorai.ui.HomeDecorApp
 class MainActivity : ComponentActivity() {
     private val viewModel: HomeDecorViewModel by viewModels {
         HomeDecorViewModel.Factory(
-            repository = HomeDecorRepository((application as HomeDecorApplication).services),
+            repository = HomeDecorRepository((application as HomeDecorApplication).services, this),
             context = this,
         )
     }

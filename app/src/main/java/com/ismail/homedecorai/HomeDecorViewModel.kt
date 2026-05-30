@@ -62,6 +62,8 @@ data class BoardItem(
     val createdAt: Double = 0.0,
 )
 
+fun BoardItem.isGeneratedResult(): Boolean = imageUrl?.isNotBlank() == true || status == "ready"
+
 data class SelectedPhoto(
     val uri: Uri? = null,
     val exampleLabel: String? = null,
@@ -122,6 +124,26 @@ data class DiamondPack(
     val description: String = "",
 )
 
+sealed class PendingPurchaseSync {
+    data class Diamond(
+        val packId: String,
+        val transactionId: String,
+        val productIdentifier: String,
+        val packageIdentifier: String?,
+        val amount: Double,
+        val currencyCode: String,
+        val purchasedAt: Double,
+    ) : PendingPurchaseSync()
+
+    data class Subscription(
+        val plan: String,
+        val subscriptionType: String,
+        val entitlement: String,
+        val purchasedAt: Double?,
+        val subscriptionEnd: Double?,
+    ) : PendingPurchaseSync()
+}
+
 data class HomeDecorUiState(
     val selectedTab: MainTab = MainTab.Tools,
     val selectedTool: DecorTool = HomeDecorCatalog.tools.first(),
@@ -165,6 +187,9 @@ data class HomeDecorUiState(
     val eraserSelected: Boolean = false,
     val purchaseMessage: String? = null,
     val purchaseBusy: Boolean = false,
+    val pendingPurchaseSync: PendingPurchaseSync? = null,
+    val settingsMessage: String? = null,
+    val settingsBusy: Boolean = false,
 )
 
 object HomeDecorCatalog {
@@ -375,7 +400,7 @@ object HomeDecorCatalog {
         DiamondPack("starter", "Découverte", 10, "19,80 MAD", description = "Pour tester plusieurs idées sans engagement."),
         DiamondPack("designer", "Designer", 30, "49,65 MAD", "POPULAIRE", "Le meilleur équilibre pour explorer une pièce complète."),
         DiamondPack("architect", "Architecte", 100, "129,25 MAD", description = "Pensé pour les séries de concepts et variantes."),
-        DiamondPack("estate", "Studio", 250, "249,00 MAD", "MEILLEURE OFFRE", "Crédits profonds pour gros projets et portfolios."),
+        DiamondPack("estate", "Studio", 300, "249,00 MAD", "MEILLEURE OFFRE", "Crédits profonds pour gros projets et portfolios."),
     )
 
     val gallery = tools.mapIndexed { index, tool ->
@@ -587,9 +612,7 @@ class HomeDecorViewModel(
 ) : ViewModel() {
     private val appContext = context.applicationContext
     private val preferences = context.applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-    private val anonymousId = preferences.getString(KEY_ANONYMOUS_ID, null) ?: UUID.randomUUID().toString().also {
-        preferences.edit().putString(KEY_ANONYMOUS_ID, it).apply()
-    }
+    private var anonymousId = preferences.getString(KEY_ANONYMOUS_ID, null) ?: newAnonymousId()
     private val _uiState = MutableStateFlow(
         HomeDecorUiState(
             progressMessage = text(R.string.progress_preparing_studio),
@@ -715,6 +738,7 @@ class HomeDecorViewModel(
     }
 
     fun setReferencePhoto(uri: Uri?) {
+        if (uri == null) return
         _uiState.update { it.copy(selectedReferenceUri = uri, selectedReferenceExampleLabel = null) }
     }
 
@@ -843,16 +867,6 @@ class HomeDecorViewModel(
         _uiState.update { it.copy(authVisible = false) }
     }
 
-    fun signInWithGooglePreview() {
-        _uiState.update {
-            it.copy(
-                authVisible = false,
-                signedInName = "Compte Google",
-                signedInEmail = "homedecor.user@gmail.com",
-            )
-        }
-    }
-
     fun openSettings() {
         _uiState.update {
             it.copy(
@@ -860,6 +874,7 @@ class HomeDecorViewModel(
                 storeVisible = false,
                 paywallVisible = false,
                 authVisible = false,
+                settingsMessage = null,
             )
         }
     }
@@ -950,6 +965,15 @@ class HomeDecorViewModel(
         currencyCode: String,
         purchasedAt: Double,
     ) {
+        val pending = PendingPurchaseSync.Diamond(
+            packId = packId,
+            transactionId = transactionId,
+            productIdentifier = productIdentifier,
+            packageIdentifier = packageIdentifier,
+            amount = amount,
+            currencyCode = currencyCode,
+            purchasedAt = purchasedAt,
+        )
         viewModelScope.launch {
             _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = text(R.string.purchase_validating)) }
             runCatching {
@@ -963,21 +987,93 @@ class HomeDecorViewModel(
                     currencyCode = currencyCode,
                     purchasedAt = purchasedAt,
                 )
-                repository.viewerSummary(anonymousId)
+                repository.viewerSummaryStrict(anonymousId)
             }.onSuccess { viewer ->
                 _uiState.update {
                     it.copy(
                         viewer = viewer,
                         diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
                         purchaseBusy = false,
+                        pendingPurchaseSync = null,
                         purchaseMessage = text(R.string.diamond_purchase_confirmed),
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        purchaseBusy = false,
+                        pendingPurchaseSync = pending,
+                        purchaseMessage = friendlyPurchaseSyncError(error, R.string.diamond_purchase_sync_failed),
+                    )
+                }
+            }
+        }
+    }
+
+    fun submitSettingsFeedback(message: String) {
+        val trimmed = message.trim()
+        if (trimmed.length < 3) {
+            _uiState.update { it.copy(settingsMessage = text(R.string.feedback_empty_error)) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(settingsBusy = true, settingsMessage = text(R.string.feedback_sending)) }
+            runCatching {
+                repository.submitFeedback(
+                    anonymousId = anonymousId,
+                    message = trimmed,
+                    generationCount = _uiState.value.board.size,
+                )
+            }.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        settingsBusy = false,
+                        settingsMessage = text(R.string.feedback_sent),
                     )
                 }
             }.onFailure {
                 _uiState.update {
                     it.copy(
+                        settingsBusy = false,
+                        settingsMessage = text(R.string.feedback_failed),
+                    )
+                }
+            }
+        }
+    }
+
+    fun deleteAccountData() {
+        viewModelScope.launch {
+            val previousAnonymousId = anonymousId
+            _uiState.update { it.copy(settingsBusy = true, settingsMessage = text(R.string.deleting_account)) }
+            runCatching {
+                repository.deleteAccountData(previousAnonymousId)
+                anonymousId = newAnonymousId()
+                repository.bootstrapViewer(anonymousId)
+            }.onSuccess { viewer ->
+                _uiState.update {
+                    it.copy(
+                        viewer = viewer,
+                        diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
+                        isPro = viewer.hasProAccess,
+                        board = emptyList(),
+                        signedInName = null,
+                        signedInEmail = null,
+                        settingsVisible = false,
+                        paywallVisible = false,
+                        storeVisible = false,
+                        authVisible = false,
+                        settingsBusy = false,
+                        settingsMessage = null,
                         purchaseBusy = false,
-                        purchaseMessage = text(R.string.diamond_purchase_sync_failed),
+                        purchaseMessage = text(R.string.delete_account_done),
+                    )
+                }
+            }.onFailure {
+                _uiState.update {
+                    it.copy(
+                        settingsBusy = false,
+                        settingsMessage = text(R.string.delete_account_failed),
                     )
                 }
             }
@@ -991,6 +1087,13 @@ class HomeDecorViewModel(
         purchasedAt: Double?,
         subscriptionEnd: Double?,
     ) {
+        val pending = PendingPurchaseSync.Subscription(
+            plan = plan,
+            subscriptionType = subscriptionType,
+            entitlement = entitlement,
+            purchasedAt = purchasedAt,
+            subscriptionEnd = subscriptionEnd,
+        )
         viewModelScope.launch {
             _uiState.update { it.copy(purchaseBusy = true, purchaseMessage = text(R.string.pro_syncing)) }
             runCatching {
@@ -1002,7 +1105,7 @@ class HomeDecorViewModel(
                     purchasedAt = purchasedAt,
                     subscriptionEnd = subscriptionEnd,
                 )
-                repository.viewerSummary(anonymousId)
+                repository.viewerSummaryStrict(anonymousId)
             }.onSuccess { viewer ->
                 _uiState.update {
                     it.copy(
@@ -1011,17 +1114,41 @@ class HomeDecorViewModel(
                         diamonds = viewer.diamondBalance.coerceAtLeast(viewer.credits),
                         paywallVisible = false,
                         purchaseBusy = false,
+                        pendingPurchaseSync = null,
                         purchaseMessage = text(R.string.pro_activated_success),
                     )
                 }
-            }.onFailure {
+            }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         purchaseBusy = false,
-                        purchaseMessage = text(R.string.pro_sync_failed),
+                        pendingPurchaseSync = pending,
+                        purchaseMessage = friendlyPurchaseSyncError(error, R.string.pro_sync_failed),
                     )
                 }
             }
+        }
+    }
+
+    fun retryPurchaseSync() {
+        when (val pending = _uiState.value.pendingPurchaseSync) {
+            is PendingPurchaseSync.Diamond -> fulfillDiamondPurchase(
+                packId = pending.packId,
+                transactionId = pending.transactionId,
+                productIdentifier = pending.productIdentifier,
+                packageIdentifier = pending.packageIdentifier,
+                amount = pending.amount,
+                currencyCode = pending.currencyCode,
+                purchasedAt = pending.purchasedAt,
+            )
+            is PendingPurchaseSync.Subscription -> syncSubscriptionFromRevenueCat(
+                plan = pending.plan,
+                subscriptionType = pending.subscriptionType,
+                entitlement = pending.entitlement,
+                purchasedAt = pending.purchasedAt,
+                subscriptionEnd = pending.subscriptionEnd,
+            )
+            null -> Unit
         }
     }
 
@@ -1085,11 +1212,29 @@ class HomeDecorViewModel(
 
     fun generate() {
         val snapshot = _uiState.value
+        if (snapshot.selectedTool.id == "layout" && snapshot.selectedRooms.isEmpty()) {
+            _uiState.update {
+                it.copy(
+                    wizardStage = WizardStage.Space,
+                    generationError = text(R.string.layout_goal_required_error),
+                )
+            }
+            return
+        }
         if (snapshot.selectedTool.id == "reference" && !hasReferenceFlowImages(snapshot)) {
             _uiState.update {
                 it.copy(
                     wizardStage = WizardStage.Photo,
                     generationError = text(R.string.reference_missing_error),
+                )
+            }
+            return
+        }
+        if (snapshot.selectedTool.id == "replace" && snapshot.customPrompt.isBlank()) {
+            _uiState.update {
+                it.copy(
+                    wizardStage = WizardStage.Refine,
+                    generationError = text(R.string.replacement_prompt_required_error),
                 )
             }
             return
@@ -1110,11 +1255,15 @@ class HomeDecorViewModel(
             runCatching {
                 val access = repository.canUserGenerate(anonymousId)
                 if (!access.allowed && access.shouldTriggerPaywall) {
-                    error(access.message ?: text(R.string.no_diamonds_error_token))
+                    throw AppRecoverableException(AppErrorKind.Limit)
                 }
                 val source = readSelectedSource(snapshot)
                 val reference = readSelectedReference(snapshot)
                 val mask = readMaskSource(snapshot)
+                val generationRoomType = when {
+                    snapshot.selectedTool.id == "garden" && snapshot.roomType.isBlank() -> "Jardin"
+                    else -> snapshot.roomType
+                }
                 val generationPrompt = when (snapshot.selectedTool.id) {
                     "layout" -> buildString {
                         append("Focused space-planning task, not a normal redesign. Re-arrange existing furniture and propose a practical room layout to gain more space and fluid circulation. Preserve the exact architectural shell, camera angle, walls, windows, doors, fixed cabinetry, flooring, wall finishes, and room structure. Do not change the decor style unless needed for small staging consistency.")
@@ -1142,7 +1291,7 @@ class HomeDecorViewModel(
                     maskBytes = mask?.bytes,
                     maskMimeType = mask?.mimeType,
                     tool = snapshot.selectedTool,
-                    roomType = snapshot.roomType,
+                    roomType = generationRoomType,
                     style = snapshot.style,
                     palette = snapshot.palette,
                     designMode = snapshot.designMode,
@@ -1157,7 +1306,7 @@ class HomeDecorViewModel(
                     id = start.generationId,
                     toolTitle = snapshot.selectedTool.title,
                     style = snapshot.style,
-                    roomType = snapshot.roomType,
+                    roomType = generationRoomType,
                     imageRes = R.drawable.sample_after_luxury,
                     imageUrl = ready.imageUrl,
                     sourceImageUrl = ready.sourceImageUrl,
@@ -1176,6 +1325,8 @@ class HomeDecorViewModel(
                 }
             }.onFailure { error ->
                 val message = friendlyGenerationError(error)
+                val recoveredViewer = runCatching { repository.viewerSummaryStrict(anonymousId) }.getOrNull()
+                val recoveredBoard = runCatching { repository.archive(anonymousId).mapNotNull { item -> item.toBoardItem() } }.getOrNull()
                 _uiState.update {
                     it.copy(
                         wizardStage = when (snapshot.selectedTool.id) {
@@ -1183,12 +1334,25 @@ class HomeDecorViewModel(
                             "reference" -> WizardStage.Style
                             else -> WizardStage.Refine
                         },
+                        viewer = recoveredViewer ?: it.viewer,
+                        diamonds = recoveredViewer?.let { viewer -> viewer.diamondBalance.coerceAtLeast(viewer.credits) } ?: it.diamonds,
+                        board = recoveredBoard ?: it.board,
                         generationError = message,
                         progressMessage = message,
                     )
                 }
             }
         }
+    }
+
+    fun saveResultToPortfolio(result: BoardItem?): Boolean {
+        if (result == null || !result.isGeneratedResult()) return false
+        _uiState.update { state ->
+            state.copy(
+                board = listOf(result) + state.board.filterNot { it.id == result.id },
+            )
+        }
+        return true
     }
 
     fun claimDiamond() {
@@ -1251,19 +1415,6 @@ class HomeDecorViewModel(
         "Surface à marquer",
     )
 
-    private fun defaultRoomFor(tool: DecorTool): String {
-        return when (tool.id) {
-            "facade" -> "Villa"
-            "garden" -> "Moderne"
-            "paint" -> "Surface à marquer"
-            "floor" -> "Choix de l'IA"
-            "replace" -> "Mur"
-            "reference" -> "Transfert équilibré"
-            "layout" -> "Circulation ouverte"
-            else -> "Salon"
-        }
-    }
-
     private data class SourceImage(
         val bytes: ByteArray,
         val mimeType: String,
@@ -1273,7 +1424,7 @@ class HomeDecorViewModel(
         val firstPhoto = snapshot.selectedPhotos.firstOrNull()
         firstPhoto?.uri?.let { uri -> return readUriSource(uri) }
         firstPhoto?.exampleLabel?.let {
-            val resId = exampleImageResFor(snapshot.selectedTool.id)
+            val resId = exampleImageResFor(snapshot.selectedTool.id, it)
             val bytes = appContext.resources.openRawResource(resId).use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream)
                     ?: error(text(R.string.prepare_example_failed))
@@ -1282,7 +1433,7 @@ class HomeDecorViewModel(
             return SourceImage(bytes, "image/jpeg")
         }
         snapshot.selectedPhotoUri?.let { uri -> return readUriSource(uri) }
-        val resId = exampleImageResFor(snapshot.selectedTool.id)
+        val resId = exampleImageResFor(snapshot.selectedTool.id, snapshot.selectedExampleLabel)
         val bytes = appContext.resources.openRawResource(resId).use { stream ->
             val bitmap = BitmapFactory.decodeStream(stream)
                 ?: error(text(R.string.prepare_example_failed))
@@ -1340,23 +1491,18 @@ class HomeDecorViewModel(
 
     private fun friendlyGenerationError(error: Throwable): String {
         val message = error.message.orEmpty()
-        return when {
-            text(R.string.real_mask_required_error) in message ->
-                text(R.string.mark_area_before_generate)
-            "401" in message || "403" in message || "Access denied" in message || "subscription" in message || "Azure" in message || "OpenAI" in message ->
-                text(R.string.ai_generation_unavailable)
-            "No Diamonds" in message || "Diamonds left" in message ->
-                text(R.string.no_diamonds_recharge)
-            "converted to a JPG or PNG" in message ->
-                text(R.string.image_prepare_failed)
-            "still processing" in message ->
-                text(R.string.design_processing_delayed)
-            "Generation failed" in message || "Convex" in message || "upload" in message || "API" in message ->
-                text(R.string.generation_failed_retry)
-            message.isNotBlank() && message.any { it in 'à'..'ÿ' } -> message
-            message.isNotBlank() -> text(R.string.generation_failed_retry)
-            else -> text(R.string.generation_failed_retry)
+        val kind = when {
+            text(R.string.real_mask_required_error) in message -> AppErrorKind.Mask
+            text(R.string.prepare_example_failed) in message ||
+                text(R.string.prepare_reference_failed) in message ||
+                text(R.string.read_selected_image_failed) in message -> AppErrorKind.ImagePreparation
+            else -> error.toAppErrorKind(appContext)
         }
+        return text(kind.generationMessageRes())
+    }
+
+    private fun friendlyPurchaseSyncError(error: Throwable, @StringRes fallback: Int): String {
+        return text(error.toAppErrorKind(appContext).purchaseSyncMessageRes(fallback))
     }
 
     private fun ArchiveGeneration.toBoardItem(): BoardItem? {
@@ -1367,10 +1513,10 @@ class HomeDecorViewModel(
                 style = style ?: "",
                 roomType = roomType ?: "",
                 imageRes = R.drawable.sample_after_luxury,
-                imageUrl = imageUrl,
-                sourceImageUrl = sourceImageUrl,
+            imageUrl = imageUrl,
+            sourceImageUrl = sourceImageUrl,
             status = "failed",
-            errorMessage = errorMessage,
+            errorMessage = text(R.string.generation_failed_retry),
             prompt = null,
             createdAt = createdAt,
         )
@@ -1391,10 +1537,26 @@ class HomeDecorViewModel(
         )
     }
 
-    private fun exampleImageResFor(toolId: String): Int {
+    private fun exampleImageResFor(toolId: String, exampleLabel: String? = null): Int {
         return when (toolId) {
-            "facade" -> R.drawable.assets_media_examples_exterior_exteriorbeforebrickshell
-            "garden" -> R.drawable.assets_media_examples_garden_gardenbeforerubbleyard
+            "interior" -> when (exampleLabel) {
+                "interior-messy-lounge" -> R.drawable.assets_media_examples_interior_interiorbeforemessylounge
+                "interior-damaged-room" -> R.drawable.assets_media_examples_interior_interiorbeforedamagedroom
+                "interior-outdated-kitchen" -> R.drawable.assets_media_examples_interior_interiorbeforeoutdatedkitchen
+                else -> R.drawable.assets_media_examples_interior_interiorbeforeemptyroom
+            }
+            "facade" -> when (exampleLabel) {
+                "facade-scaffold-house" -> R.drawable.assets_media_examples_exterior_exteriorbeforescaffoldhouse
+                "facade-weathered-house" -> R.drawable.assets_media_examples_exterior_exteriorbeforeweatheredhouse
+                "facade-overgrown-cottage" -> R.drawable.assets_media_examples_exterior_exteriorbeforeovergrowncottage
+                else -> R.drawable.assets_media_examples_exterior_exteriorbeforebrickshell
+            }
+            "garden" -> when (exampleLabel) {
+                "garden-muddy-yard" -> R.drawable.assets_media_examples_garden_gardenbeforemuddyyard
+                "garden-weedy-yard" -> R.drawable.assets_media_examples_garden_gardenbeforeweedyyard
+                "garden-overgrown-corner" -> R.drawable.assets_media_examples_garden_gardenbeforeovergrowncorner
+                else -> R.drawable.assets_media_examples_garden_gardenbeforerubbleyard
+            }
             "floor" -> R.drawable.assets_media_examples_floor_floorbeforecrackedconcrete
             "paint" -> R.drawable.assets_media_examples_wall_wallbeforerawconcrete
             else -> R.drawable.assets_media_examples_interior_interiorbeforeemptyroom
@@ -1415,5 +1577,11 @@ class HomeDecorViewModel(
         const val PREFERENCES_NAME = "home_decor_preferences"
         const val KEY_DISCLOSURE_ACCEPTED = "disclosure_accepted"
         const val KEY_ANONYMOUS_ID = "anonymous_id"
+    }
+
+    private fun newAnonymousId(): String {
+        return UUID.randomUUID().toString().also {
+            preferences.edit().putString(KEY_ANONYMOUS_ID, it).apply()
+        }
     }
 }

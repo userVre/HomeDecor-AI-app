@@ -1,12 +1,15 @@
 package com.ismail.homedecorai
 
+import android.content.Context
 import dev.convex.android.ConvexClient
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -28,12 +31,14 @@ data class ViewerSummary(
     val lastClaimAt: Double? = null,
     val nextDiamondClaimAt: Double = 0.0,
     val canClaimDiamond: Boolean = false,
+    val claimStatus: String? = null,
     val status: String? = null,
     val granted: Boolean = false,
     val creditsAdded: Int = 0,
     val proTrialExpiresAt: Double? = null,
     val hasProAccess: Boolean = false,
     val hasPaidAccess: Boolean = false,
+    val isGuest: Boolean = true,
     val canGenerateNow: Boolean = credits > 0 || hasProAccess,
 )
 
@@ -78,14 +83,16 @@ data class ArchiveGeneration(
 
 class HomeDecorRepository(
     private val services: NativeServices,
+    context: Context,
 ) {
+    private val appContext = context.applicationContext
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         coerceInputValues = true
     }
 
-    suspend fun bootstrapViewer(anonymousId: String): ViewerSummary = withContext(Dispatchers.IO) {
+    suspend fun bootstrapViewer(anonymousId: String): ViewerSummary = networkCall {
         val raw = services.convex.mutation<JsonElement>(
             "users:getOrCreateCurrentUser",
             mapOf("anonymousId" to anonymousId),
@@ -93,29 +100,34 @@ class HomeDecorRepository(
         json.decodeFromJsonElement<ViewerSummary>(raw)
     }
 
-    suspend fun viewerSummary(anonymousId: String): ViewerSummary = withContext(Dispatchers.IO) {
-        runCatching {
-            services.convex
-                .subscribe<ViewerSummary>("users:me", mapOf("anonymousId" to anonymousId))
-                .first()
-                .getOrThrow()
-        }.getOrElse {
-            ViewerSummary()
-        }
+    suspend fun viewerSummary(anonymousId: String): ViewerSummary {
+        return runCatching { viewerSummaryStrict(anonymousId) }.getOrElse { ViewerSummary() }
     }
 
-    suspend fun canUserGenerate(anonymousId: String): GenerationAccess = withContext(Dispatchers.IO) {
-        runCatching {
-            services.convex
-                .subscribe<GenerationAccess>("users:canUserGenerate", mapOf("anonymousId" to anonymousId))
-                .first()
-                .getOrThrow()
-        }.getOrElse {
-            GenerationAccess(
-                allowed = false,
-                shouldTriggerPaywall = true,
-                message = it.message ?: "Generation access could not be verified.",
-            )
+    suspend fun viewerSummaryStrict(anonymousId: String): ViewerSummary = networkCall {
+        services.convex
+            .subscribe<ViewerSummary>("users:me", mapOf("anonymousId" to anonymousId))
+            .first()
+            .getOrThrow()
+    }
+
+    suspend fun canUserGenerate(anonymousId: String): GenerationAccess {
+        return runCatching {
+            networkCall {
+                services.convex
+                    .subscribe<GenerationAccess>("users:canUserGenerate", mapOf("anonymousId" to anonymousId))
+                    .first()
+                    .getOrThrow()
+            }
+        }.getOrElse { error ->
+            when (error.toAppErrorKind(appContext)) {
+                AppErrorKind.Offline, AppErrorKind.Timeout -> throw error
+                else -> GenerationAccess(
+                    allowed = false,
+                    shouldTriggerPaywall = true,
+                    message = null,
+                )
+            }
         }
     }
 
@@ -133,7 +145,7 @@ class HomeDecorRepository(
         customPrompt: String,
         referenceImageBytes: ByteArray? = null,
         referenceMimeType: String? = null,
-    ): StartGenerationResponse = withContext(Dispatchers.IO) {
+    ): StartGenerationResponse = networkCall(UPLOAD_TIMEOUT_MS) {
         val uploadUrl = services.convex.mutation<String>(
             "generations:createSourceUploadUrl",
             mapOf("anonymousId" to anonymousId),
@@ -200,7 +212,7 @@ class HomeDecorRepository(
         entitlement: String,
         purchasedAt: Double?,
         subscriptionEnd: Double?,
-    ): JsonElement = withContext(Dispatchers.IO) {
+    ): JsonElement = networkCall {
         services.convex.mutation<JsonElement>(
             "users:setViewerPlanFromRevenueCat",
             buildMap<String, Any> {
@@ -223,7 +235,7 @@ class HomeDecorRepository(
         amount: Double,
         currencyCode: String,
         purchasedAt: Double,
-    ): JsonElement = withContext(Dispatchers.IO) {
+    ): JsonElement = networkCall {
         services.convex.mutation<JsonElement>(
             "users:fulfillDiamondPurchase",
             buildMap<String, Any> {
@@ -239,44 +251,87 @@ class HomeDecorRepository(
         )
     }
 
+    suspend fun submitFeedback(
+        anonymousId: String,
+        message: String,
+        generationCount: Int,
+    ): JsonElement = networkCall {
+        services.convex.mutation<JsonElement>(
+            "feedback:submit",
+            mapOf(
+                "anonymousId" to anonymousId,
+                "message" to message,
+                "generationCount" to generationCount,
+            ),
+        )
+    }
+
+    suspend fun deleteAccountData(anonymousId: String): JsonElement = networkCall {
+        services.convex.mutation<JsonElement>(
+            "users:deleteAccountData",
+            mapOf("anonymousId" to anonymousId),
+        )
+    }
+
     suspend fun waitForGeneration(
         anonymousId: String,
         generationId: String,
         maxAttempts: Int = 45,
     ): ArchiveGeneration = withContext(Dispatchers.IO) {
         repeat(maxAttempts) {
-            val item = archive(anonymousId).firstOrNull { it.id == generationId }
+            if (!appContext.hasUsableNetwork()) {
+                throw AppRecoverableException(AppErrorKind.Offline)
+            }
+            val item = archiveStrict(anonymousId).firstOrNull { it.id == generationId }
             if (item?.status == "ready" && !item.imageUrl.isNullOrBlank()) {
                 return@withContext item
             }
             if (item?.status == "failed") {
-                error(item.errorMessage ?: "Generation failed.")
+                throw AppRecoverableException(AppErrorKind.Generation)
             }
             delay(2_000)
         }
-        error("Generation is still processing. Check the portfolio again in a moment.")
+        throw AppRecoverableException(AppErrorKind.Timeout)
     }
 
-    suspend fun archive(anonymousId: String): List<ArchiveGeneration> = withContext(Dispatchers.IO) {
-        runCatching {
-            services.convex
-                .subscribe<List<ArchiveGeneration>>("generations:getUserArchive", mapOf("anonymousId" to anonymousId))
-                .first()
-                .getOrThrow()
-        }.getOrElse {
-            emptyList()
-        }
+    suspend fun archive(anonymousId: String): List<ArchiveGeneration> {
+        return runCatching { archiveStrict(anonymousId) }.getOrElse { emptyList() }
     }
 
-    suspend fun claimDailyDiamond(anonymousId: String): ViewerSummary = withContext(Dispatchers.IO) {
+    private suspend fun archiveStrict(anonymousId: String): List<ArchiveGeneration> = networkCall {
+        services.convex
+            .subscribe<List<ArchiveGeneration>>("generations:getUserArchive", mapOf("anonymousId" to anonymousId))
+            .first()
+            .getOrThrow()
+    }
+
+    suspend fun claimDailyDiamond(anonymousId: String): ViewerSummary = networkCall {
         val raw = services.convex.mutation<JsonElement>("diamonds:claimDailyDiamond", mapOf("anonymousId" to anonymousId))
         json.decodeFromJsonElement<ViewerSummary>(raw)
+    }
+
+    private suspend fun <T> networkCall(
+        timeoutMs: Long = NETWORK_TIMEOUT_MS,
+        block: suspend () -> T,
+    ): T = withContext(Dispatchers.IO) {
+        if (!appContext.hasUsableNetwork()) {
+            throw AppRecoverableException(AppErrorKind.Offline)
+        }
+        try {
+            withTimeout(timeoutMs) {
+                block()
+            }
+        } catch (error: TimeoutCancellationException) {
+            throw AppRecoverableException(AppErrorKind.Timeout, error)
+        }
     }
 
     private fun uploadToStorage(uploadUrl: String, imageBytes: ByteArray, mimeType: String): String {
         val connection = (URL(uploadUrl).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             doOutput = true
+            connectTimeout = HTTP_TIMEOUT_MS
+            readTimeout = HTTP_TIMEOUT_MS
             setRequestProperty("Content-Type", mimeType)
             setRequestProperty("Content-Length", imageBytes.size.toString())
         }
@@ -285,8 +340,7 @@ class HomeDecorRepository(
         val response = if (responseCode in 200..299) {
             connection.inputStream.bufferedReader().use { it.readText() }
         } else {
-            val errorBody = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            error("Convex storage upload failed ($responseCode): $errorBody")
+            throw AppRecoverableException(AppErrorKind.Generation)
         }
         return json.decodeFromString(StorageUploadResponse.serializer(), response).storageId
     }
@@ -303,5 +357,11 @@ class HomeDecorRepository(
             "reference" -> "reference"
             else -> tool.serviceType
         }
+    }
+
+    private companion object {
+        const val NETWORK_TIMEOUT_MS = 30_000L
+        const val UPLOAD_TIMEOUT_MS = 60_000L
+        const val HTTP_TIMEOUT_MS = 30_000
     }
 }

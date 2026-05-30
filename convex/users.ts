@@ -1600,16 +1600,30 @@ export const claimThreeDayReward = mutationGeneric({
 });
 
 export const deleteAccountData = mutationGeneric({
-  args: {},
-  handler: async (ctx) => {
-    const { user } = await getCurrentUser(ctx);
-    if (!user || !user.clerkId) {
+  args: {
+    anonymousId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const normalizedAnonymousId = normalizeAnonymousId(args.anonymousId);
+    const user = identity
+      ? await getUserByClerkId(ctx, identity.subject)
+      : normalizedAnonymousId
+        ? await getUserByAnonymousId(ctx, normalizedAnonymousId)
+        : null;
+    if (!user) {
+      return { ok: true };
+    }
+
+    const ownerId = user.clerkId ?? (user.anonymousId ? toGuestUserId(user.anonymousId) : null);
+    if (!ownerId) {
+      await ctx.db.delete(user._id);
       return { ok: true };
     }
 
     const generations = await ctx.db
       .query("generations")
-      .withIndex("by_userId", (q: any) => q.eq("userId", user.clerkId))
+      .withIndex("by_userId", (q: any) => q.eq("userId", ownerId))
       .collect();
 
     for (const generation of generations) {
@@ -1630,7 +1644,7 @@ export const deleteAccountData = mutationGeneric({
 
     const projects = await ctx.db
       .query("projects")
-      .withIndex("by_userId", (q: any) => q.eq("userId", user.clerkId))
+      .withIndex("by_userId", (q: any) => q.eq("userId", ownerId))
       .collect();
 
     for (const project of projects) {
@@ -1639,11 +1653,29 @@ export const deleteAccountData = mutationGeneric({
 
     const feedback = await ctx.db
       .query("feedback")
-      .withIndex("by_userId", (q: any) => q.eq("userId", user.clerkId))
+      .withIndex("by_userId", (q: any) => q.eq("userId", ownerId))
       .collect();
 
     for (const item of feedback) {
       await ctx.db.delete(item._id);
+    }
+
+    const diamondPurchases = await ctx.db
+      .query("diamondPurchases")
+      .withIndex("by_userId", (q: any) => q.eq("userId", ownerId))
+      .collect();
+
+    for (const purchase of diamondPurchases) {
+      await ctx.db.delete(purchase._id);
+    }
+
+    const renders = await ctx.db
+      .query("renders")
+      .withIndex("by_userId", (q: any) => q.eq("userId", ownerId))
+      .collect();
+
+    for (const render of renders) {
+      await ctx.db.delete(render._id);
     }
 
     await ctx.db.delete(user._id);
