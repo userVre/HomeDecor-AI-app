@@ -26,6 +26,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -97,10 +99,12 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -125,14 +129,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -147,6 +154,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.content.FileProvider
 import androidx.core.content.ContextCompat
@@ -168,6 +176,7 @@ import com.ismail.homedecorai.R
 import com.ismail.homedecorai.SelectedPhoto
 import com.ismail.homedecorai.WizardStage
 import com.ismail.homedecorai.hasVisibleMaskPaint
+import com.ismail.homedecorai.isValidReplacementPrompt
 import com.ismail.homedecorai.isGeneratedResult
 import com.ismail.homedecorai.purchaseAttemptMessageRes
 import com.ismail.homedecorai.purchaseSyncMessageRes
@@ -185,28 +194,64 @@ import com.revenuecat.purchases.interfaces.ReceiveCustomerInfoCallback
 import com.revenuecat.purchases.interfaces.ReceiveOfferingsCallback
 import com.revenuecat.purchases.models.StoreTransaction
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 
-private val StudioInk = Color(0xFF171A18)
-private val StudioBlue = Color(0xFF2F5EBA)
-private val StudioGreen = StudioBlue
-private val StudioMoss = Color(0xFF60645F)
-private val StudioRose = Color(0xFFB3261E)
-private val StudioCanvas = Color(0xFFF5F4F0)
-private val StudioPaper = Color(0xFFFFFFFF)
-private val StudioMist = Color(0xFFE9EBE4)
-private val StudioLine = Color(0xFFD6D9D1)
-private val StudioBlack = Color(0xFF121411)
-private val StudioGold = Color(0xFFB78632)
-private val StudioSky = StudioBlue
-private val StudioViolet = StudioBlue
-private val StudioPrimaryContainer = Color(0xFFE8EEF9)
-private val StudioProContainer = Color(0xFFFFF3D9)
-private val StudioErrorContainer = Color(0xFFFFEDEA)
+private object HomeDecorColors {
+    val Ink = Color(0xFF19140D)
+    val InkSoft = Color(0xFF5F5648)
+    val Canvas = Color(0xFFF6F1E9)
+    val Paper = Color(0xFFFFFCF7)
+    val Mist = Color(0xFFEDE5D8)
+    val Line = Color(0xFFD9CBB8)
+    val Secondary = Color(0xFF6A604D)
+    val Accent = Color(0xFF8A5A18)
+    val AccentContainer = Color(0xFFFFE7BA)
+    val ProContainer = Color(0xFFFFF0D1)
+    val PremiumGold = Color(0xFFD2AA5A)
+    val GoldDeep = Color(0xFFB88A3A)
+    val Dark = Color(0xFF070706)
+    val DarkSurface = Color(0xFF11100D)
+    val DarkOverlay = Color(0xFF4A3522)
+    val DisabledDarkButton = Color(0xFF2B261D)
+    val DisabledDarkText = Color(0xFFC8BDAA)
+    val Error = Color(0xFFB3261E)
+    val ErrorContainer = Color(0xFFFFEDEA)
+    val Success = Color(0xFF9BC489)
+}
+
+private val StudioInk = HomeDecorColors.Ink
+private val StudioAccent = HomeDecorColors.Accent
+private val StudioBlue = StudioAccent
+private val StudioGreen = StudioAccent
+private val StudioMoss = HomeDecorColors.Secondary
+private val StudioRose = HomeDecorColors.Error
+private val StudioCanvas = HomeDecorColors.Canvas
+private val StudioPaper = HomeDecorColors.Paper
+private val StudioMist = HomeDecorColors.Mist
+private val StudioLine = HomeDecorColors.Line
+private val StudioBlack = HomeDecorColors.DarkSurface
+private val StudioGold = HomeDecorColors.GoldDeep
+private val StudioSky = StudioAccent
+private val StudioViolet = StudioAccent
+private val StudioPrimaryContainer = HomeDecorColors.AccentContainer
+private val StudioProContainer = HomeDecorColors.ProContainer
+private val StudioErrorContainer = HomeDecorColors.ErrorContainer
+private val PaywallBg = HomeDecorColors.Dark
+private val PaywallAccent = HomeDecorColors.GoldDeep
+private val PaywallPremiumGold = HomeDecorColors.PremiumGold
+private val PaywallCard = Color(0x14FFFAEE)
+private val PaywallCardAlt = Color(0x0CFFFAEE)
+private val PaywallBorder = Color(0x29EFDDB8)
+private val PaywallTextSecondary = Color(0xDDF6EFE0)
+private val PaywallTextMuted = Color(0xB8F6EFE0)
+private val PaywallDisabledButton = HomeDecorColors.DisabledDarkButton
+private val PaywallDisabledText = HomeDecorColors.DisabledDarkText
+private val PaywallSuccess = HomeDecorColors.Success
 
 private fun Modifier.minimumTouchTarget(): Modifier = sizeIn(minWidth = 48.dp, minHeight = 48.dp)
 
@@ -229,7 +274,6 @@ private data class StepCopy(
 @StringRes
 private fun tabLabelRes(tab: MainTab): Int = when (tab) {
     MainTab.Tools -> R.string.nav_tools
-    MainTab.ElitePass -> R.string.nav_elite_pass
     MainTab.Discover -> R.string.nav_discover
     MainTab.Profile -> R.string.nav_profile
     MainTab.Create -> R.string.workflow_interior
@@ -391,6 +435,10 @@ private fun optionLabelRes(label: String): Int? = when (label) {
 @Composable
 private fun localizedOption(label: String): String = optionLabelRes(label)?.let { stringResource(it) } ?: label
 
+@Composable
+private fun localizedReplacementPrompt(prompt: String): String =
+    prompt.takeIf { it.isNotBlank() }?.let { localizedOption(it) }.orEmpty()
+
 @StringRes
 private fun discoverClusterRes(cluster: String): Int = when (cluster) {
     "Architecture" -> R.string.discover_cluster_architecture
@@ -411,13 +459,53 @@ private fun discoverSectionTitleRes(section: DiscoverSection): Int = when (secti
     "gaming" -> R.string.discover_section_gaming
     "laundry" -> R.string.discover_section_laundry
     "villa" -> R.string.discover_section_villa
+    "house" -> R.string.option_building_house
     "apartment" -> R.string.discover_section_apartment
+    "office-building" -> R.string.option_building_office
+    "retail" -> R.string.option_building_retail
     "residential" -> R.string.discover_section_residential
     "wall-scenes" -> R.string.discover_section_wall_scenes
     "floors" -> R.string.discover_section_floors
     "garden" -> R.string.discover_section_garden
+    "backyard" -> R.string.option_outdoor_backyard
+    "terrace" -> R.string.option_outdoor_terrace
+    "patio" -> R.string.option_outdoor_patio
+    "yard" -> R.string.option_outdoor_yard
+    "pool" -> R.string.option_outdoor_pool
+    "front-garden" -> R.string.option_outdoor_front_garden
     "outdoor-spaces" -> R.string.discover_section_outdoor_spaces
     else -> R.string.nav_discover
+}
+
+@StringRes
+private fun discoverSectionSubtitleRes(section: DiscoverSection): Int = when (section.id) {
+    "kitchen" -> R.string.discover_subtitle_kitchen
+    "living-room" -> R.string.discover_subtitle_living_room
+    "bedroom" -> R.string.discover_subtitle_bedroom
+    "bathroom" -> R.string.discover_subtitle_bathroom
+    "dining" -> R.string.discover_subtitle_dining
+    "home-office" -> R.string.discover_subtitle_home_office
+    "library" -> R.string.discover_subtitle_library
+    "hall" -> R.string.discover_subtitle_hall
+    "gaming" -> R.string.discover_subtitle_gaming
+    "laundry" -> R.string.discover_subtitle_laundry
+    "villa" -> R.string.discover_subtitle_villa
+    "house" -> R.string.discover_subtitle_house
+    "apartment" -> R.string.discover_subtitle_apartment
+    "office-building" -> R.string.discover_subtitle_office_building
+    "retail" -> R.string.discover_subtitle_retail
+    "residential" -> R.string.discover_subtitle_residential
+    "wall-scenes" -> R.string.discover_subtitle_wall_scenes
+    "floors" -> R.string.discover_subtitle_floors
+    "garden" -> R.string.discover_subtitle_garden
+    "backyard" -> R.string.discover_subtitle_backyard
+    "terrace" -> R.string.discover_subtitle_terrace
+    "patio" -> R.string.discover_subtitle_patio
+    "yard" -> R.string.discover_subtitle_yard
+    "pool" -> R.string.discover_subtitle_pool
+    "front-garden" -> R.string.discover_subtitle_front_garden
+    "outdoor-spaces" -> R.string.discover_subtitle_outdoor_spaces
+    else -> R.string.discover_hero_body
 }
 
 @StringRes
@@ -433,11 +521,20 @@ private fun galleryCategoryRes(category: String): Int = when (category) {
     "Loisir" -> R.string.category_leisure
     "Service" -> R.string.category_service
     "Villa" -> R.string.category_villa
+    "Maison" -> R.string.option_building_house
     "Appartement" -> R.string.category_apartment
+    "Immeuble de bureaux" -> R.string.option_building_office
+    "Vente au détail" -> R.string.option_building_retail
     "Résidentiel" -> R.string.category_residential
     "Mur" -> R.string.category_wall
     "Sol" -> R.string.category_floor
     "Jardin" -> R.string.category_garden
+    "Cour arrière" -> R.string.option_outdoor_backyard
+    "Terrasse" -> R.string.option_outdoor_terrace
+    "Patio" -> R.string.option_outdoor_patio
+    "Cour" -> R.string.option_outdoor_yard
+    "Piscine" -> R.string.option_outdoor_pool
+    "Jardin avant" -> R.string.option_outdoor_front_garden
     "Paysage" -> R.string.category_landscape
     else -> R.string.nav_discover
 }
@@ -479,9 +576,28 @@ private fun galleryItemNumber(item: GalleryItem): Int? = item.id.substringAfterL
     item.id.startsWith("kitchen-") ||
         item.id.startsWith("living-") ||
         item.id.startsWith("bedroom-") ||
+        item.id.startsWith("bathroom-") ||
+        item.id.startsWith("dining-") ||
+        item.id.startsWith("office-") ||
+        item.id.startsWith("library-") ||
+        item.id.startsWith("hall-") ||
+        item.id.startsWith("gaming-") ||
+        item.id.startsWith("laundry-") ||
         item.id.startsWith("villa-") ||
+        item.id.startsWith("house-") ||
         item.id.startsWith("apartment-") ||
-        item.id.startsWith("garden-")
+        item.id.startsWith("office-building-") ||
+        item.id.startsWith("retail-") ||
+        item.id.startsWith("residential-") ||
+        item.id.startsWith("wall-") ||
+        item.id.startsWith("floor-") ||
+        item.id.startsWith("garden-") ||
+        item.id.startsWith("backyard-") ||
+        item.id.startsWith("terrace-") ||
+        item.id.startsWith("patio-") ||
+        item.id.startsWith("yard-") ||
+        item.id.startsWith("pool-") ||
+        item.id.startsWith("front-garden-")
 }
 
 @Composable
@@ -489,6 +605,9 @@ private fun localizedDiscoverCluster(cluster: String): String = stringResource(d
 
 @Composable
 private fun localizedDiscoverSection(section: DiscoverSection): String = stringResource(discoverSectionTitleRes(section))
+
+@Composable
+private fun localizedDiscoverSectionSubtitle(section: DiscoverSection): String = stringResource(discoverSectionSubtitleRes(section))
 
 @Composable
 private fun localizedGalleryCategory(category: String): String = stringResource(galleryCategoryRes(category))
@@ -595,7 +714,7 @@ fun HomeDecorApp(
             surfaceContainerHigh = StudioMist,
             background = StudioCanvas,
             onSurface = StudioInk,
-            onSurfaceVariant = Color(0xFF62665F),
+            onSurfaceVariant = HomeDecorColors.InkSoft,
             outlineVariant = StudioLine,
         ),
     ) {
@@ -615,15 +734,15 @@ private fun studioPrimaryButtonColors() = ButtonDefaults.buttonColors(
     containerColor = StudioBlue,
     contentColor = Color.White,
     disabledContainerColor = StudioMist,
-    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    disabledContentColor = HomeDecorColors.InkSoft,
 )
 
 @Composable
 private fun studioProButtonColors() = ButtonDefaults.buttonColors(
     containerColor = StudioGold,
     contentColor = StudioInk,
-    disabledContainerColor = Color.White.copy(alpha = 0.14f),
-    disabledContentColor = Color.White.copy(alpha = 0.62f),
+    disabledContainerColor = PaywallDisabledButton,
+    disabledContentColor = PaywallDisabledText,
 )
 
 @Composable
@@ -666,7 +785,6 @@ private fun AppScaffold(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, stringResource(tabLabelRes(MainTab.Tools)), viewModel::selectTab)
-                    NavItem(MainTab.ElitePass, state.selectedTab, Icons.Rounded.Star, stringResource(tabLabelRes(MainTab.ElitePass)), viewModel::selectTab)
                     NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, stringResource(tabLabelRes(MainTab.Discover)), viewModel::selectTab)
                     NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
                 }
@@ -680,7 +798,6 @@ private fun AppScaffold(
                     MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(onTool = viewModel::startTool)
-                    MainTab.ElitePass -> ElitePassScreen(state = state, viewModel = viewModel)
                     MainTab.Profile -> ProfileScreen(state = state, viewModel = viewModel)
                 }
             }
@@ -716,11 +833,11 @@ private fun AppScaffold(
                     SettingsSheet(
                         state = state,
                         onClose = viewModel::closeSettings,
-                        onStore = viewModel::openDiamondStore,
                         onSubscription = viewModel::syncSubscriptionFromRevenueCat,
                         onRetrySync = viewModel::retryPurchaseSync,
                         onFeedback = viewModel::submitSettingsFeedback,
                         onDeleteAccount = viewModel::deleteAccountData,
+                        onLogout = viewModel::logOut,
                         currentLanguageTag = currentLanguageTag,
                         onLanguageSelected = onLanguageSelected,
                     )
@@ -1097,6 +1214,13 @@ private fun CreateScreen(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
+    BackHandler(enabled = true) {
+        if (state.wizardStage == WizardStage.Photo) {
+            viewModel.selectTab(MainTab.Tools)
+        } else {
+            viewModel.previousStage()
+        }
+    }
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
         DesignStepHeader(
             state = state,
@@ -1120,6 +1244,7 @@ private fun CreateScreen(
                     else -> {
                         val isGarden = state.selectedTool.id == "garden"
                         ChoiceStep(
+                            state = state,
                             eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
                             copy = stepTwoCopy(state.selectedTool),
                             selected = if (isGarden) state.selectedStyles else state.selectedRooms,
@@ -1133,6 +1258,7 @@ private fun CreateScreen(
                 WizardStage.Style -> when (state.selectedTool.id) {
                     "paint", "floor", "replace", "reference" -> SpecializedGenerateStep(state = state, viewModel = viewModel)
                     else -> ChoiceStep(
+                        state = state,
                         eyebrow = stringResource(R.string.step_count_format, 3, wizardTotalSteps(state.selectedTool)),
                         copy = stepThreeCopy(state.selectedTool),
                         selected = state.selectedStyles,
@@ -1215,6 +1341,7 @@ private fun StepScaffold(
     buttonLabel: String,
     buttonIcon: ImageVector = Icons.Rounded.AutoAwesome,
     buttonEnabled: Boolean = true,
+    validationMessage: String? = null,
     contentBottomPadding: Dp = 18.dp,
     protectBottomInsets: Boolean = false,
     buttonAllowsTwoLines: Boolean = false,
@@ -1244,25 +1371,56 @@ private fun StepScaffold(
         }
         Surface(color = StudioPaper, tonalElevation = 3.dp, modifier = bottomBarModifier) {
             val buttonModifier = if (buttonAllowsTwoLines) {
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp).heightIn(min = 58.dp)
+                Modifier.fillMaxWidth().heightIn(min = 58.dp)
             } else {
-                Modifier.fillMaxWidth().padding(20.dp).height(58.dp)
+                Modifier.fillMaxWidth().height(58.dp)
             }
-            Button(
-                onClick = onButton,
-                enabled = buttonEnabled,
-                shape = CircleShape,
-                colors = studioPrimaryButtonColors(),
-                modifier = buttonModifier,
-            ) {
-                Text(
-                    buttonLabel,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = if (buttonAllowsTwoLines) 2 else 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (!buttonEnabled && !validationMessage.isNullOrBlank()) {
+                    ValidationNotice(validationMessage)
+                }
+                Button(
+                    onClick = onButton,
+                    enabled = buttonEnabled,
+                    shape = CircleShape,
+                    colors = studioPrimaryButtonColors(),
+                    modifier = buttonModifier,
+                ) {
+                    Icon(buttonIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        buttonLabel,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = if (buttonAllowsTwoLines) 2 else 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun ValidationNotice(message: String) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = StudioErrorContainer,
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioRose.copy(alpha = 0.24f), RoundedCornerShape(18.dp)),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
+            Text(
+                message,
+                modifier = Modifier.weight(1f),
+                color = StudioRose,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
 }
@@ -1328,7 +1486,8 @@ private fun PhotoStep(
     viewModel: HomeDecorViewModel,
 ) {
     val isLayoutTool = state.selectedTool.id == "layout"
-    val isSingleSourceFlow = state.selectedTool.id in setOf("interior", "facade", "garden", "layout")
+    val allowExamplePhotos = state.selectedTool.id != "replace"
+    val isSingleSourceFlow = state.selectedTool.id in setOf("interior", "facade", "garden", "layout", "replace")
     val imageInputActions = rememberImageInputActions { uri ->
         if (isSingleSourceFlow) viewModel.setPrimaryPhoto(uri) else viewModel.setPhoto(uri)
     }
@@ -1344,6 +1503,11 @@ private fun PhotoStep(
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
         buttonEnabled = canContinue,
+        validationMessage = if (allowExamplePhotos) {
+            stringResource(R.string.validation_add_source_photo)
+        } else {
+            stringResource(R.string.validation_upload_source_photo)
+        },
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -1407,29 +1571,31 @@ private fun PhotoStep(
                     Text(stringResource(R.string.camera))
                 }
             }
-            OutlinedButton(
-                onClick = {
-                    val example = examplesForTool(state.selectedTool).first().label
-                    if (isSingleSourceFlow) viewModel.selectPrimaryExamplePhoto(example) else viewModel.selectExamplePhoto(example)
-                },
-                shape = CircleShape,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-            ) {
-                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.use_example))
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(stringResource(R.string.example_photos), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(examplesForTool(state.selectedTool), key = { "example-${it.label}" }) { photo ->
-                        ExamplePhotoCard(
-                            photo = photo,
-                            selected = state.selectedPhotos.any { it.exampleLabel == photo.label },
-                            onClick = {
-                                if (isSingleSourceFlow) viewModel.selectPrimaryExamplePhoto(photo.label) else viewModel.selectExamplePhoto(photo.label)
-                            },
-                        )
+            if (allowExamplePhotos) {
+                OutlinedButton(
+                    onClick = {
+                        val example = examplesForTool(state.selectedTool).first().label
+                        if (isSingleSourceFlow) viewModel.selectPrimaryExamplePhoto(example) else viewModel.selectExamplePhoto(example)
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                ) {
+                    Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.use_example))
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.example_photos), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        items(examplesForTool(state.selectedTool), key = { "example-${it.label}" }) { photo ->
+                            ExamplePhotoCard(
+                                photo = photo,
+                                selected = state.selectedPhotos.any { it.exampleLabel == photo.label },
+                                onClick = {
+                                    if (isSingleSourceFlow) viewModel.selectPrimaryExamplePhoto(photo.label) else viewModel.selectExamplePhoto(photo.label)
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -1442,7 +1608,7 @@ private fun ReferenceImagesStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val context = LocalContext.current
+    val editorialReference = stringResource(R.string.editorial_reference)
     val roomImageInputActions = rememberImageInputActions { uri ->
         viewModel.setPrimaryPhoto(uri)
     }
@@ -1469,6 +1635,7 @@ private fun ReferenceImagesStep(
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
         buttonEnabled = canContinue,
+        validationMessage = missingHint,
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1496,7 +1663,7 @@ private fun ReferenceImagesStep(
                 contentDescription = stringResource(R.string.reference_image),
                 onGallery = referenceImageInputActions.openGallery,
                 onCamera = referenceImageInputActions.openCamera,
-                onExample = { viewModel.selectReferenceExample(context.getString(R.string.editorial_reference)) },
+                onExample = { viewModel.selectReferenceExample(editorialReference) },
             )
             if (missingHint != null) {
                 ReferenceContinueHint(missingHint)
@@ -1622,6 +1789,145 @@ private fun ReferenceContinueHint(message: String) {
 }
 
 @Composable
+private fun SourcePreviewCard(state: HomeDecorUiState) {
+    val firstPhoto = state.selectedPhotos.firstOrNull()
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp)),
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(Modifier.size(76.dp).clip(RoundedCornerShape(18.dp)).background(StudioMist)) {
+                UriOrResourceImage(
+                    uri = firstPhoto?.uri,
+                    imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
+                    contentDescription = stringResource(R.string.source_photo_preview),
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.source_photo_preview), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.source_photo_preview_body), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            }
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioGreen, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun MaskPreviewCard(
+    state: HomeDecorUiState,
+    title: String,
+    body: String,
+) {
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp)),
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioBlue)
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            }
+            Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            MaskPreviewBox(state = state)
+        }
+    }
+}
+
+@Composable
+private fun MaskPreviewBox(state: HomeDecorUiState) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.18f)
+            .clip(RoundedCornerShape(18.dp))
+            .background(StudioMist),
+    ) {
+        val firstPhoto = state.selectedPhotos.firstOrNull()
+        UriOrResourceImage(
+            uri = firstPhoto?.uri,
+            imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
+            contentDescription = stringResource(R.string.mask_preview_title),
+            modifier = Modifier.fillMaxSize(),
+        )
+        Canvas(Modifier.matchParentSize()) {
+            state.maskStrokes.forEach { stroke ->
+                val points = stroke.points
+                if (points.size >= 2) {
+                    points.zipWithNext().forEach { (start, end) ->
+                        drawLine(
+                            color = if (stroke.erase) Color.Transparent else StudioSky.copy(alpha = 0.62f),
+                            start = Offset(start.x * size.width, start.y * size.height),
+                            end = Offset(end.x * size.width, end.y * size.height),
+                            strokeWidth = stroke.brushSize,
+                            cap = StrokeCap.Round,
+                            blendMode = if (stroke.erase) BlendMode.Clear else BlendMode.SrcOver,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReferenceStylePreview(state: HomeDecorUiState) {
+    val roomPhoto = state.selectedPhotos.firstOrNull()
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp)),
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.reference_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                PreviewTile(
+                    title = stringResource(R.string.your_room),
+                    uri = roomPhoto?.uri,
+                    imageRes = roomPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
+                    modifier = Modifier.weight(1f),
+                )
+                PreviewTile(
+                    title = stringResource(R.string.reference_image),
+                    uri = state.selectedReferenceUri,
+                    imageRes = R.drawable.tool_reference,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PreviewTile(
+    title: String,
+    uri: Uri?,
+    imageRes: Int,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1.08f).clip(RoundedCornerShape(16.dp)).background(StudioMist)) {
+            UriOrResourceImage(
+                uri = uri,
+                imageRes = imageRes,
+                contentDescription = title,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
 private fun SelectedPhotoStrip(
     state: HomeDecorUiState,
     onAdd: () -> Unit,
@@ -1659,7 +1965,7 @@ private fun SelectedPhotoStrip(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = Color(0xFF4A4D57),
+                        color = HomeDecorColors.DarkOverlay,
                         modifier = Modifier.size(32.dp),
                     ) {
                         Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.padding(7.dp), tint = Color.White)
@@ -1831,6 +2137,7 @@ private fun ExamplePhotoCard(
 
 @Composable
 private fun ChoiceStep(
+    state: HomeDecorUiState,
     eyebrow: String,
     copy: StepCopy,
     selected: List<String>,
@@ -1846,8 +2153,11 @@ private fun ChoiceStep(
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
         buttonEnabled = selected.isNotEmpty(),
+        validationMessage = stringResource(R.string.validation_choose_option_to_continue),
         onButton = onContinue,
     ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SourcePreviewCard(state = state)
         if (visualStyleCards || visualBuildingCards) {
             val gridRows = (copy.options.size + 2) / 3
             LazyVerticalGrid(
@@ -1883,6 +2193,7 @@ private fun ChoiceStep(
                 }
             }
         }
+        }
     }
 }
 
@@ -1891,7 +2202,7 @@ private fun ReferencePhotoStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val context = LocalContext.current
+    val editorialReference = stringResource(R.string.editorial_reference)
     val referenceImageInputActions = rememberImageInputActions { uri ->
         viewModel.setReferencePhoto(uri)
     }
@@ -1909,7 +2220,7 @@ private fun ReferencePhotoStep(
                 selectedUri = state.selectedReferenceUri,
                 selectedExample = state.selectedReferenceExampleLabel,
                 onImport = referenceImageInputActions.openGallery,
-                onExample = { viewModel.selectReferenceExample(context.getString(R.string.editorial_reference)) },
+                onExample = { viewModel.selectReferenceExample(editorialReference) },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = referenceImageInputActions.openGallery, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
@@ -1928,7 +2239,7 @@ private fun ReferencePhotoStep(
                 }
             }
             OutlinedButton(
-                onClick = { viewModel.selectReferenceExample(context.getString(R.string.editorial_reference)) },
+                onClick = { viewModel.selectReferenceExample(editorialReference) },
                 shape = CircleShape,
                 modifier = Modifier.fillMaxWidth().height(48.dp),
             ) {
@@ -2038,6 +2349,7 @@ private fun MaskEditorStep(
         body = body,
         buttonLabel = if (hasMask) stringResource(R.string.continue_action) else disabledLabel,
         buttonEnabled = hasMask,
+        validationMessage = disabledLabel,
         contentBottomPadding = if (isSurfaceMask) 32.dp else 18.dp,
         protectBottomInsets = isSurfaceMask,
         buttonAllowsTwoLines = isSurfaceMask,
@@ -2391,7 +2703,7 @@ private fun MaskCanvas(
     Box(
         Modifier
             .fillMaxWidth()
-            .aspectRatio(1f)
+            .aspectRatio(1.18f)
             .clip(RoundedCornerShape(22.dp))
             .background(StudioLine)
             .border(2.dp, if (hasMask) StudioBlue else StudioLine, RoundedCornerShape(22.dp))
@@ -2415,7 +2727,11 @@ private fun MaskCanvas(
             contentDescription = imageDescription,
             modifier = Modifier.fillMaxSize(),
         )
-        Canvas(Modifier.matchParentSize()) {
+        Canvas(
+            Modifier
+                .matchParentSize()
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
+        ) {
             fun drawStroke(stroke: MaskStroke) {
                 val points = stroke.points
                 if (points.size < 2) return
@@ -2733,100 +3049,107 @@ private fun LayoutPlanningStep(
     val firstPhoto = state.selectedPhotos.firstOrNull()
     val hasPlanningGoal = state.selectedRooms.isNotEmpty()
     val canGenerate = firstPhoto != null && hasPlanningGoal
-    Column(Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
-        ) {
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.layout_plan_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                    Text(stringResource(R.string.layout_plan_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            if (!state.generationError.isNullOrBlank()) {
-                item {
-                    GenerationErrorNotice(
-                        message = state.generationError,
-                        onRetry = viewModel::generate,
-                    )
-                }
-            }
-            item {
-                Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = StudioPaper,
-                    tonalElevation = 2.dp,
-                    modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
-                ) {
-                    Row(
-                        Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Box(Modifier.size(86.dp).clip(RoundedCornerShape(18.dp))) {
-                            UriOrResourceImage(
-                                uri = firstPhoto?.uri,
-                                imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
-                                contentDescription = stringResource(R.string.room_photo),
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(stringResource(R.string.room_photo), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                            Text(stringResource(R.string.room_photo_layout_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioGreen, modifier = Modifier.size(22.dp))
-                    }
-                }
-            }
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                    HomeDecorCatalog.layoutGoals.chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            row.forEach { option ->
-                                LayoutGoalChip(
-                                    label = option,
-                                    selected = option in state.selectedRooms,
-                                    onClick = { viewModel.setRoom(option) },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                            if (row.size == 1) Spacer(Modifier.weight(1f))
-                        }
-                    }
-                }
-            }
-            item {
-                LayoutConstraintFields(state = state, viewModel = viewModel)
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.layout_plan_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.layout_plan_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Surface(
-            color = StudioPaper,
-            tonalElevation = 3.dp,
-            modifier = Modifier.imePadding().windowInsetsPadding(WindowInsets.navigationBars),
-        ) {
-            Button(
-                onClick = viewModel::generate,
-                enabled = canGenerate,
-                shape = CircleShape,
-                colors = studioPrimaryButtonColors(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-                    .height(58.dp),
-            ) {
-                Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    if (hasPlanningGoal) stringResource(R.string.layout_generate) else stringResource(R.string.layout_select_goal_to_generate),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+        if (!state.generationError.isNullOrBlank()) {
+            item {
+                GenerationErrorNotice(
+                    message = state.generationError,
+                    onRetry = viewModel::generate,
                 )
+            }
+        }
+        item {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = StudioPaper,
+                tonalElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
+            ) {
+                Row(
+                    Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Box(Modifier.size(86.dp).clip(RoundedCornerShape(18.dp))) {
+                        UriOrResourceImage(
+                            uri = firstPhoto?.uri,
+                            imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
+                            contentDescription = stringResource(R.string.room_photo),
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(stringResource(R.string.room_photo), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.room_photo_layout_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioGreen, modifier = Modifier.size(22.dp))
+                }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                HomeDecorCatalog.layoutGoals.chunked(2).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { option ->
+                            LayoutGoalChip(
+                                label = option,
+                                selected = option in state.selectedRooms,
+                                onClick = { viewModel.setRoom(option) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+        item {
+            LayoutConstraintFields(state = state, viewModel = viewModel)
+        }
+        item {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (!canGenerate) {
+                    ValidationNotice(
+                        if (firstPhoto == null) {
+                            stringResource(R.string.validation_add_source_photo)
+                        } else {
+                            stringResource(R.string.validation_select_layout_goal)
+                        },
+                    )
+                }
+                Button(
+                    onClick = viewModel::generate,
+                    enabled = canGenerate,
+                    shape = CircleShape,
+                    colors = studioPrimaryButtonColors(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(58.dp),
+                ) {
+                    Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (hasPlanningGoal) stringResource(R.string.layout_generate) else stringResource(R.string.layout_select_goal_to_generate),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
@@ -2897,8 +3220,8 @@ private fun LayoutConstraintFields(
                 value = state.layoutConstraints,
                 onValueChange = viewModel::setLayoutConstraints,
                 placeholder = { Text(stringResource(R.string.constraints_placeholder)) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 132.dp),
-                minLines = 4,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp),
+                minLines = 2,
                 shape = RoundedCornerShape(18.dp),
             )
         }
@@ -2907,6 +3230,15 @@ private fun LayoutConstraintFields(
             onValueChange = viewModel::setPaletteText,
             label = { Text(stringResource(R.string.furniture_to_keep)) },
             placeholder = { Text(stringResource(R.string.furniture_to_keep_placeholder)) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
+            shape = RoundedCornerShape(18.dp),
+            singleLine = true,
+        )
+        OutlinedTextField(
+            value = state.mobilierASupprimer,
+            onValueChange = viewModel::setMobilierASupprimerText,
+            label = { Text(stringResource(R.string.furniture_to_remove)) },
+            placeholder = { Text(stringResource(R.string.furniture_to_remove_placeholder)) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
             shape = RoundedCornerShape(18.dp),
             singleLine = true,
@@ -2932,10 +3264,10 @@ private fun LayoutConstraintFields(
         OutlinedTextField(
             value = state.customPrompt,
             onValueChange = viewModel::setCustomPrompt,
-            label = { Text(stringResource(R.string.custom_notes)) },
-            placeholder = { Text(stringResource(R.string.custom_notes_placeholder)) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 144.dp),
-            minLines = 4,
+            label = { Text(stringResource(R.string.optional_notes)) },
+            placeholder = { Text(stringResource(R.string.optional_notes_placeholder)) },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp),
+            minLines = 3,
             shape = RoundedCornerShape(18.dp),
         )
     }
@@ -2953,12 +3285,14 @@ private fun RefineStep(
             body = stringResource(R.string.add_details_body),
             buttonLabel = stringResource(R.string.generate),
             buttonEnabled = state.selectedRooms.isNotEmpty(),
+            validationMessage = stringResource(R.string.validation_select_layout_goal),
             onButton = viewModel::generate,
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 OutlinedTextField(value = state.roomType, onValueChange = viewModel::setRoomTypeText, label = { Text(stringResource(R.string.room_type)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
                 OutlinedTextField(value = state.style, onValueChange = viewModel::setStyleText, label = { Text(stringResource(R.string.people_count)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
                 OutlinedTextField(value = state.palette, onValueChange = viewModel::setPaletteText, label = { Text(stringResource(R.string.furniture_to_keep)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
+                OutlinedTextField(value = state.mobilierASupprimer, onValueChange = viewModel::setMobilierASupprimerText, label = { Text(stringResource(R.string.furniture_to_remove)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
                 OutlinedTextField(value = state.mobilierADeplacer, onValueChange = viewModel::setMobilierADeplacerText, label = { Text(stringResource(R.string.furniture_to_move)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
                 OutlinedTextField(
                     value = state.customPrompt,
@@ -2981,6 +3315,7 @@ private fun RefineStep(
         buttonLabel = stringResource(R.string.generate_my_design),
         buttonIcon = Icons.Rounded.AutoAwesome,
         buttonEnabled = state.selectedPalettes.isNotEmpty(),
+        validationMessage = stringResource(R.string.validation_choose_palette_to_generate),
         onButton = viewModel::generate,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -2990,6 +3325,7 @@ private fun RefineStep(
                     onRetry = viewModel::generate,
                 )
             }
+            SourcePreviewCard(state = state)
             if (state.selectedTool.id !in listOf("facade", "garden", "paint")) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
@@ -3114,7 +3450,8 @@ private fun SpecializedGenerateStep(
     val selected = state.selectedStyles
     val requiresMask = state.selectedTool.id in setOf("paint", "floor", "replace")
     val replacementPrompt = state.customPrompt.trim()
-    val hasReplacementPrompt = replacementPrompt.isNotBlank()
+    val hasReplacementPrompt = replacementPrompt.isValidReplacementPrompt()
+    val localizedReplacement = localizedReplacementPrompt(replacementPrompt)
     val hasRequiredMask = remember(state.maskStrokes, state.selectedTool.id) {
         if (state.selectedTool.id in setOf("paint", "floor", "replace")) {
             state.maskStrokes.hasVisibleMaskPaint()
@@ -3130,6 +3467,19 @@ private fun SpecializedGenerateStep(
         "replace" -> hasRequiredMask && hasReplacementPrompt
         "reference" -> selected.isNotEmpty() && hasReferenceImages
         else -> (selected.isNotEmpty() || state.customPrompt.isNotBlank()) && (!requiresMask || hasRequiredMask)
+    }
+    val disabledReason = when {
+        requiresMask && !hasRequiredMask -> when (state.selectedTool.id) {
+            "floor" -> stringResource(R.string.validation_mark_floor_to_generate)
+            "replace" -> stringResource(R.string.validation_mark_object_to_generate)
+            else -> stringResource(R.string.validation_mark_wall_to_generate)
+        }
+        state.selectedTool.id == "reference" && !hasReferenceImages -> stringResource(R.string.reference_missing_error)
+        state.selectedTool.id == "reference" && selected.isEmpty() -> stringResource(R.string.validation_choose_transfer_strength)
+        state.selectedTool.id == "replace" && !hasReplacementPrompt -> stringResource(R.string.replacement_prompt_required_error)
+        state.selectedTool.id == "paint" && selected.isEmpty() && state.customPrompt.isBlank() -> stringResource(R.string.validation_choose_color_or_prompt)
+        state.selectedTool.id == "floor" && selected.isEmpty() && state.customPrompt.isBlank() -> stringResource(R.string.validation_choose_material_or_prompt)
+        else -> null
     }
     StepScaffold(
         eyebrow = stringResource(R.string.step_count_format, wizardStepNumber(state.wizardStage, state.selectedTool), wizardTotalSteps(state.selectedTool)),
@@ -3149,6 +3499,7 @@ private fun SpecializedGenerateStep(
             stringResource(R.string.generate)
         },
         buttonEnabled = canGenerate,
+        validationMessage = disabledReason,
         contentBottomPadding = if (isPaintOrFloor) 32.dp else 18.dp,
         protectBottomInsets = isPaintOrFloor,
         buttonAllowsTwoLines = isPaintOrFloor,
@@ -3161,12 +3512,22 @@ private fun SpecializedGenerateStep(
                     onRetry = viewModel::generate,
                 )
             }
+            if (state.selectedTool.id == "reference") {
+                ReferenceStylePreview(state = state)
+            } else {
+                SourcePreviewCard(state = state)
+            }
             if (state.selectedTool.id in setOf("paint", "floor")) {
                 val maskLabel = if (state.selectedTool.id == "floor") {
                     stringResource(R.string.mask_floor_marked)
                 } else {
                     stringResource(R.string.mask_wall_marked)
                 }
+                MaskPreviewCard(
+                    state = state,
+                    title = stringResource(R.string.mask_preview_title),
+                    body = stringResource(R.string.mask_preview_body),
+                )
                 SurfaceMaskStatus(
                     hasMask = hasRequiredMask,
                     readyText = stringResource(R.string.mask_ready, maskLabel),
@@ -3175,6 +3536,13 @@ private fun SpecializedGenerateStep(
                     } else {
                         stringResource(R.string.mask_required_wall)
                     },
+                )
+            }
+            if (state.selectedTool.id == "replace") {
+                MaskPreviewCard(
+                    state = state,
+                    title = stringResource(R.string.mask_preview_title),
+                    body = stringResource(R.string.mask_preview_body),
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -3210,11 +3578,15 @@ private fun SpecializedGenerateStep(
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             row.forEach { option ->
                                 if (state.selectedTool.id == "replace") {
+                                    val optionPrompt = localizedOption(option)
                                     ReplaceSuggestionChip(
                                         label = option,
-                                        selected = option in selected || replacementPrompt == option,
+                                        selected = option in selected ||
+                                            optionPrompt in selected ||
+                                            replacementPrompt == option ||
+                                            replacementPrompt == optionPrompt,
                                         onClick = {
-                                            viewModel.selectReplacementSuggestion(option)
+                                            viewModel.selectReplacementSuggestion(optionPrompt)
                                         },
                                         modifier = Modifier.weight(1f),
                                     )
@@ -3253,10 +3625,14 @@ private fun SpecializedGenerateStep(
             OutlinedTextField(
                 value = state.customPrompt,
                 onValueChange = viewModel::setCustomPrompt,
-                label = if (state.selectedTool.id == "replace") {
-                    { Text(stringResource(R.string.replacement_object)) }
-                } else {
-                    null
+                label = when (state.selectedTool.id) {
+                    "replace" -> {
+                        { Text(stringResource(R.string.replacement_object)) }
+                    }
+                    "reference" -> {
+                        { Text(stringResource(R.string.custom_notes)) }
+                    }
+                    else -> null
                 },
                 placeholder = {
                     Text(
@@ -3264,45 +3640,98 @@ private fun SpecializedGenerateStep(
                             "paint" -> stringResource(R.string.prompt_paint)
                             "floor" -> stringResource(R.string.prompt_floor)
                             "replace" -> stringResource(R.string.prompt_replace)
+                            "reference" -> stringResource(R.string.custom_notes_placeholder)
                             else -> stringResource(R.string.prompt_optional)
                         },
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = if (state.selectedTool.id == "replace") 4 else 3,
+                minLines = if (state.selectedTool.id in setOf("replace", "reference")) 4 else 3,
                 shape = RoundedCornerShape(18.dp),
-            )
-            if (state.selectedTool.id == "replace") {
-                Surface(shape = RoundedCornerShape(22.dp), color = StudioPrimaryContainer) {
-                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                isError = state.selectedTool.id == "replace" && state.customPrompt.isNotBlank() && !hasReplacementPrompt,
+                supportingText = if (state.selectedTool.id == "replace") {
+                    {
                         Text(
-                            stringResource(R.string.replacement_confirmation_title),
-                            color = StudioBlue,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                        )
-                        Text(
-                            if (hasRequiredMask) {
-                                stringResource(R.string.replacement_confirmation_mask_ready)
+                            if (state.customPrompt.isBlank() || hasReplacementPrompt) {
+                                stringResource(R.string.describe_new_object)
                             } else {
-                                stringResource(R.string.replacement_confirmation_need_mask)
+                                stringResource(R.string.replacement_prompt_required_error)
                             },
-                            color = StudioInk.copy(alpha = 0.78f),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Text(
-                            if (hasReplacementPrompt) {
-                                stringResource(R.string.replacement_confirmation_object_format, replacementPrompt)
-                            } else {
-                                stringResource(R.string.replacement_confirmation_need_replacement)
-                            },
-                            color = StudioInk.copy(alpha = 0.78f),
-                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
-                }
+                } else {
+                    null
+                },
+            )
+            if (state.selectedTool.id == "replace") {
+                ReplacementReadinessSummary(
+                    hasMask = hasRequiredMask,
+                    hasReplacementPrompt = hasReplacementPrompt,
+                    replacementPrompt = localizedReplacement,
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun ReplacementReadinessSummary(
+    hasMask: Boolean,
+    hasReplacementPrompt: Boolean,
+    replacementPrompt: String,
+) {
+    val allReady = hasMask && hasReplacementPrompt
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = if (allReady) StudioPrimaryContainer else StudioMist.copy(alpha = 0.72f),
+        modifier = Modifier.fillMaxWidth().border(
+            1.dp,
+            if (allReady) StudioBlue.copy(alpha = 0.36f) else StudioLine,
+            RoundedCornerShape(22.dp),
+        ),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                stringResource(R.string.replacement_confirmation_title),
+                color = if (allReady) StudioBlue else StudioInk,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+            )
+            ReplacementSummaryLine(
+                checked = hasMask,
+                text = if (hasMask) {
+                    stringResource(R.string.replacement_confirmation_mask_ready)
+                } else {
+                    stringResource(R.string.replacement_confirmation_need_mask)
+                },
+            )
+            ReplacementSummaryLine(
+                checked = hasReplacementPrompt,
+                text = if (hasReplacementPrompt) {
+                    stringResource(R.string.replacement_confirmation_object_format, replacementPrompt)
+                } else {
+                    stringResource(R.string.replacement_confirmation_need_replacement)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReplacementSummaryLine(
+    checked: Boolean,
+    text: String,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+        Surface(shape = CircleShape, color = if (checked) StudioBlue else StudioPaper, modifier = Modifier.padding(top = 1.dp)) {
+            Icon(
+                if (checked) Icons.Rounded.Check else Icons.Rounded.Lock,
+                contentDescription = null,
+                modifier = Modifier.padding(4.dp).size(13.dp),
+                tint = if (checked) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(text, color = StudioInk.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -3434,10 +3863,11 @@ private fun LayoutResultSummary(state: HomeDecorUiState) {
 private fun layoutChangeSummary(state: HomeDecorUiState): String {
     val goals = state.roomType.ifBlank { stringResource(R.string.layout_default_goals) }
     val keep = state.palette.ifBlank { stringResource(R.string.layout_default_keep) }
+    val remove = state.mobilierASupprimer.ifBlank { stringResource(R.string.layout_default_remove) }
     val move = state.mobilierADeplacer.ifBlank { stringResource(R.string.layout_default_move) }
     val people = state.style.ifBlank { stringResource(R.string.layout_default_people) }
     val constraints = state.layoutConstraints.ifBlank { stringResource(R.string.layout_default_constraints) }
-    return stringResource(R.string.layout_summary_format, goals, keep, move, people, constraints)
+    return stringResource(R.string.layout_summary_format, goals, keep, remove, move, people, constraints)
 }
 
 @Composable
@@ -3448,6 +3878,9 @@ private fun layoutSuggestions(state: HomeDecorUiState): List<String> {
     }
     if (state.palette.isNotBlank()) {
         suggestions += stringResource(R.string.layout_suggestion_keep)
+    }
+    if (state.mobilierASupprimer.isNotBlank()) {
+        suggestions += stringResource(R.string.layout_suggestion_remove)
     }
     if (state.mobilierADeplacer.isNotBlank()) {
         suggestions += stringResource(R.string.layout_suggestion_move)
@@ -3461,72 +3894,187 @@ private fun layoutSuggestions(state: HomeDecorUiState): List<String> {
 }
 
 @Composable
+private fun ReplacementResultSummary(
+    replacementPrompt: String,
+    resultReady: Boolean,
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = StudioPrimaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.45f)),
+        modifier = Modifier.fillMaxWidth(),
+        tonalElevation = 2.dp,
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                stringResource(R.string.replacement_result_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                color = StudioBlue,
+            )
+            Text(
+                stringResource(R.string.replacement_result_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = StudioInk,
+            )
+            ReplacementResultRow(
+                label = stringResource(R.string.replacement_result_mask_used),
+                value = stringResource(R.string.mask_object_marked),
+            )
+            ReplacementResultRow(
+                label = stringResource(R.string.replacement_result_object),
+                value = replacementPrompt.ifBlank { stringResource(R.string.no_custom_prompt) },
+            )
+            ReplacementResultRow(
+                label = stringResource(R.string.replacement_result_status),
+                value = stringResource(if (resultReady) R.string.ready else R.string.failed),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReplacementResultRow(
+    label: String,
+    value: String,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+        Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(label, style = MaterialTheme.typography.labelLarge, color = StudioBlue, fontWeight = FontWeight.Bold)
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = StudioInk)
+        }
+    }
+}
+
+@Composable
 private fun ResultStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
     val result = state.board.firstOrNull()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
-    val resultReady = result?.isGeneratedResult() == true
+    var showOriginal by remember { mutableStateOf(false) }
+    val resultReady = result?.let { it.isGeneratedResult() && it.status != "failed" } == true
+    val isReplaceResult = state.selectedTool.id == "replace"
+    val replacementPrompt = localizedReplacementPrompt(state.customPrompt)
+    if (showOriginal) {
+        OriginalImageDialog(
+            state = state,
+            result = result,
+            onDismiss = { showOriginal = false },
+        )
+    }
     StepScaffold(
         eyebrow = stringResource(R.string.result),
         title = stringResource(R.string.your_result),
-        body = stringResource(R.string.result_saved_workspace),
+        body = if (isReplaceResult) stringResource(R.string.result_replace_body) else stringResource(R.string.result_saved_workspace),
         buttonLabel = stringResource(R.string.new_creation),
         buttonIcon = Icons.Rounded.Check,
         onButton = { viewModel.startTool(state.selectedTool) },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.generated_image), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            Card(shape = RoundedCornerShape(28.dp)) {
-                NetworkOrResourceImage(
-                    imageUrl = result?.imageUrl,
-                    imageRes = result?.imageRes ?: R.drawable.sample_after_luxury,
-                    contentDescription = stringResource(R.string.generated_image),
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+            if (result == null) {
+                ResultStateNotice(
+                    title = stringResource(R.string.result_empty_title),
+                    body = stringResource(R.string.result_empty_body),
+                    icon = Icons.Rounded.AutoAwesome,
                 )
+            } else if (!resultReady) {
+                ResultStateNotice(
+                    title = stringResource(R.string.result_failed_title),
+                    body = result.errorMessage ?: stringResource(R.string.generation_failed_retry),
+                    icon = Icons.Rounded.Refresh,
+                )
+            } else if (state.selectedTool.id == "reference") {
+                Text(stringResource(R.string.reference_result_images), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                ResultImageCard(title = stringResource(R.string.generated_result)) {
+                    NetworkOrResourceImage(
+                        imageUrl = result.imageUrl,
+                        imageRes = result.imageRes,
+                        contentDescription = stringResource(R.string.generated_result),
+                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ResultImageCard(title = stringResource(R.string.original_image), modifier = Modifier.weight(1f)) {
+                        OriginalSourceImage(
+                            state = state,
+                            result = result,
+                            contentDescription = stringResource(R.string.original_image),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    }
+                    ResultImageCard(title = stringResource(R.string.reference_image), modifier = Modifier.weight(1f)) {
+                        UriOrResourceImage(
+                            uri = state.selectedReferenceUri,
+                            imageRes = R.drawable.tool_reference,
+                            contentDescription = stringResource(R.string.reference_image),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    }
+                }
+            } else {
+                Text(stringResource(R.string.generated_image), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Card(shape = RoundedCornerShape(28.dp)) {
+                    NetworkOrResourceImage(
+                        imageUrl = result.imageUrl,
+                        imageRes = result.imageRes,
+                        contentDescription = stringResource(R.string.generated_image),
+                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                    )
+                }
             }
-            if (state.selectedTool.id == "layout") {
+            ResultContentsSummary(
+                state = state,
+                result = result,
+                replacementPrompt = replacementPrompt,
+                resultReady = resultReady,
+            )
+            if (resultReady && state.selectedTool.id == "layout") {
                 LayoutResultSummary(state)
             }
-            Text(stringResource(R.string.before_after), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                    NetworkOrResourceImage(
-                        imageUrl = result?.sourceImageUrl,
-                        imageRes = selectedExampleImageRes(state),
-                        contentDescription = stringResource(R.string.before),
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                    )
-                }
-                Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                    NetworkOrResourceImage(
-                        imageUrl = result?.imageUrl,
-                        imageRes = result?.imageRes ?: R.drawable.sample_after_luxury,
-                        contentDescription = stringResource(R.string.after),
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                    )
-                }
+            if (resultReady && isReplaceResult) {
+                ReplacementResultSummary(
+                    replacementPrompt = replacementPrompt,
+                    resultReady = true,
+                )
             }
-            if (state.selectedTool.id == "reference") {
-                Text(stringResource(R.string.reference), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                Card(shape = RoundedCornerShape(20.dp)) {
-                    UriOrResourceImage(
-                        uri = state.selectedReferenceUri,
-                        imageRes = R.drawable.tool_reference,
-                        contentDescription = stringResource(R.string.reference_image),
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1.4f),
-                    )
+            if (resultReady) {
+                Text(stringResource(R.string.before_after), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
+                        OriginalSourceImage(
+                            state = state,
+                            result = result,
+                            contentDescription = stringResource(R.string.before),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    }
+                    Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
+                        NetworkOrResourceImage(
+                            imageUrl = result?.imageUrl,
+                            imageRes = result?.imageRes ?: R.drawable.sample_after_luxury,
+                            contentDescription = stringResource(R.string.after),
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    }
                 }
             }
             Surface(shape = RoundedCornerShape(22.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp))) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(stringResource(R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(if (isReplaceResult) R.string.replacement_summary else R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                     Text(stringResource(R.string.metadata_service, localizedWorkflowTitle(state.selectedTool)))
-                    Text(stringResource(R.string.metadata_style, (state.style.ifBlank { state.palette }).takeIf { it.isNotBlank() }?.let { localizedOption(it) } ?: stringResource(R.string.ai_choice)))
-                    Text(stringResource(R.string.metadata_prompt, state.customPrompt.ifBlank { stringResource(R.string.no_custom_prompt) }))
-                    Text(stringResource(R.string.metadata_status, stringResource(if (result?.status == "failed" || !resultReady) R.string.failed else R.string.ready)))
+                    if (isReplaceResult) {
+                        Text(stringResource(R.string.metadata_replacement_object, replacementPrompt.ifBlank { stringResource(R.string.no_custom_prompt) }))
+                        Text(stringResource(R.string.metadata_mask, stringResource(R.string.mask_object_marked)))
+                    } else {
+                        Text(stringResource(R.string.metadata_style, (state.style.ifBlank { state.palette }).takeIf { it.isNotBlank() }?.let { localizedOption(it) } ?: stringResource(R.string.ai_choice)))
+                        Text(stringResource(R.string.metadata_prompt, state.customPrompt.ifBlank { stringResource(R.string.no_custom_prompt) }))
+                    }
+                    Text(stringResource(R.string.metadata_status, stringResource(if (!resultReady) R.string.failed else R.string.ready)))
                     Text(stringResource(R.string.metadata_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date((result?.createdAt ?: System.currentTimeMillis().toDouble()).toLong()))))
                 }
             }
@@ -3534,30 +4082,32 @@ private fun ResultStep(
                 Button(
                     onClick = {
                         val saved = viewModel.saveResultToPortfolio(result)
-                        Toast.makeText(context, if (saved) context.getString(R.string.toast_design_saved) else context.getString(R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, if (saved) resources.getString(R.string.toast_design_saved) else resources.getString(R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
                     },
+                    enabled = resultReady,
                     shape = CircleShape,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Rounded.Save, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.save))
+                    Text(stringResource(R.string.save), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 OutlinedButton(
                     onClick = {
                         scope.launch {
                             val shared = shareResult(context, result)
                             if (!shared) {
-                                Toast.makeText(context, context.getString(R.string.toast_share_failed), Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, resources.getString(R.string.toast_share_failed), Toast.LENGTH_LONG).show()
                             }
                         }
                     },
+                    enabled = resultReady,
                     shape = CircleShape,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Rounded.Share, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.share))
+                    Text(stringResource(R.string.share), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -3565,33 +4115,176 @@ private fun ResultStep(
                     onClick = {
                         scope.launch {
                             val saved = saveResultToGallery(context, result)
-                            if (!saved) {
-                                Toast.makeText(context, context.getString(R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
-                            }
+                            Toast.makeText(
+                                context,
+                                resources.getString(if (saved) R.string.toast_design_downloaded else R.string.toast_design_save_failed),
+                                Toast.LENGTH_LONG,
+                            ).show()
                         }
                     },
+                    enabled = resultReady,
                     shape = CircleShape,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Rounded.Download, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.download))
+                    Text(stringResource(R.string.download), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                OutlinedButton(onClick = viewModel::generate, shape = CircleShape, modifier = Modifier.weight(1f)) {
+                OutlinedButton(onClick = viewModel::generate, shape = CircleShape, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.retry))
+                    Text(stringResource(R.string.regenerate), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+            }
+            OutlinedButton(
+                onClick = { showOriginal = true },
+                enabled = result != null,
+                shape = CircleShape,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            ) {
+                Icon(Icons.Rounded.Visibility, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.view_original))
             }
             OutlinedButton(
                 onClick = { viewModel.startTool(state.selectedTool) },
                 shape = CircleShape,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.new_creation))
             }
+        }
+    }
+}
+
+@Composable
+private fun ResultContentsSummary(
+    state: HomeDecorUiState,
+    result: BoardItem?,
+    replacementPrompt: String,
+    resultReady: Boolean,
+) {
+    val space = state.roomType.ifBlank { result?.roomType.orEmpty() }
+        .takeIf { it.isNotBlank() }
+        ?.let { localizedOption(it) }
+        ?: stringResource(R.string.ai_choice)
+    val finish = (state.style.ifBlank { state.palette.ifBlank { result?.style.orEmpty() } })
+        .takeIf { it.isNotBlank() }
+        ?.let { localizedOption(it) }
+        ?: stringResource(R.string.ai_choice)
+    val description = when {
+        !resultReady -> stringResource(R.string.result_contains_failed)
+        state.selectedTool.id == "layout" -> stringResource(R.string.result_contains_layout, space)
+        state.selectedTool.id == "replace" -> stringResource(R.string.result_contains_replace, replacementPrompt.ifBlank { stringResource(R.string.ai_choice) })
+        state.selectedTool.id == "reference" -> stringResource(R.string.result_contains_reference, finish)
+        state.selectedTool.id == "paint" -> stringResource(R.string.result_contains_paint, finish)
+        state.selectedTool.id == "floor" -> stringResource(R.string.result_contains_floor, finish)
+        else -> stringResource(R.string.result_contains_default, space, finish)
+    }
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = StudioPrimaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.35f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.result_contains_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioBlue)
+            Text(description, color = StudioInk, style = MaterialTheme.typography.bodyMedium)
+            if (resultReady) {
+                Text(stringResource(R.string.result_saved_to_profile_history), color = StudioInk, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultStateNotice(
+    title: String,
+    body: String,
+    icon: ImageVector,
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = StudioPaper,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            Modifier.padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                Icon(icon, contentDescription = null, modifier = Modifier.padding(16.dp).size(28.dp), tint = StudioBlue)
+            }
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+private fun OriginalImageDialog(
+    state: HomeDecorUiState,
+    result: BoardItem?,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.original_image)) },
+        text = {
+            OriginalSourceImage(
+                state = state,
+                result = result,
+                contentDescription = stringResource(R.string.original_image),
+                modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+            )
+        },
+        confirmButton = {
+            Button(onClick = onDismiss, shape = CircleShape) {
+                Text(stringResource(R.string.close))
+            }
+        },
+    )
+}
+
+@Composable
+private fun OriginalSourceImage(
+    state: HomeDecorUiState,
+    result: BoardItem?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    val sourceUri = state.selectedPhotos.firstOrNull()?.uri ?: state.selectedPhotoUri
+    if (!result?.sourceImageUrl.isNullOrBlank()) {
+        NetworkOrResourceImage(
+            imageUrl = result?.sourceImageUrl,
+            imageRes = selectedExampleImageRes(state),
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    } else {
+        UriOrResourceImage(
+            uri = sourceUri,
+            imageRes = selectedExampleImageRes(state),
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun ResultImageCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    image: @Composable () -> Unit,
+) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black)
+        Card(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
+            image()
         }
     }
 }
@@ -3840,9 +4533,19 @@ private fun DiscoverSectionRow(
     onPreview: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
+    val sectionSubtitle = localizedDiscoverSectionSubtitle(section)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(sectionTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+            Column(Modifier.weight(1f).padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(sectionTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                Text(
+                    sectionSubtitle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             OutlinedButton(
                 onClick = onSeeAll,
                 shape = CircleShape,
@@ -3867,6 +4570,7 @@ private fun DiscoverDetailScreen(
 ) {
     val sectionTitle = localizedDiscoverSection(section)
     val sectionCluster = localizedDiscoverCluster(section.cluster)
+    val sectionSubtitle = localizedDiscoverSectionSubtitle(section)
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
         Row(
             modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 14.dp, vertical = 10.dp),
@@ -3878,7 +4582,8 @@ private fun DiscoverDetailScreen(
             }
             Column(Modifier.weight(1f)) {
                 Text(sectionTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                Text(stringResource(R.string.discover_detail_subtitle, sectionCluster.lowercase()), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(sectionSubtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.discover_detail_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
             }
             Surface(shape = CircleShape, color = StudioPrimaryContainer, tonalElevation = 2.dp) {
                 Text(
@@ -4145,125 +4850,19 @@ private fun EliteMetricPill(
 }
 
 @Composable
-private fun ElitePassScreen(
-    state: HomeDecorUiState,
-    viewModel: HomeDecorViewModel,
-) {
-    val pass = elitePassPresentation(state)
-    ScreenColumn(title = stringResource(R.string.nav_elite_pass), subtitle = null, trailing = { CreditPill(state, compact = true, onClick = viewModel::openDiamondStore) }) {
-        LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            item {
-                ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFF151713))) {
-                    Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.weight(1f)) {
-                                Text(stringResource(R.string.daily_pass), color = StudioGold, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-                                Text(stringResource(R.string.nav_elite_pass), color = Color.White, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                            }
-                            EliteSyncPill(state)
-                        }
-                        Text(
-                            stringResource(R.string.elite_intro),
-                            color = Color.White.copy(alpha = 0.78f),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            repeat(7) { index ->
-                                val day = index + 1
-                                val claimed = day <= pass.claimedDays
-                                val today = day == pass.currentDay && pass.canClaimToday
-                                val isProDay = day == 7
-                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = when {
-                                            claimed -> Color.White
-                                            today -> StudioGold
-                                            isProDay -> Color.White.copy(alpha = 0.18f)
-                                            else -> Color.White.copy(alpha = 0.10f)
-                                        },
-                                    ) {
-                                        Text(
-                                            "$day",
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                                            color = if (claimed || today) StudioBlack else Color.White.copy(alpha = 0.76f),
-                                            fontWeight = FontWeight.Black,
-                                        )
-                                    }
-                                    Text(if (isProDay) stringResource(R.string.pro) else stringResource(R.string.one_diamond_reward), color = if (isProDay) StudioGold else Color.White.copy(alpha = 0.68f), style = MaterialTheme.typography.labelSmall)
-                                }
-                            }
-                        }
-                        EliteStatusStrip(pass)
-                        Button(
-                            onClick = viewModel::claimDiamond,
-                            enabled = (pass.canClaimToday || pass.canRetrySync) && !pass.syncing,
-                            shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (pass.daySevenAvailable) StudioGold else Color.White,
-                                contentColor = StudioBlack,
-                                disabledContainerColor = Color.White.copy(alpha = 0.16f),
-                                disabledContentColor = Color.White.copy(alpha = 0.62f),
-                            ),
-                            modifier = Modifier.fillMaxWidth().height(54.dp),
-                        ) {
-                            if (pass.syncing) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = StudioInk, strokeWidth = 2.dp)
-                            } else {
-                                Icon(
-                                    when {
-                                        pass.canRetrySync -> Icons.Rounded.Refresh
-                                        pass.daySevenAvailable -> Icons.Rounded.Star
-                                        else -> Icons.Rounded.Diamond
-                                    },
-                                    null,
-                                )
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            Text(pass.claimButtonLabel, fontWeight = FontWeight.Black)
-                        }
-                    }
-                }
-            }
-            item { EliteTimelineCard(state = state, onClaim = viewModel::claimDiamond) }
-            item {
-                OutlinedButton(
-                    onClick = viewModel::openDiamondStore,
-                    shape = CircleShape,
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                ) {
-                    Icon(Icons.Rounded.Star, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.open_diamond_store))
-                }
-            }
-            item { PaywallCard(onUnlock = viewModel::unlockProPreview) }
-        }
-    }
-}
-
-@Composable
-private fun EliteTimelineCard(
+private fun DailyRewardCard(
     state: HomeDecorUiState,
     onClaim: () -> Unit,
 ) {
     val pass = elitePassPresentation(state)
-    ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFF111410))) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    ElevatedCard(shape = RoundedCornerShape(22.dp), colors = CardDefaults.elevatedCardColors(containerColor = HomeDecorColors.DarkSurface)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.your_elite_streak), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                    Text(stringResource(R.string.future_days_locked), color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.daily_reward), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.elite_intro), color = Color.White.copy(alpha = 0.68f), style = MaterialTheme.typography.bodySmall)
                 }
-                Surface(shape = CircleShape, color = StudioProContainer) {
-                    Text(
-                        "${pass.claimedDays}/7",
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                        color = StudioInk,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Black,
-                    )
-                }
+                EliteSyncPill(state)
             }
             LinearProgressIndicator(
                 progress = { pass.progress },
@@ -4271,106 +4870,30 @@ private fun EliteTimelineCard(
                 color = StudioGold,
                 trackColor = Color.White.copy(alpha = 0.18f),
             )
-            repeat(7) { index ->
-                val day = index + 1
-                val claimed = day <= pass.claimedDays
-                val current = day == pass.currentDay && pass.currentDayVisible
-                val claimable = day == pass.currentDay && pass.canClaimToday
-                EliteDayRow(
-                    day = day,
-                    claimed = claimed,
-                    current = current,
-                    claimable = claimable,
-                    syncing = pass.syncing,
-                    statusText = eliteDayStatusText(day, pass),
-                    onClaim = onClaim,
-                )
-            }
-            Text(
-                pass.footer,
-                color = Color.White.copy(alpha = 0.78f),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@Composable
-private fun eliteDayStatusText(day: Int, pass: ElitePassPresentation): String {
-    val daysLeft = day - pass.claimedDays
-    return when {
-        day <= pass.claimedDays -> stringResource(R.string.claimed)
-        day == pass.currentDay && pass.canClaimToday -> stringResource(R.string.available_today)
-        day == pass.currentDay && pass.atCap -> stringResource(R.string.daily_balance_full)
-        day == pass.currentDay && pass.lockedByTime -> stringResource(R.string.next_reward_pending)
-        day == 7 -> stringResource(R.string.pro_bonus_locked)
-        daysLeft <= 1 -> stringResource(R.string.next_reward_pending)
-        else -> stringResource(R.string.locked_day_format, day)
-    }
-}
-
-@Composable
-private fun EliteDayRow(
-    day: Int,
-    claimed: Boolean,
-    current: Boolean,
-    claimable: Boolean,
-    syncing: Boolean,
-    statusText: String,
-    onClaim: () -> Unit,
-) {
-    val locked = !claimed && !claimable
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = when {
-            current -> Color(0xFF332B12)
-            claimed -> Color.White.copy(alpha = 0.10f)
-            day == 7 -> Color(0xFF211C12)
-            else -> Color.White.copy(alpha = 0.055f)
-        },
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (current) StudioGold.copy(alpha = 0.58f) else Color.White.copy(alpha = 0.10f)),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Surface(shape = CircleShape, color = if (claimed || current) StudioGold else Color.White.copy(alpha = 0.10f)) {
-                Icon(
-                    when {
-                        claimed -> Icons.Rounded.Check
-                        locked -> Icons.Rounded.Lock
-                        day == 7 -> Icons.Rounded.Star
-                        else -> Icons.AutoMirrored.Rounded.ViewQuilt
-                    },
-                    null,
-                    Modifier.padding(9.dp).size(18.dp),
-                    tint = if (claimed || current) Color.White else Color.White.copy(alpha = 0.48f),
-                )
-            }
-            Column(Modifier.weight(1f)) {
-                Text(if (day == 7) stringResource(R.string.day_7_pro) else stringResource(R.string.day_format, day), color = if (day == 7) StudioGold else Color.White, fontWeight = FontWeight.Black)
+            EliteStatusStrip(pass)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    statusText,
-                    color = if (current) StudioGold else Color.White.copy(alpha = 0.68f),
-                    style = MaterialTheme.typography.labelMedium,
+                    pass.footer,
+                    color = Color.White.copy(alpha = 0.78f),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
                 )
-            }
-            if (claimable) {
                 Button(
                     onClick = onClaim,
-                    enabled = !syncing,
+                    enabled = (pass.canClaimToday || pass.canRetrySync) && !pass.syncing,
                     shape = CircleShape,
                     colors = studioProButtonColors(),
                     contentPadding = PaddingValues(horizontal = 14.dp),
-                    modifier = Modifier.height(48.dp),
+                    modifier = Modifier.height(46.dp),
                 ) {
-                    Text(if (syncing) stringResource(R.string.ellipsis) else if (day == 7) stringResource(R.string.day7_bonus) else stringResource(R.string.one_diamond_reward), fontWeight = FontWeight.Black)
+                    if (pass.syncing) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = StudioInk, strokeWidth = 2.dp)
+                    } else {
+                        Icon(if (pass.canRetrySync) Icons.Rounded.Refresh else Icons.Rounded.Diamond, null, Modifier.size(16.dp))
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    Text(pass.claimButtonLabel, fontWeight = FontWeight.Black, maxLines = 1)
                 }
-            } else if (day == 7) {
-                Text(stringResource(R.string.day7_bonus), color = StudioGold, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -4399,171 +4922,179 @@ private fun ProfileScreen(
     val context = LocalContext.current
     val openRealAuth = { openAuth(context) }
     val signedIn = !state.viewer.isGuest || state.signedInName != null
-    Column(Modifier.fillMaxSize().background(StudioCanvas)) {
-        ScreenHeaderPills(
-            title = stringResource(R.string.nav_profile),
-            trailing = {
-                FilledIconButton(onClick = viewModel::openSettings, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings))
-                }
-            },
-        )
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(StudioCanvas)
+            .windowInsetsPadding(WindowInsets.statusBars),
+    ) {
         LazyColumn(
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-                item {
-                    AccountHeaderSection(
-                        state = state,
-                        signedIn = signedIn,
-                        onSignIn = openRealAuth,
+            item("profile-header") {
+                SimpleProfileHeader(
+                    state = state,
+                    signedIn = signedIn,
+                    name = state.signedInName,
+                    email = state.signedInEmail,
+                    onSignIn = openRealAuth,
+                    onSettings = viewModel::openSettings,
                     onStore = viewModel::openDiamondStore,
                     onPaywall = viewModel::openPaywall,
                 )
             }
-            item {
-                ProfileSignInStateSection(
-                    signedIn = signedIn,
-                    email = state.signedInEmail,
-                    onSignIn = openRealAuth,
-                )
-            }
-            item {
+            item("portfolio-history") {
                 PortfolioHistorySection(
                     state = state,
                     onCreate = { viewModel.selectTab(MainTab.Tools) },
                 )
             }
-            item {
-                PurchasesSection(
-                    state = state,
-                    onStore = viewModel::openDiamondStore,
-                    onPaywall = viewModel::openPaywall,
-                    onRetrySync = viewModel::retryPurchaseSync,
-                )
-            }
-            item {
-                ProfileSettingsSection(
-                    onSettings = viewModel::openSettings,
-                    onShare = {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_app_text))
-                        }
-                        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_app_chooser)))
-                    },
-                )
-            }
         }
     }
 }
 
 @Composable
-private fun AccountHeaderSection(
+private fun SimpleProfileHeader(
     state: HomeDecorUiState,
     signedIn: Boolean,
+    name: String?,
+    email: String?,
     onSignIn: () -> Unit,
+    onSettings: () -> Unit,
     onStore: () -> Unit,
     onPaywall: () -> Unit,
 ) {
-    ElevatedCard(
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Surface(shape = CircleShape, color = if (state.isPro) StudioProContainer else StudioPrimaryContainer) {
-                    Icon(Icons.Rounded.Person, null, Modifier.padding(16.dp).size(28.dp), tint = if (state.isPro) StudioGold else StudioBlue)
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(
-                        when {
-                            state.signedInName != null -> state.signedInName
-                            signedIn -> stringResource(R.string.account_connected)
-                            else -> stringResource(R.string.signed_out)
-                        },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black,
-                    )
-                    Text(
-                        when {
-                            state.signedInEmail != null -> state.signedInEmail
-                            signedIn -> stringResource(R.string.profile_signed_in_sync)
-                            else -> stringResource(R.string.profile_sign_in_sync)
-                        },
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                ProfileInfoPill(
-                    icon = Icons.Rounded.Diamond,
-                    label = stringResource(R.string.diamonds_count, state.diamonds),
-                    modifier = Modifier.weight(1f),
-                )
-                ProfileInfoPill(
-                    icon = Icons.Rounded.Star,
-                    label = if (state.isPro) stringResource(R.string.active_pro) else stringResource(R.string.free_plan),
-                    modifier = Modifier.weight(1f),
-                    accent = state.isPro,
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                if (!signedIn) {
-                    Button(
-                        onClick = onSignIn,
-                        shape = CircleShape,
-                        colors = studioPrimaryButtonColors(),
-                        modifier = Modifier.weight(1f).height(50.dp),
-                    ) {
-                        Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Black)
-                    }
-                } else if (!state.isPro) {
-                    Button(
-                        onClick = onPaywall,
-                        shape = CircleShape,
-                        colors = studioPrimaryButtonColors(),
-                        modifier = Modifier.weight(1f).height(50.dp),
-                    ) {
-                        Text(stringResource(R.string.upgrade_to_pro), fontWeight = FontWeight.Black)
-                    }
-                }
-                OutlinedButton(
-                    onClick = onStore,
-                    shape = CircleShape,
-                    modifier = Modifier.weight(1f).height(50.dp),
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (signedIn) {
+                Surface(
+                    onClick = onSignIn,
+                    shape = RoundedCornerShape(24.dp),
+                    color = StudioPaper,
+                    tonalElevation = 1.dp,
+                    modifier = Modifier.weight(1f).heightIn(min = 58.dp),
                 ) {
-                    Icon(Icons.Rounded.Diamond, null, Modifier.size(17.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.diamonds), fontWeight = FontWeight.Black)
+                    Row(
+                        Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Surface(shape = CircleShape, color = if (state.isPro) StudioProContainer else StudioPrimaryContainer) {
+                            Icon(
+                                Icons.Rounded.Person,
+                                contentDescription = null,
+                                modifier = Modifier.padding(10.dp).size(20.dp),
+                                tint = if (state.isPro) StudioGold else StudioBlue,
+                            )
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                name ?: stringResource(R.string.account_connected),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                email ?: stringResource(R.string.profile_signed_in_sync),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
                 }
+            } else {
+                Button(
+                    onClick = onSignIn,
+                    shape = CircleShape,
+                    colors = studioPrimaryButtonColors(),
+                    modifier = Modifier.weight(1f).height(54.dp),
+                ) {
+                    Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Black, maxLines = 1)
+                }
+            }
+            OutlinedButton(
+                onClick = onSettings,
+                shape = CircleShape,
+                modifier = Modifier.height(54.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp),
+            ) {
+                Icon(Icons.Rounded.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.settings), fontWeight = FontWeight.Black, maxLines = 1)
             }
         }
+        ProfileStatusStrip(
+            state = state,
+            onStore = onStore,
+            onPaywall = onPaywall,
+        )
     }
 }
 
 @Composable
-private fun ProfileInfoPill(
+private fun ProfileStatusStrip(
+    state: HomeDecorUiState,
+    onStore: () -> Unit,
+    onPaywall: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        ProfileStatusPill(
+            icon = Icons.Rounded.Diamond,
+            label = stringResource(R.string.diamonds_count, state.diamonds),
+            onClick = onStore,
+            modifier = Modifier.weight(1f),
+        )
+        ProfileStatusPill(
+            icon = Icons.Rounded.Star,
+            label = if (state.isPro) stringResource(R.string.active_pro) else stringResource(R.string.free_plan),
+            onClick = onPaywall,
+            modifier = Modifier.weight(1f),
+            accent = state.isPro,
+        )
+    }
+}
+
+@Composable
+private fun ProfileStatusPill(
     icon: ImageVector,
     label: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     accent: Boolean = false,
 ) {
     Surface(
+        onClick = onClick,
         shape = CircleShape,
-        color = if (accent) StudioProContainer else StudioPrimaryContainer,
+        color = if (accent) StudioProContainer else StudioPaper,
+        tonalElevation = 1.dp,
         modifier = modifier,
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(icon, null, Modifier.size(17.dp), tint = if (accent) StudioGold else StudioBlue)
-            Text(label, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -4617,7 +5148,7 @@ private fun PortfolioHistorySection(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         ProfileSectionTitle(icon = Icons.AutoMirrored.Rounded.ViewQuilt, title = stringResource(R.string.portfolio_history))
         Text(
-            stringResource(R.string.portfolio_saved_count, state.board.size),
+            stringResource(R.string.portfolio_saved_count, state.board.count { it.isGeneratedResult() }),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
@@ -4663,7 +5194,7 @@ private fun PurchasesSection(
                 )
                 ProfileActionRow(
                     icon = Icons.Rounded.Star,
-                    title = stringResource(R.string.nav_elite_pass),
+                    title = stringResource(R.string.pro),
                     subtitle = if (state.isPro) stringResource(R.string.active_pro_access) else stringResource(R.string.clean_exports_and_generations),
                     action = if (state.isPro) stringResource(R.string.manage) else stringResource(R.string.view),
                     onClick = onPaywall,
@@ -4803,34 +5334,35 @@ private fun ProfileActionRow(
 
 @Composable
 private fun EmptyPortfolio(onCreate: () -> Unit) {
-    ElevatedCard(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 320.dp)
+            .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Column(
-            Modifier.fillMaxWidth().padding(22.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+        Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+            Icon(Icons.Rounded.Diamond, null, Modifier.padding(24.dp).size(36.dp), tint = StudioBlue)
+        }
+        Spacer(Modifier.height(18.dp))
+        Text(stringResource(R.string.empty_portfolio_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            stringResource(R.string.empty_portfolio_body),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.fillMaxWidth(0.86f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        Spacer(Modifier.height(22.dp))
+        Button(
+            onClick = onCreate,
+            shape = CircleShape,
+            colors = studioPrimaryButtonColors(),
+            modifier = Modifier.fillMaxWidth().height(54.dp),
         ) {
-            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
-                Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(24.dp).size(36.dp), tint = StudioBlue)
-            }
-            Text(stringResource(R.string.empty_portfolio_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-            Text(
-                stringResource(R.string.empty_portfolio_body),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.fillMaxWidth(0.86f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            )
-            Button(
-                onClick = onCreate,
-                shape = CircleShape,
-                colors = studioPrimaryButtonColors(),
-                modifier = Modifier.fillMaxWidth().height(54.dp),
-            ) {
-                Text(stringResource(R.string.create_design), fontWeight = FontWeight.Black)
-            }
+            Text(stringResource(R.string.create_design), fontWeight = FontWeight.Black)
         }
     }
 }
@@ -4843,24 +5375,50 @@ private fun SettingsRow(
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
-    ElevatedCard(
-        onClick = onClick,
-        enabled = enabled,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(
+    ListItem(
+        headlineContent = {
+            Text(
+                title,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        supportingContent = {
+            Text(
+                subtitle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        leadingContent = {
+            Surface(shape = CircleShape, color = if (enabled) StudioPrimaryContainer else StudioMist) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = if (enabled) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(9.dp).size(20.dp),
+                )
+            }
+        },
+        trailingContent = {
+            Icon(
+                Icons.AutoMirrored.Rounded.ArrowForward,
+                contentDescription = null,
+                tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(20.dp),
+            )
+        },
+        colors = ListItemDefaults.colors(
             containerColor = if (enabled) StudioPaper else StudioMist,
         ),
-    ) {
-        ListItem(
-            headlineContent = { Text(title, fontWeight = FontWeight.Bold, color = if (enabled) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant) },
-            supportingContent = { Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-            leadingContent = {
-        Surface(shape = CircleShape, color = StudioPrimaryContainer) {
-            Icon(icon, contentDescription = null, tint = if (enabled) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(9.dp).size(20.dp))
-                }
-            },
-        )
-    }
+        modifier = Modifier
+            .fillMaxWidth()
+            .minimumTouchTarget()
+            .clip(RoundedCornerShape(18.dp))
+            .disabledSemantics(enabled)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+    )
 }
 
 @Composable
@@ -4877,12 +5435,16 @@ private fun BoardCard(item: com.ismail.homedecorai.BoardItem) {
     )
     ElevatedCard(shape = RoundedCornerShape(20.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper)) {
         Box(Modifier.fillMaxWidth().height(208.dp)) {
-            NetworkOrResourceImage(
-                imageUrl = item.imageUrl,
-                imageRes = item.imageRes,
-                contentDescription = toolTitle,
-                modifier = Modifier.fillMaxSize(),
-            )
+            when {
+                failed -> ImageFailureState(modifier = Modifier.fillMaxSize())
+                ready -> NetworkOrResourceImage(
+                    imageUrl = item.imageUrl,
+                    imageRes = item.imageRes,
+                    contentDescription = toolTitle,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                else -> ImageLoadingState(modifier = Modifier.fillMaxSize())
+            }
             Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.72f)))))
             Surface(
                 shape = CircleShape,
@@ -4914,30 +5476,77 @@ private fun NetworkOrResourceImage(
     modifier: Modifier = Modifier,
 ) {
     var bitmap by remember(imageUrl) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var loading by remember(imageUrl) { mutableStateOf(!imageUrl.isNullOrBlank()) }
+    var failed by remember(imageUrl) { mutableStateOf(false) }
     LaunchedEffect(imageUrl) {
         bitmap = null
+        failed = false
+        loading = !imageUrl.isNullOrBlank()
         if (!imageUrl.isNullOrBlank()) {
             bitmap = withContext(Dispatchers.IO) {
                 runCatching {
                     URL(imageUrl).openStream().use { BitmapFactory.decodeStream(it)?.asImageBitmap() }
                 }.getOrNull()
             }
+            failed = bitmap == null
+        }
+        loading = false
+    }
+    when {
+        bitmap != null -> {
+            Image(
+                bitmap = bitmap!!,
+                contentDescription = contentDescription,
+                modifier = modifier,
+                contentScale = ContentScale.Crop,
+            )
+        }
+        loading -> {
+            ImageLoadingState(modifier = modifier)
+        }
+        failed -> {
+            ImageFailureState(modifier = modifier)
+        }
+        else -> {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = contentDescription,
+                modifier = modifier,
+                contentScale = ContentScale.Crop,
+            )
         }
     }
-    if (bitmap != null) {
-        Image(
-            bitmap = bitmap!!,
-            contentDescription = contentDescription,
-            modifier = modifier,
-            contentScale = ContentScale.Crop,
-        )
-    } else {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = contentDescription,
-            modifier = modifier,
-            contentScale = ContentScale.Crop,
-        )
+}
+
+@Composable
+private fun ImageLoadingState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(StudioMist),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            CircularProgressIndicator(modifier = Modifier.size(30.dp), strokeWidth = 3.dp, color = StudioBlue)
+            Text(stringResource(R.string.image_loading_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = StudioInk)
+            Text(stringResource(R.string.image_loading_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ImageFailureState(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(StudioErrorContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(28.dp), tint = StudioRose)
+            Text(stringResource(R.string.image_unavailable_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = StudioRose, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text(stringResource(R.string.image_unavailable_body), style = MaterialTheme.typography.bodySmall, color = StudioInk, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
     }
 }
 
@@ -4963,6 +5572,7 @@ private fun PaywallSheet(
     onStore: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val modalTapBlocker = remember { MutableInteractionSource() }
     var offering by remember { mutableStateOf<Offering?>(null) }
     var offeringsLoading by remember { mutableStateOf(true) }
@@ -4970,13 +5580,14 @@ private fun PaywallSheet(
     var restoring by remember { mutableStateOf(false) }
     var selectedPlan by remember { mutableStateOf("yearly") }
     var message by remember { mutableStateOf<String?>(null) }
+
     fun loadOfferings() {
         offeringsLoading = true
         offering = null
         message = null
         if (!Purchases.isConfigured) {
             offeringsLoading = false
-            message = context.getString(R.string.subscriptions_unavailable)
+            message = resources.getString(R.string.subscriptions_unavailable)
             return
         }
         Purchases.sharedInstance.getOfferings(object : ReceiveOfferingsCallback {
@@ -4984,23 +5595,25 @@ private fun PaywallSheet(
                 offering = offerings.current ?: offerings.all.values.firstOrNull()
                 offeringsLoading = false
                 if (offering == null) {
-                    message = context.getString(R.string.no_subscription_available)
+                    message = resources.getString(R.string.no_subscription_available)
                 }
             }
 
             override fun onError(error: PurchasesError) {
                 offeringsLoading = false
-                message = context.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.load_prices_failed))
+                message = resources.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.load_prices_failed))
             }
         })
     }
+
     LaunchedEffect(Unit) {
         loadOfferings()
     }
+
     fun buy(packageToPurchase: Package?, subscriptionType: String, entitlement: String) {
         val activity = context.findActivity()
         if (packageToPurchase == null || activity == null || !Purchases.isConfigured) {
-            message = context.getString(R.string.plan_unavailable)
+            message = resources.getString(R.string.plan_unavailable)
             return
         }
         purchasing = true
@@ -5021,35 +5634,78 @@ private fun PaywallSheet(
             override fun onError(error: PurchasesError, userCancelled: Boolean) {
                 purchasing = false
                 message = if (userCancelled) {
-                    context.getString(R.string.purchase_cancelled)
+                    resources.getString(R.string.purchase_cancelled)
                 } else {
-                    context.getString(rawServiceMessageToKind(context, error.message).purchaseAttemptMessageRes(R.string.purchase_failed))
+                    resources.getString(rawServiceMessageToKind(context, error.message).purchaseAttemptMessageRes(R.string.purchase_failed))
                 }
             }
         })
     }
+
+    val weeklyPackage = offering?.weekly ?: offering?.availablePackages?.firstOrNull { it.packageType == PackageType.WEEKLY }
     val monthlyPackage = offering?.monthly ?: offering?.availablePackages?.firstOrNull { it.packageType == PackageType.MONTHLY }
     val yearlyPackage = offering?.annual ?: offering?.availablePackages?.firstOrNull { it.packageType == PackageType.ANNUAL }
     val purchaseBusy = purchasing || restoring || state.purchaseBusy
-    val pricesUnavailable = !offeringsLoading && monthlyPackage == null && yearlyPackage == null
-    LaunchedEffect(offeringsLoading, monthlyPackage, yearlyPackage) {
+    val pricesUnavailable = !offeringsLoading && weeklyPackage == null && monthlyPackage == null && yearlyPackage == null
+    val availablePlans = listOfNotNull(
+        yearlyPackage?.let {
+            PaywallPlan(
+                id = "yearly",
+                label = stringResource(R.string.paywall_access_yearly),
+                price = it.product.price.formatted,
+                detail = stringResource(R.string.paywall_billed_yearly, it.product.price.formatted),
+                badge = stringResource(R.string.paywall_best_offer),
+                packageToPurchase = it,
+                entitlement = "annual_pro",
+            )
+        },
+        weeklyPackage?.let {
+            PaywallPlan(
+                id = "weekly",
+                label = stringResource(R.string.paywall_access_weekly),
+                price = it.product.price.formatted,
+                detail = stringResource(R.string.paywall_flexible_access),
+                badge = null,
+                packageToPurchase = it,
+                entitlement = "weekly_pro",
+            )
+        },
+        monthlyPackage?.let {
+            PaywallPlan(
+                id = "monthly",
+                label = stringResource(R.string.paywall_access_monthly),
+                price = it.product.price.formatted,
+                detail = stringResource(R.string.paywall_billed_monthly),
+                badge = null,
+                packageToPurchase = it,
+                entitlement = "monthly_pro",
+            )
+        },
+    )
+
+    LaunchedEffect(offeringsLoading, weeklyPackage, monthlyPackage, yearlyPackage) {
         if (!offeringsLoading) {
             selectedPlan = when {
                 selectedPlan == "yearly" && yearlyPackage != null -> "yearly"
                 selectedPlan == "monthly" && monthlyPackage != null -> "monthly"
+                selectedPlan == "weekly" && weeklyPackage != null -> "weekly"
                 yearlyPackage != null -> "yearly"
+                weeklyPackage != null -> "weekly"
                 monthlyPackage != null -> "monthly"
                 else -> selectedPlan
             }
         }
     }
-    val selectedPackage = if (selectedPlan == "yearly") yearlyPackage else monthlyPackage
-    val selectedSubscriptionType = if (selectedPlan == "yearly") "yearly" else "monthly"
-    val selectedEntitlement = if (selectedPlan == "yearly") "annual_pro" else "monthly_pro"
+
+    val selectedPlanModel = availablePlans.firstOrNull { it.id == selectedPlan } ?: availablePlans.firstOrNull()
+    val selectedPackage = selectedPlanModel?.packageToPurchase
+    val selectedSubscriptionType = selectedPlanModel?.id ?: selectedPlan
+    val selectedEntitlement = selectedPlanModel?.entitlement ?: "pro"
+
     Box(
         Modifier
             .fillMaxSize()
-            .background(StudioCanvas)
+            .background(PaywallBg)
             .clickable(
                 interactionSource = modalTapBlocker,
                 indication = null,
@@ -5058,146 +5714,401 @@ private fun PaywallSheet(
     ) {
         IconButton(
             onClick = onClose,
-            modifier = Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp).size(48.dp),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .zIndex(1f)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(top = 10.dp, end = 18.dp)
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(Color.Black.copy(alpha = 0.50f)),
         ) {
-            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
+            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
         }
         LazyColumn(
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 92.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            contentPadding = PaddingValues(bottom = 34.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Surface(shape = CircleShape, color = StudioProContainer, tonalElevation = 6.dp) {
-                        Icon(Icons.Rounded.Diamond, null, Modifier.padding(20.dp).size(38.dp), tint = StudioInk)
-                    }
-                    Text(stringResource(R.string.paywall_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                PaywallHeroCarousel()
+            }
+            item {
+                Column(
+                    Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp),
+                ) {
+                    Text(stringResource(R.string.paywall_eyebrow), color = PaywallPremiumGold, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
                     Text(
-                        stringResource(R.string.paywall_subtitle),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        stringResource(R.string.paywall_pro_studio_title),
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        lineHeight = 35.sp,
+                    )
+                    Text(
+                        stringResource(R.string.paywall_pro_studio_subtitle),
+                        color = PaywallTextSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
             item {
-                ElevatedCard(shape = RoundedCornerShape(28.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioBlack)) {
-                    Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Text(stringResource(R.string.pro_upper), color = StudioGold, fontWeight = FontWeight.Black)
-                        Text(stringResource(R.string.premium_creation), color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                Column(
+                    Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    PaywallOutcomeCard(stringResource(R.string.paywall_outcome_4k_title), stringResource(R.string.paywall_outcome_4k_body))
+                    PaywallOutcomeCard(stringResource(R.string.paywall_outcome_watermark_title), stringResource(R.string.paywall_outcome_watermark_body))
+                    PaywallOutcomeCard(stringResource(R.string.paywall_outcome_priority_title), stringResource(R.string.paywall_outcome_priority_body))
+                }
+            }
+            item {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = PaywallCard,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                ) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(stringResource(R.string.paywall_included), color = PaywallTextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
                         FeatureRowOnDark(Icons.Rounded.AutoAwesome, stringResource(R.string.paywall_feature_generations))
-                        FeatureRowOnDark(Icons.Rounded.Refresh, stringResource(R.string.paywall_feature_fast))
-                        FeatureRowOnDark(Icons.Rounded.Star, stringResource(R.string.paywall_feature_styles))
-                        FeatureRowOnDark(Icons.Rounded.Save, stringResource(R.string.paywall_feature_history))
                         FeatureRowOnDark(Icons.Rounded.Download, stringResource(R.string.paywall_feature_watermark))
-                        if (offeringsLoading) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = StudioGold, strokeWidth = 2.dp)
-                                Text(stringResource(R.string.loading_prices), color = Color.White.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                        if (!pricesUnavailable && (message != null || state.purchaseMessage != null)) {
-                            val displayMessage = message ?: state.purchaseMessage.orEmpty()
-                            if (state.pendingPurchaseSync != null && message == null) {
-                                PurchaseSyncNotice(
-                                    message = displayMessage,
-                                    pending = true,
-                                    busy = state.purchaseBusy,
-                                    onRetry = onRetrySync,
-                                )
-                            } else {
-                                Text(displayMessage, color = StudioGold, style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                        if (pricesUnavailable) {
-                            PaywallPricesFallback(
-                                message = message ?: context.getString(R.string.load_prices_failed),
-                                retrying = offeringsLoading,
-                                onRetry = { loadOfferings() },
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            PlanChoiceButton(
-                                title = stringResource(R.string.monthly),
-                                price = monthlyPackage?.product?.price?.formatted,
-                                loading = offeringsLoading,
-                                enabled = !offeringsLoading && !purchaseBusy && monthlyPackage != null,
-                                selected = selectedPlan == "monthly" && monthlyPackage != null,
-                                onClick = { selectedPlan = "monthly" },
-                                modifier = Modifier.weight(1f).height(66.dp),
-                            )
-                            PlanChoiceButton(
-                                title = stringResource(R.string.yearly),
-                                price = yearlyPackage?.product?.price?.formatted,
-                                loading = offeringsLoading,
-                                enabled = !offeringsLoading && !purchaseBusy && yearlyPackage != null,
-                                selected = selectedPlan == "yearly" && yearlyPackage != null,
-                                onClick = { selectedPlan = "yearly" },
-                                modifier = Modifier.weight(1f).height(66.dp),
-                            )
-                        }
-                        Button(
-                            onClick = { buy(selectedPackage, selectedSubscriptionType, selectedEntitlement) },
-                            enabled = !offeringsLoading && !purchaseBusy && selectedPackage != null,
-                            shape = CircleShape,
-                            colors = studioProButtonColors(),
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                        ) {
-                            Text(
-                                when {
-                                    purchaseBusy -> stringResource(R.string.processing_ellipsis)
-                                    offeringsLoading -> stringResource(R.string.loading_ellipsis)
-                                    state.isPro -> stringResource(R.string.pro_activated)
-                                    selectedPlan == "yearly" && selectedPackage != null -> stringResource(R.string.continue_yearly)
-                                    selectedPlan == "monthly" && selectedPackage != null -> stringResource(R.string.continue_monthly)
-                                    else -> stringResource(R.string.prices_unavailable)
-                                },
-                                fontWeight = FontWeight.Black,
-                            )
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                if (!Purchases.isConfigured) {
-                                    message = context.getString(R.string.restore_unavailable)
-                                } else {
-                                    restoring = true
-                                    message = null
-                                    Purchases.sharedInstance.restorePurchases(object : ReceiveCustomerInfoCallback {
-                                        override fun onReceived(customerInfo: CustomerInfo) {
-                                            restoring = false
-                                            val active = customerInfo.entitlements.active.values.firstOrNull()
-                                            if (active != null) {
-                                                onSubscription("pro", if (active.identifier.contains("annual")) "yearly" else "monthly", active.identifier, active.latestPurchaseDate.time.toDouble(), active.expirationDate?.time?.toDouble())
-                                            } else {
-                                                message = context.getString(R.string.no_active_pro_purchase)
-                                            }
-                                        }
-
-                                        override fun onError(error: PurchasesError) {
-                                            restoring = false
-                                            message = context.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.restore_failed))
-                                        }
-                                    })
-                                }
-                            },
-                            enabled = !purchaseBusy,
-                            shape = CircleShape,
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                        ) {
-                            Text(if (restoring) stringResource(R.string.restoring) else stringResource(R.string.restore_purchases))
-                        }
+                        FeatureRowOnDark(Icons.Rounded.Refresh, stringResource(R.string.paywall_feature_fast))
+                        FeatureRowOnDark(Icons.Rounded.Save, stringResource(R.string.paywall_feature_history))
                     }
                 }
             }
             item {
-                OutlinedButton(
+                Surface(
+                    shape = CircleShape,
+                    color = PaywallAccent.copy(alpha = 0.16f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallAccent.copy(alpha = 0.45f)),
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(Icons.Rounded.Check, contentDescription = null, tint = PaywallPremiumGold, modifier = Modifier.size(18.dp))
+                        Text(stringResource(R.string.paywall_google_play_checkout), color = PaywallTextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+            if (offeringsLoading) {
+                item {
+                    Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = PaywallPremiumGold, strokeWidth = 2.dp)
+                            Text(stringResource(R.string.loading_prices), color = PaywallTextSecondary, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        repeat(2) {
+                            PaywallPlanSkeleton()
+                        }
+                    }
+                }
+            }
+            if (!offeringsLoading && !pricesUnavailable) {
+                items(availablePlans, key = { it.id }) { plan ->
+                    PaywallPlanCard(
+                        plan = plan,
+                        selected = plan.id == selectedPlanModel?.id,
+                        enabled = !purchaseBusy,
+                        onClick = { selectedPlan = plan.id },
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                    )
+                }
+            }
+            if (pricesUnavailable) {
+                item {
+                    PaywallPricesFallback(
+                        message = message ?: resources.getString(R.string.load_prices_failed),
+                        retrying = offeringsLoading,
+                        onRetry = { loadOfferings() },
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                    )
+                }
+            }
+            if (!pricesUnavailable && (message != null || state.purchaseMessage != null)) {
+                item {
+                    val displayMessage = message ?: state.purchaseMessage.orEmpty()
+                    if (state.pendingPurchaseSync != null && message == null) {
+                        PurchaseSyncNotice(
+                            message = displayMessage,
+                            pending = true,
+                            busy = state.purchaseBusy,
+                            onRetry = onRetrySync,
+                        )
+                    } else {
+                        Text(displayMessage, color = PaywallPremiumGold, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 20.dp))
+                    }
+                }
+            }
+            item {
+                Column(
+                    Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Button(
+                        onClick = { buy(selectedPackage, selectedSubscriptionType, selectedEntitlement) },
+                        enabled = !offeringsLoading && !purchaseBusy && selectedPackage != null,
+                        shape = CircleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PaywallPremiumGold,
+                            contentColor = PaywallBg,
+                            disabledContainerColor = PaywallDisabledButton,
+                            disabledContentColor = PaywallDisabledText,
+                        ),
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                    ) {
+                        Text(
+                            when {
+                                purchaseBusy -> stringResource(R.string.processing_ellipsis)
+                                offeringsLoading -> stringResource(R.string.loading_ellipsis)
+                                state.isPro -> stringResource(R.string.pro_activated)
+                                selectedPackage != null -> stringResource(R.string.paywall_start_trial)
+                                else -> stringResource(R.string.prices_unavailable)
+                            },
+                            fontWeight = FontWeight.Black,
+                        )
+                    }
+                    Text(
+                        if (pricesUnavailable) stringResource(R.string.paywall_restore_or_retry) else stringResource(R.string.paywall_cta_fine_print),
+                        color = PaywallTextMuted,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            item {
+                Surface(
                     onClick = onStore,
                     enabled = !purchaseBusy,
-                    shape = CircleShape,
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = PaywallCardAlt,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+                    modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().heightIn(min = 58.dp),
                 ) {
-                    Icon(Icons.Rounded.Diamond, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.buy_diamonds_only))
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Surface(shape = CircleShape, color = PaywallAccent.copy(alpha = 0.20f)) {
+                            Icon(Icons.Rounded.Diamond, null, Modifier.padding(9.dp).size(18.dp), tint = PaywallPremiumGold)
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(stringResource(R.string.paywall_diamond_store_title), color = Color.White, fontWeight = FontWeight.Black)
+                            Text(stringResource(R.string.paywall_diamond_store_subtitle), color = PaywallTextMuted, style = MaterialTheme.typography.labelMedium)
+                        }
+                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = PaywallTextMuted, modifier = Modifier.size(18.dp))
+                    }
+                }
+            }
+            item {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            if (!Purchases.isConfigured) {
+                                message = resources.getString(R.string.restore_unavailable)
+                            } else {
+                                restoring = true
+                                message = null
+                                Purchases.sharedInstance.restorePurchases(object : ReceiveCustomerInfoCallback {
+                                    override fun onReceived(customerInfo: CustomerInfo) {
+                                        restoring = false
+                                        val active = customerInfo.entitlements.active.values.firstOrNull()
+                                        if (active != null) {
+                                            val restoredType = when {
+                                                active.identifier.contains("annual", ignoreCase = true) -> "yearly"
+                                                active.identifier.contains("year", ignoreCase = true) -> "yearly"
+                                                active.identifier.contains("week", ignoreCase = true) -> "weekly"
+                                                else -> "monthly"
+                                            }
+                                            onSubscription("pro", restoredType, active.identifier, active.latestPurchaseDate.time.toDouble(), active.expirationDate?.time?.toDouble())
+                                        } else {
+                                            message = resources.getString(R.string.no_active_pro_purchase)
+                                        }
+                                    }
+
+                                    override fun onError(error: PurchasesError) {
+                                        restoring = false
+                                        message = resources.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.restore_failed))
+                                    }
+                                })
+                            }
+                        },
+                        enabled = !purchaseBusy,
+                        shape = CircleShape,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PaywallTextMuted),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent),
+                    ) {
+                        Text(if (restoring) stringResource(R.string.restoring) else stringResource(R.string.restore_purchases))
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class PaywallPlan(
+    val id: String,
+    val label: String,
+    val price: String,
+    val detail: String,
+    val badge: String?,
+    val packageToPurchase: Package,
+    val entitlement: String,
+)
+
+private val PaywallHeroImages = listOf(
+    R.drawable.assets_media_paywall_carouseljapandibedroom,
+    R.drawable.assets_media_paywall_carouselluxurymarble,
+    R.drawable.assets_media_paywall_paintintroblackmarblesalon,
+)
+
+@Composable
+private fun PaywallHeroCarousel() {
+    var heroIndex by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(3_000)
+            heroIndex = (heroIndex + 1) % PaywallHeroImages.size
+        }
+    }
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(242.dp)
+            .background(PaywallBg),
+    ) {
+        AnimatedContent(
+            targetState = PaywallHeroImages[heroIndex],
+            label = "paywallHero",
+        ) { imageRes ->
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, PaywallBg), startY = 140f)))
+        Row(
+            Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            PaywallHeroImages.forEachIndexed { index, _ ->
+                Box(
+                    Modifier
+                        .width(if (index == heroIndex) 18.dp else 7.dp)
+                        .height(7.dp)
+                        .clip(CircleShape)
+                        .background(if (index == heroIndex) PaywallPremiumGold else Color.White.copy(alpha = 0.28f)),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaywallOutcomeCard(title: String, body: String) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = PaywallCardAlt,
+        border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(
+                Modifier
+                    .width(3.dp)
+                    .height(48.dp)
+                    .clip(CircleShape)
+                    .background(PaywallPremiumGold),
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
+                Text(title, color = Color.White, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
+                Text(body, color = PaywallTextSecondary, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaywallPlanSkeleton() {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = PaywallCard,
+        border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+        modifier = Modifier.fillMaxWidth().height(74.dp),
+    ) {
+        Row(Modifier.fillMaxSize().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = PaywallPremiumGold, strokeWidth = 2.dp)
+            Spacer(Modifier.width(12.dp))
+            Text(stringResource(R.string.loading_prices), color = PaywallTextSecondary)
+        }
+    }
+}
+
+@Composable
+private fun PaywallPlanCard(
+    plan: PaywallPlan,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val borderColor = if (selected) PaywallPremiumGold.copy(alpha = 0.85f) else PaywallBorder
+    val backgroundColor = if (selected) PaywallPremiumGold.copy(alpha = 0.10f) else PaywallCard
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(if (plan.id == "yearly") 18.dp else 16.dp),
+        color = backgroundColor,
+        border = androidx.compose.foundation.BorderStroke(if (selected) 1.3.dp else 1.dp, borderColor),
+        modifier = modifier.fillMaxWidth().heightIn(min = if (plan.id == "yearly") 96.dp else 72.dp),
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            if (plan.badge != null) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = PaywallPremiumGold.copy(alpha = 0.20f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallPremiumGold.copy(alpha = 0.45f)),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 10.dp, end = 14.dp),
+                ) {
+                    Text(
+                        plan.badge,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                        color = PaywallPremiumGold,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Black,
+                    )
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Surface(shape = CircleShape, color = if (selected) PaywallPremiumGold else Color.White.copy(alpha = 0.12f)) {
+                    Icon(
+                        if (selected) Icons.Rounded.Check else Icons.Rounded.Star,
+                        contentDescription = null,
+                        tint = if (selected) PaywallBg else PaywallPremiumGold,
+                        modifier = Modifier.padding(8.dp).size(18.dp),
+                    )
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(plan.label, color = if (plan.id == "weekly") PaywallTextMuted else PaywallTextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
+                    Text(plan.price, color = Color.White, style = if (plan.id == "yearly") MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(plan.detail, color = if (plan.id == "yearly") PaywallSuccess else PaywallTextMuted, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -5209,12 +6120,13 @@ private fun PaywallPricesFallback(
     message: String,
     retrying: Boolean,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         shape = RoundedCornerShape(22.dp),
         color = Color.White.copy(alpha = 0.10f),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -5313,9 +6225,9 @@ private fun PlanChoiceButton(
 private fun FeatureRowOnDark(icon: ImageVector, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.12f)) {
-            Icon(icon, contentDescription = null, tint = StudioGold, modifier = Modifier.padding(8.dp).size(18.dp))
+            Icon(icon, contentDescription = null, tint = PaywallPremiumGold, modifier = Modifier.padding(8.dp).size(18.dp))
         }
-        Text(text, color = Color.White.copy(alpha = 0.86f), fontWeight = FontWeight.SemiBold)
+        Text(text, color = PaywallTextSecondary, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -5357,7 +6269,7 @@ private fun AuthSheet(
             ElevatedCard(shape = RoundedCornerShape(18.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioMist)) {
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     OutlinedButton(onClick = onAuth, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(54.dp)) {
-                        Text(stringResource(R.string.google_initial), color = Color(0xFF4285F4), fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.google_initial), color = StudioBlue, fontWeight = FontWeight.Black)
                         Spacer(Modifier.width(10.dp))
                         Text(stringResource(R.string.continue_with_google))
                     }
@@ -5389,30 +6301,41 @@ private fun AuthSheet(
 private fun SettingsSheet(
     state: HomeDecorUiState,
     onClose: () -> Unit,
-    onStore: () -> Unit,
     onSubscription: (String, String, String, Double?, Double?) -> Unit,
     onRetrySync: () -> Unit,
     onFeedback: (String) -> Unit,
     onDeleteAccount: () -> Unit,
+    onLogout: () -> Unit,
     currentLanguageTag: String,
     onLanguageSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val modalTapBlocker = remember { MutableInteractionSource() }
     var languagePickerVisible by remember { mutableStateOf(false) }
     var feedbackDialogVisible by remember { mutableStateOf(false) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
+    var logoutDialogVisible by remember { mutableStateOf(false) }
+    var unavailableMessage by remember { mutableStateOf<String?>(null) }
     var restoring by remember { mutableStateOf(false) }
     var settingsMessage by remember { mutableStateOf<String?>(null) }
-    val restoreEnabled = Purchases.isConfigured && !restoring && !state.settingsBusy && !state.purchaseBusy
+    val signedIn = !state.viewer.isGuest || state.signedInName != null
+    val actionBusy = restoring || state.settingsBusy || state.purchaseBusy
     fun setLinkFailureMessage(opened: Boolean) {
         if (!opened) {
-            settingsMessage = context.getString(R.string.open_link_failed)
+            settingsMessage = resources.getString(R.string.open_link_failed)
         }
     }
+    fun showTemporaryUnavailable(message: String = resources.getString(R.string.settings_temporarily_unavailable_body)) {
+        unavailableMessage = message
+    }
     fun restorePurchases() {
+        if (actionBusy) {
+            settingsMessage = resources.getString(R.string.settings_action_in_progress)
+            return
+        }
         if (!Purchases.isConfigured) {
-            settingsMessage = context.getString(R.string.restore_unavailable)
+            showTemporaryUnavailable(resources.getString(R.string.restore_unavailable_body))
             return
         }
         restoring = true
@@ -5422,7 +6345,7 @@ private fun SettingsSheet(
                 restoring = false
                 val active = customerInfo.entitlements.active.values.firstOrNull()
                 if (active != null) {
-                    settingsMessage = context.getString(R.string.pro_syncing)
+                    settingsMessage = resources.getString(R.string.pro_syncing)
                     onSubscription(
                         "pro",
                         if (active.identifier.contains("annual")) "yearly" else "monthly",
@@ -5431,13 +6354,13 @@ private fun SettingsSheet(
                         active.expirationDate?.time?.toDouble(),
                     )
                 } else {
-                    settingsMessage = context.getString(R.string.no_active_pro_purchase)
+                    settingsMessage = resources.getString(R.string.no_active_pro_purchase)
                 }
             }
 
             override fun onError(error: PurchasesError) {
                 restoring = false
-                settingsMessage = context.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.restore_failed))
+                settingsMessage = resources.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.restore_failed))
             }
         })
     }
@@ -5491,38 +6414,93 @@ private fun SettingsSheet(
                     }
                 }
                 item {
-                    SettingsRow(
-                        Icons.Rounded.Language,
-                        stringResource(R.string.language),
-                        AppLocale.labelFor(currentLanguageTag),
-                        onClick = { languagePickerVisible = true },
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = StudioPaper,
+                        tonalElevation = 1.dp,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(Modifier.padding(vertical = 6.dp)) {
+                            SettingsRow(
+                                Icons.Rounded.Language,
+                                stringResource(R.string.language),
+                                AppLocale.labelFor(context, currentLanguageTag),
+                                onClick = { languagePickerVisible = true },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.AutoMirrored.Rounded.Help,
+                                stringResource(R.string.faq),
+                                stringResource(R.string.faq_subtitle),
+                                onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/faq"))) },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Policy,
+                                stringResource(R.string.terms),
+                                stringResource(R.string.terms_subtitle),
+                                onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/terms"))) },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Lock,
+                                stringResource(R.string.privacy_policy),
+                                stringResource(R.string.privacy_subtitle),
+                                onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/privacy"))) },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.RateReview,
+                                stringResource(R.string.feedback),
+                                stringResource(R.string.feedback_subtitle),
+                                onClick = {
+                                    if (actionBusy) settingsMessage = resources.getString(R.string.settings_action_in_progress) else feedbackDialogVisible = true
+                                },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Star,
+                                stringResource(R.string.restore_purchases),
+                                when {
+                                    restoring -> stringResource(R.string.restoring)
+                                    !Purchases.isConfigured -> stringResource(R.string.restore_unavailable)
+                                    else -> stringResource(R.string.restore_purchases_subtitle)
+                                },
+                                onClick = { restorePurchases() },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Delete,
+                                stringResource(R.string.delete_account),
+                                stringResource(R.string.delete_account_subtitle),
+                                onClick = {
+                                    if (actionBusy) settingsMessage = resources.getString(R.string.settings_action_in_progress) else deleteDialogVisible = true
+                                },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Person,
+                                if (signedIn) stringResource(R.string.log_out) else stringResource(R.string.sign_in),
+                                if (signedIn) {
+                                    state.signedInEmail ?: stringResource(R.string.logout_subtitle)
+                                } else {
+                                    stringResource(R.string.sign_in_subtitle)
+                                },
+                                onClick = {
+                                    if (actionBusy) {
+                                        settingsMessage = resources.getString(R.string.settings_action_in_progress)
+                                    } else if (signedIn) {
+                                        logoutDialogVisible = true
+                                    } else {
+                                        val opened = openUrlSafely(context, appUrl("/sign-in"))
+                                        setLinkFailureMessage(opened)
+                                        if (opened) onClose()
+                                    }
+                                },
+                            )
+                        }
+                    }
                 }
-                item { SettingsRow(Icons.Rounded.RateReview, stringResource(R.string.feedback), stringResource(R.string.feedback_subtitle), enabled = !state.settingsBusy, onClick = { feedbackDialogVisible = true }) }
-                item { SettingsRow(Icons.AutoMirrored.Rounded.Help, stringResource(R.string.faq), stringResource(R.string.faq_subtitle), onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/faq"))) }) }
-                item {
-                    SettingsRow(
-                        Icons.Rounded.Star,
-                        stringResource(R.string.restore_purchases),
-                        when {
-                            restoring -> stringResource(R.string.restoring)
-                            !Purchases.isConfigured -> stringResource(R.string.restore_unavailable)
-                            else -> stringResource(R.string.restore_purchases_subtitle)
-                        },
-                        enabled = restoreEnabled,
-                        onClick = { restorePurchases() },
-                    )
-                }
-                item { SettingsRow(Icons.Rounded.Diamond, stringResource(R.string.diamond_store), stringResource(R.string.diamond_store_subtitle), enabled = !state.settingsBusy, onClick = onStore) }
-                item {
-                    SettingsRow(Icons.Rounded.Share, stringResource(R.string.share_app), stringResource(R.string.share_app_subtitle), onClick = {
-                        val shareText = context.getString(R.string.share_app_share_text, appUrl(""))
-                        setLinkFailureMessage(shareTextSafely(context, shareText))
-                    })
-                }
-                item { SettingsRow(Icons.Rounded.Policy, stringResource(R.string.terms), stringResource(R.string.terms_subtitle), onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/terms"))) }) }
-                item { SettingsRow(Icons.Rounded.Policy, stringResource(R.string.privacy_policy), stringResource(R.string.privacy_subtitle), onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/privacy"))) }) }
-                item { SettingsRow(Icons.Rounded.Delete, stringResource(R.string.delete_account), stringResource(R.string.delete_account_subtitle), enabled = !state.settingsBusy, onClick = { deleteDialogVisible = true }) }
             }
         }
     }
@@ -5562,6 +6540,46 @@ private fun SettingsSheet(
             onDismiss = { deleteDialogVisible = false },
         )
     }
+    if (logoutDialogVisible) {
+        LogoutDialog(
+            onConfirm = {
+                logoutDialogVisible = false
+                onLogout()
+            },
+            onDismiss = { logoutDialogVisible = false },
+        )
+    }
+    unavailableMessage?.let { message ->
+        TemporaryUnavailableDialog(
+            message = message,
+            onDismiss = { unavailableMessage = null },
+        )
+    }
+}
+
+@Composable
+private fun SettingsDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 72.dp),
+        color = StudioLine.copy(alpha = 0.65f),
+    )
+}
+
+@Composable
+private fun TemporaryUnavailableDialog(
+    message: String,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_temporarily_unavailable_title)) },
+        text = { Text(message) },
+        confirmButton = {
+            Button(onClick = onDismiss, shape = CircleShape) {
+                Text(stringResource(R.string.close))
+            }
+        },
+    )
 }
 
 @Composable
@@ -5630,6 +6648,28 @@ private fun DeleteAccountDialog(
 }
 
 @Composable
+private fun LogoutDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.logout_title)) },
+        text = { Text(stringResource(R.string.logout_body)) },
+        confirmButton = {
+            Button(onClick = onConfirm, shape = CircleShape) {
+                Text(stringResource(R.string.logout_confirm))
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss, shape = CircleShape) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
 private fun LanguagePickerDialog(
     currentLanguageTag: String,
     onLanguageSelected: (String) -> Unit,
@@ -5639,7 +6679,31 @@ private fun LanguagePickerDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.language_picker_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                Modifier
+                    .heightIn(max = 520.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val systemSelected = currentLanguageTag == AppLocale.SYSTEM_LANGUAGE_TAG
+                Surface(
+                    color = if (systemSelected) StudioPrimaryContainer else Color.Transparent,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.language_system_default), fontWeight = FontWeight.Bold) },
+                        trailingContent = {
+                            if (systemSelected) {
+                                Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue)
+                            }
+                        },
+                        modifier = Modifier
+                            .minimumTouchTarget()
+                            .semantics { this.selected = systemSelected }
+                            .clickable(role = Role.Button) { onLanguageSelected(AppLocale.SYSTEM_LANGUAGE_TAG) },
+                    )
+                }
                 AppLocale.supportedLanguages.forEach { language ->
                     val selected = language.tag == currentLanguageTag
                     Surface(
@@ -5648,7 +6712,7 @@ private fun LanguagePickerDialog(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         ListItem(
-                            headlineContent = { Text(language.label, fontWeight = FontWeight.Bold) },
+                            headlineContent = { Text(stringResource(language.labelRes), fontWeight = FontWeight.Bold) },
                             trailingContent = {
                                 if (selected) {
                                     Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue)
@@ -5718,6 +6782,7 @@ private fun DiamondStoreSheet(
     onRetrySync: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scrimTapBlocker = remember { MutableInteractionSource() }
     val sheetTapBlocker = remember { MutableInteractionSource() }
     var packages by remember { mutableStateOf<List<Package>>(emptyList()) }
@@ -5737,7 +6802,7 @@ private fun DiamondStoreSheet(
         packages = emptyList()
         if (!Purchases.isConfigured) {
             storeLoading = false
-            loadError = context.getString(R.string.store_purchases_unavailable)
+            loadError = resources.getString(R.string.store_purchases_unavailable)
             return@LaunchedEffect
         }
         Purchases.sharedInstance.getOfferings(object : ReceiveOfferingsCallback {
@@ -5746,13 +6811,13 @@ private fun DiamondStoreSheet(
                     .distinctBy { "${it.identifier}:${it.product.id}" }
                 storeLoading = false
                 if (packages.isEmpty()) {
-                    loadError = context.getString(R.string.store_no_packs)
+                    loadError = resources.getString(R.string.store_no_packs)
                 }
             }
 
             override fun onError(error: PurchasesError) {
                 storeLoading = false
-                loadError = context.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.store_load_packs_failed))
+                loadError = resources.getString(rawServiceMessageToKind(context, error.message).storeMessageRes(R.string.store_load_packs_failed))
             }
         })
     }
@@ -5772,7 +6837,7 @@ private fun DiamondStoreSheet(
         val activity = context.findActivity()
         if (storeLoading || loadingPack != null || state.purchaseBusy) return
         if (productPackage == null || activity == null || !Purchases.isConfigured) {
-            message = context.getString(R.string.pack_unavailable_google)
+            message = resources.getString(R.string.pack_unavailable_google)
             return
         }
         loadingPack = pack.id
@@ -5782,7 +6847,7 @@ private fun DiamondStoreSheet(
             override fun onCompleted(storeTransaction: StoreTransaction, customerInfo: CustomerInfo) {
                 loadingPack = null
                 syncingPack = pack.id
-                message = context.getString(R.string.purchase_google_confirmed)
+                message = resources.getString(R.string.purchase_google_confirmed)
                 onFulfill(
                     pack.id,
                     storeTransaction.orderId ?: storeTransaction.purchaseToken,
@@ -5798,9 +6863,9 @@ private fun DiamondStoreSheet(
                 loadingPack = null
                 syncingPack = null
                 message = if (userCancelled) {
-                    context.getString(R.string.purchase_cancelled)
+                    resources.getString(R.string.purchase_cancelled)
                 } else {
-                    context.getString(rawServiceMessageToKind(context, error.message).purchaseAttemptMessageRes(R.string.purchase_failed))
+                    resources.getString(rawServiceMessageToKind(context, error.message).purchaseAttemptMessageRes(R.string.purchase_failed))
                 }
             }
         })
@@ -5816,7 +6881,7 @@ private fun DiamondStoreSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.34f))
+            .background(Color.Black.copy(alpha = 0.58f))
             .clickable(
                 interactionSource = scrimTapBlocker,
                 indication = null,
@@ -5826,7 +6891,7 @@ private fun DiamondStoreSheet(
     ) {
         Surface(
             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
-            color = StudioCanvas,
+            color = PaywallBg,
             tonalElevation = 8.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -5858,39 +6923,39 @@ private fun DiamondStoreSheet(
                                     .width(44.dp)
                                     .height(5.dp)
                                     .clip(CircleShape)
-                                    .background(StudioLine),
+                                    .background(Color.White.copy(alpha = 0.22f)),
                             )
                         }
                     }
                 }
                 item {
-                    ElevatedCard(shape = RoundedCornerShape(26.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper)) {
+                    ElevatedCard(shape = RoundedCornerShape(20.dp), colors = CardDefaults.elevatedCardColors(containerColor = PaywallCardAlt)) {
                         Row(
                             Modifier.fillMaxWidth().padding(18.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
-                                Icon(Icons.Rounded.Diamond, null, Modifier.padding(12.dp).size(26.dp), tint = StudioBlue)
+                            Surface(shape = CircleShape, color = PaywallAccent.copy(alpha = 0.20f)) {
+                                Icon(Icons.Rounded.Diamond, null, Modifier.padding(12.dp).size(26.dp), tint = PaywallPremiumGold)
                             }
                             Column(Modifier.weight(1f)) {
-                                Text(stringResource(R.string.current_balance), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                                Text(stringResource(R.string.diamonds_amount, state.diamonds), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(R.string.current_balance), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                                Text(stringResource(R.string.diamonds_amount, state.diamonds), color = PaywallTextSecondary)
                             }
                             IconButton(onClick = onClose) {
-                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
+                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
                             }
                         }
                     }
                 }
                 item {
-                    Text(stringResource(R.string.get_more_credits), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.get_more_credits), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
                 if (storeLoading) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = StudioBlue, strokeWidth = 2.dp)
-                            Text(stringResource(R.string.loading_packs), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = PaywallPremiumGold, strokeWidth = 2.dp)
+                            Text(stringResource(R.string.loading_packs), color = PaywallTextSecondary)
                         }
                     }
                 }
@@ -5904,7 +6969,7 @@ private fun DiamondStoreSheet(
                                 onRetry = onRetrySync,
                             )
                         } else {
-                            Text(notice.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(notice.orEmpty(), color = PaywallTextSecondary)
                         }
                     }
                 }
@@ -5914,6 +6979,7 @@ private fun DiamondStoreSheet(
                             onClick = { loadAttempt += 1 },
                             enabled = !storeLoading && loadingPack == null && !state.purchaseBusy,
                             shape = CircleShape,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PaywallTextSecondary),
                         ) {
                             Icon(Icons.Rounded.Refresh, null, Modifier.size(17.dp))
                             Spacer(Modifier.width(8.dp))
@@ -5949,37 +7015,37 @@ private fun DiamondPackRow(
     val packBadge = diamondPackBadgeRes(pack)?.let { stringResource(it) }
     val packDescription = stringResource(diamondPackDescriptionRes(pack))
     val enabled = !loading && !unavailable && !purchaseBlocked
-    val titleColor = if (unavailable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f) else StudioInk
-    val bodyColor = if (unavailable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.62f) else MaterialTheme.colorScheme.onSurfaceVariant
+    val titleColor = if (unavailable) PaywallTextMuted else Color.White
+    val bodyColor = if (unavailable) PaywallTextMuted else PaywallTextSecondary
     ElevatedCard(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = StudioPaper,
-            disabledContainerColor = if (unavailable) StudioMist.copy(alpha = 0.78f) else StudioPaper,
+            containerColor = PaywallCardAlt,
+            disabledContainerColor = PaywallCardAlt.copy(alpha = 0.72f),
         ),
         modifier = Modifier
             .fillMaxWidth()
             .height(108.dp)
-            .border(1.dp, if (unavailable) StudioRose.copy(alpha = 0.28f) else StudioLine.copy(alpha = 0.5f), RoundedCornerShape(22.dp)),
+            .border(1.dp, if (unavailable) StudioRose.copy(alpha = 0.36f) else PaywallBorder, RoundedCornerShape(16.dp)),
     ) {
         Row(
             Modifier.fillMaxSize().padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Surface(shape = CircleShape, color = if (unavailable) StudioMist else StudioPrimaryContainer) {
-                Icon(Icons.Rounded.Diamond, null, Modifier.padding(10.dp).size(22.dp), tint = if (unavailable) bodyColor else StudioBlue)
+            Surface(shape = CircleShape, color = if (unavailable) Color.White.copy(alpha = 0.08f) else PaywallAccent.copy(alpha = 0.20f)) {
+                Icon(Icons.Rounded.Diamond, null, Modifier.padding(10.dp).size(22.dp), tint = if (unavailable) bodyColor else PaywallPremiumGold)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.pack_title, packTitle), color = titleColor, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (packBadge != null) {
-                    Surface(shape = CircleShape, color = StudioErrorContainer) {
+                    Surface(shape = RoundedCornerShape(6.dp), color = PaywallPremiumGold.copy(alpha = 0.18f), border = androidx.compose.foundation.BorderStroke(1.dp, PaywallPremiumGold.copy(alpha = 0.40f))) {
                         Text(
                             packBadge,
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                            color = StudioRose,
+                            color = PaywallPremiumGold,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
@@ -5998,7 +7064,12 @@ private fun DiamondPackRow(
                 onClick = onClick,
                 enabled = enabled,
                 shape = CircleShape,
-                colors = studioPrimaryButtonColors(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PaywallPremiumGold,
+                    contentColor = PaywallBg,
+                    disabledContainerColor = PaywallDisabledButton,
+                    disabledContentColor = PaywallDisabledText,
+                ),
                 modifier = Modifier.widthIn(min = 106.dp).height(48.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp),
             ) {
@@ -6038,7 +7109,7 @@ private fun wizardStepNumber(stage: WizardStage, tool: DecorTool? = null): Int {
         WizardStage.Photo -> 1
         WizardStage.Space -> 2
         WizardStage.Style -> if (tool?.id == "reference") 2 else 3
-        WizardStage.Refine -> if (tool?.id in listOf("reference", "layout")) 2 else if (tool?.id in listOf("garden", "paint")) 3 else 4
+        WizardStage.Refine -> if (tool?.id in listOf("reference", "layout")) 2 else if (tool?.id in listOf("garden", "paint", "floor", "replace")) 3 else 4
         WizardStage.Processing -> wizardTotalSteps(tool)
         WizardStage.Result -> wizardTotalSteps(tool)
     }
@@ -6046,7 +7117,7 @@ private fun wizardStepNumber(stage: WizardStage, tool: DecorTool? = null): Int {
 
 private fun wizardTotalSteps(tool: DecorTool?): Int {
     return when (tool?.id) {
-        "garden" -> 3
+        "garden", "paint", "floor", "replace" -> 3
         "reference" -> 2
         "layout" -> 2
         else -> 4

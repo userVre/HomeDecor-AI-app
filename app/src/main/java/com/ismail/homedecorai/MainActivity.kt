@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -13,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import com.ismail.homedecorai.ui.HomeDecorApp
 
 class MainActivity : ComponentActivity() {
@@ -44,7 +46,14 @@ class MainActivity : ComponentActivity() {
             val localizedContext = remember(languageTag) {
                 AppLocale.wrap(this, languageTag)
             }
-            CompositionLocalProvider(LocalContext provides localizedContext) {
+            val layoutDirection = remember(languageTag) {
+                AppLocale.layoutDirectionFor(this, languageTag)
+            }
+            CompositionLocalProvider(
+                LocalActivityResultRegistryOwner provides this@MainActivity,
+                LocalContext provides localizedContext,
+                LocalLayoutDirection provides layoutDirection,
+            ) {
                 HomeDecorApp(
                     viewModel = viewModel,
                     currentLanguageTag = languageTag,

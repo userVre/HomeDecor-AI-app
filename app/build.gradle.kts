@@ -43,6 +43,12 @@ android {
         buildConfig = true
     }
 
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

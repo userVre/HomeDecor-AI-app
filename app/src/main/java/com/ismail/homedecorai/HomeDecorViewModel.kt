@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import java.util.UUID
 
-enum class MainTab { Tools, Create, Discover, ElitePass, Profile }
+enum class MainTab { Tools, Create, Discover, Profile }
 enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
 enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
 
@@ -62,7 +62,8 @@ data class BoardItem(
     val createdAt: Double = 0.0,
 )
 
-fun BoardItem.isGeneratedResult(): Boolean = imageUrl?.isNotBlank() == true || status == "ready"
+fun BoardItem.isGeneratedResult(): Boolean =
+    status == "ready" && (imageUrl?.isNotBlank() == true || imageRes != 0)
 
 data class SelectedPhoto(
     val uri: Uri? = null,
@@ -88,6 +89,9 @@ fun List<MaskStroke>.hasVisibleMaskPaint(): Boolean {
     }
     return false
 }
+
+fun String.isValidReplacementPrompt(): Boolean =
+    trim().let { prompt -> prompt.length >= 3 && prompt.any { it.isLetterOrDigit() } }
 
 private fun List<MaskStroke>.toMaskBitmap(size: Int): Bitmap {
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
@@ -162,6 +166,7 @@ data class HomeDecorUiState(
     val designMode: String = "Preserve Layout",
     val customPrompt: String = "",
     val layoutConstraints: String = "",
+    val mobilierASupprimer: String = "",
     val mobilierADeplacer: String = "",
     val progressMessage: String = "",
     val diamonds: Int = 1,
@@ -190,6 +195,7 @@ data class HomeDecorUiState(
     val pendingPurchaseSync: PendingPurchaseSync? = null,
     val settingsMessage: String? = null,
     val settingsBusy: Boolean = false,
+    val workspace: CreativeWorkspaceState = CreativeWorkspaceState(),
 )
 
 object HomeDecorCatalog {
@@ -412,20 +418,28 @@ object HomeDecorCatalog {
         )
     }
 
+    private fun numberedDiscoverItems(idPrefix: String, category: String, vararg imageRes: Int): List<GalleryItem> =
+        imageRes.mapIndexed { index, image ->
+            val number = index + 1
+            GalleryItem("$idPrefix-$number", "$category $number", category, image)
+        }
+
     val discoverSections = listOf(
         DiscoverSection(
             id = "kitchen",
             title = "Cuisine",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(
-                GalleryItem("kitchen-1", "Cuisine 1", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen1),
-                GalleryItem("kitchen-2", "Cuisine 2", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen2),
-                GalleryItem("kitchen-3", "Cuisine 3", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen3),
-                GalleryItem("kitchen-4", "Cuisine 4", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen4),
-                GalleryItem("kitchen-5", "Cuisine 5", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen5),
-                GalleryItem("kitchen-6", "Cuisine 6", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen6),
-                GalleryItem("kitchen-7", "Cuisine 7", "Cuisine", R.drawable.assets_media_discover_generated_kitchen_kitchen7),
+            items = numberedDiscoverItems(
+                "kitchen",
+                "Cuisine",
+                R.drawable.assets_media_discover_generated_kitchen_kitchen1,
+                R.drawable.assets_media_discover_generated_kitchen_kitchen2,
+                R.drawable.assets_media_discover_generated_kitchen_kitchen3,
+                R.drawable.assets_media_discover_generated_kitchen_kitchen4,
+                R.drawable.assets_media_discover_generated_kitchen_kitchen5,
+                R.drawable.assets_media_discover_generated_kitchen_kitchen6,
+                R.drawable.assets_media_discover_generated_kitchen_kitchen7,
             ),
         ),
         DiscoverSection(
@@ -433,14 +447,16 @@ object HomeDecorCatalog {
             title = "Salon",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(
-                GalleryItem("living-1", "Salon 1", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom1),
-                GalleryItem("living-2", "Salon 2", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom2),
-                GalleryItem("living-3", "Salon 3", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom3),
-                GalleryItem("living-4", "Salon 4", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom4),
-                GalleryItem("living-5", "Salon 5", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom5),
-                GalleryItem("living-6", "Salon 6", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom6),
-                GalleryItem("living-7", "Salon 7", "Salon", R.drawable.assets_media_discover_generated_livingroom_livingroom7),
+            items = numberedDiscoverItems(
+                "living",
+                "Salon",
+                R.drawable.assets_media_discover_generated_livingroom_livingroom1,
+                R.drawable.assets_media_discover_generated_livingroom_livingroom2,
+                R.drawable.assets_media_discover_generated_livingroom_livingroom3,
+                R.drawable.assets_media_discover_generated_livingroom_livingroom4,
+                R.drawable.assets_media_discover_generated_livingroom_livingroom5,
+                R.drawable.assets_media_discover_generated_livingroom_livingroom6,
+                R.drawable.assets_media_discover_generated_livingroom_livingroom7,
             ),
         ),
         DiscoverSection(
@@ -448,14 +464,16 @@ object HomeDecorCatalog {
             title = "Chambre",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(
-                GalleryItem("bedroom-1", "Chambre 1", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom1),
-                GalleryItem("bedroom-2", "Chambre 2", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom2),
-                GalleryItem("bedroom-3", "Chambre 3", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom3),
-                GalleryItem("bedroom-4", "Chambre 4", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom4),
-                GalleryItem("bedroom-5", "Chambre 5", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom5),
-                GalleryItem("bedroom-6", "Chambre 6", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom6),
-                GalleryItem("bedroom-7", "Chambre 7", "Chambre", R.drawable.assets_media_discover_generated_bedroom_bedroom7),
+            items = numberedDiscoverItems(
+                "bedroom",
+                "Chambre",
+                R.drawable.assets_media_discover_generated_bedroom_bedroom1,
+                R.drawable.assets_media_discover_generated_bedroom_bedroom2,
+                R.drawable.assets_media_discover_generated_bedroom_bedroom3,
+                R.drawable.assets_media_discover_generated_bedroom_bedroom4,
+                R.drawable.assets_media_discover_generated_bedroom_bedroom5,
+                R.drawable.assets_media_discover_generated_bedroom_bedroom6,
+                R.drawable.assets_media_discover_generated_bedroom_bedroom7,
             ),
         ),
         DiscoverSection(
@@ -463,23 +481,38 @@ object HomeDecorCatalog {
             title = "Salle de bain",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(GalleryItem("bathroom-1", "Salle de bain", "Salle de bain", R.drawable.assets_media_discover_home_homebathroom)),
+            items = numberedDiscoverItems(
+                "bathroom",
+                "Salle de bain",
+                R.drawable.assets_media_discover_home_homebathroom,
+                R.drawable.assets_media_discover_wallscenes_lavendermistbath,
+                R.drawable.assets_media_styles_styleluxury,
+            ),
         ),
         DiscoverSection(
             id = "dining",
             title = "Salle à manger",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(GalleryItem("dining-1", "Salle à manger", "Salle à manger", R.drawable.assets_media_discover_home_homediningroom)),
+            items = numberedDiscoverItems(
+                "dining",
+                "Salle à manger",
+                R.drawable.assets_media_discover_home_homediningroom,
+                R.drawable.assets_media_styles_styleartdeco,
+                R.drawable.assets_media_styles_stylemediterranean,
+            ),
         ),
         DiscoverSection(
             id = "home-office",
             title = "Bureau à domicile",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(
-                GalleryItem("office-1", "Bureau à domicile", "Bureau", R.drawable.assets_media_discover_home_homehomeoffice),
-                GalleryItem("office-2", "Étude lumineuse", "Bureau", R.drawable.assets_media_discover_home_homestudy),
+            items = numberedDiscoverItems(
+                "office",
+                "Bureau",
+                R.drawable.assets_media_discover_home_homehomeoffice,
+                R.drawable.assets_media_discover_home_homestudy,
+                R.drawable.assets_media_styles_stylemidcentury,
             ),
         ),
         DiscoverSection(
@@ -487,42 +520,76 @@ object HomeDecorCatalog {
             title = "Bibliothèque",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(GalleryItem("library-1", "Bibliothèque", "Bibliothèque", R.drawable.assets_media_discover_home_homelibrary)),
+            items = numberedDiscoverItems(
+                "library",
+                "Bibliothèque",
+                R.drawable.assets_media_discover_home_homelibrary,
+                R.drawable.assets_media_styles_stylevintage,
+                R.drawable.assets_media_styles_stylerustic,
+            ),
         ),
         DiscoverSection(
             id = "hall",
             title = "Entrée / couloir",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(GalleryItem("hall-1", "Couloir", "Entrée", R.drawable.assets_media_discover_home_homehall)),
+            items = numberedDiscoverItems(
+                "hall",
+                "Entrée",
+                R.drawable.assets_media_discover_home_homehall,
+                R.drawable.assets_media_styles_stylefrenchcountry,
+                R.drawable.assets_media_styles_stylecoastal,
+            ),
         ),
         DiscoverSection(
             id = "gaming",
             title = "Salle de jeux",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(GalleryItem("gaming-1", "Salle de jeux", "Loisir", R.drawable.assets_media_discover_home_homegamingroom)),
+            items = numberedDiscoverItems(
+                "gaming",
+                "Loisir",
+                R.drawable.assets_media_discover_home_homegamingroom,
+                R.drawable.assets_media_styles_stylecyberpunk,
+                R.drawable.assets_media_styles_stylemodern,
+            ),
         ),
         DiscoverSection(
             id = "laundry",
             title = "Blanchisserie",
             cluster = "Intérieurs",
             serviceToolId = "interior",
-            items = listOf(GalleryItem("laundry-1", "Blanchisserie", "Service", R.drawable.assets_media_discover_home_homelaundry)),
+            items = numberedDiscoverItems(
+                "laundry",
+                "Service",
+                R.drawable.assets_media_discover_home_homelaundry,
+                R.drawable.assets_media_styles_stylescandinavian,
+                R.drawable.assets_media_styles_styleminimalist,
+            ),
         ),
         DiscoverSection(
             id = "villa",
             title = "Villa",
             cluster = "Architecture",
             serviceToolId = "facade",
-            items = listOf(
-                GalleryItem("villa-1", "Villa 1", "Villa", R.drawable.assets_media_discover_exterior_exteriormodernvilla),
-                GalleryItem("villa-2", "Villa 2", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior1),
-                GalleryItem("villa-3", "Villa 3", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior2),
-                GalleryItem("villa-4", "Villa 4", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior3),
-                GalleryItem("villa-5", "Villa 5", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior4),
-                GalleryItem("villa-6", "Villa 6", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior5),
-                GalleryItem("villa-7", "Villa 7", "Villa", R.drawable.assets_media_discover_generated_exterior_exterior6),
+            items = numberedDiscoverItems(
+                "villa",
+                "Villa",
+                R.drawable.assets_media_discover_exterior_exteriormodernvilla,
+                R.drawable.assets_media_discover_generated_exterior_exterior1,
+                R.drawable.assets_media_discover_generated_exterior_exterior2,
+            ),
+        ),
+        DiscoverSection(
+            id = "house",
+            title = "Maison",
+            cluster = "Architecture",
+            serviceToolId = "facade",
+            items = numberedDiscoverItems(
+                "house",
+                "Maison",
+                R.drawable.tool_exterior,
+                R.drawable.assets_media_discover_generated_exterior_exterior7,
             ),
         ),
         DiscoverSection(
@@ -530,10 +597,35 @@ object HomeDecorCatalog {
             title = "Appartement",
             cluster = "Architecture",
             serviceToolId = "facade",
-            items = listOf(
-                GalleryItem("apartment-1", "Appartement 1", "Appartement", R.drawable.assets_media_discover_exterior_exteriorapartmentblock),
-                GalleryItem("apartment-2", "Appartement 2", "Appartement", R.drawable.assets_media_discover_exterior_exteriorglassoffice),
-                GalleryItem("apartment-3", "Appartement 3", "Appartement", R.drawable.assets_media_discover_exterior_exteriorretailstorefront),
+            items = numberedDiscoverItems(
+                "apartment",
+                "Appartement",
+                R.drawable.assets_media_discover_exterior_exteriorapartmentblock,
+                R.drawable.assets_media_discover_generated_exterior_exterior3,
+            ),
+        ),
+        DiscoverSection(
+            id = "office-building",
+            title = "Immeuble de bureaux",
+            cluster = "Architecture",
+            serviceToolId = "facade",
+            items = numberedDiscoverItems(
+                "office-building",
+                "Immeuble de bureaux",
+                R.drawable.assets_media_discover_exterior_exteriorglassoffice,
+                R.drawable.assets_media_discover_generated_exterior_exterior4,
+            ),
+        ),
+        DiscoverSection(
+            id = "retail",
+            title = "Vente au détail",
+            cluster = "Architecture",
+            serviceToolId = "facade",
+            items = numberedDiscoverItems(
+                "retail",
+                "Vente au détail",
+                R.drawable.assets_media_discover_exterior_exteriorretailstorefront,
+                R.drawable.assets_media_discover_generated_exterior_exterior5,
             ),
         ),
         DiscoverSection(
@@ -541,10 +633,12 @@ object HomeDecorCatalog {
             title = "Résidentiel",
             cluster = "Architecture",
             serviceToolId = "facade",
-            items = listOf(
-                GalleryItem("residential-1", "Maison avec piscine", "Résidentiel", R.drawable.assets_media_discover_exterior_exteriorpoolhouse),
-                GalleryItem("residential-2", "Manoir en pierre", "Résidentiel", R.drawable.assets_media_discover_exterior_exteriorstonemanor),
-                GalleryItem("residential-3", "Façade 7", "Résidentiel", R.drawable.assets_media_discover_generated_exterior_exterior7),
+            items = numberedDiscoverItems(
+                "residential",
+                "Résidentiel",
+                R.drawable.assets_media_discover_exterior_exteriorpoolhouse,
+                R.drawable.assets_media_discover_exterior_exteriorstonemanor,
+                R.drawable.assets_media_discover_generated_exterior_exterior6,
             ),
         ),
         DiscoverSection(
@@ -559,6 +653,8 @@ object HomeDecorCatalog {
                 GalleryItem("wall-4", "Charbon galerie", "Mur", R.drawable.assets_media_discover_wallscenes_gallerycharcoallounge),
                 GalleryItem("wall-5", "Terre cuite", "Mur", R.drawable.assets_media_discover_wallscenes_terracottadining),
                 GalleryItem("wall-6", "Rose poudré", "Mur", R.drawable.assets_media_discover_wallscenes_dustyroseretreat),
+                GalleryItem("wall-7", "Vert olive", "Mur", R.drawable.assets_media_discover_wallscenes_deepolivestudy),
+                GalleryItem("wall-8", "Gris perle", "Mur", R.drawable.assets_media_discover_wallscenes_pearlgraysalon),
             ),
         ),
         DiscoverSection(
@@ -573,6 +669,9 @@ object HomeDecorCatalog {
                 GalleryItem("floor-4", "Béton poli", "Sol", R.drawable.assets_media_discover_floorscenes_industrialgrayconcrete),
                 GalleryItem("floor-5", "Chevron", "Sol", R.drawable.assets_media_discover_floorscenes_walnutchevron),
                 GalleryItem("floor-6", "Terre cuite", "Sol", R.drawable.assets_media_discover_floorscenes_terracottaateliertile),
+                GalleryItem("floor-7", "Carrelage ardoise", "Sol", R.drawable.assets_media_discover_floorscenes_modernslatetile),
+                GalleryItem("floor-8", "Tapis ivoire", "Sol", R.drawable.assets_media_discover_floorscenes_plushivorycarpet),
+                GalleryItem("floor-9", "Chêne patiné", "Sol", R.drawable.assets_media_discover_floorscenes_weatheredoakstudio),
             ),
         ),
         DiscoverSection(
@@ -580,27 +679,85 @@ object HomeDecorCatalog {
             title = "Jardin",
             cluster = "Paysages",
             serviceToolId = "garden",
-            items = listOf(
-                GalleryItem("garden-1", "Jardin 1", "Jardin", R.drawable.assets_media_discover_garden_gardenfiresidepatio),
-                GalleryItem("garden-2", "Jardin 2", "Jardin", R.drawable.assets_media_discover_generated_garden_garden1),
-                GalleryItem("garden-3", "Jardin 3", "Jardin", R.drawable.assets_media_discover_generated_garden_garden2),
-                GalleryItem("garden-4", "Jardin 4", "Jardin", R.drawable.assets_media_discover_generated_garden_garden3),
-                GalleryItem("garden-5", "Jardin 5", "Jardin", R.drawable.assets_media_discover_generated_garden_garden4),
-                GalleryItem("garden-6", "Jardin 6", "Jardin", R.drawable.assets_media_discover_generated_garden_garden5),
-                GalleryItem("garden-7", "Jardin 7", "Jardin", R.drawable.assets_media_discover_generated_garden_garden6),
+            items = numberedDiscoverItems(
+                "garden",
+                "Jardin",
+                R.drawable.assets_media_discover_garden_gardenfiresidepatio,
+                R.drawable.assets_media_discover_generated_garden_garden1,
+                R.drawable.assets_media_discover_generated_garden_garden2,
             ),
         ),
         DiscoverSection(
-            id = "outdoor-spaces",
-            title = "Espaces extérieurs",
+            id = "backyard",
+            title = "Cour arrière",
             cluster = "Paysages",
             serviceToolId = "garden",
-            items = listOf(
-                GalleryItem("outdoor-1", "Cour arrière", "Paysage", R.drawable.assets_media_discover_garden_gardenbackyard),
-                GalleryItem("outdoor-2", "Terrasse", "Paysage", R.drawable.assets_media_discover_garden_gardenterrace),
-                GalleryItem("outdoor-3", "Patio", "Paysage", R.drawable.assets_media_discover_garden_gardenpatio),
-                GalleryItem("outdoor-4", "Piscine", "Paysage", R.drawable.assets_media_discover_garden_gardenswimmingpool),
-                GalleryItem("outdoor-5", "Entrée villa", "Paysage", R.drawable.assets_media_discover_garden_gardenvillaentry),
+            items = numberedDiscoverItems(
+                "backyard",
+                "Cour arrière",
+                R.drawable.assets_media_discover_garden_gardenbackyard,
+                R.drawable.assets_media_discover_generated_garden_garden3,
+            ),
+        ),
+        DiscoverSection(
+            id = "terrace",
+            title = "Terrasse",
+            cluster = "Paysages",
+            serviceToolId = "garden",
+            items = numberedDiscoverItems(
+                "terrace",
+                "Terrasse",
+                R.drawable.assets_media_discover_garden_gardenterrace,
+                R.drawable.assets_media_discover_garden_gardendeck,
+            ),
+        ),
+        DiscoverSection(
+            id = "patio",
+            title = "Patio",
+            cluster = "Paysages",
+            serviceToolId = "garden",
+            items = numberedDiscoverItems(
+                "patio",
+                "Patio",
+                R.drawable.assets_media_discover_garden_gardenpatio,
+                R.drawable.assets_media_discover_generated_garden_garden4,
+            ),
+        ),
+        DiscoverSection(
+            id = "yard",
+            title = "Cour",
+            cluster = "Paysages",
+            serviceToolId = "garden",
+            items = numberedDiscoverItems(
+                "yard",
+                "Cour",
+                R.drawable.assets_media_discover_generated_garden_garden5,
+                R.drawable.assets_media_discover_generated_garden_garden6,
+                R.drawable.assets_media_discover_generated_garden_garden7,
+            ),
+        ),
+        DiscoverSection(
+            id = "pool",
+            title = "Piscine",
+            cluster = "Paysages",
+            serviceToolId = "garden",
+            items = numberedDiscoverItems(
+                "pool",
+                "Piscine",
+                R.drawable.assets_media_discover_garden_gardenswimmingpool,
+                R.drawable.assets_media_discover_garden_gardenpoolcourtyard,
+            ),
+        ),
+        DiscoverSection(
+            id = "front-garden",
+            title = "Jardin avant",
+            cluster = "Paysages",
+            serviceToolId = "garden",
+            items = numberedDiscoverItems(
+                "front-garden",
+                "Jardin avant",
+                R.drawable.assets_media_discover_garden_gardenfrontyard,
+                R.drawable.assets_media_discover_garden_gardenvillaentry,
             ),
         ),
     )
@@ -609,6 +766,7 @@ object HomeDecorCatalog {
 class HomeDecorViewModel(
     private val repository: HomeDecorRepository,
     context: Context,
+    private val workspaceStore: LocalWorkspaceStore = LocalWorkspaceStore(context),
 ) : ViewModel() {
     private val appContext = context.applicationContext
     private val preferences = context.applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -618,6 +776,8 @@ class HomeDecorViewModel(
             progressMessage = text(R.string.progress_preparing_studio),
             elitePassSyncMessage = text(R.string.elite_pass_sync_initial),
             disclosureAccepted = preferences.getBoolean(KEY_DISCLOSURE_ACCEPTED, false),
+            workspace = workspaceStore.state.value,
+            board = workspaceStore.state.value.generatedResults.toBoardItems(),
         )
     )
     val uiState: StateFlow<HomeDecorUiState> = _uiState.asStateFlow()
@@ -626,10 +786,21 @@ class HomeDecorViewModel(
 
     init {
         viewModelScope.launch {
+            workspaceStore.state.collect { workspace ->
+                _uiState.update { state ->
+                    state.copy(
+                        workspace = workspace,
+                        board = if (state.board.isEmpty()) workspace.generatedResults.toBoardItems() else state.board,
+                    )
+                }
+            }
+        }
+        viewModelScope.launch {
             runCatching { repository.bootstrapViewer(anonymousId) }
                 .recoverCatching { repository.viewerSummary(anonymousId) }
                 .onSuccess { viewer ->
                     val archive = repository.archive(anonymousId).mapNotNull { it.toBoardItem() }
+                    archive.forEach { workspaceStore.upsertGeneratedResult(it.toGeneratedResult(_uiState.value)) }
                     _uiState.update {
                         it.copy(
                             viewer = viewer,
@@ -679,6 +850,7 @@ class HomeDecorViewModel(
                 designMode = HomeDecorCatalog.designModes.first().first,
                 customPrompt = "",
                 layoutConstraints = "",
+                mobilierASupprimer = "",
                 mobilierADeplacer = "",
                 maskStrokes = emptyList(),
                 undoneMaskStrokes = emptyList(),
@@ -692,6 +864,97 @@ class HomeDecorViewModel(
     fun acceptDisclosure() {
         preferences.edit().putBoolean(KEY_DISCLOSURE_ACCEPTED, true).apply()
         _uiState.update { it.copy(disclosureAccepted = true) }
+    }
+
+    fun createProject(name: String, roomType: String = ""): Project {
+        return workspaceStore.createProject(name = name, roomType = roomType)
+    }
+
+    fun updateProject(project: Project) {
+        workspaceStore.upsertProject(project)
+    }
+
+    fun deleteProject(projectId: String) {
+        workspaceStore.deleteProject(projectId)
+    }
+
+    fun toggleFavorite(result: BoardItem?): Boolean {
+        if (result == null || !result.isGeneratedResult()) return false
+        val generated = result.toGeneratedResult(_uiState.value)
+        workspaceStore.upsertGeneratedResult(generated)
+        return workspaceStore.toggleFavorite(generated)
+    }
+
+    fun addResultToMoodboard(result: BoardItem?, projectId: String? = null): Boolean {
+        if (result == null || !result.isGeneratedResult()) return false
+        val generated = result.toGeneratedResult(_uiState.value, projectId)
+        workspaceStore.upsertGeneratedResult(generated)
+        workspaceStore.upsertMoodboardItem(
+            MoodboardItem(
+                projectId = projectId ?: generated.projectId,
+                title = listOf(generated.roomType, generated.style, generated.toolTitle)
+                    .filter { it.isNotBlank() }
+                    .joinToString(" - ")
+                    .ifBlank { "Moodboard idea" },
+                imageUrl = generated.imageUrl,
+                source = "generated_result:${generated.id}",
+            )
+        )
+        return true
+    }
+
+    fun saveCurrentToolDraft(projectId: String? = null) {
+        workspaceStore.upsertToolDraft(_uiState.value.toToolDraft(projectId))
+    }
+
+    fun loadToolDraft(toolId: String = _uiState.value.selectedTool.id, projectId: String? = null): Boolean {
+        val draft = workspaceStore.draftFor(toolId, projectId) ?: return false
+        val tool = HomeDecorCatalog.tools.firstOrNull { it.id == draft.toolId } ?: _uiState.value.selectedTool
+        _uiState.update {
+            it.copy(
+                selectedTab = MainTab.Create,
+                selectedTool = tool,
+                wizardStage = WizardStage.Photo,
+                selectedPhotos = draft.toSelectedPhotos(),
+                selectedPhotoUri = draft.selectedPhotoUris.firstOrNull()?.let(Uri::parse),
+                selectedExampleLabel = draft.selectedExampleLabels.firstOrNull(),
+                selectedReferenceUri = draft.referencePhotoUri?.let(Uri::parse),
+                selectedReferenceExampleLabel = draft.selectedReferenceExampleLabel,
+                selectedRooms = draft.selectedRooms,
+                selectedStyles = draft.selectedStyles,
+                selectedPalettes = draft.selectedPalettes,
+                roomType = draft.roomType,
+                style = draft.style,
+                palette = draft.palette,
+                designMode = draft.designMode.ifBlank { HomeDecorCatalog.designModes.first().first },
+                customPrompt = draft.customPrompt,
+                layoutConstraints = draft.layoutConstraints,
+                mobilierASupprimer = draft.mobilierASupprimer,
+                mobilierADeplacer = draft.mobilierADeplacer,
+                maskStrokes = draft.maskStrokes.toMaskStrokes(),
+                undoneMaskStrokes = emptyList(),
+                generationError = null,
+            )
+        }
+        return true
+    }
+
+    fun clearCurrentToolDraft(projectId: String? = null) {
+        workspaceStore.clearToolDraft(_uiState.value.selectedTool.id, projectId)
+    }
+
+    fun claimLocalDailyReward(): Boolean {
+        val reward = workspaceStore.claimDailyReward() ?: return false
+        _uiState.update {
+            it.copy(
+                diamonds = it.diamonds + reward.lastRewardAmount,
+                eliteStreakDay = reward.currentStreak.coerceIn(1, 7),
+                claimedToday = true,
+                elitePassSyncState = ElitePassSyncState.LocalOnly,
+                elitePassSyncMessage = text(R.string.elite_pass_local_sync),
+            )
+        }
+        return true
     }
 
     fun setPhoto(uri: Uri?) {
@@ -771,6 +1034,10 @@ class HomeDecorViewModel(
 
     fun setMobilierADeplacerText(text: String) {
         _uiState.update { it.copy(mobilierADeplacer = text) }
+    }
+
+    fun setMobilierASupprimerText(text: String) {
+        _uiState.update { it.copy(mobilierASupprimer = text) }
     }
 
     fun setStyle(style: String) {
@@ -1080,6 +1347,18 @@ class HomeDecorViewModel(
         }
     }
 
+    fun logOut() {
+        _uiState.update {
+            it.copy(
+                viewer = it.viewer.copy(isGuest = true),
+                signedInName = null,
+                signedInEmail = null,
+                authVisible = false,
+                settingsMessage = text(R.string.logout_done),
+            )
+        }
+    }
+
     fun syncSubscriptionFromRevenueCat(
         plan: String,
         subscriptionType: String,
@@ -1175,8 +1454,16 @@ class HomeDecorViewModel(
                     WizardStage.Space -> WizardStage.Photo
                     WizardStage.Style -> if (state.selectedTool.id == "reference") WizardStage.Photo else WizardStage.Space
                     WizardStage.Refine -> if (state.selectedTool.id in listOf("garden", "layout")) WizardStage.Space else WizardStage.Style
-                    WizardStage.Processing -> if (state.selectedTool.id == "layout") WizardStage.Space else WizardStage.Refine
-                    WizardStage.Result -> if (state.selectedTool.id == "layout") WizardStage.Space else WizardStage.Refine
+                    WizardStage.Processing -> when (state.selectedTool.id) {
+                        "layout" -> WizardStage.Space
+                        "reference", "paint", "floor", "replace" -> WizardStage.Style
+                        else -> WizardStage.Refine
+                    }
+                    WizardStage.Result -> when (state.selectedTool.id) {
+                        "layout" -> WizardStage.Space
+                        "reference", "paint", "floor", "replace" -> WizardStage.Style
+                        else -> WizardStage.Refine
+                    }
                 }
             )
         }
@@ -1230,17 +1517,33 @@ class HomeDecorViewModel(
             }
             return
         }
-        if (snapshot.selectedTool.id == "replace" && snapshot.customPrompt.isBlank()) {
+        if (snapshot.selectedTool.id == "replace" && !snapshot.maskStrokes.hasVisibleMaskPaint()) {
             _uiState.update {
                 it.copy(
-                    wizardStage = WizardStage.Refine,
+                    wizardStage = WizardStage.Space,
+                    generationError = text(R.string.real_mask_required_error),
+                )
+            }
+            return
+        }
+        if (snapshot.selectedTool.id == "replace" && !snapshot.customPrompt.isValidReplacementPrompt()) {
+            _uiState.update {
+                it.copy(
+                    wizardStage = WizardStage.Style,
                     generationError = text(R.string.replacement_prompt_required_error),
                 )
             }
             return
         }
         if (snapshot.diamonds <= 0 && !snapshot.isPro) {
-            _uiState.update { it.copy(selectedTab = MainTab.ElitePass) }
+            _uiState.update {
+                it.copy(
+                    paywallVisible = true,
+                    storeVisible = false,
+                    authVisible = false,
+                    settingsVisible = false,
+                )
+            }
             return
         }
 
@@ -1271,6 +1574,7 @@ class HomeDecorViewModel(
                         if (snapshot.layoutConstraints.isNotBlank()) append(" Constraints: ").append(snapshot.layoutConstraints).append(".")
                         if (snapshot.style.isNotBlank()) append(" Number of people: ").append(snapshot.style).append(".")
                         if (snapshot.palette.isNotBlank()) append(" Mobilier a garder: ").append(snapshot.palette).append(".")
+                        if (snapshot.mobilierASupprimer.isNotBlank()) append(" Mobilier a supprimer: ").append(snapshot.mobilierASupprimer).append(".")
                         if (snapshot.mobilierADeplacer.isNotBlank()) append(" Mobilier a deplacer: ").append(snapshot.mobilierADeplacer).append(".")
                         if (snapshot.customPrompt.isNotBlank()) append(" Custom notes: ").append(snapshot.customPrompt).append(".")
                     }
@@ -1315,6 +1619,13 @@ class HomeDecorViewModel(
                 )
             }.onSuccess { result ->
                 val viewer = repository.viewerSummary(anonymousId)
+                workspaceStore.upsertGeneratedResult(result.toGeneratedResult(snapshot))
+                workspaceStore.recordRecentStyle(
+                    toolId = snapshot.selectedTool.id,
+                    style = snapshot.style,
+                    roomType = snapshot.roomType,
+                    palette = snapshot.palette,
+                )
                 _uiState.update {
                     it.copy(
                         wizardStage = WizardStage.Result,
@@ -1331,7 +1642,7 @@ class HomeDecorViewModel(
                     it.copy(
                         wizardStage = when (snapshot.selectedTool.id) {
                             "layout" -> WizardStage.Space
-                            "reference" -> WizardStage.Style
+                            "reference", "paint", "floor", "replace" -> WizardStage.Style
                             else -> WizardStage.Refine
                         },
                         viewer = recoveredViewer ?: it.viewer,
@@ -1347,6 +1658,7 @@ class HomeDecorViewModel(
 
     fun saveResultToPortfolio(result: BoardItem?): Boolean {
         if (result == null || !result.isGeneratedResult()) return false
+        workspaceStore.upsertGeneratedResult(result.toGeneratedResult(_uiState.value))
         _uiState.update { state ->
             state.copy(
                 board = listOf(result) + state.board.filterNot { it.id == result.id },
@@ -1365,6 +1677,7 @@ class HomeDecorViewModel(
             }
             runCatching { repository.claimDailyDiamond(anonymousId) }
                 .onSuccess { viewer ->
+                    workspaceStore.updateDailyReward(viewer.toDailyRewardState())
                     _uiState.update {
                         it.copy(
                             viewer = viewer,
@@ -1446,11 +1759,9 @@ class HomeDecorViewModel(
         if (snapshot.selectedTool.id != "reference") return null
         snapshot.selectedReferenceUri?.let { uri -> return readUriSource(uri) }
         if (snapshot.selectedReferenceExampleLabel != null) {
-            val bytes = appContext.resources.openRawResource(R.drawable.tool_reference).use { stream ->
-                val bitmap = BitmapFactory.decodeStream(stream)
-                    ?: error(text(R.string.prepare_reference_failed))
-                bitmap.toJpegBytes()
-            }
+            val bitmap = BitmapFactory.decodeResource(appContext.resources, R.drawable.tool_reference)
+                ?: error(text(R.string.prepare_reference_failed))
+            val bytes = bitmap.toJpegBytes()
             return SourceImage(bytes, "image/jpeg")
         }
         return null
@@ -1512,14 +1823,14 @@ class HomeDecorViewModel(
                 toolTitle = serviceType ?: "HomeDecor AI",
                 style = style ?: "",
                 roomType = roomType ?: "",
-                imageRes = R.drawable.sample_after_luxury,
-            imageUrl = imageUrl,
-            sourceImageUrl = sourceImageUrl,
-            status = "failed",
-            errorMessage = text(R.string.generation_failed_retry),
-            prompt = null,
-            createdAt = createdAt,
-        )
+            imageRes = R.drawable.sample_after_luxury,
+                imageUrl = null,
+                sourceImageUrl = sourceImageUrl,
+                status = "failed",
+                errorMessage = text(R.string.generation_failed_retry),
+                prompt = null,
+                createdAt = createdAt,
+            )
         }
         if (imageUrl.isNullOrBlank()) return null
         return BoardItem(
@@ -1531,9 +1842,119 @@ class HomeDecorViewModel(
             imageUrl = imageUrl,
             sourceImageUrl = sourceImageUrl,
             status = status ?: "ready",
-            errorMessage = errorMessage,
+            errorMessage = null,
             prompt = null,
             createdAt = createdAt,
+        )
+    }
+
+    private fun List<GeneratedResult>.toBoardItems(): List<BoardItem> {
+        return sortedByDescending { it.createdAt }.map { it.toBoardItem() }
+    }
+
+    private fun GeneratedResult.toBoardItem(): BoardItem {
+        return BoardItem(
+            id = id,
+            toolTitle = toolTitle,
+            style = style,
+            roomType = roomType,
+            imageRes = R.drawable.sample_after_luxury,
+            imageUrl = imageUrl,
+            sourceImageUrl = sourceImageUrl,
+            status = status,
+            errorMessage = errorMessage,
+            prompt = prompt,
+            createdAt = createdAt.toDouble(),
+        )
+    }
+
+    private fun BoardItem.toGeneratedResult(
+        snapshot: HomeDecorUiState,
+        projectId: String? = null,
+    ): GeneratedResult {
+        val matchingTool = HomeDecorCatalog.tools.firstOrNull { tool ->
+            tool.id == toolTitle || tool.title == toolTitle || tool.title == snapshot.selectedTool.title
+        }
+        return GeneratedResult(
+            id = id,
+            projectId = projectId,
+            toolId = matchingTool?.id ?: snapshot.selectedTool.id,
+            toolTitle = toolTitle,
+            roomType = roomType,
+            style = style,
+            palette = snapshot.palette,
+            prompt = prompt ?: snapshot.customPrompt.ifBlank { null },
+            sourceImageUrl = sourceImageUrl,
+            imageUrl = imageUrl,
+            status = status,
+            errorMessage = errorMessage,
+            createdAt = if (createdAt > 0.0) createdAt.toLong() else System.currentTimeMillis(),
+        )
+    }
+
+    private fun HomeDecorUiState.toToolDraft(projectId: String? = null): ToolDraft {
+        return ToolDraft(
+            toolId = selectedTool.id,
+            projectId = projectId,
+            selectedPhotoUris = selectedPhotos.mapNotNull { it.uri?.toString() }
+                .ifEmpty { selectedPhotoUri?.toString()?.let(::listOf) ?: emptyList() },
+            selectedExampleLabels = selectedPhotos.mapNotNull { it.exampleLabel }
+                .ifEmpty { selectedExampleLabel?.let(::listOf) ?: emptyList() },
+            referencePhotoUri = selectedReferenceUri?.toString(),
+            selectedReferenceExampleLabel = selectedReferenceExampleLabel,
+            selectedRooms = selectedRooms,
+            selectedStyles = selectedStyles,
+            selectedPalettes = selectedPalettes,
+            roomType = roomType,
+            style = style,
+            palette = palette,
+            designMode = designMode,
+            customPrompt = customPrompt,
+            layoutConstraints = layoutConstraints,
+            mobilierASupprimer = mobilierASupprimer,
+            mobilierADeplacer = mobilierADeplacer,
+            maskStrokes = maskStrokes.toPersistedMaskStrokes(),
+        )
+    }
+
+    private fun ToolDraft.toSelectedPhotos(): List<SelectedPhoto> {
+        return selectedPhotoUris.map { SelectedPhoto(uri = Uri.parse(it)) } +
+            selectedExampleLabels.map { SelectedPhoto(exampleLabel = it) }
+    }
+
+    private fun List<MaskStroke>.toPersistedMaskStrokes(): List<PersistedMaskStroke> {
+        return map { stroke ->
+            PersistedMaskStroke(
+                points = stroke.points.map { PersistedMaskPoint(it.x, it.y) },
+                brushSize = stroke.brushSize,
+                erase = stroke.erase,
+            )
+        }
+    }
+
+    private fun List<PersistedMaskStroke>.toMaskStrokes(): List<MaskStroke> {
+        return map { stroke ->
+            MaskStroke(
+                points = stroke.points.map { MaskPoint(it.x, it.y) },
+                brushSize = stroke.brushSize,
+                erase = stroke.erase,
+            )
+        }
+    }
+
+    private fun ViewerSummary.toDailyRewardState(): DailyRewardState {
+        val claimedAt = lastClaimAt?.toLong()
+        val claimDay = claimedAt?.let { millis ->
+            Calendar.getInstance().apply { timeInMillis = millis }
+        }
+        return DailyRewardState(
+            currentStreak = streakCount.coerceIn(0, 7),
+            lastClaimedAt = claimedAt,
+            lastClaimEpochDay = claimDay?.let {
+                it.get(Calendar.YEAR).toLong() * 400L + it.get(Calendar.DAY_OF_YEAR)
+            },
+            nextClaimAt = nextDiamondClaimAt.toLong(),
+            lastRewardAmount = creditsAdded,
         )
     }
 
