@@ -74,6 +74,8 @@ import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Landscape
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Layers
@@ -102,6 +104,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -127,12 +130,14 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -164,14 +169,17 @@ import com.ismail.homedecorai.BuildConfig
 import com.ismail.homedecorai.DecorTool
 import com.ismail.homedecorai.DiamondPack
 import com.ismail.homedecorai.DiscoverSection
-import com.ismail.homedecorai.ElitePassSyncState
+import com.ismail.homedecorai.FavoriteItem
 import com.ismail.homedecorai.GalleryItem
+import com.ismail.homedecorai.GeneratedResult
 import com.ismail.homedecorai.HomeDecorCatalog
 import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.MainTab
 import com.ismail.homedecorai.MaskPoint
 import com.ismail.homedecorai.MaskStroke
+import com.ismail.homedecorai.MoodboardItem
+import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.SelectedPhoto
 import com.ismail.homedecorai.WizardStage
@@ -200,6 +208,10 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import java.text.DateFormat
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.Date
 
 private object HomeDecorColors {
     val Ink = Color(0xFF19140D)
@@ -362,6 +374,7 @@ private fun optionLabelRes(label: String): Int? = when (label) {
     "Cyberpunk" -> R.string.option_style_cyberpunk
     "Tropicale" -> R.string.option_style_tropical
     "Minimaliste" -> R.string.option_style_minimalist
+    "Marocain" -> R.string.option_style_moroccan
     "Scandinave" -> R.string.option_style_scandinavian
     "Bohème" -> R.string.option_style_bohemian
     "Midcentury" -> R.string.option_style_midcentury
@@ -381,6 +394,15 @@ private fun optionLabelRes(label: String): Int? = when (label) {
     "Parquet clair" -> R.string.option_floor_light_wood
     "Parquet foncé" -> R.string.option_floor_dark_wood
     "Marbre" -> R.string.option_floor_marble
+    "Chêne" -> R.string.option_material_oak_wood
+    "Noyer" -> R.string.option_material_walnut
+    "Béton" -> R.string.option_material_concrete
+    "Limewash" -> R.string.option_material_limewash
+    "Terrazzo" -> R.string.option_material_terrazzo
+    "Carrelage blanc" -> R.string.option_material_white_tile
+    "Carrelage noir" -> R.string.option_material_black_tile
+    "Peinture beige chaude" -> R.string.option_material_warm_beige_paint
+    "Peinture sombre élégante" -> R.string.option_material_dark_elegant_paint
     "Béton ciré" -> R.string.option_floor_polished_concrete
     "Carrelage moderne" -> R.string.option_floor_modern_tile
     "Pierre naturelle" -> R.string.option_floor_natural_stone
@@ -415,6 +437,14 @@ private fun optionLabelRes(label: String): Int? = when (label) {
     "Grande plante en pot" -> R.string.option_replace_potted_plant
     "Fauteuil bouclé crème" -> R.string.option_replace_boucle_armchair
     "Meuble TV noyer épuré" -> R.string.option_replace_tv_unit
+    "Remplacer le sofa" -> R.string.option_replace_template_sofa
+    "Remplacer la table" -> R.string.option_replace_template_table
+    "Remplacer la lampe" -> R.string.option_replace_template_lamp
+    "Remplacer le tapis" -> R.string.option_replace_template_rug
+    "Remplacer l'art mural" -> R.string.option_replace_template_wall_art
+    "Remplacer la plante" -> R.string.option_replace_template_plant
+    "Remplacer la chaise" -> R.string.option_replace_template_chair
+    "Remplacer le cabinet" -> R.string.option_replace_template_cabinet
     "Mélange organisé" -> R.string.option_palette_curated_mix
     "Gris millénaire" -> R.string.option_palette_millennial_gray
     "Mirage en terre cuite" -> R.string.option_palette_terracotta_mirage
@@ -599,6 +629,14 @@ private fun galleryItemNumber(item: GalleryItem): Int? = item.id.substringAfterL
         item.id.startsWith("pool-") ||
         item.id.startsWith("front-garden-")
 }
+
+private fun discoverItemById(itemId: String): GalleryItem? =
+    HomeDecorCatalog.discoverSections
+        .asSequence()
+        .flatMap { it.items.asSequence() }
+        .firstOrNull { it.id == itemId }
+
+private fun discoverSource(item: GalleryItem): String = "discover:${item.id}"
 
 @Composable
 private fun localizedDiscoverCluster(cluster: String): String = stringResource(discoverClusterRes(cluster))
@@ -797,7 +835,7 @@ private fun AppScaffold(
                 when (tab) {
                     MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
-                    MainTab.Discover -> DiscoverScreen(onTool = viewModel::startTool)
+                    MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
                     MainTab.Profile -> ProfileScreen(state = state, viewModel = viewModel)
                 }
             }
@@ -809,6 +847,7 @@ private fun AppScaffold(
                         onClose = viewModel::closeDiamondStore,
                         onFulfill = viewModel::fulfillDiamondPurchase,
                         onRetrySync = viewModel::retryPurchaseSync,
+                        onDailyRewardClaim = viewModel::claimLocalDailyReward,
                     )
                 }
                 state.paywallVisible -> {
@@ -1268,7 +1307,10 @@ private fun CreateScreen(
                     )
                 }
                 WizardStage.Refine -> RefineStep(state = state, viewModel = viewModel)
-                WizardStage.Processing -> ProcessingStep(state.progressMessage)
+                WizardStage.Processing -> ProcessingStep(
+                    state = state,
+                    message = state.progressMessage,
+                )
                 WizardStage.Result -> ResultStep(state = state, viewModel = viewModel)
             }
         }
@@ -1486,7 +1528,7 @@ private fun PhotoStep(
     viewModel: HomeDecorViewModel,
 ) {
     val isLayoutTool = state.selectedTool.id == "layout"
-    val allowExamplePhotos = state.selectedTool.id != "replace"
+    val allowExamplePhotos = true
     val isSingleSourceFlow = state.selectedTool.id in setOf("interior", "facade", "garden", "layout", "replace")
     val imageInputActions = rememberImageInputActions { uri ->
         if (isSingleSourceFlow) viewModel.setPrimaryPhoto(uri) else viewModel.setPhoto(uri)
@@ -1582,7 +1624,7 @@ private fun PhotoStep(
                 ) {
                     Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.use_example))
+                    Text(stringResource(R.string.try_with_example))
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.example_photos), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -1618,6 +1660,11 @@ private fun ReferenceImagesStep(
     val roomPhoto = state.selectedPhotos.firstOrNull()
     val hasRoom = roomPhoto != null
     val hasReference = state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null
+    val selectedDiscoverReference = state.selectedReferenceDiscoverItemId?.let(::discoverItemById)
+    val referenceImageRes = selectedDiscoverReference?.imageRes ?: R.drawable.tool_reference
+    val referenceSelectedText = selectedDiscoverReference?.let { localizedGalleryTitle(it) }
+        ?: state.selectedReferenceExampleLabel
+        ?: stringResource(R.string.reference_added)
     val canContinue = hasRoom && hasReference
     val missingHint = when {
         !hasRoom && !hasReference -> stringResource(R.string.reference_missing_both_hint)
@@ -1657,14 +1704,23 @@ private fun ReferenceImagesStep(
                 body = stringResource(R.string.reference_image_body),
                 missingHint = stringResource(R.string.reference_missing_reference_hint),
                 selected = hasReference,
-                selectedText = state.selectedReferenceExampleLabel ?: stringResource(R.string.reference_added),
+                selectedText = referenceSelectedText,
                 uri = state.selectedReferenceUri,
-                imageRes = R.drawable.tool_reference,
+                imageRes = referenceImageRes,
                 contentDescription = stringResource(R.string.reference_image),
                 onGallery = referenceImageInputActions.openGallery,
                 onCamera = referenceImageInputActions.openCamera,
                 onExample = { viewModel.selectReferenceExample(editorialReference) },
             )
+            OutlinedButton(
+                onClick = viewModel::tryWithExample,
+                shape = CircleShape,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+            ) {
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.try_with_example))
+            }
             if (missingHint != null) {
                 ReferenceContinueHint(missingHint)
             }
@@ -1881,6 +1937,10 @@ private fun MaskPreviewBox(state: HomeDecorUiState) {
 @Composable
 private fun ReferenceStylePreview(state: HomeDecorUiState) {
     val roomPhoto = state.selectedPhotos.firstOrNull()
+    val referenceImageRes = state.selectedReferenceDiscoverItemId
+        ?.let(::discoverItemById)
+        ?.imageRes
+        ?: R.drawable.tool_reference
     Surface(
         shape = RoundedCornerShape(22.dp),
         color = StudioPaper,
@@ -1899,7 +1959,7 @@ private fun ReferenceStylePreview(state: HomeDecorUiState) {
                 PreviewTile(
                     title = stringResource(R.string.reference_image),
                     uri = state.selectedReferenceUri,
-                    imageRes = R.drawable.tool_reference,
+                    imageRes = referenceImageRes,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -1995,6 +2055,7 @@ private fun SelectedPhotoStrip(
 private fun ReferenceImagePicker(
     selectedUri: Uri?,
     selectedExample: String?,
+    selectedImageRes: Int,
     onImport: () -> Unit,
     onExample: () -> Unit,
 ) {
@@ -2022,7 +2083,7 @@ private fun ReferenceImagePicker(
                 Box(Modifier.size(78.dp).clip(RoundedCornerShape(18.dp))) {
                     UriOrResourceImage(
                         uri = selectedUri,
-                        imageRes = R.drawable.tool_reference,
+                        imageRes = selectedImageRes,
                         contentDescription = stringResource(R.string.style_reference),
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -2219,6 +2280,7 @@ private fun ReferencePhotoStep(
             ReferenceImagePicker(
                 selectedUri = state.selectedReferenceUri,
                 selectedExample = state.selectedReferenceExampleLabel,
+                selectedImageRes = state.selectedReferenceDiscoverItemId?.let(::discoverItemById)?.imageRes ?: R.drawable.tool_reference,
                 onImport = referenceImageInputActions.openGallery,
                 onExample = { viewModel.selectReferenceExample(editorialReference) },
             )
@@ -2245,7 +2307,7 @@ private fun ReferencePhotoStep(
             ) {
                 Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.use_example))
+                Text(stringResource(R.string.try_with_example))
             }
         }
     }
@@ -3121,6 +3183,9 @@ private fun LayoutPlanningStep(
             LayoutConstraintFields(state = state, viewModel = viewModel)
         }
         item {
+            AdvancedControls(state = state, viewModel = viewModel)
+        }
+        item {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!canGenerate) {
                     ValidationNotice(
@@ -3303,6 +3368,7 @@ private fun RefineStep(
                     minLines = 4,
                     shape = RoundedCornerShape(18.dp),
                 )
+                AdvancedControls(state = state, viewModel = viewModel)
             }
         }
         return
@@ -3369,6 +3435,7 @@ private fun RefineStep(
                 minLines = 4,
                 shape = RoundedCornerShape(18.dp),
             )
+            AdvancedControls(state = state, viewModel = viewModel)
             val briefSpace = if (state.selectedTool.id == "garden") {
                 stringResource(R.string.workflow_garden)
             } else {
@@ -3434,6 +3501,205 @@ private fun ColorSwatchCard(
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
                 Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            }
+        }
+    }
+}
+
+private enum class MaterialPattern {
+    Vein,
+    Wood,
+    Concrete,
+    Limewash,
+    Terrazzo,
+    Tile,
+    Paint,
+}
+
+private data class MaterialSwatchSpec(
+    val base: Color,
+    val accent: Color,
+    val pattern: MaterialPattern,
+)
+
+private fun materialSwatchSpec(label: String): MaterialSwatchSpec = when (label) {
+    "Marbre" -> MaterialSwatchSpec(Color(0xFFF7F4EE), Color(0xFF9A948B), MaterialPattern.Vein)
+    "Chêne" -> MaterialSwatchSpec(Color(0xFFD7AD6F), Color(0xFF8E6335), MaterialPattern.Wood)
+    "Noyer" -> MaterialSwatchSpec(Color(0xFF6E4529), Color(0xFF2D1B12), MaterialPattern.Wood)
+    "Béton" -> MaterialSwatchSpec(Color(0xFFAAA79F), Color(0xFF6F716E), MaterialPattern.Concrete)
+    "Limewash" -> MaterialSwatchSpec(Color(0xFFE7E0D4), Color(0xFFC8BFAF), MaterialPattern.Limewash)
+    "Terrazzo" -> MaterialSwatchSpec(Color(0xFFECE3D3), Color(0xFF5C8374), MaterialPattern.Terrazzo)
+    "Carrelage blanc" -> MaterialSwatchSpec(Color(0xFFF8F8F5), Color(0xFFC9C9C1), MaterialPattern.Tile)
+    "Carrelage noir" -> MaterialSwatchSpec(Color(0xFF171717), Color(0xFF686868), MaterialPattern.Tile)
+    "Peinture beige chaude" -> MaterialSwatchSpec(Color(0xFFE4D0B8), Color(0xFFC5A987), MaterialPattern.Paint)
+    "Peinture sombre élégante" -> MaterialSwatchSpec(Color(0xFF232625), Color(0xFF606663), MaterialPattern.Paint)
+    else -> MaterialSwatchSpec(Color(0xFFE4D8C9), Color(0xFF9A8B78), MaterialPattern.Paint)
+}
+
+@Composable
+private fun MaterialLibrarySection(
+    options: List<String>,
+    selected: List<String>,
+    target: String,
+    onSelect: (String) -> Unit,
+) {
+    val selectedMaterial = selected.firstOrNull()
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.material_library), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            Text(
+                stringResource(if (target == "floor") R.string.material_library_floor_scope else R.string.material_library_wall_scope),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+        selectedMaterial?.let {
+            SelectedMaterialPreview(
+                label = it,
+                target = target,
+            )
+        }
+        options.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { option ->
+                    MaterialSwatchCard(
+                        label = option,
+                        selected = option in selected,
+                        onClick = { onSelect(option) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectedMaterialPreview(
+    label: String,
+    target: String,
+) {
+    val displayLabel = localizedOption(label)
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = StudioPrimaryContainer,
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioBlue.copy(alpha = 0.26f), RoundedCornerShape(18.dp)),
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MaterialSwatchThumb(label = label, selected = true, modifier = Modifier.size(52.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioInk)
+                Text(
+                    stringResource(if (target == "floor") R.string.material_selected_floor_preview else R.string.material_selected_wall_preview),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun MaterialSwatchCard(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val displayLabel = localizedOption(label)
+    val shape = RoundedCornerShape(18.dp)
+    Surface(
+        onClick = onClick,
+        shape = shape,
+        color = studioStateContainer(selected),
+        tonalElevation = studioStateElevation(selected),
+        modifier = modifier.height(104.dp).border(if (selected) 2.dp else 1.dp, studioStateBorder(selected), shape),
+    ) {
+        Column(
+            Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            MaterialSwatchThumb(label = label, selected = selected, modifier = Modifier.fillMaxWidth().height(48.dp))
+            Text(
+                displayLabel,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                color = StudioInk,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MaterialSwatchThumb(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val spec = materialSwatchSpec(label)
+    Box(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(Brush.linearGradient(listOf(spec.base, spec.base.copy(alpha = 0.82f), spec.accent.copy(alpha = 0.5f))))
+            .border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(14.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            when (spec.pattern) {
+                MaterialPattern.Vein -> {
+                    drawLine(spec.accent.copy(alpha = 0.72f), Offset(size.width * 0.12f, size.height * 0.75f), Offset(size.width * 0.88f, size.height * 0.2f), strokeWidth = 2.2f)
+                    drawLine(spec.accent.copy(alpha = 0.42f), Offset(size.width * 0.2f, size.height * 0.24f), Offset(size.width * 0.72f, size.height * 0.64f), strokeWidth = 1.4f)
+                }
+                MaterialPattern.Wood -> {
+                    for (index in 1..5) {
+                        val y = size.height * index / 6f
+                        drawLine(spec.accent.copy(alpha = 0.46f), Offset(0f, y), Offset(size.width, y + if (index % 2 == 0) 8f else -6f), strokeWidth = 2f)
+                    }
+                }
+                MaterialPattern.Concrete, MaterialPattern.Limewash -> {
+                    for (index in 0..8) {
+                        val x = size.width * ((index * 23) % 100) / 100f
+                        val y = size.height * ((index * 37) % 100) / 100f
+                        drawCircle(spec.accent.copy(alpha = if (spec.pattern == MaterialPattern.Concrete) 0.2f else 0.12f), radius = 7f + index, center = Offset(x, y))
+                    }
+                }
+                MaterialPattern.Terrazzo -> {
+                    val chips = listOf(
+                        Offset(size.width * 0.18f, size.height * 0.3f),
+                        Offset(size.width * 0.44f, size.height * 0.62f),
+                        Offset(size.width * 0.7f, size.height * 0.28f),
+                        Offset(size.width * 0.84f, size.height * 0.74f),
+                    )
+                    chips.forEachIndexed { index, offset ->
+                        drawCircle(listOf(spec.accent, Color(0xFFC47A5A), Color(0xFF2D2A26))[index % 3].copy(alpha = 0.72f), radius = 4f + index, center = offset)
+                    }
+                }
+                MaterialPattern.Tile -> {
+                    drawLine(spec.accent.copy(alpha = 0.52f), Offset(size.width / 2f, 0f), Offset(size.width / 2f, size.height), strokeWidth = 1.4f)
+                    drawLine(spec.accent.copy(alpha = 0.52f), Offset(0f, size.height / 2f), Offset(size.width, size.height / 2f), strokeWidth = 1.4f)
+                }
+                MaterialPattern.Paint -> Unit
+            }
+        }
+        if (selected) {
+            Surface(shape = CircleShape, color = Color.White) {
+                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(5.dp).size(15.dp), tint = StudioBlue)
             }
         }
     }
@@ -3546,31 +3812,14 @@ private fun SpecializedGenerateStep(
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (state.selectedTool.id == "paint") {
-                    val swatchColors = mapOf(
-                        "Blanc chaud" to Color(0xFFFAF9F6),
-                        "Beige" to Color(0xFFE8D8C8),
-                        "Gris clair" to Color(0xFFE2E2E2),
-                        "Vert sauge" to Color(0xFF8FA382),
-                        "Bleu doux" to Color(0xFF8CA1C4),
-                        "Terracotta" to Color(0xFFD36135),
-                        "Noir élégant" to Color(0xFF1F2421)
+                if (state.selectedTool.id in setOf("paint", "floor")) {
+                    MaterialLibrarySection(
+                        options = stepCopy.options,
+                        selected = selected,
+                        target = if (state.selectedTool.id == "floor") "floor" else "wall",
+                        onSelect = viewModel::setStyle,
                     )
-                    stepCopy.options.chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            row.forEach { option ->
-                                ColorSwatchCard(
-                                    label = option,
-                                    color = swatchColors[option] ?: Color.LightGray,
-                                    selected = option in selected,
-                                    onClick = { viewModel.setStyle(option) },
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                            if (row.size == 1) Spacer(Modifier.weight(1f))
-                        }
-                }
-            } else {
+                } else {
                 if (state.selectedTool.id == "replace") {
                     Text(stringResource(R.string.replacement_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                 }
@@ -3579,14 +3828,17 @@ private fun SpecializedGenerateStep(
                             row.forEach { option ->
                                 if (state.selectedTool.id == "replace") {
                                     val optionPrompt = localizedOption(option)
+                                    val templatePrompt = HomeDecorCatalog.replacementTemplatePrompts[option].orEmpty()
                                     ReplaceSuggestionChip(
                                         label = option,
                                         selected = option in selected ||
                                             optionPrompt in selected ||
+                                            templatePrompt in selected ||
                                             replacementPrompt == option ||
-                                            replacementPrompt == optionPrompt,
+                                            replacementPrompt == optionPrompt ||
+                                            replacementPrompt == templatePrompt,
                                         onClick = {
-                                            viewModel.selectReplacementSuggestion(optionPrompt)
+                                            viewModel.selectReplacementSuggestion(option)
                                         },
                                         modifier = Modifier.weight(1f),
                                     )
@@ -3670,8 +3922,236 @@ private fun SpecializedGenerateStep(
                     replacementPrompt = localizedReplacement,
                 )
             }
+            AdvancedControls(state = state, viewModel = viewModel)
         }
     }
+}
+
+@Composable
+private fun AdvancedControls(
+    state: HomeDecorUiState,
+    viewModel: HomeDecorViewModel,
+) {
+    val spec = HomeDecorCatalog.advancedControlSpecs[state.selectedTool.id]
+    val protectionOnly = state.selectedTool.id in HomeDecorCatalog.protectRestToolIds
+    val recentStyles = remember(state.workspace.recentStyles, state.selectedTool.id) {
+        state.workspace.recentStyles
+            .asSequence()
+            .filter { it.toolId == state.selectedTool.id && it.style.isNotBlank() }
+            .sortedByDescending { it.lastUsedAt }
+            .distinctBy { it.style.trim().lowercase() }
+            .take(6)
+            .map { it.style }
+            .toList()
+    }
+    var expanded by remember(state.selectedTool.id) { mutableStateOf(false) }
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(20.dp)),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(Icons.Rounded.Settings, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(stringResource(R.string.advanced_controls), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.advanced_controls_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                }
+                Icon(
+                    if (expanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (expanded) {
+                if (spec != null) {
+                    AdvancedOptionGroup(
+                        title = stringResource(R.string.keep_controls_title),
+                        options = spec.keepOptions,
+                        selectedOptions = state.keepOptions,
+                        onToggle = viewModel::toggleKeepOption,
+                    )
+                    AdvancedOptionGroup(
+                        title = stringResource(R.string.change_controls_title),
+                        options = spec.changeOptions,
+                        selectedOptions = state.changeOptions,
+                        onToggle = viewModel::toggleChangeOption,
+                    )
+                }
+                if (protectionOnly) {
+                    CompactFilterChip(
+                        label = stringResource(R.string.preserve_rest_of_image),
+                        selected = state.preserveRestOfImage,
+                        onClick = viewModel::togglePreserveRestOfImage,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                if (!protectionOnly) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.budget_mode), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            HomeDecorCatalog.budgetModes.forEach { mode ->
+                                    CompactFilterChip(
+                                        label = localizedAdvancedOption(mode),
+                                        selected = state.budgetMode == mode,
+                                        onClick = { viewModel.setBudgetMode(mode) },
+                                        modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.avoid_these), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        HomeDecorCatalog.avoidOptions.chunked(2).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                row.forEach { option ->
+                                    CompactFilterChip(
+                                        label = localizedAdvancedOption(option),
+                                        selected = option in state.avoidOptions,
+                                        onClick = { viewModel.toggleAvoidOption(option) },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                                if (row.size == 1) Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    }
+                    if (recentStyles.isNotEmpty()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.recent_styles), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(recentStyles, key = { "recent-style-$it" }) { style ->
+                                    CompactFilterChip(
+                                        label = localizedOption(style),
+                                        selected = style in state.selectedStyles || state.style == style || state.customPrompt == style,
+                                        onClick = {
+                                            when (state.selectedTool.id) {
+                                                "replace" -> viewModel.setCustomPrompt(style)
+                                                "layout" -> viewModel.setStyleText(style)
+                                                else -> viewModel.setStyle(style)
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = viewModel::tryWithExample,
+                        shape = CircleShape,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                    ) {
+                        Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.try_with_example), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdvancedOptionGroup(
+    title: String,
+    options: List<String>,
+    selectedOptions: List<String>,
+    onToggle: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        options.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { option ->
+                    CompactFilterChip(
+                        label = localizedAdvancedOption(option),
+                        selected = option in selectedOptions,
+                        onClick = { onToggle(option) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+private fun localizedAdvancedOption(label: String): String = when (label) {
+    "agencement" -> stringResource(R.string.option_advanced_layout)
+    "fenêtres" -> stringResource(R.string.option_advanced_windows)
+    "sol" -> stringResource(R.string.option_advanced_floor)
+    "mobilier principal" -> stringResource(R.string.option_advanced_main_furniture)
+    "style" -> stringResource(R.string.option_advanced_style)
+    "couleurs" -> stringResource(R.string.option_advanced_colors)
+    "décor" -> stringResource(R.string.option_advanced_decor)
+    "éclairage" -> stringResource(R.string.option_advanced_lighting)
+    "structure" -> stringResource(R.string.option_advanced_structure)
+    "toit" -> stringResource(R.string.option_advanced_roof)
+    "entrée" -> stringResource(R.string.option_advanced_entry)
+    "façade" -> stringResource(R.string.option_advanced_facade)
+    "paysage" -> stringResource(R.string.option_advanced_landscape)
+    "arbres" -> stringResource(R.string.option_advanced_trees)
+    "piscine" -> stringResource(R.string.option_advanced_pool)
+    "terrasse" -> stringResource(R.string.option_advanced_terrace)
+    "clôture" -> stringResource(R.string.option_advanced_fence)
+    "plantes" -> stringResource(R.string.option_advanced_plants)
+    "mobilier" -> stringResource(R.string.option_advanced_furniture)
+    "chemins" -> stringResource(R.string.option_advanced_paths)
+    "murs" -> stringResource(R.string.option_advanced_walls)
+    "portes" -> stringResource(R.string.option_advanced_doors)
+    "mobilier important" -> stringResource(R.string.option_advanced_priority_furniture)
+    "organisation" -> stringResource(R.string.option_advanced_organization)
+    "circulation" -> stringResource(R.string.option_advanced_circulation)
+    "rangement" -> stringResource(R.string.option_advanced_storage)
+    "zones" -> stringResource(R.string.option_advanced_zones)
+    "couleurs principales" -> stringResource(R.string.option_advanced_main_colors)
+    "ambiance" -> stringResource(R.string.option_advanced_mood)
+    "matériaux" -> stringResource(R.string.option_advanced_materials)
+    "Low budget" -> stringResource(R.string.option_budget_low)
+    "Medium budget" -> stringResource(R.string.option_budget_medium)
+    "Luxury" -> stringResource(R.string.option_budget_luxury)
+    "no dark colors" -> stringResource(R.string.option_avoid_dark_colors)
+    "no structural changes" -> stringResource(R.string.option_avoid_structural_changes)
+    "no plants" -> stringResource(R.string.option_avoid_plants)
+    "keep windows" -> stringResource(R.string.option_avoid_keep_windows)
+    "no furniture changes" -> stringResource(R.string.option_avoid_furniture_changes)
+    else -> localizedOption(label)
+}
+
+@Composable
+private fun CompactFilterChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(
+                label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
+        leadingIcon = if (selected) {
+            {
+                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+            }
+        } else {
+            null
+        },
+        modifier = modifier.heightIn(min = 44.dp),
+    )
 }
 
 @Composable
@@ -3814,21 +4294,181 @@ private fun PaletteChoiceCard(
 }
 
 @Composable
-private fun ProcessingStep(message: String) {
+private fun ProcessingStep(
+    state: HomeDecorUiState,
+    message: String,
+) {
+    val steps = listOf(
+        stringResource(R.string.generation_step_analyzing_room),
+        stringResource(R.string.generation_step_applying_style),
+        stringResource(R.string.generation_step_preparing_result),
+        stringResource(R.string.generation_step_finalizing),
+    )
+    val applyingMessage = stringResource(R.string.progress_applying_color)
+    val finalizingMessage = stringResource(R.string.progress_finalizing_render)
+    val reportedStep = when (message) {
+        applyingMessage -> 1
+        finalizingMessage -> 3
+        else -> 0
+    }
+    var visibleStep by remember(message) { mutableStateOf(reportedStep) }
+
+    LaunchedEffect(message) {
+        visibleStep = reportedStep
+        if (reportedStep < 1) {
+            delay(1600)
+            visibleStep = maxOf(visibleStep, 1)
+        }
+        if (reportedStep < 2) {
+            delay(2200)
+            visibleStep = maxOf(visibleStep, 2)
+        }
+    }
+
+    val progress = when (visibleStep.coerceIn(0, 3)) {
+        0 -> 0.26f
+        1 -> 0.52f
+        2 -> 0.78f
+        else -> 0.94f
+    }
+    val heroImage = processingHeroImage(state.selectedTool.id)
     Column(
-        Modifier.fillMaxSize().padding(28.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.padding(22.dp).size(46.dp), tint = StudioGreen)
+        Surface(
+            shape = RoundedCornerShape(30.dp),
+            color = StudioPaper,
+            tonalElevation = 3.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(178.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(StudioMist),
+                ) {
+                    Image(
+                        painter = painterResource(heroImage),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.58f)))))
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.92f),
+                        modifier = Modifier.align(Alignment.TopStart).padding(14.dp),
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        ) {
+                            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(17.dp), tint = StudioBlue)
+                            Text(stringResource(R.string.generation_progress_badge), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = StudioInk)
+                        }
+                    }
+                    Column(
+                        modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.generation_progress_title),
+                            color = Color.White,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Black,
+                        )
+                        Text(
+                            stringResource(R.string.generation_progress_body),
+                            color = Color.White.copy(alpha = 0.84f),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxWidth().height(9.dp).clip(CircleShape),
+                    )
+                    steps.forEachIndexed { index, label ->
+                        GenerationProgressRow(
+                            label = label,
+                            index = index,
+                            visibleStep = visibleStep,
+                        )
+                    }
+                }
+                Surface(shape = RoundedCornerShape(18.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        message.ifBlank { stringResource(R.string.processing_transform) },
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
         }
-        Spacer(Modifier.height(22.dp))
-        Text(stringResource(R.string.processing_transform), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-        Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(24.dp))
-        LinearProgressIndicator(Modifier.fillMaxWidth(0.78f).height(8.dp).clip(CircleShape))
     }
+}
+
+@Composable
+private fun GenerationProgressRow(
+    label: String,
+    index: Int,
+    visibleStep: Int,
+) {
+    val completed = index < visibleStep
+    val active = index == visibleStep
+    val container = when {
+        completed -> StudioPrimaryContainer
+        active -> StudioProContainer
+        else -> StudioMist
+    }
+    val content = when {
+        completed -> StudioBlue
+        active -> StudioGold
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Surface(shape = CircleShape, color = container) {
+            Icon(
+                if (completed) Icons.Rounded.Check else Icons.Rounded.AutoAwesome,
+                contentDescription = null,
+                modifier = Modifier.padding(7.dp).size(16.dp),
+                tint = content,
+            )
+        }
+        Text(
+            label,
+            modifier = Modifier.weight(1f),
+            color = if (active || completed) StudioInk else MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (active || completed) FontWeight.Black else FontWeight.Medium,
+        )
+    }
+}
+
+private fun processingHeroImage(toolId: String): Int = when (toolId) {
+    "facade" -> R.drawable.assets_media_discover_generated_exterior_exterior4
+    "garden" -> R.drawable.assets_media_discover_generated_garden_garden5
+    "paint" -> R.drawable.assets_media_discover_wallscenes_sagegreensuite
+    "floor" -> R.drawable.assets_media_discover_floorscenes_naturaloakparquet
+    "layout" -> R.drawable.assets_media_discover_home_homelivingroom
+    "replace" -> R.drawable.assets_media_discover_generated_livingroom_livingroom3
+    "reference" -> R.drawable.assets_media_styles_stylejapandi
+    else -> R.drawable.assets_media_discover_generated_livingroom_livingroom4
 }
 
 @Composable
@@ -3957,14 +4597,51 @@ private fun ResultStep(
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     var showOriginal by remember { mutableStateOf(false) }
+    var projectPickerVisible by remember { mutableStateOf(false) }
+    var createProjectForResultVisible by remember { mutableStateOf(false) }
     val resultReady = result?.let { it.isGeneratedResult() && it.status != "failed" } == true
     val isReplaceResult = state.selectedTool.id == "replace"
     val replacementPrompt = localizedReplacementPrompt(state.customPrompt)
+    val savedGenerated = result?.let { current -> state.workspace.generatedResults.firstOrNull { it.id == current.id } }
+    val attachedProject = savedGenerated?.projectId?.let { id -> state.workspace.projects.firstOrNull { it.id == id } }
+    val isFavorite = result?.let { current -> state.workspace.favorites.any { it.resultId == current.id } } == true
     if (showOriginal) {
         OriginalImageDialog(
             state = state,
             result = result,
             onDismiss = { showOriginal = false },
+        )
+    }
+    if (projectPickerVisible) {
+        AddToProjectDialog(
+            state = state,
+            result = result,
+            onDismiss = { projectPickerVisible = false },
+            onCreateProject = {
+                projectPickerVisible = false
+                createProjectForResultVisible = true
+            },
+            onSelectProject = { project ->
+                val saved = viewModel.addResultToProject(result, project.id)
+                Toast.makeText(context, resources.getString(if (saved) R.string.toast_added_to_project else R.string.toast_project_save_failed), Toast.LENGTH_LONG).show()
+                projectPickerVisible = false
+            },
+        )
+    }
+    if (createProjectForResultVisible) {
+        ProjectEditorDialog(
+            title = stringResource(R.string.project_create_from_result_title),
+            confirmLabel = stringResource(R.string.create),
+            initialName = result?.roomType?.takeIf { it.isNotBlank() } ?: "",
+            initialRoomType = result?.roomType.orEmpty(),
+            initialNotes = state.customPrompt,
+            initialStyleInfo = listOf(state.style, state.palette, state.designMode).filter { it.isNotBlank() }.joinToString(" - "),
+            onDismiss = { createProjectForResultVisible = false },
+            onConfirm = { name, roomType, notes, styleInfo ->
+                val project = viewModel.createProjectFromResult(name = name, roomType = roomType, notes = notes, styleInfo = styleInfo, result = result)
+                Toast.makeText(context, resources.getString(if (project != null) R.string.toast_added_to_project else R.string.toast_project_save_failed), Toast.LENGTH_LONG).show()
+                createProjectForResultVisible = false
+            },
         )
     }
     StepScaffold(
@@ -3988,43 +4665,24 @@ private fun ResultStep(
                     body = result.errorMessage ?: stringResource(R.string.generation_failed_retry),
                     icon = Icons.Rounded.Refresh,
                 )
-            } else if (state.selectedTool.id == "reference") {
-                Text(stringResource(R.string.reference_result_images), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                ResultImageCard(title = stringResource(R.string.generated_result)) {
-                    NetworkOrResourceImage(
-                        imageUrl = result.imageUrl,
-                        imageRes = result.imageRes,
-                        contentDescription = stringResource(R.string.generated_result),
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ResultImageCard(title = stringResource(R.string.original_image), modifier = Modifier.weight(1f)) {
-                        OriginalSourceImage(
-                            state = state,
-                            result = result,
-                            contentDescription = stringResource(R.string.original_image),
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                        )
-                    }
-                    ResultImageCard(title = stringResource(R.string.reference_image), modifier = Modifier.weight(1f)) {
+            } else {
+                BeforeAfterResultSlider(
+                    state = state,
+                    result = result,
+                )
+                if (state.selectedTool.id == "reference") {
+                    val referenceImageRes = state.selectedReferenceDiscoverItemId
+                        ?.let(::discoverItemById)
+                        ?.imageRes
+                        ?: R.drawable.tool_reference
+                    ResultImageCard(title = stringResource(R.string.reference_image)) {
                         UriOrResourceImage(
                             uri = state.selectedReferenceUri,
-                            imageRes = R.drawable.tool_reference,
+                            imageRes = referenceImageRes,
                             contentDescription = stringResource(R.string.reference_image),
                             modifier = Modifier.fillMaxWidth().aspectRatio(1f),
                         )
                     }
-                }
-            } else {
-                Text(stringResource(R.string.generated_image), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                Card(shape = RoundedCornerShape(28.dp)) {
-                    NetworkOrResourceImage(
-                        imageUrl = result.imageUrl,
-                        imageRes = result.imageRes,
-                        contentDescription = stringResource(R.string.generated_image),
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                    )
                 }
             }
             ResultContentsSummary(
@@ -4042,27 +4700,6 @@ private fun ResultStep(
                     resultReady = true,
                 )
             }
-            if (resultReady) {
-                Text(stringResource(R.string.before_after), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                        OriginalSourceImage(
-                            state = state,
-                            result = result,
-                            contentDescription = stringResource(R.string.before),
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                        )
-                    }
-                    Card(Modifier.weight(1f), shape = RoundedCornerShape(20.dp)) {
-                        NetworkOrResourceImage(
-                            imageUrl = result?.imageUrl,
-                            imageRes = result?.imageRes ?: R.drawable.sample_after_luxury,
-                            contentDescription = stringResource(R.string.after),
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                        )
-                    }
-                }
-            }
             Surface(shape = RoundedCornerShape(22.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp))) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(stringResource(if (isReplaceResult) R.string.replacement_summary else R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
@@ -4076,6 +4713,34 @@ private fun ResultStep(
                     }
                     Text(stringResource(R.string.metadata_status, stringResource(if (!resultReady) R.string.failed else R.string.ready)))
                     Text(stringResource(R.string.metadata_date, java.text.DateFormat.getDateTimeInstance().format(java.util.Date((result?.createdAt ?: System.currentTimeMillis().toDouble()).toLong()))))
+                }
+            }
+            if (resultReady) {
+                ResultProjectWorkspaceActions(
+                    attachedProject = attachedProject,
+                    isFavorite = isFavorite,
+                    onProject = { projectPickerVisible = true },
+                    onFavorite = {
+                        val favorite = viewModel.toggleFavorite(result)
+                        Toast.makeText(context, resources.getString(if (favorite) R.string.toast_favorite_added else R.string.toast_favorite_removed), Toast.LENGTH_LONG).show()
+                    },
+                    onMoodboard = {
+                        val saved = viewModel.addResultToMoodboard(result, attachedProject?.id)
+                        Toast.makeText(context, resources.getString(if (saved) R.string.toast_moodboard_added else R.string.toast_project_save_failed), Toast.LENGTH_LONG).show()
+                    },
+                )
+                TryAnotherStyleRow(
+                    selectedStyle = state.style.ifBlank { result.style },
+                    onStyle = viewModel::tryAnotherStyle,
+                )
+                OutlinedButton(
+                    onClick = viewModel::previousStage,
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                ) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.undo_edit_design_choices), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -4146,17 +4811,281 @@ private fun ResultStep(
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.view_original))
             }
-            OutlinedButton(
-                onClick = { viewModel.startTool(state.selectedTool) },
-                shape = CircleShape,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        }
+    }
+}
+
+@Composable
+private fun BeforeAfterResultSlider(
+    state: HomeDecorUiState,
+    result: BoardItem,
+) {
+    var comparePosition by remember(result.id) { mutableStateOf(0.5f) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.before_after_slider), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(28.dp))
+                .background(StudioMist),
+        ) {
+            WorkspaceImage(
+                imageUrl = result.imageUrl,
+                imageUri = result.imageUri,
+                imageRes = result.imageRes,
+                contentDescription = stringResource(R.string.after),
+                modifier = Modifier.fillMaxSize(),
+            )
+            OriginalSourceImage(
+                state = state,
+                result = result,
+                contentDescription = stringResource(R.string.before),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawWithContent {
+                        clipRect(right = size.width * comparePosition) {
+                            this@drawWithContent.drawContent()
+                        }
+                    },
+            )
+            Canvas(Modifier.matchParentSize()) {
+                val handleX = size.width * comparePosition
+                drawLine(
+                    color = Color.White,
+                    start = Offset(handleX, 0f),
+                    end = Offset(handleX, size.height),
+                    strokeWidth = 3.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                drawCircle(
+                    color = Color.White,
+                    radius = 18.dp.toPx(),
+                    center = Offset(handleX, size.height / 2f),
+                )
+                drawLine(
+                    color = StudioInk,
+                    start = Offset(handleX - 7.dp.toPx(), size.height / 2f),
+                    end = Offset(handleX + 7.dp.toPx(), size.height / 2f),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.new_creation))
+                ComparisonBadge(stringResource(R.string.before))
+                ComparisonBadge(stringResource(R.string.after))
+            }
+        }
+        Slider(
+            value = comparePosition,
+            onValueChange = { comparePosition = it.coerceIn(0.05f, 0.95f) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Text(
+            stringResource(R.string.before_after_slider_hint),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun ComparisonBadge(label: String) {
+    Surface(
+        shape = CircleShape,
+        color = Color.Black.copy(alpha = 0.54f),
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            color = Color.White,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun TryAnotherStyleRow(
+    selectedStyle: String,
+    onStyle: (String) -> Unit,
+) {
+    val styles = remember { listOf("Japandi", "Luxe", "Moderne", "Minimaliste", "Marocain", "Scandinave") }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.try_another_style), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(styles) { style ->
+                val selected = selectedStyle.split(" + ").any { it.trim() == style }
+                FilterChip(
+                    selected = selected,
+                    onClick = { onStyle(style) },
+                    label = { Text(localizedOption(style), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    leadingIcon = if (selected) {
+                        { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else {
+                        null
+                    },
+                )
             }
         }
     }
+}
+
+@Composable
+private fun ResultProjectWorkspaceActions(
+    attachedProject: Project?,
+    isFavorite: Boolean,
+    onProject: () -> Unit,
+    onFavorite: () -> Unit,
+    onMoodboard: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = StudioPrimaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.28f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(shape = CircleShape, color = StudioPaper) {
+                    Icon(Icons.Rounded.Layers, null, Modifier.padding(10.dp).size(20.dp), tint = StudioBlue)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.result_workspace_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioInk)
+                    Text(
+                        attachedProject?.let { stringResource(R.string.result_workspace_project, it.name) }
+                            ?: stringResource(R.string.result_workspace_body),
+                        color = StudioInk.copy(alpha = 0.78f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = onProject,
+                    shape = CircleShape,
+                    colors = studioPrimaryButtonColors(),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                ) {
+                    Icon(Icons.Rounded.Save, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.save_to_project), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                OutlinedButton(
+                    onClick = onFavorite,
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                ) {
+                    Icon(Icons.Rounded.Star, null, Modifier.size(18.dp), tint = if (isFavorite) StudioGold else Color.Unspecified)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(if (isFavorite) R.string.favorited else R.string.favorite), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            OutlinedButton(
+                onClick = onMoodboard,
+                shape = CircleShape,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            ) {
+                Icon(Icons.AutoMirrored.Rounded.ViewQuilt, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.add_to_moodboard), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddToProjectDialog(
+    state: HomeDecorUiState,
+    result: BoardItem?,
+    onDismiss: () -> Unit,
+    onCreateProject: () -> Unit,
+    onSelectProject: (Project) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.save_to_project), fontWeight = FontWeight.Black) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    stringResource(R.string.save_to_project_body),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                if (state.workspace.projects.isEmpty()) {
+                    Surface(shape = RoundedCornerShape(18.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            stringResource(R.string.no_projects_yet),
+                            modifier = Modifier.padding(14.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 320.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(state.workspace.projects, key = { it.id }) { project ->
+                            val alreadyLinked = state.workspace.generatedResults.firstOrNull { it.id == result?.id }?.projectId == project.id
+                            Surface(
+                                onClick = { onSelectProject(project) },
+                                shape = RoundedCornerShape(18.dp),
+                                color = if (alreadyLinked) StudioPrimaryContainer else StudioPaper,
+                                tonalElevation = 1.dp,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (alreadyLinked) StudioBlue.copy(alpha = 0.36f) else StudioLine),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Row(
+                                    Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    WorkspaceImage(
+                                        imageUrl = project.coverImageUrl,
+                                        imageUri = project.coverImageUri ?: project.originalPhotoUris.firstOrNull(),
+                                        contentDescription = project.name,
+                                        modifier = Modifier.size(54.dp).clip(RoundedCornerShape(14.dp)),
+                                    )
+                                    Column(Modifier.weight(1f)) {
+                                        Text(project.name, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(
+                                            project.roomType.ifBlank { stringResource(R.string.project_room_unspecified) },
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                    if (alreadyLinked) {
+                                        Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onCreateProject, shape = CircleShape) {
+                Icon(Icons.Rounded.Add, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.new_project))
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss, shape = CircleShape) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -4205,6 +5134,7 @@ private fun ResultStateNotice(
     body: String,
     icon: ImageVector,
 ) {
+    val samples = sampleProjectCards()
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = StudioPaper,
@@ -4257,10 +5187,13 @@ private fun OriginalSourceImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
 ) {
-    val sourceUri = state.selectedPhotos.firstOrNull()?.uri ?: state.selectedPhotoUri
+    val resultSourceUri = result?.sourceImageUri
+        ?.takeIf { it.isNotBlank() }
+        ?.let { runCatching { Uri.parse(it) }.getOrNull() }
+    val sourceUri = resultSourceUri ?: state.selectedPhotos.firstOrNull()?.uri ?: state.selectedPhotoUri
     if (!result?.sourceImageUrl.isNullOrBlank()) {
         NetworkOrResourceImage(
-            imageUrl = result?.sourceImageUrl,
+            imageUrl = result.sourceImageUrl,
             imageRes = selectedExampleImageRes(state),
             contentDescription = contentDescription,
             modifier = modifier,
@@ -4335,6 +5268,11 @@ private suspend fun shareResult(context: android.content.Context, result: BoardI
 }
 
 private fun writeResultImage(context: android.content.Context, result: BoardItem?, output: java.io.OutputStream) {
+    val imageUri = result?.imageUri
+    if (!imageUri.isNullOrBlank()) {
+        context.contentResolver.openInputStream(Uri.parse(imageUri))?.use { input -> input.copyTo(output) }
+        return
+    }
     val imageUrl = result?.imageUrl
     if (!imageUrl.isNullOrBlank()) {
         URL(imageUrl).openStream().use { input -> input.copyTo(output) }
@@ -4344,6 +5282,11 @@ private fun writeResultImage(context: android.content.Context, result: BoardItem
 }
 
 private fun resultBitmap(context: android.content.Context, result: BoardItem?): Bitmap {
+    result?.imageUri?.takeIf { it.isNotBlank() }?.let { imageUri ->
+        context.contentResolver.openInputStream(Uri.parse(imageUri))?.use { input ->
+            BitmapFactory.decodeStream(input)?.let { return it }
+        }
+    }
     val imageRes = result?.imageRes ?: R.drawable.sample_after_luxury
     return BitmapFactory.decodeResource(context.resources, imageRes)
 }
@@ -4358,14 +5301,36 @@ private fun openAuth(context: android.content.Context) {
 }
 
 @Composable
-private fun DiscoverScreen(onTool: (DecorTool) -> Unit) {
+private fun DiscoverScreen(
+    state: HomeDecorUiState,
+    viewModel: HomeDecorViewModel,
+) {
+    val context = LocalContext.current
     var selectedCluster by remember { mutableStateOf("Intérieurs") }
     var detailSection by remember { mutableStateOf<DiscoverSection?>(null) }
     var previewTarget by remember { mutableStateOf<DiscoverPreviewTarget?>(null) }
     val clusters = listOf("Intérieurs", "Architecture", "Paysages")
     val sections = HomeDecorCatalog.discoverSections.filter { it.cluster == selectedCluster }
+    val favoriteSources = remember(state.workspace.favorites) { state.workspace.favorites.map { it.sourceType }.toSet() }
     fun openPreview(section: DiscoverSection, item: GalleryItem) {
         previewTarget = section.discoverPreviewTarget(item)
+    }
+    fun toggleFavorite(section: DiscoverSection, item: GalleryItem) {
+        val favorite = viewModel.toggleDiscoverFavorite(item, section)
+        Toast.makeText(
+            context,
+            context.getString(if (favorite) R.string.toast_favorite_added else R.string.toast_favorite_removed),
+            Toast.LENGTH_SHORT,
+        ).show()
+    }
+    fun addToMoodboard(section: DiscoverSection, item: GalleryItem) {
+        viewModel.addDiscoverToMoodboard(item, section)
+        Toast.makeText(context, context.getString(R.string.toast_moodboard_added), Toast.LENGTH_SHORT).show()
+    }
+    fun useStyle(section: DiscoverSection, item: GalleryItem) {
+        viewModel.useDiscoverStyle(item, section)
+        previewTarget = null
+        detailSection = null
     }
     val activeDetail = detailSection
     if (activeDetail != null) {
@@ -4373,12 +5338,19 @@ private fun DiscoverScreen(onTool: (DecorTool) -> Unit) {
             section = activeDetail,
             onBack = { detailSection = null },
             onPreview = { openPreview(activeDetail, it) },
+            favoriteSources = favoriteSources,
+            onFavorite = { toggleFavorite(activeDetail, it) },
+            onMoodboard = { addToMoodboard(activeDetail, it) },
+            onUseStyle = { useStyle(activeDetail, it) },
         )
         previewTarget?.let { target ->
             DiscoverPreviewDialog(
                 target = target,
                 onDismiss = { previewTarget = null },
-                onTool = onTool,
+                isFavorite = discoverSource(target.item) in favoriteSources,
+                onFavorite = { toggleFavorite(target.section, target.item) },
+                onMoodboard = { addToMoodboard(target.section, target.item) },
+                onUseStyle = { useStyle(target.section, target.item) },
             )
         }
         return
@@ -4398,6 +5370,10 @@ private fun DiscoverScreen(onTool: (DecorTool) -> Unit) {
                         detailSection = section
                     },
                     onPreview = { openPreview(section, it) },
+                    favoriteSources = favoriteSources,
+                    onFavorite = { toggleFavorite(section, it) },
+                    onMoodboard = { addToMoodboard(section, it) },
+                    onUseStyle = { useStyle(section, it) },
                 )
             }
         }
@@ -4406,7 +5382,10 @@ private fun DiscoverScreen(onTool: (DecorTool) -> Unit) {
         DiscoverPreviewDialog(
             target = target,
             onDismiss = { previewTarget = null },
-            onTool = onTool,
+            isFavorite = discoverSource(target.item) in favoriteSources,
+            onFavorite = { toggleFavorite(target.section, target.item) },
+            onMoodboard = { addToMoodboard(target.section, target.item) },
+            onUseStyle = { useStyle(target.section, target.item) },
         )
     }
 }
@@ -4417,10 +5396,26 @@ private data class DiscoverPreviewTarget(
     val tool: DecorTool,
 )
 
+private data class DiscoverSavedTarget(
+    val item: GalleryItem,
+    val section: DiscoverSection,
+)
+
 private fun DiscoverSection.discoverPreviewTarget(item: GalleryItem): DiscoverPreviewTarget? {
     val belongsToSection = items.any { it.id == item.id }
     val tool = HomeDecorCatalog.tools.firstOrNull { it.id == serviceToolId }
     return if (belongsToSection && tool != null) DiscoverPreviewTarget(item, this, tool) else null
+}
+
+private fun discoverTargetForSource(source: String): DiscoverSavedTarget? {
+    val itemId = source.removePrefix("discover:")
+    if (itemId == source) return null
+    HomeDecorCatalog.discoverSections.forEach { section ->
+        section.items.firstOrNull { it.id == itemId }?.let { item ->
+            return DiscoverSavedTarget(item = item, section = section)
+        }
+    }
+    return null
 }
 
 @Composable
@@ -4531,6 +5526,10 @@ private fun DiscoverSectionRow(
     section: DiscoverSection,
     onSeeAll: () -> Unit,
     onPreview: (GalleryItem) -> Unit,
+    favoriteSources: Set<String>,
+    onFavorite: (GalleryItem) -> Unit,
+    onMoodboard: (GalleryItem) -> Unit,
+    onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
     val sectionSubtitle = localizedDiscoverSectionSubtitle(section)
@@ -4556,7 +5555,14 @@ private fun DiscoverSectionRow(
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(section.items, key = { it.id }) { item ->
-                GalleryCard(item = item, onClick = { onPreview(item) })
+                GalleryCard(
+                    item = item,
+                    isFavorite = discoverSource(item) in favoriteSources,
+                    onClick = { onPreview(item) },
+                    onFavorite = { onFavorite(item) },
+                    onMoodboard = { onMoodboard(item) },
+                    onUseStyle = { onUseStyle(item) },
+                )
             }
         }
     }
@@ -4567,6 +5573,10 @@ private fun DiscoverDetailScreen(
     section: DiscoverSection,
     onBack: () -> Unit,
     onPreview: (GalleryItem) -> Unit,
+    favoriteSources: Set<String>,
+    onFavorite: (GalleryItem) -> Unit,
+    onMoodboard: (GalleryItem) -> Unit,
+    onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
     val sectionCluster = localizedDiscoverCluster(section.cluster)
@@ -4602,7 +5612,15 @@ private fun DiscoverDetailScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             items(section.items, key = { it.id }) { item ->
-                GalleryCard(item = item, onClick = { onPreview(item) })
+                GalleryCard(
+                    item = item,
+                    isFavorite = discoverSource(item) in favoriteSources,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onPreview(item) },
+                    onFavorite = { onFavorite(item) },
+                    onMoodboard = { onMoodboard(item) },
+                    onUseStyle = { onUseStyle(item) },
+                )
             }
         }
     }
@@ -4612,7 +5630,10 @@ private fun DiscoverDetailScreen(
 private fun DiscoverPreviewDialog(
     target: DiscoverPreviewTarget,
     onDismiss: () -> Unit,
-    onTool: (DecorTool) -> Unit,
+    isFavorite: Boolean,
+    onFavorite: () -> Unit,
+    onMoodboard: () -> Unit,
+    onUseStyle: () -> Unit,
 ) {
     val item = target.item
     val itemTitle = localizedGalleryTitle(item)
@@ -4622,8 +5643,7 @@ private fun DiscoverPreviewDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    onTool(target.tool)
-                    onDismiss()
+                    onUseStyle()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = CircleShape,
@@ -4635,8 +5655,17 @@ private fun DiscoverPreviewDialog(
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss, shape = CircleShape) {
-                Text(stringResource(R.string.close))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = onFavorite, shape = CircleShape, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.Star, null, Modifier.size(17.dp), tint = if (isFavorite) StudioGold else Color.Unspecified)
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(if (isFavorite) R.string.favorited else R.string.favorite), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                OutlinedButton(onClick = onMoodboard, shape = CircleShape, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.Save, null, Modifier.size(17.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.add_to_moodboard), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
         },
         title = { Text(itemCategory, fontWeight = FontWeight.Black) },
@@ -4658,7 +5687,12 @@ private fun DiscoverPreviewDialog(
 @Composable
 private fun GalleryCard(
     item: GalleryItem,
+    isFavorite: Boolean,
+    modifier: Modifier = Modifier.width(196.dp),
     onClick: () -> Unit,
+    onFavorite: () -> Unit,
+    onMoodboard: () -> Unit,
+    onUseStyle: () -> Unit,
 ) {
     val itemTitle = localizedGalleryTitle(item)
     val itemCategory = localizedGalleryCategory(item.category)
@@ -4666,9 +5700,10 @@ private fun GalleryCard(
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
-        modifier = Modifier.width(196.dp),
+        modifier = modifier,
     ) {
-        Box(Modifier.fillMaxWidth().height(250.dp)) {
+        Column {
+        Box(Modifier.fillMaxWidth().height(226.dp)) {
             Image(
                 painter = painterResource(item.imageRes),
                 contentDescription = itemTitle,
@@ -4680,222 +5715,164 @@ private fun GalleryCard(
                 Text(itemCategory, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 2)
                 Text(itemTitle, color = Color.White.copy(alpha = 0.76f), style = MaterialTheme.typography.labelMedium, maxLines = 1)
             }
-            Surface(modifier = Modifier.align(Alignment.TopEnd).padding(10.dp), shape = CircleShape, color = Color.White.copy(alpha = 0.9f)) {
-                Icon(Icons.Rounded.Visibility, contentDescription = stringResource(R.string.preview), Modifier.padding(8.dp).size(16.dp), tint = StudioBlue)
+            Row(
+                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                DiscoverIconAction(
+                    icon = Icons.Rounded.Star,
+                    label = stringResource(if (isFavorite) R.string.favorited else R.string.favorite),
+                    onClick = onFavorite,
+                    active = isFavorite,
+                )
+                DiscoverIconAction(
+                    icon = Icons.Rounded.Save,
+                    label = stringResource(R.string.add_to_moodboard),
+                    onClick = onMoodboard,
+                )
             }
         }
-    }
-}
-
-private data class ElitePassPresentation(
-    val claimedDays: Int,
-    val currentDay: Int,
-    val claimedToday: Boolean,
-    val canClaimToday: Boolean,
-    val canRetrySync: Boolean,
-    val daySevenAvailable: Boolean,
-    val atCap: Boolean,
-    val lockedByTime: Boolean,
-    val currentDayVisible: Boolean,
-    val syncing: Boolean,
-    val progress: Float,
-    val todayStatus: String,
-    val claimButtonLabel: String,
-    val footer: String,
-)
-
-@Composable
-private fun elitePassPresentation(state: HomeDecorUiState): ElitePassPresentation {
-    val now = System.currentTimeMillis()
-    val claimStatus = state.viewer.status ?: state.viewer.claimStatus
-    val daySevenClaimed = state.eliteLastClaimWasDaySeven
-    val confirmedDays = if (daySevenClaimed) 7 else state.viewer.streakCount.coerceIn(0, 7)
-    val syncing = state.elitePassSyncState == ElitePassSyncState.Syncing || state.elitePassSyncState == ElitePassSyncState.Loading
-    val claimedToday = state.claimedToday && state.elitePassSyncState != ElitePassSyncState.Error
-    val currentDay = when {
-        daySevenClaimed -> 7
-        claimedToday -> confirmedDays.coerceIn(1, 7)
-        else -> (confirmedDays + 1).coerceIn(1, 7)
-    }
-    val canClaimToday = state.viewer.canClaimDiamond &&
-        !claimedToday &&
-        state.elitePassSyncState != ElitePassSyncState.LocalOnly &&
-        state.elitePassSyncState != ElitePassSyncState.Error
-    val daySevenAvailable = canClaimToday && currentDay == 7
-    val lockedByTime = !claimedToday && !canClaimToday && state.viewer.nextDiamondClaimAt > now
-    val atCap = !claimedToday &&
-        !canClaimToday &&
-        !daySevenAvailable &&
-        (claimStatus == "at_cap" || claimStatus == "already_at_cap" || (!lockedByTime && state.viewer.diamondBalance >= 3))
-    val canRetrySync = state.elitePassSyncState == ElitePassSyncState.Error && !syncing
-    val currentDayVisible = !claimedToday && (canClaimToday || atCap || lockedByTime)
-    val todayStatus = when {
-        syncing -> stringResource(R.string.elite_syncing)
-        claimedToday -> stringResource(R.string.claimed)
-        daySevenAvailable || canClaimToday -> stringResource(R.string.available)
-        atCap -> stringResource(R.string.daily_balance_full)
-        state.elitePassSyncState == ElitePassSyncState.Error -> stringResource(R.string.elite_resync)
-        state.elitePassSyncState == ElitePassSyncState.LocalOnly -> stringResource(R.string.elite_local)
-        lockedByTime -> stringResource(R.string.next_window)
-        else -> stringResource(R.string.not_ready)
-    }
-    val claimButtonLabel = when {
-        syncing -> stringResource(R.string.elite_syncing)
-        claimedToday -> stringResource(R.string.claim_today)
-        atCap -> stringResource(R.string.daily_balance_full)
-        canRetrySync -> stringResource(R.string.retry_sync_reward)
-        daySevenAvailable -> stringResource(R.string.claim_d7_pro)
-        canClaimToday -> stringResource(R.string.claim_diamond)
-        lockedByTime -> stringResource(R.string.next_reward_pending)
-        else -> stringResource(R.string.sync_required)
-    }
-    val footer = when {
-        syncing -> stringResource(R.string.elite_footer_syncing)
-        claimedToday && daySevenClaimed -> stringResource(R.string.elite_footer_day7_confirmed)
-        claimedToday -> stringResource(R.string.elite_footer_reward_confirmed)
-        daySevenAvailable -> stringResource(R.string.elite_footer_day7_available)
-        canClaimToday -> stringResource(R.string.elite_footer_diamond_available)
-        state.elitePassSyncState == ElitePassSyncState.Error -> state.elitePassSyncMessage
-        state.elitePassSyncState == ElitePassSyncState.LocalOnly -> state.elitePassSyncMessage
-        atCap -> stringResource(R.string.elite_footer_balance_full)
-        else -> stringResource(R.string.elite_footer_next_window)
-    }
-    return ElitePassPresentation(
-        claimedDays = confirmedDays,
-        currentDay = currentDay,
-        claimedToday = claimedToday,
-        canClaimToday = canClaimToday,
-        canRetrySync = canRetrySync,
-        daySevenAvailable = daySevenAvailable,
-        atCap = atCap,
-        lockedByTime = lockedByTime,
-        currentDayVisible = currentDayVisible,
-        syncing = syncing,
-        progress = (confirmedDays / 7f).coerceIn(0f, 1f),
-        todayStatus = todayStatus,
-        claimButtonLabel = claimButtonLabel,
-        footer = footer,
-    )
-}
-
-@Composable
-private fun EliteSyncPill(state: HomeDecorUiState) {
-    val (label, color, contentColor) = when (state.elitePassSyncState) {
-        ElitePassSyncState.Loading -> Triple(stringResource(R.string.elite_sync), Color.White.copy(alpha = 0.14f), Color.White)
-        ElitePassSyncState.Syncing -> Triple(stringResource(R.string.elite_sync), StudioGold, StudioInk)
-        ElitePassSyncState.Synced -> Triple(stringResource(R.string.elite_sync_ok), Color.White.copy(alpha = 0.16f), Color.White)
-        ElitePassSyncState.LocalOnly -> Triple(stringResource(R.string.elite_local), Color.White.copy(alpha = 0.12f), Color.White.copy(alpha = 0.82f))
-        ElitePassSyncState.Error -> Triple(stringResource(R.string.elite_resync), StudioErrorContainer, StudioRose)
-    }
-    Surface(shape = CircleShape, color = color) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        Button(
+            onClick = onUseStyle,
+            shape = CircleShape,
+            colors = studioPrimaryButtonColors(),
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(10.dp).height(44.dp),
         ) {
-            if (state.elitePassSyncState == ElitePassSyncState.Syncing || state.elitePassSyncState == ElitePassSyncState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.size(12.dp), color = contentColor, strokeWidth = 2.dp)
-            }
-            Text(label, color = contentColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.create_with_style), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         }
     }
 }
 
 @Composable
-private fun EliteStatusStrip(pass: ElitePassPresentation) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        EliteMetricPill(
-            label = stringResource(R.string.today),
-            value = pass.todayStatus,
-            highlighted = pass.canClaimToday,
-            modifier = Modifier.weight(1f),
-        )
-        EliteMetricPill(
-            label = stringResource(R.string.streak),
-            value = "${pass.claimedDays}/7",
-            highlighted = false,
-            modifier = Modifier.weight(1f),
-        )
-        EliteMetricPill(
-            label = stringResource(R.string.day_7_pro),
-            value = when {
-                pass.claimedToday && pass.currentDay == 7 -> stringResource(R.string.claimed)
-                pass.daySevenAvailable -> stringResource(R.string.available)
-                else -> stringResource(R.string.locked)
-            },
-            highlighted = pass.daySevenAvailable,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun EliteMetricPill(
+private fun DiscoverIconAction(
+    icon: ImageVector,
     label: String,
-    value: String,
-    highlighted: Boolean,
-    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    active: Boolean = false,
 ) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = if (highlighted) StudioGold.copy(alpha = 0.24f) else Color.White.copy(alpha = 0.10f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (highlighted) StudioGold.copy(alpha = 0.62f) else Color.White.copy(alpha = 0.08f)),
-        modifier = modifier,
+    FilledIconButton(
+        onClick = onClick,
+        modifier = Modifier.size(48.dp),
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = Color.White.copy(alpha = 0.92f),
+            contentColor = if (active) StudioGold else StudioBlue,
+        ),
     ) {
-        Column(Modifier.padding(horizontal = 10.dp, vertical = 9.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, color = Color.White.copy(alpha = 0.62f), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(value, color = if (highlighted) StudioGold else Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
+        Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp))
     }
 }
 
 @Composable
 private fun DailyRewardCard(
     state: HomeDecorUiState,
-    onClaim: () -> Unit,
+    onClaim: () -> Boolean,
+    modifier: Modifier = Modifier,
+    dark: Boolean = false,
 ) {
-    val pass = elitePassPresentation(state)
-    ElevatedCard(shape = RoundedCornerShape(22.dp), colors = CardDefaults.elevatedCardColors(containerColor = HomeDecorColors.DarkSurface)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.daily_reward), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                    Text(stringResource(R.string.elite_intro), color = Color.White.copy(alpha = 0.68f), style = MaterialTheme.typography.bodySmall)
-                }
-                EliteSyncPill(state)
-            }
-            LinearProgressIndicator(
-                progress = { pass.progress },
-                modifier = Modifier.fillMaxWidth().height(7.dp).clip(CircleShape),
-                color = StudioGold,
-                trackColor = Color.White.copy(alpha = 0.18f),
-            )
-            EliteStatusStrip(pass)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    pass.footer,
-                    color = Color.White.copy(alpha = 0.78f),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f),
+    val reward = state.workspace.dailyReward
+    val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+    val claimedToday = reward.lastClaimEpochDay == today
+    val activeStreak = when (reward.lastClaimEpochDay) {
+        today, today - 1 -> reward.currentStreak.coerceAtLeast(if (claimedToday) 1 else 0)
+        else -> 0
+    }
+    val displayDay = if (claimedToday) activeStreak.coerceAtLeast(1) else (activeStreak + 1).coerceAtLeast(1)
+    val titleColor = if (dark) Color.White else StudioInk
+    val bodyColor = if (dark) PaywallTextSecondary else MaterialTheme.colorScheme.onSurfaceVariant
+    val container = if (dark) PaywallCardAlt else StudioPaper
+    val borderColor = if (dark) PaywallBorder else StudioLine
+    val cardShape = RoundedCornerShape(20.dp)
+    ElevatedCard(
+        shape = cardShape,
+        colors = CardDefaults.elevatedCardColors(containerColor = container),
+        modifier = modifier.fillMaxWidth().border(1.dp, borderColor, cardShape),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(shape = CircleShape, color = if (dark) PaywallAccent.copy(alpha = 0.20f) else StudioProContainer) {
+                Icon(
+                    Icons.Rounded.Diamond,
+                    contentDescription = null,
+                    modifier = Modifier.padding(10.dp).size(19.dp),
+                    tint = if (dark) PaywallPremiumGold else StudioGold,
                 )
-                Button(
-                    onClick = onClaim,
-                    enabled = (pass.canClaimToday || pass.canRetrySync) && !pass.syncing,
-                    shape = CircleShape,
-                    colors = studioProButtonColors(),
-                    contentPadding = PaddingValues(horizontal = 14.dp),
-                    modifier = Modifier.height(46.dp),
-                ) {
-                    if (pass.syncing) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = StudioInk, strokeWidth = 2.dp)
-                    } else {
-                        Icon(if (pass.canRetrySync) Icons.Rounded.Refresh else Icons.Rounded.Diamond, null, Modifier.size(16.dp))
-                    }
-                    Spacer(Modifier.width(6.dp))
-                    Text(pass.claimButtonLabel, fontWeight = FontWeight.Black, maxLines = 1)
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(
+                    stringResource(R.string.daily_reward_title),
+                    color = titleColor,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    stringResource(R.string.daily_reward_subtitle),
+                    color = bodyColor,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    DailyRewardQuietPill(
+                        label = stringResource(R.string.daily_reward_day_format, displayDay),
+                        dark = dark,
+                    )
+                    DailyRewardQuietPill(
+                        label = if (activeStreak > 0) {
+                            stringResource(R.string.daily_reward_streak_format, activeStreak)
+                        } else {
+                            stringResource(R.string.daily_reward_soft_start)
+                        },
+                        dark = dark,
+                    )
                 }
+            }
+            Button(
+                onClick = { onClaim() },
+                enabled = !claimedToday,
+                shape = CircleShape,
+                colors = if (dark) studioProButtonColors() else studioPrimaryButtonColors(),
+                contentPadding = PaddingValues(horizontal = 13.dp),
+                modifier = Modifier.height(44.dp),
+            ) {
+                Icon(if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Add, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    stringResource(if (claimedToday) R.string.daily_reward_claimed else R.string.daily_reward_claim),
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun DailyRewardQuietPill(
+    label: String,
+    dark: Boolean,
+) {
+    Surface(
+        shape = CircleShape,
+        color = if (dark) Color.White.copy(alpha = 0.10f) else StudioMist.copy(alpha = 0.72f),
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+            color = if (dark) Color.White.copy(alpha = 0.78f) else HomeDecorColors.InkSoft,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -4914,6 +5891,8 @@ private fun PaywallCard(onUnlock: () -> Unit) {
     }
 }
 
+private enum class ProfileWorkspaceTab { Favorites, Moodboard, History, Projects }
+
 @Composable
 private fun ProfileScreen(
     state: HomeDecorUiState,
@@ -4922,6 +5901,43 @@ private fun ProfileScreen(
     val context = LocalContext.current
     val openRealAuth = { openAuth(context) }
     val signedIn = !state.viewer.isGuest || state.signedInName != null
+    var createProjectVisible by remember { mutableStateOf(false) }
+    var selectedProjectId by remember { mutableStateOf<String?>(null) }
+    var selectedProfileTab by remember { mutableStateOf(ProfileWorkspaceTab.Favorites) }
+    val selectedProject = state.workspace.projects.firstOrNull { it.id == selectedProjectId }
+    fun openDiscoverSource(source: String): Boolean {
+        val target = discoverTargetForSource(source) ?: return false
+        viewModel.useDiscoverStyle(target.item, target.section)
+        return true
+    }
+    if (createProjectVisible) {
+        ProjectEditorDialog(
+            title = stringResource(R.string.project_create_title),
+            confirmLabel = stringResource(R.string.create),
+            initialName = "",
+            initialRoomType = "",
+            initialNotes = "",
+            initialStyleInfo = "",
+            onDismiss = { createProjectVisible = false },
+            onConfirm = { name, roomType, notes, styleInfo ->
+                val project = viewModel.createProject(name = name, roomType = roomType, notes = notes, styleInfo = styleInfo)
+                selectedProjectId = project.id
+                createProjectVisible = false
+            },
+        )
+    }
+    if (selectedProject != null) {
+        ProjectDetailDialog(
+            project = selectedProject,
+            state = state,
+            onDismiss = { selectedProjectId = null },
+            onUpdate = viewModel::updateProject,
+            onCreateDesign = {
+                selectedProjectId = null
+                viewModel.selectTab(MainTab.Tools)
+            },
+        )
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -4944,11 +5960,61 @@ private fun ProfileScreen(
                     onPaywall = viewModel::openPaywall,
                 )
             }
-            item("portfolio-history") {
-                PortfolioHistorySection(
+            item("profile-daily-reward") {
+                DailyRewardCard(
                     state = state,
-                    onCreate = { viewModel.selectTab(MainTab.Tools) },
+                    onClaim = viewModel::claimLocalDailyReward,
                 )
+            }
+            item("profile-tabs") {
+                ProfileWorkspaceTabs(
+                    selected = selectedProfileTab,
+                    state = state,
+                    onSelect = { selectedProfileTab = it },
+                )
+            }
+            item("profile-tab-content") {
+                when (selectedProfileTab) {
+                    ProfileWorkspaceTab.Favorites -> FavoritesSection(
+                        state = state,
+                        onExplore = { viewModel.selectTab(MainTab.Discover) },
+                        onTryExample = { viewModel.selectTab(MainTab.Tools) },
+                        onOpen = { favorite ->
+                            when {
+                                favorite.resultId != null -> viewModel.openHistoryResult(favorite.resultId)
+                                favorite.sourceType.startsWith("discover:") -> openDiscoverSource(favorite.sourceType)
+                                else -> false
+                            }
+                        },
+                    )
+                    ProfileWorkspaceTab.Moodboard -> MoodboardSection(
+                        state = state,
+                        onExplore = { viewModel.selectTab(MainTab.Discover) },
+                        onTryExample = { viewModel.selectTab(MainTab.Tools) },
+                        onOpen = { item ->
+                            when {
+                                item.source.startsWith("generated_result:") -> viewModel.openHistoryResult(item.source.removePrefix("generated_result:"))
+                                item.source.startsWith("discover:") -> openDiscoverSource(item.source)
+                                else -> false
+                            }
+                        },
+                    )
+                    ProfileWorkspaceTab.History -> PortfolioHistorySection(
+                        state = state,
+                        onCreate = { viewModel.selectTab(MainTab.Tools) },
+                        onExplore = { viewModel.selectTab(MainTab.Discover) },
+                        onOpen = viewModel::openHistoryResult,
+                        onFavorite = viewModel::toggleHistoryFavorite,
+                        onSaveToProject = viewModel::saveHistoryResultToProject,
+                        onDelete = viewModel::deleteHistoryResult,
+                    )
+                    ProfileWorkspaceTab.Projects -> ProjectsWorkspaceSection(
+                        state = state,
+                        onCreateProject = { createProjectVisible = true },
+                        onOpenProject = { selectedProjectId = it.id },
+                        onCreateDesign = { viewModel.selectTab(MainTab.Tools) },
+                    )
+                }
             }
         }
     }
@@ -4984,14 +6050,7 @@ private fun SimpleProfileHeader(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Surface(shape = CircleShape, color = if (state.isPro) StudioProContainer else StudioPrimaryContainer) {
-                            Icon(
-                                Icons.Rounded.Person,
-                                contentDescription = null,
-                                modifier = Modifier.padding(10.dp).size(20.dp),
-                                tint = if (state.isPro) StudioGold else StudioBlue,
-                            )
-                        }
+                        ProfileAvatarPreview(state = state, signedIn = signedIn, modifier = Modifier.size(42.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
                                 name ?: stringResource(R.string.account_connected),
@@ -5017,7 +6076,7 @@ private fun SimpleProfileHeader(
                     colors = studioPrimaryButtonColors(),
                     modifier = Modifier.weight(1f).height(54.dp),
                 ) {
-                    Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(18.dp))
+                    ProfileAvatarPreview(state = state, signedIn = signedIn, modifier = Modifier.size(34.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Black, maxLines = 1)
                 }
@@ -5038,6 +6097,37 @@ private fun SimpleProfileHeader(
             onStore = onStore,
             onPaywall = onPaywall,
         )
+    }
+}
+
+@Composable
+private fun ProfileAvatarPreview(
+    state: HomeDecorUiState,
+    signedIn: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier, contentAlignment = Alignment.BottomEnd) {
+        Image(
+            painter = painterResource(R.drawable.profile_workspace),
+            contentDescription = stringResource(R.string.profile_photo_preview),
+            modifier = Modifier
+                .matchParentSize()
+                .clip(CircleShape)
+                .border(1.dp, if (state.isPro) StudioGold else StudioLine, CircleShape),
+            contentScale = ContentScale.Crop,
+        )
+        Surface(
+            shape = CircleShape,
+            color = if (signedIn) StudioPrimaryContainer else StudioPaper,
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.86f)),
+        ) {
+            Icon(
+                if (signedIn) Icons.Rounded.Check else Icons.Rounded.Person,
+                contentDescription = null,
+                modifier = Modifier.padding(3.dp).size(10.dp),
+                tint = if (signedIn) StudioBlue else StudioInk,
+            )
+        }
     }
 }
 
@@ -5141,33 +6231,732 @@ private fun ProfileSignInStateSection(
 }
 
 @Composable
-private fun PortfolioHistorySection(
+private fun ProfileWorkspaceTabs(
+    selected: ProfileWorkspaceTab,
     state: HomeDecorUiState,
-    onCreate: () -> Unit,
+    onSelect: (ProfileWorkspaceTab) -> Unit,
 ) {
+    val tabs = listOf(
+        ProfileWorkspaceTab.Favorites to state.workspace.favorites.size,
+        ProfileWorkspaceTab.Moodboard to state.workspace.moodboardItems.size,
+        ProfileWorkspaceTab.History to state.workspace.generatedResults.count { it.status != "failed" && (!it.imageUrl.isNullOrBlank() || !it.imageUri.isNullOrBlank()) },
+        ProfileWorkspaceTab.Projects to state.workspace.projects.size,
+    )
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        items(tabs, key = { it.first.name }) { (tab, count) ->
+            val active = selected == tab
+            FilterChip(
+                selected = active,
+                onClick = { onSelect(tab) },
+                label = {
+                    Text(
+                        stringResource(R.string.profile_tab_count, profileWorkspaceTabLabel(tab), count),
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                    )
+                },
+                leadingIcon = {
+                    Icon(profileWorkspaceTabIcon(tab), contentDescription = null, modifier = Modifier.size(17.dp))
+                },
+                shape = CircleShape,
+                modifier = Modifier.heightIn(min = 48.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun FavoritesSection(
+    state: HomeDecorUiState,
+    onExplore: () -> Unit,
+    onTryExample: () -> Unit,
+    onOpen: (FavoriteItem) -> Boolean,
+) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val favorites = remember(state.workspace.favorites) {
+        state.workspace.favorites.sortedByDescending { it.createdAt }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ProfileSectionTitle(icon = Icons.AutoMirrored.Rounded.ViewQuilt, title = stringResource(R.string.portfolio_history))
+        ProfileSectionTitle(icon = Icons.Rounded.Star, title = stringResource(R.string.profile_favorites_title))
         Text(
-            stringResource(R.string.portfolio_saved_count, state.board.count { it.isGeneratedResult() }),
+            stringResource(R.string.profile_favorites_body),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
-        if (state.board.isEmpty()) {
-            EmptyPortfolio(onCreate = onCreate)
+        if (favorites.isEmpty()) {
+            CollectionEmptyState(
+                icon = Icons.Rounded.Star,
+                title = stringResource(R.string.empty_favorites_title),
+                body = stringResource(R.string.empty_favorites_body),
+                primaryLabel = stringResource(R.string.empty_action_explore_discover),
+                onPrimary = onExplore,
+                secondaryLabel = stringResource(R.string.try_with_example),
+                onSecondary = onTryExample,
+                samples = sampleFavoriteCards(),
+            )
         } else {
-            val rows = ((state.board.size + 1) / 2).coerceAtLeast(1)
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.height((rows * 226).dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                userScrollEnabled = false,
-            ) {
-                items(state.board, key = { it.id }) { item ->
-                    BoardCard(item = item)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                favorites.forEach { favorite ->
+                    SavedCollectionCard(
+                        title = savedFavoriteTitle(favorite),
+                        subtitle = savedFavoriteSubtitle(favorite),
+                        imageRes = favorite.imageRes,
+                        imageUrl = favorite.imageUrl,
+                        imageUri = favorite.imageUri,
+                        icon = Icons.Rounded.Star,
+                        actionLabel = stringResource(if (favorite.resultId != null) R.string.open else R.string.create_with_style),
+                        onAction = {
+                            if (!onOpen(favorite)) {
+                                Toast.makeText(context, resources.getString(R.string.history_open_failed), Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MoodboardSection(
+    state: HomeDecorUiState,
+    onExplore: () -> Unit,
+    onTryExample: () -> Unit,
+    onOpen: (MoodboardItem) -> Boolean,
+) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val moodboardItems = remember(state.workspace.moodboardItems) {
+        state.workspace.moodboardItems.sortedWith(compareBy<MoodboardItem> { it.sortOrder }.thenByDescending { it.createdAt })
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProfileSectionTitle(icon = Icons.AutoMirrored.Rounded.ViewQuilt, title = stringResource(R.string.profile_moodboard_title))
+        Text(
+            stringResource(R.string.profile_moodboard_body),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        if (moodboardItems.isEmpty()) {
+            CollectionEmptyState(
+                icon = Icons.AutoMirrored.Rounded.ViewQuilt,
+                title = stringResource(R.string.empty_moodboard_title),
+                body = stringResource(R.string.empty_moodboard_body),
+                primaryLabel = stringResource(R.string.empty_action_explore_discover),
+                onPrimary = onExplore,
+                secondaryLabel = stringResource(R.string.try_with_example),
+                onSecondary = onTryExample,
+                samples = sampleMoodboardCards(),
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                moodboardItems.forEach { item ->
+                    SavedCollectionCard(
+                        title = savedMoodboardTitle(item),
+                        subtitle = savedMoodboardSubtitle(item),
+                        imageRes = item.imageRes,
+                        imageUrl = item.imageUrl,
+                        imageUri = item.imageUri,
+                        colorHex = item.colorHex,
+                        icon = Icons.AutoMirrored.Rounded.ViewQuilt,
+                        actionLabel = stringResource(if (item.source.startsWith("generated_result:")) R.string.open else R.string.create_with_style),
+                        onAction = {
+                            if (!onOpen(item)) {
+                                Toast.makeText(context, resources.getString(R.string.history_open_failed), Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavedCollectionCard(
+    title: String,
+    subtitle: String,
+    imageRes: Int,
+    imageUrl: String?,
+    imageUri: String?,
+    icon: ImageVector,
+    actionLabel: String,
+    onAction: () -> Unit,
+    colorHex: String? = null,
+) {
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                Modifier
+                    .size(104.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(StudioMist),
+            ) {
+                SavedCollectionImage(
+                    imageRes = imageRes,
+                    imageUrl = imageUrl,
+                    imageUri = imageUri,
+                    contentDescription = title,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                colorHex?.let { hex ->
+                    Surface(
+                        shape = CircleShape,
+                        color = hex.toComposeColor() ?: StudioPrimaryContainer,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.78f)),
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp).size(28.dp),
+                    ) {}
+                }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                        Icon(icon, null, Modifier.padding(6.dp).size(15.dp), tint = StudioBlue)
+                    }
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Text(
+                    subtitle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                OutlinedButton(
+                    onClick = onAction,
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    modifier = Modifier.heightIn(min = 44.dp),
+                ) {
+                    Text(actionLabel, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavedCollectionImage(
+    imageRes: Int,
+    imageUrl: String?,
+    imageUri: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    if (imageRes != 0) {
+        Image(
+            painter = painterResource(imageRes),
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = ContentScale.Crop,
+        )
+    } else {
+        WorkspaceImage(
+            imageUrl = imageUrl,
+            imageUri = imageUri,
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun CollectionEmptyState(
+    icon: ImageVector,
+    title: String,
+    body: String,
+    primaryLabel: String,
+    onPrimary: () -> Unit,
+    samples: List<SampleCollectionCard>,
+    secondaryLabel: String? = null,
+    onSecondary: (() -> Unit)? = null,
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                    Icon(icon, null, Modifier.padding(11.dp).size(22.dp), tint = StudioBlue)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(items = samples, key = { it.title }) { sample ->
+                    SampleCollectionPreview(sample)
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = onPrimary,
+                    shape = CircleShape,
+                    colors = studioPrimaryButtonColors(),
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                ) {
+                    Icon(Icons.Rounded.Explore, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(primaryLabel, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                if (secondaryLabel != null && onSecondary != null) {
+                    OutlinedButton(
+                        onClick = onSecondary,
+                        shape = CircleShape,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                    ) {
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(secondaryLabel, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class SampleCollectionCard(
+    val title: String,
+    val subtitle: String,
+    val imageRes: Int,
+)
+
+@Composable
+private fun SampleCollectionPreview(sample: SampleCollectionCard) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = StudioMist,
+        modifier = Modifier.width(136.dp),
+    ) {
+        Column {
+            Image(
+                painter = painterResource(sample.imageRes),
+                contentDescription = sample.title,
+                modifier = Modifier.fillMaxWidth().height(112.dp),
+                contentScale = ContentScale.Crop,
+            )
+            Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(sample.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(sample.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
+@Composable
+private fun profileWorkspaceTabLabel(tab: ProfileWorkspaceTab): String = stringResource(
+    when (tab) {
+        ProfileWorkspaceTab.Favorites -> R.string.profile_tab_favorites
+        ProfileWorkspaceTab.Moodboard -> R.string.profile_tab_moodboard
+        ProfileWorkspaceTab.History -> R.string.profile_tab_history
+        ProfileWorkspaceTab.Projects -> R.string.profile_tab_projects
+    },
+)
+
+private fun profileWorkspaceTabIcon(tab: ProfileWorkspaceTab): ImageVector = when (tab) {
+    ProfileWorkspaceTab.Favorites -> Icons.Rounded.Star
+    ProfileWorkspaceTab.Moodboard -> Icons.AutoMirrored.Rounded.ViewQuilt
+    ProfileWorkspaceTab.History -> Icons.Rounded.Visibility
+    ProfileWorkspaceTab.Projects -> Icons.Rounded.Layers
+}
+
+@Composable
+private fun savedFavoriteTitle(item: FavoriteItem): String {
+    val discoverTarget = discoverTargetForSource(item.sourceType)
+    return discoverTarget?.let { target ->
+        listOf(localizedDiscoverSection(target.section), localizedGalleryTitle(target.item))
+            .filter { it.isNotBlank() }
+            .joinToString(" - ")
+    } ?: item.title
+}
+
+@Composable
+private fun savedFavoriteSubtitle(item: FavoriteItem): String {
+    val discoverTarget = discoverTargetForSource(item.sourceType)
+    return discoverTarget?.let { target ->
+        stringResource(R.string.saved_discover_source, localizedDiscoverCluster(target.section.cluster))
+    } ?: listOf(item.roomType, item.style)
+        .filter { it.isNotBlank() }
+        .joinToString(" - ")
+        .ifBlank { stringResource(R.string.saved_generated_source) }
+}
+
+@Composable
+private fun savedMoodboardTitle(item: MoodboardItem): String {
+    val discoverTarget = discoverTargetForSource(item.source)
+    return discoverTarget?.let { target ->
+        listOf(localizedDiscoverSection(target.section), localizedGalleryTitle(target.item))
+            .filter { it.isNotBlank() }
+            .joinToString(" - ")
+    } ?: item.title
+}
+
+@Composable
+private fun savedMoodboardSubtitle(item: MoodboardItem): String {
+    val discoverTarget = discoverTargetForSource(item.source)
+    return when {
+        discoverTarget != null -> stringResource(R.string.saved_discover_source, localizedDiscoverCluster(discoverTarget.section.cluster))
+        item.notes.isNotBlank() -> item.notes
+        item.source.startsWith("generated_result:") -> stringResource(R.string.saved_generated_source)
+        else -> stringResource(R.string.saved_local_source)
+    }
+}
+
+@Composable
+private fun sampleFavoriteCards(): List<SampleCollectionCard> = listOf(
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_favorite_modern_title),
+        subtitle = stringResource(R.string.sample_favorite_modern_subtitle),
+        imageRes = R.drawable.assets_media_discover_generated_livingroom_livingroom4,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_favorite_garden_title),
+        subtitle = stringResource(R.string.sample_favorite_garden_subtitle),
+        imageRes = R.drawable.assets_media_discover_garden_gardenpatio,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_favorite_floor_title),
+        subtitle = stringResource(R.string.sample_favorite_floor_subtitle),
+        imageRes = R.drawable.assets_media_discover_floorscenes_naturaloakparquet,
+    ),
+)
+
+@Composable
+private fun sampleMoodboardCards(): List<SampleCollectionCard> = listOf(
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_moodboard_japandi_title),
+        subtitle = stringResource(R.string.sample_moodboard_japandi_subtitle),
+        imageRes = R.drawable.assets_media_styles_stylejapandi,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_moodboard_palette_title),
+        subtitle = stringResource(R.string.sample_moodboard_palette_subtitle),
+        imageRes = R.drawable.assets_media_discover_wallscenes_sagegreensuite,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_moodboard_exterior_title),
+        subtitle = stringResource(R.string.sample_moodboard_exterior_subtitle),
+        imageRes = R.drawable.assets_media_discover_exterior_exteriormodernvilla,
+    ),
+)
+
+@Composable
+private fun sampleProjectCards(): List<SampleCollectionCard> = listOf(
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_project_bedroom_title),
+        subtitle = stringResource(R.string.sample_project_bedroom_subtitle),
+        imageRes = R.drawable.assets_media_discover_generated_bedroom_bedroom4,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_project_kitchen_title),
+        subtitle = stringResource(R.string.sample_project_kitchen_subtitle),
+        imageRes = R.drawable.assets_media_discover_generated_kitchen_kitchen3,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_project_garden_title),
+        subtitle = stringResource(R.string.sample_project_garden_subtitle),
+        imageRes = R.drawable.assets_media_discover_generated_garden_garden5,
+    ),
+)
+
+@Composable
+private fun sampleHistoryCards(): List<SampleCollectionCard> = listOf(
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_history_before_after_title),
+        subtitle = stringResource(R.string.sample_history_before_after_subtitle),
+        imageRes = R.drawable.sample_after_luxury,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_history_layout_title),
+        subtitle = stringResource(R.string.sample_history_layout_subtitle),
+        imageRes = R.drawable.assets_media_discover_home_homehomeoffice,
+    ),
+    SampleCollectionCard(
+        title = stringResource(R.string.sample_history_reference_title),
+        subtitle = stringResource(R.string.sample_history_reference_subtitle),
+        imageRes = R.drawable.assets_media_styles_stylemodern,
+    ),
+)
+
+private fun String.toComposeColor(): Color? {
+    return runCatching {
+        val clean = removePrefix("#")
+        Color(clean.toLong(16) or if (clean.length <= 6) 0xFF000000 else 0x00000000)
+    }.getOrNull()
+}
+
+@Composable
+private fun PortfolioHistorySection(
+    state: HomeDecorUiState,
+    onCreate: () -> Unit,
+    onExplore: () -> Unit,
+    onOpen: (String) -> Boolean,
+    onFavorite: (String) -> Boolean,
+    onSaveToProject: (String) -> com.ismail.homedecorai.Project?,
+    onDelete: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    val resources = LocalResources.current
+    val historyItems = remember(state.workspace.generatedResults) {
+        state.workspace.generatedResults
+            .filter { it.status != "failed" && (!it.imageUrl.isNullOrBlank() || !it.imageUri.isNullOrBlank()) }
+            .sortedByDescending { it.createdAt }
+    }
+    val favoriteResultIds = remember(state.workspace.favorites) {
+        state.workspace.favorites.mapNotNull { it.resultId }.toSet()
+    }
+    val groupedHistory = remember(historyItems) { groupHistoryResults(historyItems) }
+    var deleteCandidate by remember { mutableStateOf<GeneratedResult?>(null) }
+
+    deleteCandidate?.let { result ->
+        AlertDialog(
+            onDismissRequest = { deleteCandidate = null },
+            icon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = StudioRose) },
+            title = { Text(stringResource(R.string.delete_history_item_title), fontWeight = FontWeight.Black) },
+            text = { Text(stringResource(R.string.delete_history_item_body)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete(result.id)
+                        deleteCandidate = null
+                        Toast.makeText(context, resources.getString(R.string.history_deleted), Toast.LENGTH_SHORT).show()
+                    },
+                    shape = CircleShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = StudioRose, contentColor = Color.White),
+                ) {
+                    Text(stringResource(R.string.delete), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { deleteCandidate = null }, shape = CircleShape) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ProfileSectionTitle(icon = Icons.AutoMirrored.Rounded.ViewQuilt, title = stringResource(R.string.history_timeline))
+        Text(
+            stringResource(R.string.history_saved_count, historyItems.size),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        if (historyItems.isEmpty()) {
+            EmptyPortfolio(onCreate = onCreate, onExplore = onExplore)
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                groupedHistory.forEach { section ->
+                    HistoryTimelineGroup(
+                        section = section,
+                        favoriteResultIds = favoriteResultIds,
+                        onOpen = { result ->
+                            if (!onOpen(result.id)) {
+                                Toast.makeText(context, resources.getString(R.string.history_open_failed), Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onFavorite = { result ->
+                            val favorite = onFavorite(result.id)
+                            Toast.makeText(
+                                context,
+                                resources.getString(if (favorite) R.string.history_favorited else R.string.history_unfavorited),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        },
+                        onSaveToProject = { result ->
+                            val project = onSaveToProject(result.id)
+                            Toast.makeText(
+                                context,
+                                if (project != null) {
+                                    resources.getString(R.string.history_saved_to_project, project.name)
+                                } else {
+                                    resources.getString(R.string.toast_design_save_failed)
+                                },
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        },
+                        onDelete = { result -> deleteCandidate = result },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryTimelineGroup(
+    section: HistoryTimelineSection,
+    favoriteResultIds: Set<String>,
+    onOpen: (GeneratedResult) -> Unit,
+    onFavorite: (GeneratedResult) -> Unit,
+    onSaveToProject: (GeneratedResult) -> Unit,
+    onDelete: (GeneratedResult) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(top = 2.dp),
+        ) {
+            Surface(shape = CircleShape, color = StudioBlue) {
+                Box(Modifier.size(9.dp))
+            }
+            Text(
+                historyBucketLabel(section.bucket),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                color = StudioInk,
+            )
+            Text(
+                section.items.size.toString(),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            section.items.forEach { result ->
+                HistoryTimelineItem(
+                    result = result,
+                    favorite = result.id in favoriteResultIds,
+                    onOpen = { onOpen(result) },
+                    onFavorite = { onFavorite(result) },
+                    onSaveToProject = { onSaveToProject(result) },
+                    onDelete = { onDelete(result) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryTimelineItem(
+    result: GeneratedResult,
+    favorite: Boolean,
+    onOpen: () -> Unit,
+    onFavorite: () -> Unit,
+    onSaveToProject: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val toolTitle = boardToolTitleRes(result.toolTitle)?.let { stringResource(it) } ?: result.toolTitle
+    val styleLabel = result.style.ifBlank { result.palette }
+        .takeIf { it.isNotBlank() }
+        ?.let { localizedOption(it) }
+    val detail = listOfNotNull(styleLabel, result.budgetLabel.takeIf { it.isNotBlank() })
+        .joinToString(" - ")
+        .ifBlank { stringResource(R.string.history_style_budget_unavailable) }
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier
+                        .size(86.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(StudioMist),
+                ) {
+                    HistoryThumbnail(result = result, contentDescription = toolTitle, modifier = Modifier.fillMaxSize())
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(toolTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(detail, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(formatHistoryItemDate(result.createdAt), color = StudioInk.copy(alpha = 0.72f), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                HistoryQuickAction(Icons.Rounded.Visibility, stringResource(R.string.open), onOpen, Modifier.weight(1f))
+                HistoryQuickAction(Icons.Rounded.Star, stringResource(if (favorite) R.string.favorited else R.string.favorite), onFavorite, Modifier.weight(1f), active = favorite)
+                HistoryQuickAction(Icons.Rounded.Save, stringResource(R.string.project), onSaveToProject, Modifier.weight(1f))
+                HistoryQuickAction(Icons.Rounded.Delete, stringResource(R.string.delete), onDelete, Modifier.weight(1f), danger = true)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryThumbnail(
+    result: GeneratedResult,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    val imageUri = result.imageUri?.takeIf { it.isNotBlank() }?.let(Uri::parse)
+    if (imageUri != null) {
+        UriOrResourceImage(
+            uri = imageUri,
+            imageRes = R.drawable.sample_after_luxury,
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    } else {
+        NetworkOrResourceImage(
+            imageUrl = result.imageUrl,
+            imageRes = R.drawable.sample_after_luxury,
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    }
+}
+
+@Composable
+private fun HistoryQuickAction(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    active: Boolean = false,
+    danger: Boolean = false,
+) {
+    val container = when {
+        danger -> StudioErrorContainer
+        active -> StudioProContainer
+        else -> StudioMist
+    }
+    val content = when {
+        danger -> StudioRose
+        active -> StudioGold
+        else -> StudioInk
+    }
+    Column(
+        modifier = modifier
+            .heightIn(min = 56.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(vertical = 5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Surface(shape = CircleShape, color = container) {
+            Icon(icon, contentDescription = label, tint = content, modifier = Modifier.padding(6.dp).size(16.dp))
+        }
+        Spacer(Modifier.height(3.dp))
+        Text(
+            label,
+            color = content,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -5333,38 +7122,518 @@ private fun ProfileActionRow(
 }
 
 @Composable
-private fun EmptyPortfolio(onCreate: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 320.dp)
-            .padding(vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Surface(shape = CircleShape, color = StudioPrimaryContainer) {
-            Icon(Icons.Rounded.Diamond, null, Modifier.padding(24.dp).size(36.dp), tint = StudioBlue)
-        }
-        Spacer(Modifier.height(18.dp))
-        Text(stringResource(R.string.empty_portfolio_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            stringResource(R.string.empty_portfolio_body),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth(0.86f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
-        Spacer(Modifier.height(22.dp))
-        Button(
-            onClick = onCreate,
-            shape = CircleShape,
-            colors = studioPrimaryButtonColors(),
-            modifier = Modifier.fillMaxWidth().height(54.dp),
+private fun ProjectsWorkspaceSection(
+    state: HomeDecorUiState,
+    onCreateProject: () -> Unit,
+    onOpenProject: (Project) -> Unit,
+    onCreateDesign: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(stringResource(R.string.create_design), fontWeight = FontWeight.Black)
+            ProfileSectionTitle(icon = Icons.Rounded.Layers, title = stringResource(R.string.room_projects))
+            FilledIconButton(
+                onClick = onCreateProject,
+                modifier = Modifier.size(48.dp),
+                colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
+                    containerColor = StudioPrimaryContainer,
+                    contentColor = StudioBlue,
+                ),
+            ) {
+                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.project_create_title))
+            }
+        }
+        Text(
+            stringResource(R.string.room_projects_body),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        if (state.workspace.projects.isEmpty()) {
+            EmptyProjects(onCreateProject = onCreateProject, onCreateDesign = onCreateDesign)
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(end = 4.dp),
+            ) {
+                items(state.workspace.projects, key = { it.id }) { project ->
+                    ProjectCard(
+                        project = project,
+                        state = state,
+                        onClick = { onOpenProject(project) },
+                    )
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun EmptyProjects(
+    onCreateProject: () -> Unit,
+    onCreateDesign: () -> Unit,
+) {
+    val samples = sampleProjectCards()
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                    Icon(Icons.Rounded.Layers, null, Modifier.padding(11.dp).size(22.dp), tint = StudioBlue)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.empty_projects_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.empty_projects_body), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(items = samples, key = { it.title }) { sample ->
+                    SampleCollectionPreview(sample)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = onCreateProject,
+                    shape = CircleShape,
+                    colors = studioPrimaryButtonColors(),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                ) {
+                    Icon(Icons.Rounded.Add, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.empty_action_start_project), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                OutlinedButton(
+                    onClick = onCreateDesign,
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                ) {
+                    Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.try_with_example), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectCard(
+    project: Project,
+    state: HomeDecorUiState,
+    onClick: () -> Unit,
+) {
+    val projectResults = state.workspace.generatedResults.filter { it.projectId == project.id }
+    val favoriteCount = state.workspace.favorites.count { it.projectId == project.id }
+    val originalCount = project.originalPhotoUris.size + project.originalPhotoUrls.size
+    val coverUrl = project.coverImageUrl ?: projectResults.firstOrNull()?.imageUrl
+    val coverUri = project.coverImageUri ?: projectResults.firstOrNull()?.imageUri ?: project.originalPhotoUris.firstOrNull()
+    ElevatedCard(
+        onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+        modifier = Modifier.width(260.dp),
+    ) {
+        Column {
+            Box(Modifier.fillMaxWidth().height(150.dp)) {
+                WorkspaceImage(
+                    imageUrl = coverUrl,
+                    imageUri = coverUri,
+                    contentDescription = project.name,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.62f)))))
+                Text(
+                    project.name,
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.BottomStart).padding(14.dp),
+                )
+            }
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    project.roomType.ifBlank { stringResource(R.string.project_room_unspecified) },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ProjectMetricChip(Icons.Rounded.PhotoCamera, originalCount.toString())
+                    ProjectMetricChip(Icons.AutoMirrored.Rounded.ViewQuilt, projectResults.size.toString())
+                    ProjectMetricChip(Icons.Rounded.Star, favoriteCount.toString())
+                }
+                Text(
+                    stringResource(R.string.project_created, formatProjectDate(project.createdAt)),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectMetricChip(
+    icon: ImageVector,
+    label: String,
+) {
+    Surface(shape = CircleShape, color = StudioMist) {
+        Row(
+            Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            Icon(icon, null, Modifier.size(14.dp), tint = StudioBlue)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = StudioInk, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun ProjectDetailDialog(
+    project: Project,
+    state: HomeDecorUiState,
+    onDismiss: () -> Unit,
+    onUpdate: (Project) -> Unit,
+    onCreateDesign: () -> Unit,
+) {
+    val projectResults = state.workspace.generatedResults.filter { it.projectId == project.id }
+    val projectFavorites = state.workspace.favorites.filter { it.projectId == project.id }
+    var name by remember(project.id) { mutableStateOf(project.name) }
+    var roomType by remember(project.id) { mutableStateOf(project.roomType) }
+    var notes by remember(project.id) { mutableStateOf(project.notes) }
+    var styleInfo by remember(project.id) { mutableStateOf(project.styleInfo) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.project_workspace_title), fontWeight = FontWeight.Black) },
+        text = {
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 520.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                item {
+                    ProjectHeaderPreview(project = project, results = projectResults)
+                }
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ProjectMetricChip(Icons.Rounded.PhotoCamera, stringResource(R.string.project_originals_count, project.originalPhotoUris.size + project.originalPhotoUrls.size))
+                        ProjectMetricChip(Icons.AutoMirrored.Rounded.ViewQuilt, stringResource(R.string.project_results_count, projectResults.size))
+                        ProjectMetricChip(Icons.Rounded.Star, stringResource(R.string.project_favorites_count, projectFavorites.size))
+                    }
+                }
+                item {
+                    Text(stringResource(R.string.project_created, formatProjectDate(project.createdAt)), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                }
+                item {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(stringResource(R.string.project_name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        singleLine = true,
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = roomType,
+                        onValueChange = { roomType = it },
+                        label = { Text(stringResource(R.string.room_type)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                        singleLine = true,
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = styleInfo,
+                        onValueChange = { styleInfo = it },
+                        label = { Text(stringResource(R.string.project_style_info)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp),
+                    )
+                }
+                item {
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text(stringResource(R.string.project_notes)) },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        minLines = 3,
+                    )
+                }
+                if (projectResults.isNotEmpty()) {
+                    item {
+                        Text(stringResource(R.string.project_generated_results), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    }
+                    item {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            items(projectResults, key = { it.id }) { item ->
+                                ProjectResultThumb(title = item.toolTitle, imageUrl = item.imageUrl, imageUri = item.imageUri)
+                            }
+                        }
+                    }
+                }
+                if (projectFavorites.isNotEmpty()) {
+                    item {
+                        Text(stringResource(R.string.project_favorites), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    }
+                    item {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            items(projectFavorites, key = { it.id }) { item ->
+                                ProjectResultThumb(title = item.title, imageUrl = item.imageUrl, imageUri = item.imageUri, imageRes = item.imageRes)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onUpdate(project.copy(name = name.ifBlank { project.name }, roomType = roomType, notes = notes, styleInfo = styleInfo))
+                    onDismiss()
+                },
+                shape = CircleShape,
+            ) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onCreateDesign, shape = CircleShape) {
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.create_design))
+            }
+        },
+    )
+}
+
+@Composable
+private fun ProjectHeaderPreview(
+    project: Project,
+    results: List<com.ismail.homedecorai.GeneratedResult>,
+) {
+    val coverUrl = project.coverImageUrl ?: results.firstOrNull()?.imageUrl
+    val coverUri = project.coverImageUri ?: results.firstOrNull()?.imageUri ?: project.originalPhotoUris.firstOrNull()
+    Surface(shape = RoundedCornerShape(24.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().height(180.dp)) {
+            WorkspaceImage(
+                imageUrl = coverUrl,
+                imageUri = coverUri,
+                contentDescription = project.name,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.68f)))))
+            Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+                Text(project.name, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(project.roomType.ifBlank { stringResource(R.string.project_room_unspecified) }, color = Color.White.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectResultThumb(
+    title: String,
+    imageUrl: String?,
+    imageUri: String?,
+    imageRes: Int = R.drawable.profile_workspace,
+) {
+    Surface(shape = RoundedCornerShape(18.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.width(124.dp)) {
+        Column {
+            WorkspaceImage(
+                imageUrl = imageUrl,
+                imageUri = imageUri,
+                imageRes = imageRes,
+                contentDescription = title,
+                modifier = Modifier.fillMaxWidth().height(104.dp),
+            )
+            Text(
+                title,
+                modifier = Modifier.padding(10.dp),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProjectEditorDialog(
+    title: String,
+    confirmLabel: String,
+    initialName: String,
+    initialRoomType: String,
+    initialNotes: String,
+    initialStyleInfo: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String, String) -> Unit,
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var roomType by remember { mutableStateOf(initialRoomType) }
+    var notes by remember { mutableStateOf(initialNotes) }
+    var styleInfo by remember { mutableStateOf(initialStyleInfo) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, fontWeight = FontWeight.Black) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.project_name)) },
+                    placeholder = { Text(stringResource(R.string.project_name_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = roomType,
+                    onValueChange = { roomType = it },
+                    label = { Text(stringResource(R.string.room_type)) },
+                    placeholder = { Text(stringResource(R.string.project_room_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = styleInfo,
+                    onValueChange = { styleInfo = it },
+                    label = { Text(stringResource(R.string.project_style_info)) },
+                    placeholder = { Text(stringResource(R.string.project_style_info_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                )
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text(stringResource(R.string.project_notes)) },
+                    placeholder = { Text(stringResource(R.string.project_notes_hint)) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    minLines = 3,
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(name.trim(), roomType.trim(), notes.trim(), styleInfo.trim()) },
+                enabled = name.trim().length >= 2,
+                shape = CircleShape,
+            ) {
+                Text(confirmLabel)
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss, shape = CircleShape) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun WorkspaceImage(
+    imageUrl: String?,
+    imageUri: String?,
+    imageRes: Int = R.drawable.profile_workspace,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+) {
+    if (!imageUri.isNullOrBlank()) {
+        UriOrResourceImage(
+            uri = runCatching { Uri.parse(imageUri) }.getOrNull(),
+            imageRes = imageRes,
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    } else {
+        NetworkOrResourceImage(
+            imageUrl = imageUrl,
+            imageRes = imageRes,
+            contentDescription = contentDescription,
+            modifier = modifier,
+        )
+    }
+}
+
+private fun formatProjectDate(createdAt: Long): String =
+    java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM).format(java.util.Date(createdAt))
+
+@Composable
+private fun EmptyPortfolio(
+    onCreate: () -> Unit,
+    onExplore: () -> Unit,
+) {
+    CollectionEmptyState(
+        icon = Icons.Rounded.Diamond,
+        title = stringResource(R.string.empty_history_title),
+        body = stringResource(R.string.empty_history_body),
+        primaryLabel = stringResource(R.string.try_with_example),
+        onPrimary = onCreate,
+        secondaryLabel = stringResource(R.string.empty_action_explore_discover),
+        onSecondary = onExplore,
+        samples = sampleHistoryCards(),
+    )
+}
+
+private enum class HistoryBucket { Today, Yesterday, ThisWeek, Older }
+
+private data class HistoryTimelineSection(
+    val bucket: HistoryBucket,
+    val items: List<GeneratedResult>,
+)
+
+private fun groupHistoryResults(results: List<GeneratedResult>): List<HistoryTimelineSection> {
+    if (results.isEmpty()) return emptyList()
+    val zone = ZoneId.systemDefault()
+    val today = LocalDate.now(zone)
+    return results
+        .groupBy { result ->
+            val date = LocalDate.ofInstant(java.time.Instant.ofEpochMilli(result.createdAt), zone)
+            when {
+                date == today -> HistoryBucket.Today
+                date == today.minusDays(1) -> HistoryBucket.Yesterday
+                !date.isBefore(today.minusDays(6)) -> HistoryBucket.ThisWeek
+                else -> HistoryBucket.Older
+            }
+        }
+        .let { grouped ->
+            listOf(HistoryBucket.Today, HistoryBucket.Yesterday, HistoryBucket.ThisWeek, HistoryBucket.Older)
+                .mapNotNull { bucket ->
+                    grouped[bucket]?.takeIf { it.isNotEmpty() }?.let { HistoryTimelineSection(bucket, it) }
+                }
+        }
+}
+
+@Composable
+private fun historyBucketLabel(bucket: HistoryBucket): String = stringResource(
+    when (bucket) {
+        HistoryBucket.Today -> R.string.history_today
+        HistoryBucket.Yesterday -> R.string.history_yesterday
+        HistoryBucket.ThisWeek -> R.string.history_this_week
+        HistoryBucket.Older -> R.string.history_older
+    }
+)
+
+private fun formatHistoryItemDate(createdAt: Long): String {
+    return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(createdAt))
 }
 
 @Composable
@@ -5437,8 +7706,9 @@ private fun BoardCard(item: com.ismail.homedecorai.BoardItem) {
         Box(Modifier.fillMaxWidth().height(208.dp)) {
             when {
                 failed -> ImageFailureState(modifier = Modifier.fillMaxSize())
-                ready -> NetworkOrResourceImage(
+                ready -> WorkspaceImage(
                     imageUrl = item.imageUrl,
+                    imageUri = item.imageUri,
                     imageRes = item.imageRes,
                     contentDescription = toolTitle,
                     modifier = Modifier.fillMaxSize(),
@@ -5524,10 +7794,32 @@ private fun ImageLoadingState(modifier: Modifier = Modifier) {
         modifier = modifier.background(StudioMist),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            CircularProgressIndicator(modifier = Modifier.size(30.dp), strokeWidth = 3.dp, color = StudioBlue)
-            Text(stringResource(R.string.image_loading_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = StudioInk)
-            Text(stringResource(R.string.image_loading_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Surface(shape = CircleShape, color = StudioPaper) {
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.padding(10.dp).size(20.dp), tint = StudioBlue)
+            }
+            Text(
+                stringResource(R.string.image_loading_title),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = StudioInk,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(0.72f).height(6.dp).clip(CircleShape),
+                color = StudioBlue,
+                trackColor = StudioLine,
+            )
+            Text(
+                stringResource(R.string.image_loading_body),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
         }
     }
 }
@@ -6780,6 +9072,7 @@ private fun DiamondStoreSheet(
     onClose: () -> Unit,
     onFulfill: (String, String, String, String?, Double, String, Double) -> Unit,
     onRetrySync: () -> Unit,
+    onDailyRewardClaim: () -> Boolean,
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -6947,6 +9240,13 @@ private fun DiamondStoreSheet(
                             }
                         }
                     }
+                }
+                item {
+                    DailyRewardCard(
+                        state = state,
+                        onClaim = onDailyRewardClaim,
+                        dark = true,
+                    )
                 }
                 item {
                     Text(stringResource(R.string.get_more_credits), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
@@ -7183,6 +9483,7 @@ private fun choiceImageRes(label: String): Int {
         "Cyberpunk" -> R.drawable.assets_media_styles_stylecyberpunk
         "Tropicale" -> R.drawable.assets_media_styles_styletropical
         "Minimaliste" -> R.drawable.assets_media_styles_styleminimalist
+        "Marocain" -> R.drawable.assets_media_styles_stylemediterranean
         "Scandinave" -> R.drawable.assets_media_styles_stylescandinavian
         "Bohème" -> R.drawable.assets_media_styles_stylebohemian
         "Midcentury" -> R.drawable.assets_media_styles_stylemidcentury

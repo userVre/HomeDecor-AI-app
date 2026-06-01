@@ -208,11 +208,11 @@ function buildAzureFlowInstruction(args: {
   referenceImageCount: number;
 }) {
   if (args.serviceType === "paint") {
-    return "Automatically detect all wall planes. Apply the user's selected color family and specific shade exactly, preserving furniture shadows on the wall, original window light direction, trim, decor, and all non-wall areas.";
+    return "Apply the user's selected wall material or shade to the marked wall area only, preserving furniture shadows on the wall, original window light direction, trim, decor, floor, ceiling, and all non-wall areas.";
   }
 
   if (args.serviceType === "floor") {
-    return "Automatically detect the floor plane. Replace only the floor finish, making wood grain, marble veins, tile seams, and material scale follow the original room's perspective lines, while preserving furniture grounding and contact shadows.";
+    return "Apply the user's selected floor material to the marked floor area only, making wood grain, marble veins, tile seams, and material scale follow the original room's perspective lines, while preserving walls, furniture grounding, and contact shadows.";
   }
 
   if (args.serviceType === "replace") {

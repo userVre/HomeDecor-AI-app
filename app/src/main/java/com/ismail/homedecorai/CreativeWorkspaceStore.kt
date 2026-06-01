@@ -17,7 +17,10 @@ data class Project(
     val roomType: String = "",
     val coverImageUri: String? = null,
     val coverImageUrl: String? = null,
+    val originalPhotoUris: List<String> = emptyList(),
+    val originalPhotoUrls: List<String> = emptyList(),
     val notes: String = "",
+    val styleInfo: String = "",
     val createdAt: Long = nowMillis(),
     val updatedAt: Long = createdAt,
 )
@@ -32,6 +35,7 @@ data class GeneratedResult(
     val style: String = "",
     val palette: String = "",
     val prompt: String? = null,
+    val budgetLabel: String = "",
     val sourceImageUri: String? = null,
     val sourceImageUrl: String? = null,
     val imageUri: String? = null,
@@ -50,6 +54,7 @@ data class FavoriteItem(
     val toolId: String = "",
     val roomType: String = "",
     val style: String = "",
+    val imageRes: Int = 0,
     val imageUri: String? = null,
     val imageUrl: String? = null,
     val sourceType: String = "generated_result",
@@ -62,6 +67,7 @@ data class MoodboardItem(
     val id: String = newWorkspaceId(),
     val projectId: String? = null,
     val title: String,
+    val imageRes: Int = 0,
     val imageUri: String? = null,
     val imageUrl: String? = null,
     val colorHex: String? = null,
@@ -115,6 +121,7 @@ data class ToolDraft(
     val selectedExampleLabels: List<String> = emptyList(),
     val referencePhotoUri: String? = null,
     val selectedReferenceExampleLabel: String? = null,
+    val selectedReferenceDiscoverItemId: String? = null,
     val selectedRooms: List<String> = emptyList(),
     val selectedStyles: List<String> = emptyList(),
     val selectedPalettes: List<String> = emptyList(),
@@ -122,6 +129,11 @@ data class ToolDraft(
     val style: String = "",
     val palette: String = "",
     val designMode: String = "",
+    val budgetMode: String = "",
+    val avoidOptions: List<String> = emptyList(),
+    val keepOptions: List<String> = emptyList(),
+    val changeOptions: List<String> = emptyList(),
+    val preserveRestOfImage: Boolean = false,
     val customPrompt: String = "",
     val layoutConstraints: String = "",
     val mobilierASupprimer: String = "",
@@ -152,11 +164,25 @@ class LocalWorkspaceStore(context: Context) {
     private val _state = MutableStateFlow(readState())
     val state: StateFlow<CreativeWorkspaceState> = _state.asStateFlow()
 
-    fun createProject(name: String, roomType: String = "", coverImageUri: String? = null): Project {
+    fun createProject(
+        name: String,
+        roomType: String = "",
+        coverImageUri: String? = null,
+        coverImageUrl: String? = null,
+        originalPhotoUris: List<String> = emptyList(),
+        originalPhotoUrls: List<String> = emptyList(),
+        notes: String = "",
+        styleInfo: String = "",
+    ): Project {
         val project = Project(
             name = name.ifBlank { "Untitled project" },
             roomType = roomType,
             coverImageUri = coverImageUri,
+            coverImageUrl = coverImageUrl,
+            originalPhotoUris = originalPhotoUris.distinct().take(MAX_PROJECT_ORIGINALS),
+            originalPhotoUrls = originalPhotoUrls.distinct().take(MAX_PROJECT_ORIGINALS),
+            notes = notes,
+            styleInfo = styleInfo,
         )
         update { workspace -> workspace.copy(projects = (listOf(project) + workspace.projects).take(MAX_PROJECTS)) }
         return project
@@ -193,7 +219,19 @@ class LocalWorkspaceStore(context: Context) {
 
     fun upsertGeneratedResult(result: GeneratedResult) {
         update { workspace ->
+            val nextProjects = if (result.projectId == null) {
+                workspace.projects
+            } else {
+                workspace.projects.map { project ->
+                    if (project.id == result.projectId) {
+                        project.withGeneratedResult(result)
+                    } else {
+                        project
+                    }
+                }
+            }
             workspace.copy(
+                projects = nextProjects.sortedByDescending { it.updatedAt }.take(MAX_PROJECTS),
                 generatedResults = workspace.generatedResults
                     .upsert(result) { it.id == result.id }
                     .sortedByDescending { it.createdAt }
@@ -303,11 +341,11 @@ class LocalWorkspaceStore(context: Context) {
             if (previousDay == today) return@update workspace
 
             val nextStreak = if (previousDay == today - 1) {
-                (workspace.dailyReward.currentStreak + 1).coerceAtMost(7)
+                workspace.dailyReward.currentStreak + 1
             } else {
                 1
             }
-            val rewardAmount = if (nextStreak == 7) 7 else 1
+            val rewardAmount = 1
             val nextReward = workspace.dailyReward.copy(
                 currentStreak = nextStreak,
                 totalClaims = workspace.dailyReward.totalClaims + 1,
@@ -375,10 +413,33 @@ class LocalWorkspaceStore(context: Context) {
             .ifBlank { "Saved idea" }
     }
 
+    private fun Project.withGeneratedResult(result: GeneratedResult): Project {
+        val nextOriginalUris = (originalPhotoUris + listOfNotNull(result.sourceImageUri))
+            .distinct()
+            .take(MAX_PROJECT_ORIGINALS)
+        val nextOriginalUrls = (originalPhotoUrls + listOfNotNull(result.sourceImageUrl))
+            .distinct()
+            .take(MAX_PROJECT_ORIGINALS)
+        return copy(
+            roomType = roomType.ifBlank { result.roomType },
+            coverImageUri = coverImageUri ?: result.imageUri ?: result.sourceImageUri,
+            coverImageUrl = coverImageUrl ?: result.imageUrl ?: result.sourceImageUrl,
+            originalPhotoUris = nextOriginalUris,
+            originalPhotoUrls = nextOriginalUrls,
+            styleInfo = styleInfo.ifBlank {
+                listOf(result.style, result.palette)
+                    .filter { it.isNotBlank() }
+                    .joinToString(" - ")
+            },
+            updatedAt = nowMillis(),
+        )
+    }
+
     private companion object {
         const val PREFERENCES_NAME = "creative_workspace_store"
         const val KEY_STATE = "creative_workspace_state"
         const val MAX_PROJECTS = 50
+        const val MAX_PROJECT_ORIGINALS = 24
         const val MAX_GENERATED_RESULTS = 200
         const val MAX_FAVORITES = 200
         const val MAX_MOODBOARD_ITEMS = 300

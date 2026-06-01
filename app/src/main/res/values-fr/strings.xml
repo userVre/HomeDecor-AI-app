@@ -372,6 +372,13 @@
   <string name="locked">Verrouillé</string>
   <string name="streak">Série</string>
   <string name="daily_reward">RÉCOMPENSE QUOTIDIENNE</string>
+  <string name="daily_reward_title">Récompense quotidienne</string>
+  <string name="daily_reward_subtitle">+1 diamant, disponible une fois par jour.</string>
+  <string name="daily_reward_day_format">Jour %1$d</string>
+  <string name="daily_reward_streak_format">Série %1$d j</string>
+  <string name="daily_reward_soft_start">Rythme libre</string>
+  <string name="daily_reward_claim">Recevoir</string>
+  <string name="daily_reward_claimed">Reçue</string>
   <string name="elite_intro">Réclamez 1 diamant par jour. Au J7, recevez 3 diamants et 24h Pro dès que la récompense est confirmée.</string>
   <string name="elite_footer_syncing">Synchronisation des récompenses quotidiennes...</string>
   <string name="elite_footer_day7_confirmed">Récompense du J7 confirmée. Pro est actif.</string>

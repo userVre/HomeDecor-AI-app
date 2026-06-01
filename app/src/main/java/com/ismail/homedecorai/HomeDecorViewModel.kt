@@ -33,6 +33,11 @@ data class DecorTool(
     val serviceType: String,
 )
 
+data class AdvancedControlSpec(
+    val keepOptions: List<String>,
+    val changeOptions: List<String>,
+)
+
 data class GalleryItem(
     val id: String,
     val title: String,
@@ -54,11 +59,14 @@ data class BoardItem(
     val style: String,
     val roomType: String,
     val imageRes: Int,
+    val imageUri: String? = null,
     val imageUrl: String? = null,
+    val sourceImageUri: String? = null,
     val sourceImageUrl: String? = null,
     val status: String = "ready",
     val errorMessage: String? = null,
     val prompt: String? = null,
+    val budgetLabel: String = "",
     val createdAt: Double = 0.0,
 )
 
@@ -157,6 +165,7 @@ data class HomeDecorUiState(
     val selectedPhotos: List<SelectedPhoto> = emptyList(),
     val selectedReferenceUri: Uri? = null,
     val selectedReferenceExampleLabel: String? = null,
+    val selectedReferenceDiscoverItemId: String? = null,
     val selectedRooms: List<String> = emptyList(),
     val selectedStyles: List<String> = emptyList(),
     val selectedPalettes: List<String> = emptyList(),
@@ -164,6 +173,11 @@ data class HomeDecorUiState(
     val style: String = "",
     val palette: String = "",
     val designMode: String = "Preserve Layout",
+    val budgetMode: String = "",
+    val avoidOptions: List<String> = emptyList(),
+    val keepOptions: List<String> = emptyList(),
+    val changeOptions: List<String> = emptyList(),
+    val preserveRestOfImage: Boolean = false,
     val customPrompt: String = "",
     val layoutConstraints: String = "",
     val mobilierASupprimer: String = "",
@@ -308,16 +322,20 @@ object HomeDecorCatalog {
         "Éclairage",
     )
 
-    val floorMaterials = listOf(
-        "Parquet clair",
-        "Parquet foncé",
+    val materialLibrary = listOf(
         "Marbre",
-        "Béton ciré",
-        "Carrelage moderne",
-        "Pierre naturelle",
-        "Vinyle premium",
-        "Tapis élégant",
+        "Chêne",
+        "Noyer",
+        "Béton",
+        "Limewash",
+        "Terrazzo",
+        "Carrelage blanc",
+        "Carrelage noir",
+        "Peinture beige chaude",
+        "Peinture sombre élégante",
     )
+
+    val floorMaterials = materialLibrary
 
     val layoutGoals = listOf(
         "Circulation ouverte",
@@ -344,23 +362,67 @@ object HomeDecorCatalog {
         "Ambiance complète",
     )
 
-    val paintColors = listOf(
-        "Blanc chaud",
-        "Beige",
-        "Gris clair",
-        "Vert sauge",
-        "Bleu doux",
-        "Terracotta",
-        "Noir élégant",
+    val budgetModes = listOf(
+        "Low budget",
+        "Medium budget",
+        "Luxury",
     )
 
+    val avoidOptions = listOf(
+        "no dark colors",
+        "no structural changes",
+        "no plants",
+        "keep windows",
+        "no furniture changes",
+    )
+
+    val advancedControlSpecs = mapOf(
+        "interior" to AdvancedControlSpec(
+            keepOptions = listOf("agencement", "fenêtres", "sol", "mobilier principal"),
+            changeOptions = listOf("style", "couleurs", "décor", "éclairage"),
+        ),
+        "facade" to AdvancedControlSpec(
+            keepOptions = listOf("structure", "fenêtres", "toit", "entrée"),
+            changeOptions = listOf("façade", "couleurs", "éclairage", "paysage"),
+        ),
+        "garden" to AdvancedControlSpec(
+            keepOptions = listOf("agencement", "arbres", "piscine", "terrasse", "clôture"),
+            changeOptions = listOf("plantes", "éclairage", "mobilier", "chemins"),
+        ),
+        "layout" to AdvancedControlSpec(
+            keepOptions = listOf("murs", "fenêtres", "portes", "mobilier important"),
+            changeOptions = listOf("organisation", "circulation", "rangement", "zones"),
+        ),
+        "reference" to AdvancedControlSpec(
+            keepOptions = listOf("agencement", "mobilier", "couleurs principales"),
+            changeOptions = listOf("style", "ambiance", "matériaux", "décor"),
+        ),
+    )
+
+    val protectRestToolIds = setOf("replace", "paint", "floor")
+
+    val paintColors = materialLibrary
+
     val replaceSuggestions = listOf(
-        "Canapé beige moderne",
-        "Table basse en bois clair",
-        "Suspension noire minimaliste",
-        "Grande plante en pot",
-        "Fauteuil bouclé crème",
-        "Meuble TV noyer épuré",
+        "Remplacer le sofa",
+        "Remplacer la table",
+        "Remplacer la lampe",
+        "Remplacer le tapis",
+        "Remplacer l'art mural",
+        "Remplacer la plante",
+        "Remplacer la chaise",
+        "Remplacer le cabinet",
+    )
+
+    val replacementTemplatePrompts = mapOf(
+        "Remplacer le sofa" to "modern sofa matching the room scale, perspective, and light",
+        "Remplacer la table" to "refined table matching the room scale, perspective, and light",
+        "Remplacer la lampe" to "elegant lamp matching the room scale, perspective, and light",
+        "Remplacer le tapis" to "textured area rug matching the room scale, perspective, and light",
+        "Remplacer l'art mural" to "framed wall art matching the room scale, perspective, and light",
+        "Remplacer la plante" to "healthy indoor plant matching the room scale, perspective, and light",
+        "Remplacer la chaise" to "comfortable accent chair matching the room scale, perspective, and light",
+        "Remplacer le cabinet" to "streamlined cabinet matching the room scale, perspective, and light",
     )
 
     val styles = listOf(
@@ -841,6 +903,7 @@ class HomeDecorViewModel(
                 selectedPhotos = emptyList(),
                 selectedReferenceUri = null,
                 selectedReferenceExampleLabel = null,
+                selectedReferenceDiscoverItemId = null,
                 selectedRooms = emptyList(),
                 selectedStyles = emptyList(),
                 selectedPalettes = emptyList(),
@@ -848,6 +911,11 @@ class HomeDecorViewModel(
                 style = "",
                 palette = "",
                 designMode = HomeDecorCatalog.designModes.first().first,
+                budgetMode = "",
+                avoidOptions = emptyList(),
+                keepOptions = emptyList(),
+                changeOptions = emptyList(),
+                preserveRestOfImage = false,
                 customPrompt = "",
                 layoutConstraints = "",
                 mobilierASupprimer = "",
@@ -866,8 +934,13 @@ class HomeDecorViewModel(
         _uiState.update { it.copy(disclosureAccepted = true) }
     }
 
-    fun createProject(name: String, roomType: String = ""): Project {
-        return workspaceStore.createProject(name = name, roomType = roomType)
+    fun createProject(name: String, roomType: String = "", notes: String = "", styleInfo: String = ""): Project {
+        return workspaceStore.createProject(
+            name = name,
+            roomType = roomType,
+            notes = notes,
+            styleInfo = styleInfo,
+        )
     }
 
     fun updateProject(project: Project) {
@@ -885,12 +958,54 @@ class HomeDecorViewModel(
         return workspaceStore.toggleFavorite(generated)
     }
 
+    fun addResultToProject(result: BoardItem?, projectId: String): Boolean {
+        if (result == null || projectId.isBlank() || !result.isGeneratedResult()) return false
+        val generated = result.toGeneratedResult(_uiState.value, projectId)
+        workspaceStore.upsertGeneratedResult(generated)
+        _uiState.update { state ->
+            state.copy(board = state.board.map { if (it.id == result.id) result else it })
+        }
+        return true
+    }
+
+    fun createProjectFromResult(
+        name: String,
+        roomType: String,
+        notes: String,
+        styleInfo: String,
+        result: BoardItem?,
+    ): Project? {
+        if (result == null || !result.isGeneratedResult()) return null
+        val snapshot = _uiState.value
+        val sourceUris = snapshot.selectedPhotos.mapNotNull { it.uri?.toString() }
+            .ifEmpty { snapshot.selectedPhotoUri?.toString()?.let(::listOf) ?: emptyList() }
+        val inferredStyleInfo = listOf(
+            snapshot.style.ifBlank { result.style },
+            snapshot.palette,
+            snapshot.designMode,
+        )
+            .filter { it.isNotBlank() }
+            .joinToString(" - ")
+        val project = workspaceStore.createProject(
+            name = name,
+            roomType = roomType.ifBlank { snapshot.roomType.ifBlank { result.roomType } },
+            coverImageUrl = result.imageUrl,
+            originalPhotoUris = sourceUris,
+            originalPhotoUrls = listOfNotNull(result.sourceImageUrl),
+            notes = notes,
+            styleInfo = styleInfo.ifBlank { inferredStyleInfo },
+        )
+        addResultToProject(result, project.id)
+        return project
+    }
+
     fun addResultToMoodboard(result: BoardItem?, projectId: String? = null): Boolean {
         if (result == null || !result.isGeneratedResult()) return false
         val generated = result.toGeneratedResult(_uiState.value, projectId)
         workspaceStore.upsertGeneratedResult(generated)
         workspaceStore.upsertMoodboardItem(
             MoodboardItem(
+                id = "generated_result:${generated.id}",
                 projectId = projectId ?: generated.projectId,
                 title = listOf(generated.roomType, generated.style, generated.toolTitle)
                     .filter { it.isNotBlank() }
@@ -901,6 +1016,148 @@ class HomeDecorViewModel(
             )
         )
         return true
+    }
+
+    fun toggleDiscoverFavorite(item: GalleryItem, section: DiscoverSection): Boolean {
+        val source = discoverSource(item)
+        var isFavorite = false
+        workspaceStore.state.value.favorites.firstOrNull { it.sourceType == source }?.let { existing ->
+            workspaceStore.removeFavorite(existing.id)
+            return false
+        }
+        isFavorite = true
+        workspaceStore.upsertFavorite(
+            FavoriteItem(
+                id = source,
+                title = discoverSavedTitle(item, section),
+                toolId = section.serviceToolId,
+                roomType = section.title,
+                style = item.title,
+                imageRes = item.imageRes,
+                sourceType = source,
+            ),
+        )
+        return isFavorite
+    }
+
+    fun addDiscoverToMoodboard(item: GalleryItem, section: DiscoverSection): Boolean {
+        workspaceStore.upsertMoodboardItem(
+            MoodboardItem(
+                id = discoverSource(item),
+                title = discoverSavedTitle(item, section),
+                imageRes = item.imageRes,
+                source = discoverSource(item),
+                notes = section.title,
+            ),
+        )
+        return true
+    }
+
+    fun useDiscoverStyle(item: GalleryItem, section: DiscoverSection) {
+        val referenceTool = HomeDecorCatalog.tools.firstOrNull { it.id == "reference" } ?: return
+        _uiState.update {
+            it.copy(
+                selectedTab = MainTab.Create,
+                selectedTool = referenceTool,
+                wizardStage = WizardStage.Photo,
+                selectedPhotoUri = null,
+                selectedExampleLabel = null,
+                selectedPhotos = emptyList(),
+                selectedReferenceUri = null,
+                selectedReferenceExampleLabel = item.title,
+                selectedReferenceDiscoverItemId = item.id,
+                selectedRooms = emptyList(),
+                selectedStyles = emptyList(),
+                selectedPalettes = emptyList(),
+                roomType = section.title,
+                style = "",
+                palette = "",
+                designMode = HomeDecorCatalog.designModes.first().first,
+                budgetMode = "",
+                avoidOptions = emptyList(),
+                keepOptions = emptyList(),
+                changeOptions = emptyList(),
+                preserveRestOfImage = false,
+                customPrompt = "",
+                layoutConstraints = "",
+                mobilierASupprimer = "",
+                mobilierADeplacer = "",
+                maskStrokes = emptyList(),
+                undoneMaskStrokes = emptyList(),
+                brushSize = 28f,
+                eraserSelected = false,
+                generationError = null,
+            )
+        }
+    }
+
+    fun openHistoryResult(resultId: String): Boolean {
+        val generated = workspaceStore.state.value.generatedResults.firstOrNull { it.id == resultId } ?: return false
+        val tool = HomeDecorCatalog.tools.firstOrNull { it.id == generated.toolId || it.title == generated.toolTitle }
+            ?: _uiState.value.selectedTool
+        val boardItem = generated.toBoardItem()
+        _uiState.update { state ->
+            state.copy(
+                selectedTab = MainTab.Create,
+                selectedTool = tool,
+                wizardStage = WizardStage.Result,
+                roomType = generated.roomType,
+                style = generated.style,
+                palette = generated.palette,
+                customPrompt = generated.prompt.orEmpty(),
+                board = listOf(boardItem) + state.board.filterNot { it.id == boardItem.id },
+                generationError = null,
+            )
+        }
+        return true
+    }
+
+    fun toggleHistoryFavorite(resultId: String): Boolean {
+        val generated = workspaceStore.state.value.generatedResults.firstOrNull { it.id == resultId } ?: return false
+        return workspaceStore.toggleFavorite(generated)
+    }
+
+    fun saveHistoryResultToProject(resultId: String): Project? {
+        val workspace = workspaceStore.state.value
+        val generated = workspace.generatedResults.firstOrNull { it.id == resultId } ?: return null
+        val project = generated.projectId?.let { id -> workspace.projects.firstOrNull { it.id == id } }
+            ?: workspace.projects.firstOrNull { it.name == DEFAULT_HISTORY_PROJECT_NAME }
+            ?: workspaceStore.createProject(
+                name = DEFAULT_HISTORY_PROJECT_NAME,
+                roomType = generated.roomType,
+                coverImageUri = generated.imageUri,
+            )
+        val savedProject = if (project.coverImageUrl.isNullOrBlank() && !generated.imageUrl.isNullOrBlank()) {
+            project.copy(coverImageUrl = generated.imageUrl, coverImageUri = generated.imageUri ?: project.coverImageUri)
+                .also(workspaceStore::upsertProject)
+        } else {
+            project
+        }
+        val saved = generated.copy(projectId = savedProject.id)
+        workspaceStore.upsertGeneratedResult(saved)
+        workspaceStore.upsertMoodboardItem(
+            MoodboardItem(
+                projectId = savedProject.id,
+                title = listOf(saved.roomType, saved.style, saved.toolTitle)
+                    .filter { it.isNotBlank() }
+                    .joinToString(" - ")
+                    .ifBlank { "Project save" },
+                imageUri = saved.imageUri,
+                imageUrl = saved.imageUrl,
+                source = "generated_result:${saved.id}",
+            )
+        )
+        _uiState.update { state ->
+            state.copy(board = state.board.map { if (it.id == saved.id) saved.toBoardItem() else it })
+        }
+        return savedProject
+    }
+
+    fun deleteHistoryResult(resultId: String) {
+        workspaceStore.removeGeneratedResult(resultId)
+        _uiState.update { state ->
+            state.copy(board = state.board.filterNot { it.id == resultId })
+        }
     }
 
     fun saveCurrentToolDraft(projectId: String? = null) {
@@ -920,6 +1177,7 @@ class HomeDecorViewModel(
                 selectedExampleLabel = draft.selectedExampleLabels.firstOrNull(),
                 selectedReferenceUri = draft.referencePhotoUri?.let(Uri::parse),
                 selectedReferenceExampleLabel = draft.selectedReferenceExampleLabel,
+                selectedReferenceDiscoverItemId = draft.selectedReferenceDiscoverItemId,
                 selectedRooms = draft.selectedRooms,
                 selectedStyles = draft.selectedStyles,
                 selectedPalettes = draft.selectedPalettes,
@@ -927,6 +1185,11 @@ class HomeDecorViewModel(
                 style = draft.style,
                 palette = draft.palette,
                 designMode = draft.designMode.ifBlank { HomeDecorCatalog.designModes.first().first },
+                budgetMode = draft.budgetMode,
+                avoidOptions = draft.avoidOptions,
+                keepOptions = draft.keepOptions,
+                changeOptions = draft.changeOptions,
+                preserveRestOfImage = draft.preserveRestOfImage,
                 customPrompt = draft.customPrompt,
                 layoutConstraints = draft.layoutConstraints,
                 mobilierASupprimer = draft.mobilierASupprimer,
@@ -946,9 +1209,14 @@ class HomeDecorViewModel(
     fun claimLocalDailyReward(): Boolean {
         val reward = workspaceStore.claimDailyReward() ?: return false
         _uiState.update {
+            val nextDiamonds = it.diamonds + reward.lastRewardAmount
             it.copy(
-                diamonds = it.diamonds + reward.lastRewardAmount,
-                eliteStreakDay = reward.currentStreak.coerceIn(1, 7),
+                diamonds = nextDiamonds,
+                viewer = it.viewer.copy(
+                    credits = nextDiamonds,
+                    diamondBalance = nextDiamonds,
+                ),
+                eliteStreakDay = reward.currentStreak.coerceAtLeast(1),
                 claimedToday = true,
                 elitePassSyncState = ElitePassSyncState.LocalOnly,
                 elitePassSyncMessage = text(R.string.elite_pass_local_sync),
@@ -1002,11 +1270,11 @@ class HomeDecorViewModel(
 
     fun setReferencePhoto(uri: Uri?) {
         if (uri == null) return
-        _uiState.update { it.copy(selectedReferenceUri = uri, selectedReferenceExampleLabel = null) }
+        _uiState.update { it.copy(selectedReferenceUri = uri, selectedReferenceExampleLabel = null, selectedReferenceDiscoverItemId = null) }
     }
 
     fun selectReferenceExample(label: String) {
-        _uiState.update { it.copy(selectedReferenceExampleLabel = label, selectedReferenceUri = null) }
+        _uiState.update { it.copy(selectedReferenceExampleLabel = label, selectedReferenceUri = null, selectedReferenceDiscoverItemId = null) }
     }
 
     fun setRoom(room: String) {
@@ -1042,9 +1310,26 @@ class HomeDecorViewModel(
 
     fun setStyle(style: String) {
         _uiState.update { state ->
+            if (state.selectedTool.id in setOf("paint", "floor")) {
+                return@update state.copy(selectedStyles = listOf(style), style = style)
+            }
             val selected = toggleLimited(state.selectedStyles, style, limit = 2)
             state.copy(selectedStyles = selected, style = selected.joinToString(" + "))
         }
+    }
+
+    fun tryAnotherStyle(style: String) {
+        if (style.isBlank()) return
+        _uiState.update {
+            it.copy(
+                selectedStyles = listOf(style),
+                selectedPalettes = emptyList(),
+                style = style,
+                palette = "",
+                generationError = null,
+            )
+        }
+        generate()
     }
 
     fun setPalette(palette: String) {
@@ -1058,10 +1343,77 @@ class HomeDecorViewModel(
         _uiState.update { it.copy(designMode = mode) }
     }
 
+    fun setBudgetMode(mode: String) {
+        _uiState.update { state ->
+            state.copy(budgetMode = if (state.budgetMode == mode) "" else mode)
+        }
+    }
+
+    fun toggleAvoidOption(option: String) {
+        _uiState.update { state ->
+            val next = if (option in state.avoidOptions) {
+                state.avoidOptions - option
+            } else {
+                state.avoidOptions + option
+            }
+            state.copy(avoidOptions = next)
+        }
+    }
+
+    fun toggleKeepOption(option: String) {
+        _uiState.update { state ->
+            val next = if (option in state.keepOptions) {
+                state.keepOptions - option
+            } else {
+                state.keepOptions + option
+            }
+            state.copy(keepOptions = next)
+        }
+    }
+
+    fun toggleChangeOption(option: String) {
+        _uiState.update { state ->
+            val next = if (option in state.changeOptions) {
+                state.changeOptions - option
+            } else {
+                state.changeOptions + option
+            }
+            state.copy(changeOptions = next)
+        }
+    }
+
+    fun togglePreserveRestOfImage() {
+        _uiState.update { state ->
+            state.copy(preserveRestOfImage = !state.preserveRestOfImage)
+        }
+    }
+
+    fun tryWithExample() {
+        val snapshot = _uiState.value
+        val exampleLabel = firstExampleLabelForTool(snapshot.selectedTool.id)
+        _uiState.update { state ->
+            state.copy(
+                selectedPhotos = listOf(SelectedPhoto(exampleLabel = exampleLabel)),
+                selectedPhotoUri = null,
+                selectedExampleLabel = exampleLabel,
+                selectedReferenceUri = if (state.selectedTool.id == "reference") null else state.selectedReferenceUri,
+                selectedReferenceExampleLabel = if (state.selectedTool.id == "reference") {
+                    text(R.string.editorial_reference)
+                } else {
+                    state.selectedReferenceExampleLabel
+                },
+                selectedReferenceDiscoverItemId = if (state.selectedTool.id == "reference") null else state.selectedReferenceDiscoverItemId,
+                generationError = null,
+            )
+        }
+    }
+
     fun setCustomPrompt(prompt: String) {
         _uiState.update { state ->
             if (state.selectedTool.id == "replace") {
-                val selectedSuggestion = HomeDecorCatalog.replaceSuggestions.firstOrNull { it == prompt }
+                val selectedSuggestion = HomeDecorCatalog.replaceSuggestions.firstOrNull {
+                    it == prompt || HomeDecorCatalog.replacementTemplatePrompts[it] == prompt
+                }
                 state.copy(
                     customPrompt = prompt,
                     selectedStyles = selectedSuggestion?.let(::listOf).orEmpty(),
@@ -1078,7 +1430,7 @@ class HomeDecorViewModel(
             it.copy(
                 selectedStyles = listOf(suggestion),
                 style = suggestion,
-                customPrompt = suggestion,
+                customPrompt = HomeDecorCatalog.replacementTemplatePrompts[suggestion] ?: suggestion,
             )
         }
     }
@@ -1577,6 +1929,7 @@ class HomeDecorViewModel(
                         if (snapshot.mobilierASupprimer.isNotBlank()) append(" Mobilier a supprimer: ").append(snapshot.mobilierASupprimer).append(".")
                         if (snapshot.mobilierADeplacer.isNotBlank()) append(" Mobilier a deplacer: ").append(snapshot.mobilierADeplacer).append(".")
                         if (snapshot.customPrompt.isNotBlank()) append(" Custom notes: ").append(snapshot.customPrompt).append(".")
+                        appendAdvancedInstructions(snapshot)
                     }
                     "reference" -> buildString {
                         append("Reference style transfer. Use the first image as Votre piece and the second image as Image de reference.")
@@ -1584,8 +1937,26 @@ class HomeDecorViewModel(
                         if (snapshot.palette.isNotBlank()) append(" Transfer options: ").append(snapshot.palette).append(".")
                         append(" Preserve the source room structure, camera angle, openings, and proportions.")
                         if (snapshot.customPrompt.isNotBlank()) append(" Additional notes: ").append(snapshot.customPrompt).append(".")
+                        appendAdvancedInstructions(snapshot)
                     }
-                    else -> snapshot.customPrompt
+                    "paint" -> buildString {
+                        append("Wall-only masked material edit. Change only the masked wall area")
+                        if (snapshot.style.isNotBlank()) append(" to ").append(snapshot.style)
+                        append(". Preserve the floor, ceiling, furniture, decor, trim, windows, shadows, camera angle, and every non-wall surface exactly.")
+                        if (snapshot.customPrompt.isNotBlank()) append(" Wall finish notes: ").append(snapshot.customPrompt).append(".")
+                        appendAdvancedInstructions(snapshot)
+                    }
+                    "floor" -> buildString {
+                        append("Floor-only masked material edit. Change only the masked floor area")
+                        if (snapshot.style.isNotBlank()) append(" to ").append(snapshot.style)
+                        append(". Preserve walls, furniture, decor, baseboards, lighting, contact shadows, camera angle, and every non-floor surface exactly.")
+                        if (snapshot.customPrompt.isNotBlank()) append(" Floor finish notes: ").append(snapshot.customPrompt).append(".")
+                        appendAdvancedInstructions(snapshot)
+                    }
+                    else -> buildString {
+                        append(snapshot.customPrompt)
+                        appendAdvancedInstructions(snapshot)
+                    }
                 }
                 _uiState.update { it.copy(progressMessage = text(R.string.progress_analyzing_image)) }
                 val start = repository.startGeneration(
@@ -1606,7 +1977,8 @@ class HomeDecorViewModel(
                 _uiState.update { it.copy(progressMessage = text(R.string.progress_applying_color)) }
                 val ready = repository.waitForGeneration(anonymousId, start.generationId)
                 _uiState.update { it.copy(progressMessage = text(R.string.progress_finalizing_render)) }
-                ready.toBoardItem() ?: BoardItem(
+                val budgetLabel = start.renderLabel ?: start.quality.orEmpty()
+                ready.toBoardItem()?.copy(budgetLabel = budgetLabel) ?: BoardItem(
                     id = start.generationId,
                     toolTitle = snapshot.selectedTool.title,
                     style = snapshot.style,
@@ -1615,6 +1987,7 @@ class HomeDecorViewModel(
                     imageUrl = ready.imageUrl,
                     sourceImageUrl = ready.sourceImageUrl,
                     prompt = generationPrompt,
+                    budgetLabel = budgetLabel,
                     createdAt = System.currentTimeMillis().toDouble(),
                 )
             }.onSuccess { result ->
@@ -1758,6 +2131,13 @@ class HomeDecorViewModel(
     private fun readSelectedReference(snapshot: HomeDecorUiState): SourceImage? {
         if (snapshot.selectedTool.id != "reference") return null
         snapshot.selectedReferenceUri?.let { uri -> return readUriSource(uri) }
+        snapshot.selectedReferenceDiscoverItemId
+            ?.let(::discoverImageResForItemId)
+            ?.let { imageRes ->
+                val bitmap = BitmapFactory.decodeResource(appContext.resources, imageRes)
+                    ?: error(text(R.string.prepare_reference_failed))
+                return SourceImage(bitmap.toJpegBytes(), "image/jpeg")
+            }
         if (snapshot.selectedReferenceExampleLabel != null) {
             val bitmap = BitmapFactory.decodeResource(appContext.resources, R.drawable.tool_reference)
                 ?: error(text(R.string.prepare_reference_failed))
@@ -1823,12 +2203,15 @@ class HomeDecorViewModel(
                 toolTitle = serviceType ?: "HomeDecor AI",
                 style = style ?: "",
                 roomType = roomType ?: "",
-            imageRes = R.drawable.sample_after_luxury,
-                imageUrl = null,
-                sourceImageUrl = sourceImageUrl,
+                    imageRes = R.drawable.sample_after_luxury,
+                    imageUri = null,
+                    imageUrl = null,
+                    sourceImageUri = null,
+                    sourceImageUrl = sourceImageUrl,
                 status = "failed",
                 errorMessage = text(R.string.generation_failed_retry),
                 prompt = null,
+                budgetLabel = "",
                 createdAt = createdAt,
             )
         }
@@ -1839,11 +2222,14 @@ class HomeDecorViewModel(
             style = style ?: "",
             roomType = roomType ?: "",
             imageRes = R.drawable.sample_after_luxury,
+            imageUri = null,
             imageUrl = imageUrl,
+            sourceImageUri = null,
             sourceImageUrl = sourceImageUrl,
             status = status ?: "ready",
             errorMessage = null,
             prompt = null,
+            budgetLabel = "",
             createdAt = createdAt,
         )
     }
@@ -1859,11 +2245,14 @@ class HomeDecorViewModel(
             style = style,
             roomType = roomType,
             imageRes = R.drawable.sample_after_luxury,
+            imageUri = imageUri,
             imageUrl = imageUrl,
+            sourceImageUri = sourceImageUri,
             sourceImageUrl = sourceImageUrl,
             status = status,
             errorMessage = errorMessage,
             prompt = prompt,
+            budgetLabel = budgetLabel,
             createdAt = createdAt.toDouble(),
         )
     }
@@ -1872,19 +2261,26 @@ class HomeDecorViewModel(
         snapshot: HomeDecorUiState,
         projectId: String? = null,
     ): GeneratedResult {
+        val existing = workspaceStore.state.value.generatedResults.firstOrNull { it.id == id }
+        val sourceImageUri = snapshot.selectedPhotos.firstOrNull()?.uri?.toString()
+            ?: snapshot.selectedPhotoUri?.toString()
+            ?: existing?.sourceImageUri
         val matchingTool = HomeDecorCatalog.tools.firstOrNull { tool ->
             tool.id == toolTitle || tool.title == toolTitle || tool.title == snapshot.selectedTool.title
         }
         return GeneratedResult(
             id = id,
-            projectId = projectId,
+            projectId = projectId ?: existing?.projectId,
             toolId = matchingTool?.id ?: snapshot.selectedTool.id,
             toolTitle = toolTitle,
             roomType = roomType,
             style = style,
             palette = snapshot.palette,
             prompt = prompt ?: snapshot.customPrompt.ifBlank { null },
-            sourceImageUrl = sourceImageUrl,
+            budgetLabel = budgetLabel.ifBlank { existing?.budgetLabel.orEmpty() },
+            sourceImageUri = sourceImageUri,
+            sourceImageUrl = sourceImageUrl ?: existing?.sourceImageUrl,
+            imageUri = imageUri ?: existing?.imageUri,
             imageUrl = imageUrl,
             status = status,
             errorMessage = errorMessage,
@@ -1902,6 +2298,7 @@ class HomeDecorViewModel(
                 .ifEmpty { selectedExampleLabel?.let(::listOf) ?: emptyList() },
             referencePhotoUri = selectedReferenceUri?.toString(),
             selectedReferenceExampleLabel = selectedReferenceExampleLabel,
+            selectedReferenceDiscoverItemId = selectedReferenceDiscoverItemId,
             selectedRooms = selectedRooms,
             selectedStyles = selectedStyles,
             selectedPalettes = selectedPalettes,
@@ -1909,6 +2306,11 @@ class HomeDecorViewModel(
             style = style,
             palette = palette,
             designMode = designMode,
+            budgetMode = budgetMode,
+            avoidOptions = avoidOptions,
+            keepOptions = keepOptions,
+            changeOptions = changeOptions,
+            preserveRestOfImage = preserveRestOfImage,
             customPrompt = customPrompt,
             layoutConstraints = layoutConstraints,
             mobilierASupprimer = mobilierASupprimer,
@@ -1984,6 +2386,54 @@ class HomeDecorViewModel(
         }
     }
 
+    private fun firstExampleLabelForTool(toolId: String): String {
+        return when (toolId) {
+            "facade" -> "facade-scaffold-house"
+            "garden" -> "garden-muddy-yard"
+            "floor" -> "floor-cracked-concrete"
+            "paint" -> "paint-raw-concrete"
+            else -> "interior-empty-room"
+        }
+    }
+
+    private fun StringBuilder.appendAdvancedInstructions(snapshot: HomeDecorUiState) {
+        if (snapshot.budgetMode.isNotBlank()) {
+            if (isNotEmpty() && !last().isWhitespace()) append(" ")
+            append("Budget mode: ").append(snapshot.budgetMode).append(".")
+        }
+        if (snapshot.avoidOptions.isNotEmpty()) {
+            if (isNotEmpty() && !last().isWhitespace()) append(" ")
+            append("Avoid these: ").append(snapshot.avoidOptions.joinToString(", ")).append(".")
+        }
+        if (snapshot.keepOptions.isNotEmpty()) {
+            if (isNotEmpty() && !last().isWhitespace()) append(" ")
+            append("Advanced keep controls: preserve ").append(snapshot.keepOptions.joinToString(", ")).append(".")
+        }
+        if (snapshot.changeOptions.isNotEmpty()) {
+            if (isNotEmpty() && !last().isWhitespace()) append(" ")
+            append("Advanced change controls: change ").append(snapshot.changeOptions.joinToString(", ")).append(".")
+        }
+        if (snapshot.preserveRestOfImage) {
+            if (isNotEmpty() && !last().isWhitespace()) append(" ")
+            append("Protection: preserve the rest of the image exactly; only edit the requested target area.")
+        }
+    }
+
+    private fun discoverImageResForItemId(itemId: String): Int? =
+        HomeDecorCatalog.discoverSections
+            .asSequence()
+            .flatMap { it.items.asSequence() }
+            .firstOrNull { it.id == itemId }
+            ?.imageRes
+
+    private fun discoverSource(item: GalleryItem): String = "discover:${item.id}"
+
+    private fun discoverSavedTitle(item: GalleryItem, section: DiscoverSection): String =
+        listOf(section.title, item.title)
+            .filter { it.isNotBlank() }
+            .joinToString(" - ")
+            .ifBlank { "Discover style" }
+
     class Factory(
         private val repository: HomeDecorRepository,
         private val context: Context,
@@ -1998,6 +2448,7 @@ class HomeDecorViewModel(
         const val PREFERENCES_NAME = "home_decor_preferences"
         const val KEY_DISCLOSURE_ACCEPTED = "disclosure_accepted"
         const val KEY_ANONYMOUS_ID = "anonymous_id"
+        const val DEFAULT_HISTORY_PROJECT_NAME = "Saved designs"
     }
 
     private fun newAnonymousId(): String {

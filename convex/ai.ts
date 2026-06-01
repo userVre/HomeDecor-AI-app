@@ -424,6 +424,10 @@ function buildFallbackOrchestration(args: {
 }) {
   const normalizedRoom = args.roomType.toLowerCase();
   const styleDirection = buildStyleDirection(args.style, args.styleSelections);
+  const userSelectedSurfaceFinish =
+    trimOptional(args.style) && args.style.trim().toLowerCase() !== "modern"
+      ? styleDirection
+      : undefined;
   const balancedWallColor =
     normalizedRoom.includes("bath") ? "soft warm white" :
     normalizedRoom.includes("bed") ? "muted greige" :
@@ -436,21 +440,23 @@ function buildFallbackOrchestration(args: {
     "matte natural oak flooring";
 
   if (args.serviceType === "paint") {
+    const wallFinish = userSelectedSurfaceFinish ?? balancedWallColor;
     return {
       style: styleDirection,
-      wallColor: balancedWallColor,
-      customPrompt: `Use ${balancedWallColor} as the professionally balanced specific wall shade within a warm neutral color family after analyzing the room's current furniture, window-light direction, shadows, and materials. Preserve furniture shadows on the wall and keep all non-wall surfaces unchanged.`,
-      reason: "Fallback balanced wall color selected for a high-end result.",
+      wallColor: wallFinish,
+      customPrompt: `Use ${wallFinish} on the marked wall area only after analyzing the room's current furniture, window-light direction, shadows, and materials. Preserve furniture shadows on the wall and keep the floor, ceiling, furniture, decor, trim, windows, and all non-wall surfaces unchanged.`,
+      reason: userSelectedSurfaceFinish ? "User-selected wall material preserved for a high-end masked result." : "Fallback balanced wall color selected for a high-end result.",
       source: "fallback" as const,
     };
   }
 
   if (args.serviceType === "floor") {
+    const floorFinish = userSelectedSurfaceFinish ?? balancedFloorMaterial;
     return {
       style: styleDirection,
-      floorMaterial: balancedFloorMaterial,
-      customPrompt: `Use ${balancedFloorMaterial} as the professionally balanced flooring material after analyzing the room's furniture, lighting, and perspective. Align grain, seams, or stone veining with the source vanishing lines and preserve furniture grounding and contact shadows.`,
-      reason: "Fallback balanced floor material selected for a high-end result.",
+      floorMaterial: floorFinish,
+      customPrompt: `Use ${floorFinish} on the marked floor area only after analyzing the room's furniture, lighting, and perspective. Align grain, seams, or stone veining with the source vanishing lines and preserve walls, baseboards, furniture grounding, decor, and contact shadows.`,
+      reason: userSelectedSurfaceFinish ? "User-selected floor material preserved for a high-end masked result." : "Fallback balanced floor material selected for a high-end result.",
       source: "fallback" as const,
     };
   }
@@ -653,9 +659,9 @@ export async function requestAzureDesignOrchestration(args: {
         : '{"style":"...","styles":["...","..."],"paletteId":"...","fusionPrompt":"...","customPrompt":"...","reason":"..."}';
   const taskInstruction =
     args.serviceType === "paint"
-      ? "Analyze the room's current furniture, lighting direction, wall planes, and materials, then choose the best professional wall color. In customPrompt, distinguish the broad color family from the exact shade and require preserved furniture shadows on the wall."
+      ? "Use the user's selected wall material or shade as the target. In customPrompt, apply it only to the marked wall area and require preserved furniture shadows, trim, floor, ceiling, decor, windows, and every non-wall surface."
       : args.serviceType === "floor"
-        ? "Analyze the room's current furniture, lighting, perspective lines, and materials, then choose the best professional floor material and finish. In customPrompt, specify material depth and how grain, veins, seams, or plank direction follow the source perspective."
+        ? "Use the user's selected floor material as the target. In customPrompt, apply it only to the marked floor area, specify material depth and how grain, veins, seams, or plank direction follow the source perspective, and preserve walls, furniture, decor, and contact shadows."
         : args.serviceType === "layout"
           ? "Analyze current furniture placement, circulation paths, and architectural shell. In customPrompt, produce a spacious, ergonomic, breathable rearrangement strategy that maximizes usable floor area while keeping windows and doors in their original places."
         : args.serviceType === "replace"
