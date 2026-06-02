@@ -375,6 +375,7 @@
   <string name="toast_favorite_added">Added to favorites.</string>
   <string name="toast_favorite_removed">Removed from favorites.</string>
   <string name="toast_moodboard_added">Added to moodboard.</string>
+  <string name="toast_moodboard_removed">Removed from moodboard.</string>
   <string name="toast_share_failed">Could not share this design right now.</string>
   <string name="share_design_chooser">Share design</string>
   <string name="try_another_style">Try another style</string>

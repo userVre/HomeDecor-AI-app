@@ -1160,6 +1160,14 @@ class HomeDecorViewModel(
         }
     }
 
+    fun removeFavorite(favoriteId: String) {
+        workspaceStore.removeFavorite(favoriteId)
+    }
+
+    fun removeMoodboardItem(itemId: String) {
+        workspaceStore.removeMoodboardItem(itemId)
+    }
+
     fun saveCurrentToolDraft(projectId: String? = null) {
         workspaceStore.upsertToolDraft(_uiState.value.toToolDraft(projectId))
     }
@@ -1924,11 +1932,10 @@ class HomeDecorViewModel(
                         append("Focused space-planning task, not a normal redesign. Re-arrange existing furniture and propose a practical room layout to gain more space and fluid circulation. Preserve the exact architectural shell, camera angle, walls, windows, doors, fixed cabinetry, flooring, wall finishes, and room structure. Do not change the decor style unless needed for small staging consistency.")
                         if (snapshot.roomType.isNotBlank()) append(" Planning goals: ").append(snapshot.roomType).append(".")
                         if (snapshot.layoutConstraints.isNotBlank()) append(" Constraints: ").append(snapshot.layoutConstraints).append(".")
-                        if (snapshot.style.isNotBlank()) append(" Number of people: ").append(snapshot.style).append(".")
+                        if (snapshot.customPrompt.isNotBlank()) append(" Custom notes: ").append(snapshot.customPrompt).append(".")
                         if (snapshot.palette.isNotBlank()) append(" Mobilier a garder: ").append(snapshot.palette).append(".")
                         if (snapshot.mobilierASupprimer.isNotBlank()) append(" Mobilier a supprimer: ").append(snapshot.mobilierASupprimer).append(".")
                         if (snapshot.mobilierADeplacer.isNotBlank()) append(" Mobilier a deplacer: ").append(snapshot.mobilierADeplacer).append(".")
-                        if (snapshot.customPrompt.isNotBlank()) append(" Custom notes: ").append(snapshot.customPrompt).append(".")
                         appendAdvancedInstructions(snapshot)
                     }
                     "reference" -> buildString {
