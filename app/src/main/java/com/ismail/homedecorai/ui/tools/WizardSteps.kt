@@ -2,9 +2,7 @@ package com.ismail.homedecorai.ui.tools
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.ImageDecoder
+
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -99,6 +97,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -114,6 +113,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -129,14 +129,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
+
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
 import com.ismail.homedecorai.BoardItem
 import com.ismail.homedecorai.DecorTool
-import com.ismail.homedecorai.GeneratedResult
+
 import com.ismail.homedecorai.HomeDecorCatalog
 import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
@@ -145,7 +146,7 @@ import com.ismail.homedecorai.MaskPoint
 import com.ismail.homedecorai.MaskStroke
 import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.R
-import com.ismail.homedecorai.SelectedPhoto
+
 import com.ismail.homedecorai.WizardStage
 import com.ismail.homedecorai.hasVisibleMaskPaint
 import com.ismail.homedecorai.isGeneratedResult
@@ -154,7 +155,7 @@ import com.ismail.homedecorai.ui.components.*
 import com.ismail.homedecorai.ui.dialogs.*
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
-import com.ismail.homedecorai.ui.utility.StepCopy
+
 
 private data class ImageInputActions(
     val openGallery: () -> Unit,
@@ -209,30 +210,6 @@ private fun rememberImageInputActions(
             }
         },
     )
-}
-
-@Composable
-fun ValidationNotice(message: String) {
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = StudioErrorContainer,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioRose.copy(alpha = 0.24f), RoundedCornerShape(18.dp)),
-    ) {
-        Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
-            Text(
-                message,
-                modifier = Modifier.weight(1f),
-                color = StudioRose,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
 }
 
 @Composable

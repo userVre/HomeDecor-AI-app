@@ -2,7 +2,6 @@ package com.ismail.homedecorai.ui.tools
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
@@ -36,14 +34,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -52,6 +47,7 @@ import com.ismail.homedecorai.HomeDecorCatalog
 import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
+import com.ismail.homedecorai.ui.components.*
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
 
@@ -109,44 +105,6 @@ fun ToolsHeader(
                     Text(if (state.isPro) stringResource(R.string.pro) else stringResource(R.string.upgrade_to_pro), fontWeight = FontWeight.Bold)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun CreditPill(state: HomeDecorUiState) {
-    CreditPill(state = state, compact = false)
-}
-
-@Composable
-fun CreditPill(
-    state: HomeDecorUiState,
-    compact: Boolean,
-    onClick: (() -> Unit)? = null,
-) {
-    val balanceLabel = if (state.isPro) stringResource(R.string.pro_upper) else stringResource(R.string.diamonds_count, state.diamonds)
-    val pillDescription = if (onClick != null) {
-        stringResource(R.string.a11y_open_diamond_store_balance, balanceLabel)
-    } else {
-        balanceLabel
-    }
-    Surface(
-        onClick = { onClick?.invoke() },
-        shape = CircleShape,
-        color = if (state.isPro) StudioProContainer else StudioPaper,
-        tonalElevation = 2.dp,
-        modifier = Modifier
-            .minimumTouchTarget()
-            .border(1.dp, StudioLine, CircleShape)
-            .semantics { contentDescription = pillDescription },
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = if (compact) 10.dp else 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-        ) {
-            Icon(Icons.Rounded.Diamond, null, Modifier.size(17.dp), tint = if (state.isPro) StudioGold else StudioBlue)
-            Text(if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}", fontWeight = FontWeight.Bold)
         }
     }
 }

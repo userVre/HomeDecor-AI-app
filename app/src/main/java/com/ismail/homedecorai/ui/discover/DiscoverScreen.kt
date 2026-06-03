@@ -66,7 +66,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ismail.homedecorai.DecorTool
 import com.ismail.homedecorai.DiscoverSection
 import com.ismail.homedecorai.GalleryItem
 import com.ismail.homedecorai.HomeDecorCatalog
