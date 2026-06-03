@@ -76,20 +76,6 @@ import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
 
-fun discoverSource(item: GalleryItem): String = "discover:${item.id}"
-
-data class DiscoverPreviewTarget(
-    val item: GalleryItem,
-    val section: DiscoverSection,
-    val tool: DecorTool,
-)
-
-fun DiscoverSection.discoverPreviewTarget(item: GalleryItem): DiscoverPreviewTarget? {
-    val belongsToSection = items.any { it.id == item.id }
-    val tool = HomeDecorCatalog.tools.firstOrNull { it.id == serviceToolId }
-    return if (belongsToSection && tool != null) DiscoverPreviewTarget(item, this, tool) else null
-}
-
 @Composable
 fun DiscoverScreen(
     state: HomeDecorUiState,
