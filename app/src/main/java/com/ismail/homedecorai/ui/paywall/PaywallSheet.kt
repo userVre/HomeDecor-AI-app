@@ -659,8 +659,8 @@ fun PaywallPricesFallback(
 ) {
     Surface(
         shape = RoundedCornerShape(22.dp),
-        color = HomeDecorColors.ErrorContainer,
-        border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Error.copy(alpha = 0.24f)),
+        color = HomeDecorColors.ErrorContainerColor,
+        border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.ErrorColor.copy(alpha = 0.24f)),
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
@@ -668,8 +668,8 @@ fun PaywallPricesFallback(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Surface(shape = CircleShape, color = HomeDecorColors.Error.copy(alpha = 0.18f)) {
-                Icon(Icons.Rounded.Refresh, contentDescription = null, tint = HomeDecorColors.Error, modifier = Modifier.padding(9.dp).size(18.dp))
+            Surface(shape = CircleShape, color = HomeDecorColors.ErrorColor.copy(alpha = 0.18f)) {
+                Icon(Icons.Rounded.Refresh, contentDescription = null, tint = HomeDecorColors.ErrorColor, modifier = Modifier.padding(9.dp).size(18.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(stringResource(R.string.prices_unavailable), color = HomeDecorColors.Ink, fontWeight = FontWeight.Black)

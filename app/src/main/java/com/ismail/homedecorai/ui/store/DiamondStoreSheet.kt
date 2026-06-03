@@ -344,7 +344,7 @@ fun DiamondPackRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(108.dp)
-            .border(1.dp, if (unavailable) HomeDecorColors.Error.copy(alpha = 0.36f) else HomeDecorColors.Line, RoundedCornerShape(16.dp)),
+            .border(1.dp, if (unavailable) HomeDecorColors.ErrorColor.copy(alpha = 0.36f) else HomeDecorColors.Line, RoundedCornerShape(16.dp)),
     ) {
         Row(
             Modifier.fillMaxSize().padding(14.dp),
@@ -371,7 +371,7 @@ fun DiamondPackRow(
                 }
                 Text(stringResource(R.string.diamonds_amount, pack.diamonds), color = bodyColor)
                 if (unavailable) {
-                    Text(stringResource(R.string.pack_not_available_in_store), color = HomeDecorColors.Error, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.pack_not_available_in_store), color = HomeDecorColors.ErrorColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else if (packDescription.isNotBlank()) {
                     Text(packDescription, color = bodyColor, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }

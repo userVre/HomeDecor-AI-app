@@ -1,10 +1,13 @@
 package com.ismail.homedecorai.ui.theme
 
-import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,58 +16,75 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-object HomeDecorColors {
-    val Ink = Color(0xFF19140D)
-    val InkSoft = Color(0xFF5F5648)
-    val Canvas = Color(0xFFF6F1E9)
-    val Paper = Color(0xFFFFFCF7)
-    val Mist = Color(0xFFEDE5D8)
-    val Line = Color(0xFFD9CBB8)
-    val Secondary = Color(0xFF6A604D)
-    val Accent = Color(0xFF8A5A18)
-    val AccentContainer = Color(0xFFFFE7BA)
-    val ProContainer = Color(0xFFFFF0D1)
-    val PremiumGold = Color(0xFFD2AA5A)
-    val GoldDeep = Color(0xFFB88A3A)
-    val Dark = Color(0xFF070706)
-    val DarkSurface = Color(0xFF11100D)
-    val DarkOverlay = Color(0xFF4A3522)
-    val DisabledDarkButton = Color(0xFF2B261D)
-    val DisabledDarkText = Color(0xFFC8BDAA)
-    val Error = Color(0xFFB3261E)
-    val ErrorContainer = Color(0xFFFFEDEA)
-    val Success = Color(0xFF9BC489)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val LightColorScheme = expressiveLightColorScheme().copy(
+    primary = HomeDecorColors.Primary,
+    onPrimary = HomeDecorColors.OnPrimary,
+    primaryContainer = HomeDecorColors.PrimaryContainer,
+    onPrimaryContainer = HomeDecorColors.OnPrimaryContainer,
+    secondary = HomeDecorColors.SecondaryColor,
+    onSecondary = HomeDecorColors.OnSecondary,
+    secondaryContainer = HomeDecorColors.SecondaryContainer,
+    onSecondaryContainer = HomeDecorColors.OnSecondaryContainer,
+    tertiary = HomeDecorColors.Tertiary,
+    onTertiary = HomeDecorColors.OnTertiary,
+    tertiaryContainer = HomeDecorColors.TertiaryContainer,
+    onTertiaryContainer = HomeDecorColors.OnTertiaryContainer,
+    error = HomeDecorColors.ErrorColor,
+    onError = HomeDecorColors.OnError,
+    errorContainer = HomeDecorColors.ErrorContainerColor,
+    onErrorContainer = HomeDecorColors.OnErrorContainer,
+    background = HomeDecorColors.Background,
+    onBackground = HomeDecorColors.OnBackground,
+    surface = HomeDecorColors.Canvas,
+    onSurface = HomeDecorColors.OnSurface,
+    onSurfaceVariant = HomeDecorColors.OnSurfaceVariant,
+    outline = HomeDecorColors.Outline,
+    outlineVariant = HomeDecorColors.OutlineVariant,
+    surfaceDim = HomeDecorColors.SurfaceDim,
+    surfaceBright = HomeDecorColors.SurfaceBright,
+    surfaceContainerLowest = HomeDecorColors.SurfaceContainerLowest,
+    surfaceContainerLow = HomeDecorColors.SurfaceContainerLow,
+    surfaceContainer = HomeDecorColors.SurfaceContainer,
+    surfaceContainerHigh = HomeDecorColors.SurfaceContainerHigh,
+    surfaceContainerHighest = HomeDecorColors.SurfaceContainerHighest,
+)
+
+private val DarkColorScheme = darkColorScheme(
+    primary = HomeDecorColors.PremiumGold,
+    onPrimary = Color.Black,
+    primaryContainer = HomeDecorColors.DarkOverlay,
+    onPrimaryContainer = HomeDecorColors.PremiumGold,
+    secondary = HomeDecorColors.DisabledDarkText,
+    onSecondary = Color.Black,
+    tertiary = HomeDecorColors.GoldDeep,
+    onTertiary = Color.Black,
+    error = Color(0xFFF2B8B5),
+    onError = Color(0xFF601410),
+    background = HomeDecorColors.Dark,
+    onBackground = Color(0xFFE8E0D5),
+    surface = HomeDecorColors.DarkSurface,
+    onSurface = Color(0xFFE8E0D5),
+    onSurfaceVariant = Color(0xFFCCC3B5),
+    outline = Color(0xFF968E80),
+    outlineVariant = Color(0xFF4C4639),
+)
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun HomeDecorTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
+    MaterialExpressiveTheme(
+        colorScheme = colorScheme,
+        typography = HomeDecorTypography,
+        shapes = HomeDecorShapes,
+        content = content,
+    )
 }
-
-val StudioInk = HomeDecorColors.Ink
-val StudioAccent = HomeDecorColors.Accent
-val StudioBlue = StudioAccent
-val StudioGreen = StudioAccent
-val StudioMoss = HomeDecorColors.Secondary
-val StudioRose = HomeDecorColors.Error
-val StudioCanvas = HomeDecorColors.Canvas
-val StudioPaper = HomeDecorColors.Paper
-val StudioMist = HomeDecorColors.Mist
-val StudioLine = HomeDecorColors.Line
-val StudioBlack = HomeDecorColors.DarkSurface
-val StudioGold = HomeDecorColors.GoldDeep
-val StudioSky = StudioAccent
-val StudioViolet = StudioAccent
-val StudioPrimaryContainer = HomeDecorColors.AccentContainer
-val StudioProContainer = HomeDecorColors.ProContainer
-val StudioErrorContainer = HomeDecorColors.ErrorContainer
-
-val PaywallBg = HomeDecorColors.Dark
-val PaywallAccent = HomeDecorColors.GoldDeep
-val PaywallPremiumGold = HomeDecorColors.PremiumGold
-val PaywallCard = Color(0x14FFFAEE)
-val PaywallCardAlt = Color(0x0CFFFAEE)
-val PaywallBorder = Color(0x29EFDDB8)
-val PaywallTextSecondary = Color(0xDDF6EFE0)
-val PaywallTextMuted = Color(0xB8F6EFE0)
-val PaywallDisabledButton = HomeDecorColors.DisabledDarkButton
-val PaywallDisabledText = HomeDecorColors.DisabledDarkText
-val PaywallSuccess = HomeDecorColors.Success
 
 fun Modifier.minimumTouchTarget(): Modifier = sizeIn(minWidth = 48.dp, minHeight = 48.dp)
 

@@ -32,13 +32,11 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -86,28 +84,7 @@ fun HomeDecorApp(
     onLanguageSelected: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    MaterialExpressiveTheme(
-        colorScheme = expressiveLightColorScheme().copy(
-            primary = StudioBlue,
-            onPrimary = Color.White,
-            primaryContainer = StudioPrimaryContainer,
-            onPrimaryContainer = StudioInk,
-            secondary = StudioMoss,
-            tertiary = StudioGold,
-            onTertiary = StudioInk,
-            tertiaryContainer = StudioProContainer,
-            onTertiaryContainer = StudioInk,
-            error = StudioRose,
-            errorContainer = StudioErrorContainer,
-            surface = StudioCanvas,
-            surfaceContainer = StudioPaper,
-            surfaceContainerHigh = StudioMist,
-            background = StudioCanvas,
-            onSurface = StudioInk,
-            onSurfaceVariant = HomeDecorColors.InkSoft,
-            outlineVariant = StudioLine,
-        ),
-    ) {
+    HomeDecorTheme {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             AppScaffold(
                 state = state,
