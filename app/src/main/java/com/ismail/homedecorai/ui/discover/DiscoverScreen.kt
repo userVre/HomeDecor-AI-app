@@ -294,19 +294,9 @@ fun DiscoverSectionRow(
     onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
-    val sectionSubtitle = localizedDiscoverSectionSubtitle(section)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(sectionTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                Text(
-                    sectionSubtitle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(sectionTitle, modifier = Modifier.weight(1f).padding(end = 12.dp), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             OutlinedButton(
                 onClick = onSeeAll,
                 shape = CircleShape,
@@ -341,8 +331,6 @@ fun DiscoverDetailScreen(
     onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
-    val sectionCluster = localizedDiscoverCluster(section.cluster)
-    val sectionSubtitle = localizedDiscoverSectionSubtitle(section)
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
         Row(
             modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 14.dp, vertical = 10.dp),
@@ -354,8 +342,6 @@ fun DiscoverDetailScreen(
             }
             Column(Modifier.weight(1f)) {
                 Text(sectionTitle, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                Text(sectionSubtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(stringResource(R.string.discover_detail_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
             }
             Surface(shape = CircleShape, color = StudioPrimaryContainer, tonalElevation = 2.dp) {
                 Text(
@@ -457,7 +443,6 @@ fun GalleryCard(
     onUseStyle: () -> Unit,
 ) {
     val itemTitle = localizedGalleryTitle(item)
-    val itemCategory = localizedGalleryCategory(item.category)
     ElevatedCard(
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
@@ -472,27 +457,6 @@ fun GalleryCard(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
-            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.72f)))))
-            Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
-                Text(itemCategory, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 2)
-                Text(itemTitle, color = Color.White.copy(alpha = 0.76f), style = MaterialTheme.typography.labelMedium, maxLines = 1)
-            }
-            Row(
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                DiscoverIconAction(
-                    icon = Icons.Rounded.Star,
-                    label = stringResource(if (isFavorite) R.string.favorited else R.string.favorite),
-                    onClick = onFavorite,
-                    active = isFavorite,
-                )
-                DiscoverIconAction(
-                    icon = Icons.Rounded.Save,
-                    label = stringResource(R.string.add_to_moodboard),
-                    onClick = onMoodboard,
-                )
-            }
         }
         Button(
             onClick = onUseStyle,
