@@ -239,7 +239,7 @@ fun PaywallSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(PaywallBg)
+            .background(Color.White)
             .clickable(
                 interactionSource = modalTapBlocker,
                 indication = null,
@@ -255,9 +255,9 @@ fun PaywallSheet(
                 .padding(top = 10.dp, end = 18.dp)
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(Color.Black.copy(alpha = 0.50f)),
+                .background(HomeDecorColors.Ink.copy(alpha = 0.08f)),
         ) {
-            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
+            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = HomeDecorColors.Ink)
         }
         LazyColumn(
             contentPadding = PaddingValues(bottom = 34.dp),
@@ -271,17 +271,17 @@ fun PaywallSheet(
                     Modifier.padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(9.dp),
                 ) {
-                    Text(stringResource(R.string.paywall_eyebrow), color = PaywallPremiumGold, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.paywall_eyebrow), color = HomeDecorColors.Accent, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
                     Text(
                         stringResource(R.string.paywall_pro_studio_title),
-                        color = Color.White,
+                        color = HomeDecorColors.Ink,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Black,
                         lineHeight = 35.sp,
                     )
                     Text(
                         stringResource(R.string.paywall_pro_studio_subtitle),
-                        color = PaywallTextSecondary,
+                        color = HomeDecorColors.InkSoft,
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -299,24 +299,24 @@ fun PaywallSheet(
             item {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = PaywallCard,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+                    color = HomeDecorColors.Canvas,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Line),
                     modifier = Modifier.padding(horizontal = 20.dp),
                 ) {
                     Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(stringResource(R.string.paywall_included), color = PaywallTextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
-                        FeatureRowOnDark(Icons.Rounded.AutoAwesome, stringResource(R.string.paywall_feature_generations))
-                        FeatureRowOnDark(Icons.Rounded.Download, stringResource(R.string.paywall_feature_watermark))
-                        FeatureRowOnDark(Icons.Rounded.Refresh, stringResource(R.string.paywall_feature_fast))
-                        FeatureRowOnDark(Icons.Rounded.Save, stringResource(R.string.paywall_feature_history))
+                        Text(stringResource(R.string.paywall_included), color = HomeDecorColors.InkSoft, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
+                        FeatureRow(Icons.Rounded.AutoAwesome, stringResource(R.string.paywall_feature_generations))
+                        FeatureRow(Icons.Rounded.Download, stringResource(R.string.paywall_feature_watermark))
+                        FeatureRow(Icons.Rounded.Refresh, stringResource(R.string.paywall_feature_fast))
+                        FeatureRow(Icons.Rounded.Save, stringResource(R.string.paywall_feature_history))
                     }
                 }
             }
             item {
                 Surface(
                     shape = CircleShape,
-                    color = PaywallAccent.copy(alpha = 0.16f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallAccent.copy(alpha = 0.45f)),
+                    color = HomeDecorColors.AccentContainer.copy(alpha = 0.4f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Accent.copy(alpha = 0.25f)),
                     modifier = Modifier.padding(horizontal = 20.dp),
                 ) {
                     Row(
@@ -324,8 +324,8 @@ fun PaywallSheet(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Icon(Icons.Rounded.Check, contentDescription = null, tint = PaywallPremiumGold, modifier = Modifier.size(18.dp))
-                        Text(stringResource(R.string.paywall_google_play_checkout), color = PaywallTextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Rounded.Check, contentDescription = null, tint = HomeDecorColors.Accent, modifier = Modifier.size(18.dp))
+                        Text(stringResource(R.string.paywall_google_play_checkout), color = HomeDecorColors.InkSoft, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -374,7 +374,7 @@ fun PaywallSheet(
                             onRetry = onRetrySync,
                         )
                     } else {
-                        Text(displayMessage, color = PaywallPremiumGold, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 20.dp))
+                        Text(displayMessage, color = HomeDecorColors.Accent, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 20.dp))
                     }
                 }
             }
@@ -389,10 +389,10 @@ fun PaywallSheet(
                         enabled = !offeringsLoading && !purchaseBusy && selectedPackage != null,
                         shape = CircleShape,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PaywallPremiumGold,
-                            contentColor = PaywallBg,
-                            disabledContainerColor = PaywallDisabledButton,
-                            disabledContentColor = PaywallDisabledText,
+                            containerColor = HomeDecorColors.Accent,
+                            contentColor = Color.White,
+                            disabledContainerColor = HomeDecorColors.DisabledDarkButton,
+                            disabledContentColor = HomeDecorColors.DisabledDarkText,
                         ),
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                     ) {
@@ -409,7 +409,7 @@ fun PaywallSheet(
                     }
                     Text(
                         if (pricesUnavailable) stringResource(R.string.paywall_restore_or_retry) else stringResource(R.string.paywall_cta_fine_print),
-                        color = PaywallTextMuted,
+                        color = HomeDecorColors.InkSoft,
                         style = MaterialTheme.typography.labelSmall,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth(),
@@ -421,8 +421,8 @@ fun PaywallSheet(
                     onClick = onStore,
                     enabled = !purchaseBusy,
                     shape = RoundedCornerShape(16.dp),
-                    color = PaywallCardAlt,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+                    color = HomeDecorColors.Canvas,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Line),
                     modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().heightIn(min = 58.dp),
                 ) {
                     Row(
@@ -430,14 +430,14 @@ fun PaywallSheet(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Surface(shape = CircleShape, color = PaywallAccent.copy(alpha = 0.20f)) {
-                            Icon(Icons.Rounded.Diamond, null, Modifier.padding(9.dp).size(18.dp), tint = PaywallPremiumGold)
+                        Surface(shape = CircleShape, color = HomeDecorColors.AccentContainer) {
+                            Icon(Icons.Rounded.Diamond, null, Modifier.padding(9.dp).size(18.dp), tint = HomeDecorColors.Accent)
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(stringResource(R.string.paywall_diamond_store_title), color = Color.White, fontWeight = FontWeight.Black)
-                            Text(stringResource(R.string.paywall_diamond_store_subtitle), color = PaywallTextMuted, style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.paywall_diamond_store_title), color = HomeDecorColors.Ink, fontWeight = FontWeight.Black)
+                            Text(stringResource(R.string.paywall_diamond_store_subtitle), color = HomeDecorColors.InkSoft, style = MaterialTheme.typography.labelMedium)
                         }
-                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = PaywallTextMuted, modifier = Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = HomeDecorColors.InkSoft, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -480,13 +480,14 @@ fun PaywallSheet(
                         },
                         enabled = !purchaseBusy,
                         shape = CircleShape,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PaywallTextMuted),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Transparent),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = HomeDecorColors.InkSoft),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Line),
                     ) {
                         Text(if (restoring) stringResource(R.string.restoring) else stringResource(R.string.restore_purchases))
                     }
                 }
             }
+
         }
     }
 }
@@ -555,8 +556,8 @@ fun PaywallHeroCarousel() {
 fun PaywallOutcomeCard(title: String, body: String) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = PaywallCardAlt,
-        border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+        color = HomeDecorColors.Canvas,
+        border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Line),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -565,11 +566,11 @@ fun PaywallOutcomeCard(title: String, body: String) {
                     .width(3.dp)
                     .height(48.dp)
                     .clip(CircleShape)
-                    .background(PaywallPremiumGold),
+                    .background(HomeDecorColors.Accent),
             )
             Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
-                Text(title, color = Color.White, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
-                Text(body, color = PaywallTextSecondary, style = MaterialTheme.typography.bodySmall)
+                Text(title, color = HomeDecorColors.Ink, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Black)
+                Text(body, color = HomeDecorColors.InkSoft, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -579,14 +580,14 @@ fun PaywallOutcomeCard(title: String, body: String) {
 fun PaywallPlanSkeleton() {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = PaywallCard,
-        border = androidx.compose.foundation.BorderStroke(1.dp, PaywallBorder),
+        color = HomeDecorColors.Canvas,
+        border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Line),
         modifier = Modifier.fillMaxWidth().height(74.dp),
     ) {
         Row(Modifier.fillMaxSize().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = PaywallPremiumGold, strokeWidth = 2.dp)
+            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = HomeDecorColors.Accent, strokeWidth = 2.dp)
             Spacer(Modifier.width(12.dp))
-            Text(stringResource(R.string.loading_prices), color = PaywallTextSecondary)
+            Text(stringResource(R.string.loading_prices), color = HomeDecorColors.InkSoft)
         }
     }
 }
@@ -599,8 +600,8 @@ fun PaywallPlanCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val borderColor = if (selected) PaywallPremiumGold.copy(alpha = 0.85f) else PaywallBorder
-    val backgroundColor = if (selected) PaywallPremiumGold.copy(alpha = 0.10f) else PaywallCard
+    val borderColor = if (selected) HomeDecorColors.Accent else HomeDecorColors.Line
+    val backgroundColor = if (selected) HomeDecorColors.AccentContainer.copy(alpha = 0.3f) else HomeDecorColors.Canvas
     Surface(
         onClick = onClick,
         enabled = enabled,
@@ -613,14 +614,14 @@ fun PaywallPlanCard(
             if (plan.badge != null) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = PaywallPremiumGold.copy(alpha = 0.20f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, PaywallPremiumGold.copy(alpha = 0.45f)),
+                    color = HomeDecorColors.AccentContainer,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Accent.copy(alpha = 0.45f)),
                     modifier = Modifier.align(Alignment.TopEnd).padding(top = 10.dp, end = 14.dp),
                 ) {
                     Text(
                         plan.badge,
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                        color = PaywallPremiumGold,
+                        color = HomeDecorColors.Accent,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Black,
                     )
@@ -631,18 +632,18 @@ fun PaywallPlanCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Surface(shape = CircleShape, color = if (selected) PaywallPremiumGold else Color.White.copy(alpha = 0.12f)) {
+                Surface(shape = CircleShape, color = if (selected) HomeDecorColors.Accent else HomeDecorColors.Mist) {
                     Icon(
                         if (selected) Icons.Rounded.Check else Icons.Rounded.Star,
                         contentDescription = null,
-                        tint = if (selected) PaywallBg else PaywallPremiumGold,
+                        tint = if (selected) Color.White else HomeDecorColors.Accent,
                         modifier = Modifier.padding(8.dp).size(18.dp),
                     )
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(plan.label, color = if (plan.id == "weekly") PaywallTextMuted else PaywallTextSecondary, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
-                    Text(plan.price, color = Color.White, style = if (plan.id == "yearly") MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                    Text(plan.detail, color = if (plan.id == "yearly") PaywallSuccess else PaywallTextMuted, style = MaterialTheme.typography.labelMedium)
+                    Text(plan.label, color = if (plan.id == "weekly") HomeDecorColors.InkSoft else HomeDecorColors.Ink, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
+                    Text(plan.price, color = HomeDecorColors.Ink, style = if (plan.id == "yearly") MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(plan.detail, color = if (plan.id == "yearly") HomeDecorColors.Accent else HomeDecorColors.InkSoft, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -658,8 +659,8 @@ fun PaywallPricesFallback(
 ) {
     Surface(
         shape = RoundedCornerShape(22.dp),
-        color = Color.White.copy(alpha = 0.10f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.14f)),
+        color = HomeDecorColors.ErrorContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Error.copy(alpha = 0.24f)),
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
@@ -667,19 +668,20 @@ fun PaywallPricesFallback(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Surface(shape = CircleShape, color = StudioGold.copy(alpha = 0.18f)) {
-                Icon(Icons.Rounded.Refresh, contentDescription = null, tint = StudioGold, modifier = Modifier.padding(9.dp).size(18.dp))
+            Surface(shape = CircleShape, color = HomeDecorColors.Error.copy(alpha = 0.18f)) {
+                Icon(Icons.Rounded.Refresh, contentDescription = null, tint = HomeDecorColors.Error, modifier = Modifier.padding(9.dp).size(18.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(stringResource(R.string.prices_unavailable), color = Color.White, fontWeight = FontWeight.Black)
-                Text(message, color = Color.White.copy(alpha = 0.74f), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.prices_unavailable), color = HomeDecorColors.Ink, fontWeight = FontWeight.Black)
+                Text(message, color = HomeDecorColors.InkSoft, style = MaterialTheme.typography.bodySmall)
             }
             OutlinedButton(
                 onClick = onRetry,
                 enabled = !retrying,
                 shape = CircleShape,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = HomeDecorColors.Ink),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Line),
                 modifier = Modifier.heightIn(min = 48.dp),
             ) {
                 Text(if (retrying) stringResource(R.string.loading_ellipsis) else stringResource(R.string.retry), fontWeight = FontWeight.Bold)

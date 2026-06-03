@@ -134,9 +134,11 @@ private fun AppScaffold(
         !state.disclosureAccepted
     BackHandler(enabled = state.storeVisible) {
         viewModel.closeDiamondStore()
+        viewModel.selectTab(MainTab.Tools)
     }
     BackHandler(enabled = state.paywallVisible) {
         viewModel.closePaywall()
+        viewModel.selectTab(MainTab.Tools)
     }
     BackHandler(enabled = state.authVisible) {
         viewModel.closeAuth()
@@ -180,7 +182,10 @@ private fun AppScaffold(
                 state.storeVisible -> {
                     DiamondStoreSheet(
                         state = state,
-                        onClose = viewModel::closeDiamondStore,
+                        onClose = {
+                            viewModel.closeDiamondStore()
+                            viewModel.selectTab(MainTab.Tools)
+                        },
                         onFulfill = viewModel::fulfillDiamondPurchase,
                         onRetrySync = viewModel::retryPurchaseSync,
                         onDailyRewardClaim = viewModel::claimLocalDailyReward,
@@ -189,7 +194,10 @@ private fun AppScaffold(
                 state.paywallVisible -> {
                     PaywallSheet(
                         state = state,
-                        onClose = viewModel::closePaywall,
+                        onClose = {
+                            viewModel.closePaywall()
+                            viewModel.selectTab(MainTab.Tools)
+                        },
                         onSubscription = viewModel::syncSubscriptionFromRevenueCat,
                         onRetrySync = viewModel::retryPurchaseSync,
                         onStore = viewModel::openDiamondStore,

@@ -201,7 +201,7 @@ fun DiamondStoreSheet(
     ) {
         Surface(
             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
-            color = PaywallBg,
+            color = Color.White,
             tonalElevation = 8.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -212,8 +212,8 @@ fun DiamondStoreSheet(
                 ),
         ) {
             LazyColumn(
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 28.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 36.dp, bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 item {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
@@ -238,21 +238,21 @@ fun DiamondStoreSheet(
                     }
                 }
                 item {
-                    ElevatedCard(shape = RoundedCornerShape(20.dp), colors = CardDefaults.elevatedCardColors(containerColor = PaywallCardAlt)) {
+                    ElevatedCard(shape = RoundedCornerShape(20.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper)) {
                         Row(
                             Modifier.fillMaxWidth().padding(18.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
-                            Surface(shape = CircleShape, color = PaywallAccent.copy(alpha = 0.20f)) {
-                                Icon(Icons.Rounded.Diamond, null, Modifier.padding(12.dp).size(26.dp), tint = PaywallPremiumGold)
+                            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                                Icon(Icons.Rounded.Diamond, null, Modifier.padding(12.dp).size(26.dp), tint = StudioGold)
                             }
                             Column(Modifier.weight(1f)) {
-                                Text(stringResource(R.string.current_balance), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                                Text(stringResource(R.string.diamonds_amount, state.diamonds), color = PaywallTextSecondary)
+                                Text(stringResource(R.string.current_balance), color = StudioInk, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                                Text(stringResource(R.string.diamonds_amount, state.diamonds), color = HomeDecorColors.InkSoft)
                             }
                             IconButton(onClick = onClose) {
-                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
+                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = StudioInk)
                             }
                         }
                     }
@@ -261,17 +261,17 @@ fun DiamondStoreSheet(
                     DailyRewardCard(
                         state = state,
                         onClaim = onDailyRewardClaim,
-                        dark = true,
+                        dark = false,
                     )
                 }
                 item {
-                    Text(stringResource(R.string.get_more_credits), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.get_more_credits), color = StudioInk, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
                 if (storeLoading) {
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = PaywallPremiumGold, strokeWidth = 2.dp)
-                            Text(stringResource(R.string.loading_packs), color = PaywallTextSecondary)
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = StudioBlue, strokeWidth = 2.dp)
+                            Text(stringResource(R.string.loading_packs), color = HomeDecorColors.InkSoft)
                         }
                     }
                 }
@@ -285,7 +285,7 @@ fun DiamondStoreSheet(
                                 onRetry = onRetrySync,
                             )
                         } else {
-                            Text(notice.orEmpty(), color = PaywallTextSecondary)
+                            Text(notice.orEmpty(), color = HomeDecorColors.InkSoft)
                         }
                     }
                 }
@@ -295,7 +295,7 @@ fun DiamondStoreSheet(
                             onClick = { loadAttempt += 1 },
                             enabled = !storeLoading && loadingPack == null && !state.purchaseBusy,
                             shape = CircleShape,
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PaywallTextSecondary),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = HomeDecorColors.InkSoft),
                         ) {
                             Icon(Icons.Rounded.Refresh, null, Modifier.size(17.dp))
                             Spacer(Modifier.width(8.dp))
@@ -331,37 +331,37 @@ fun DiamondPackRow(
     val packBadge = diamondPackBadgeRes(pack)?.let { stringResource(it) }
     val packDescription = stringResource(diamondPackDescriptionRes(pack))
     val enabled = !loading && !unavailable && !purchaseBlocked
-    val titleColor = if (unavailable) PaywallTextMuted else Color.White
-    val bodyColor = if (unavailable) PaywallTextMuted else PaywallTextSecondary
+    val titleColor = if (unavailable) HomeDecorColors.InkSoft.copy(alpha = 0.5f) else StudioInk
+    val bodyColor = if (unavailable) HomeDecorColors.InkSoft.copy(alpha = 0.5f) else HomeDecorColors.InkSoft
     ElevatedCard(
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = PaywallCardAlt,
-            disabledContainerColor = PaywallCardAlt.copy(alpha = 0.72f),
+            containerColor = StudioPaper,
+            disabledContainerColor = StudioPaper.copy(alpha = 0.72f),
         ),
         modifier = Modifier
             .fillMaxWidth()
             .height(108.dp)
-            .border(1.dp, if (unavailable) StudioRose.copy(alpha = 0.36f) else PaywallBorder, RoundedCornerShape(16.dp)),
+            .border(1.dp, if (unavailable) HomeDecorColors.Error.copy(alpha = 0.36f) else HomeDecorColors.Line, RoundedCornerShape(16.dp)),
     ) {
         Row(
             Modifier.fillMaxSize().padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Surface(shape = CircleShape, color = if (unavailable) Color.White.copy(alpha = 0.08f) else PaywallAccent.copy(alpha = 0.20f)) {
-                Icon(Icons.Rounded.Diamond, null, Modifier.padding(10.dp).size(22.dp), tint = if (unavailable) bodyColor else PaywallPremiumGold)
+            Surface(shape = CircleShape, color = if (unavailable) HomeDecorColors.Mist else StudioPrimaryContainer) {
+                Icon(Icons.Rounded.Diamond, null, Modifier.padding(10.dp).size(22.dp), tint = if (unavailable) bodyColor else StudioGold)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(stringResource(R.string.pack_title, packTitle), color = titleColor, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (packBadge != null) {
-                    Surface(shape = RoundedCornerShape(6.dp), color = PaywallPremiumGold.copy(alpha = 0.18f), border = androidx.compose.foundation.BorderStroke(1.dp, PaywallPremiumGold.copy(alpha = 0.40f))) {
+                    Surface(shape = RoundedCornerShape(6.dp), color = StudioPrimaryContainer, border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Accent.copy(alpha = 0.40f))) {
                         Text(
                             packBadge,
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                            color = PaywallPremiumGold,
+                            color = HomeDecorColors.Accent,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
@@ -371,7 +371,7 @@ fun DiamondPackRow(
                 }
                 Text(stringResource(R.string.diamonds_amount, pack.diamonds), color = bodyColor)
                 if (unavailable) {
-                    Text(stringResource(R.string.pack_not_available_in_store), color = StudioRose, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.pack_not_available_in_store), color = HomeDecorColors.Error, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else if (packDescription.isNotBlank()) {
                     Text(packDescription, color = bodyColor, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
@@ -381,10 +381,10 @@ fun DiamondPackRow(
                 enabled = enabled,
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PaywallPremiumGold,
-                    contentColor = PaywallBg,
-                    disabledContainerColor = PaywallDisabledButton,
-                    disabledContentColor = PaywallDisabledText,
+                    containerColor = HomeDecorColors.Accent,
+                    contentColor = Color.White,
+                    disabledContainerColor = HomeDecorColors.DisabledDarkButton,
+                    disabledContentColor = HomeDecorColors.DisabledDarkText,
                 ),
                 modifier = Modifier.widthIn(min = 106.dp).height(48.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp),

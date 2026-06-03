@@ -311,6 +311,13 @@ object HomeDecorCatalog {
         "Tropicale",
         "Minimaliste",
         "Méditerranéen",
+        "Japandi",
+        "Rustique",
+        "Zen",
+        "Anglais",
+        "Paysage",
+        "Bohème",
+        "Scandinave",
     )
 
     val maskTargets = listOf(
@@ -457,6 +464,18 @@ object HomeDecorCatalog {
         "Crépuscule de velours",
         "Rêve d'améthyste",
         "Fuchsia Noir",
+        "Sable doré",
+        "Bleu profond",
+        "Rose poudré",
+        "Vert sauge",
+        "Terracotta chaleureux",
+        "Noir et blanc",
+        "Bleu canard",
+        "Mauve doux",
+        " Jaune moutarde",
+        " Vert forêt",
+        " Rouge brique",
+        " Bleu ciel",
     )
 
     val designModes = listOf(
@@ -1795,7 +1814,7 @@ class HomeDecorViewModel(
         _uiState.update { state ->
             state.copy(
                 wizardStage = when (state.wizardStage) {
-                    WizardStage.Photo -> if (state.selectedTool.id == "reference") WizardStage.Style else WizardStage.Space
+                    WizardStage.Photo -> if (state.selectedTool.id in setOf("reference", "paint", "floor")) WizardStage.Style else WizardStage.Space
                     WizardStage.Space -> if (state.selectedTool.id == "garden") WizardStage.Refine else WizardStage.Style
                     WizardStage.Style -> WizardStage.Refine
                     WizardStage.Refine -> WizardStage.Refine
@@ -1812,7 +1831,7 @@ class HomeDecorViewModel(
                 wizardStage = when (state.wizardStage) {
                     WizardStage.Photo -> WizardStage.Photo
                     WizardStage.Space -> WizardStage.Photo
-                    WizardStage.Style -> if (state.selectedTool.id == "reference") WizardStage.Photo else WizardStage.Space
+                    WizardStage.Style -> if (state.selectedTool.id in setOf("reference", "paint", "floor")) WizardStage.Photo else WizardStage.Space
                     WizardStage.Refine -> if (state.selectedTool.id in listOf("garden", "layout")) WizardStage.Space else WizardStage.Style
                     WizardStage.Processing -> when (state.selectedTool.id) {
                         "layout" -> WizardStage.Space

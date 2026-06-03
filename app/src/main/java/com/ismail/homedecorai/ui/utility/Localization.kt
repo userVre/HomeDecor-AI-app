@@ -955,8 +955,8 @@ fun wizardStepNumber(stage: WizardStage, tool: DecorTool? = null): Int {
     return when (stage) {
         WizardStage.Photo -> 1
         WizardStage.Space -> 2
-        WizardStage.Style -> if (tool?.id == "reference") 2 else 3
-        WizardStage.Refine -> if (tool?.id in listOf("reference", "layout")) 2 else if (tool?.id in listOf("garden", "paint", "floor", "replace")) 3 else 4
+        WizardStage.Style -> if (tool?.id in listOf("reference", "paint", "floor")) 2 else 3
+        WizardStage.Refine -> if (tool?.id in listOf("reference", "paint", "floor", "layout")) 2 else if (tool?.id in listOf("garden", "replace")) 3 else 4
         WizardStage.Processing -> wizardTotalSteps(tool)
         WizardStage.Result -> wizardTotalSteps(tool)
     }
@@ -964,8 +964,8 @@ fun wizardStepNumber(stage: WizardStage, tool: DecorTool? = null): Int {
 
 fun wizardTotalSteps(tool: DecorTool?): Int {
     return when (tool?.id) {
-        "garden", "paint", "floor", "replace" -> 3
-        "reference" -> 2
+        "garden", "replace" -> 3
+        "reference", "paint", "floor" -> 2
         "layout" -> 2
         else -> 4
     }

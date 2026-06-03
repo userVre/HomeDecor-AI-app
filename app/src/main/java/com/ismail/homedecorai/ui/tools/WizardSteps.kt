@@ -321,17 +321,17 @@ fun DesignStepHeader(
             modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Row(
+            Box(
                 modifier = Modifier.fillMaxWidth().height(48.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                if (step > 1) {
-                    IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
+                Box(modifier = Modifier.align(Alignment.CenterStart)) {
+                    if (step > 1) {
+                        IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
+                        }
+                    } else {
+                        CreditPill(state, compact = false, onClick = onCredits)
                     }
-                } else {
-                    CreditPill(state, compact = false, onClick = onCredits)
                 }
                 Text(
                     localizedWorkflowTitle(state.selectedTool),
@@ -339,9 +339,9 @@ fun DesignStepHeader(
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 12.dp).weight(1f),
+                    modifier = Modifier.align(Alignment.Center),
                 )
-                IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
+                IconButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterEnd).size(48.dp)) {
                     Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
                 }
             }
@@ -841,7 +841,6 @@ fun ChoiceStep(
         onButton = onContinue,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SourcePreviewCard(state = state)
         if (visualStyleCards || visualBuildingCards) {
             val gridRows = (copy.options.size + 2) / 3
             LazyVerticalGrid(
@@ -888,9 +887,8 @@ fun PhotoStep(
 ) {
     val isLayoutTool = state.selectedTool.id == "layout"
     val allowExamplePhotos = true
-    val isSingleSourceFlow = state.selectedTool.id in setOf("interior", "facade", "garden", "layout", "replace")
     val imageInputActions = rememberImageInputActions { uri ->
-        if (isSingleSourceFlow) viewModel.setPrimaryPhoto(uri) else viewModel.setPhoto(uri)
+        viewModel.setPhoto(uri)
     }
     val copy = photoCopy(state.selectedTool)
     val copyTitle = stringResource(copy.titleRes)
@@ -948,13 +946,11 @@ fun PhotoStep(
                         )
                     }
                 }
-                if (!isSingleSourceFlow) {
-                    SelectedPhotoStrip(
-                        state = state,
-                        onAdd = imageInputActions.openGallery,
-                        onRemove = viewModel::removePhoto,
-                    )
-                }
+                SelectedPhotoStrip(
+                    state = state,
+                    onAdd = imageInputActions.openGallery,
+                    onRemove = viewModel::removePhoto,
+                )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = imageInputActions.openGallery, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
@@ -976,7 +972,7 @@ fun PhotoStep(
                 OutlinedButton(
                     onClick = {
                         val example = examplesForTool(state.selectedTool).first().label
-                        if (isSingleSourceFlow) viewModel.selectPrimaryExamplePhoto(example) else viewModel.selectExamplePhoto(example)
+                        viewModel.selectExamplePhoto(example)
                     },
                     shape = CircleShape,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -993,7 +989,7 @@ fun PhotoStep(
                                 photo = photo,
                                 selected = state.selectedPhotos.any { it.exampleLabel == photo.label },
                                 onClick = {
-                                    if (isSingleSourceFlow) viewModel.selectPrimaryExamplePhoto(photo.label) else viewModel.selectExamplePhoto(photo.label)
+                                    viewModel.selectExamplePhoto(photo.label)
                                 },
                             )
                         }
@@ -2397,7 +2393,6 @@ fun RefineStep(
                     onRetry = viewModel::generate,
                 )
             }
-            SourcePreviewCard(state = state)
             if (state.selectedTool.id !in listOf("facade", "garden", "paint")) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
@@ -2512,12 +2507,6 @@ fun ReplacementReadinessSummary(
         ),
     ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                stringResource(R.string.replacement_confirmation_title),
-                color = if (allReady) StudioBlue else StudioInk,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
-            )
             ReplacementSummaryLine(
                 checked = hasMask,
                 text = if (hasMask) {
