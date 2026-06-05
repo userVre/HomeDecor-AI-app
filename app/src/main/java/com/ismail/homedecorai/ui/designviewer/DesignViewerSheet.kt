@@ -1,6 +1,7 @@
 package com.ismail.homedecorai.ui.designviewer
 
 import android.widget.Toast
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,6 +36,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +48,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -135,6 +141,9 @@ fun DesignViewerSheet(
             Spacer(Modifier.height(16.dp))
 
             if (result != null && result.isGeneratedResult() && result.status != "failed") {
+                var comparePosition by remember(result.id) { mutableStateOf(0.5f) }
+                val hasSourceImage = !result.sourceImageUrl.isNullOrBlank() || !result.sourceImageUri.isNullOrBlank()
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,9 +155,55 @@ fun DesignViewerSheet(
                         imageUrl = result.imageUrl,
                         imageUri = result.imageUri,
                         imageRes = result.imageRes,
-                        contentDescription = stringResource(R.string.generated_image),
+                        contentDescription = stringResource(R.string.after),
                         modifier = Modifier.fillMaxSize(),
                     )
+
+                    if (hasSourceImage) {
+                        WorkspaceImage(
+                            imageUrl = result.sourceImageUrl,
+                            imageUri = result.sourceImageUri,
+                            contentDescription = stringResource(R.string.before),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .drawWithContent {
+                                    clipRect(right = size.width * comparePosition) {
+                                        this@drawWithContent.drawContent()
+                                    }
+                                },
+                        )
+                        Canvas(Modifier.matchParentSize()) {
+                            val handleX = size.width * comparePosition
+                            drawLine(
+                                color = Color.White,
+                                start = Offset(handleX, 0f),
+                                end = Offset(handleX, size.height),
+                                strokeWidth = 3.dp.toPx(),
+                                cap = StrokeCap.Round,
+                            )
+                            drawCircle(
+                                color = Color.White,
+                                radius = 18.dp.toPx(),
+                                center = Offset(handleX, size.height / 2f),
+                            )
+                            drawLine(
+                                color = StudioInk,
+                                start = Offset(handleX - 7.dp.toPx(), size.height / 2f),
+                                end = Offset(handleX + 7.dp.toPx(), size.height / 2f),
+                                strokeWidth = 2.dp.toPx(),
+                                cap = StrokeCap.Round,
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            ComparisonBadge(stringResource(R.string.before))
+                            ComparisonBadge(stringResource(R.string.after))
+                        }
+                    }
 
                     Row(
                         modifier = Modifier
@@ -190,6 +245,14 @@ fun DesignViewerSheet(
                             )
                         }
                     }
+                }
+
+                if (hasSourceImage) {
+                    Slider(
+                        value = comparePosition,
+                        onValueChange = { comparePosition = it.coerceIn(0.05f, 0.95f) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -380,5 +443,21 @@ fun DesignViewerSheet(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ComparisonBadge(label: String) {
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = Color.Black.copy(alpha = 0.58f),
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            color = Color.White,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }

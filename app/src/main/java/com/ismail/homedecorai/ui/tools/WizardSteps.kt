@@ -2907,9 +2907,9 @@ fun ResultStep(
         eyebrow = stringResource(R.string.result),
         title = stringResource(R.string.your_result),
         body = if (isReplaceResult) stringResource(R.string.result_replace_body) else stringResource(R.string.result_saved_workspace),
-        buttonLabel = stringResource(R.string.new_creation),
-        buttonIcon = Icons.Rounded.Check,
-        onButton = { viewModel.startTool(state.selectedTool) },
+        buttonLabel = stringResource(R.string.your_design),
+        buttonIcon = Icons.Rounded.Visibility,
+        onButton = { viewModel.selectTab(MainTab.Profile) },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (result == null) {
