@@ -210,6 +210,8 @@ data class HomeDecorUiState(
     val settingsMessage: String? = null,
     val settingsBusy: Boolean = false,
     val workspace: CreativeWorkspaceState = CreativeWorkspaceState(),
+    val designViewerVisible: Boolean = false,
+    val designViewerResult: BoardItem? = null,
 )
 
 object HomeDecorCatalog {
@@ -1527,6 +1529,37 @@ class HomeDecorViewModel(
 
     fun closeSettings() {
         _uiState.update { it.copy(settingsVisible = false) }
+    }
+
+    fun openDesignViewer(item: BoardItem) {
+        _uiState.update {
+            it.copy(
+                designViewerVisible = true,
+                designViewerResult = item,
+            )
+        }
+    }
+
+    fun closeDesignViewer() {
+        _uiState.update {
+            it.copy(
+                designViewerVisible = false,
+                designViewerResult = null,
+            )
+        }
+    }
+
+    fun deleteDesignResult(item: BoardItem) {
+        _uiState.update { state ->
+            state.copy(
+                workspace = state.workspace.copy(
+                    generatedResults = state.workspace.generatedResults.filter { it.id != item.id },
+                    favorites = state.workspace.favorites.filter { it.id != item.id },
+                ),
+                designViewerVisible = false,
+                designViewerResult = null,
+            )
+        }
     }
 
     fun buyDiamondPack(pack: DiamondPack) {

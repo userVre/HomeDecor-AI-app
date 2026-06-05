@@ -63,6 +63,7 @@ import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.MainTab
 import com.ismail.homedecorai.ui.auth.AuthSheet
+import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
 import com.ismail.homedecorai.ui.dialogs.FirstLaunchDisclosure
 import com.ismail.homedecorai.ui.discover.DiscoverScreen
 import com.ismail.homedecorai.ui.paywall.PaywallSheet
@@ -74,6 +75,7 @@ import com.ismail.homedecorai.ui.tools.CreateScreen
 import com.ismail.homedecorai.ui.tools.ToolsScreen
 import com.ismail.homedecorai.ui.utility.createCameraUri
 import com.ismail.homedecorai.ui.utility.openAuth
+import com.ismail.homedecorai.ui.utility.openGooglePlayReview
 import com.ismail.homedecorai.ui.utility.tabLabelRes
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -108,6 +110,7 @@ private fun AppScaffold(
         state.paywallVisible ||
         state.authVisible ||
         state.settingsVisible ||
+        state.designViewerVisible ||
         !state.disclosureAccepted
     BackHandler(enabled = state.storeVisible) {
         viewModel.closeDiamondStore()
@@ -122,6 +125,9 @@ private fun AppScaffold(
     }
     BackHandler(enabled = state.settingsVisible) {
         viewModel.closeSettings()
+    }
+    BackHandler(enabled = state.designViewerVisible) {
+        viewModel.closeDesignViewer()
     }
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -200,6 +206,20 @@ private fun AppScaffold(
                         onLogout = viewModel::logOut,
                         currentLanguageTag = currentLanguageTag,
                         onLanguageSelected = onLanguageSelected,
+                    )
+                }
+                state.designViewerVisible -> {
+                    DesignViewerSheet(
+                        result = state.designViewerResult,
+                        onBack = viewModel::closeDesignViewer,
+                        onDelete = {
+                            state.designViewerResult?.let { viewModel.deleteDesignResult(it) }
+                        },
+                        onRegenerate = viewModel::closeDesignViewer,
+                        onLike = {
+                            openGooglePlayReview(context)
+                        },
+                        onDislike = {},
                     )
                 }
             }

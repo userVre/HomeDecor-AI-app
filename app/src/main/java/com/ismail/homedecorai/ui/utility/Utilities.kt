@@ -137,6 +137,15 @@ fun openUrl(context: android.content.Context, url: String) {
     }
 }
 
+fun openGooglePlayReview(context: android.content.Context) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))
+    runCatching {
+        context.startActivity(intent)
+    }.onFailure {
+        openUrlSafely(context, "https://play.google.com/store/apps/details?id=${context.packageName}")
+    }
+}
+
 tailrec fun android.content.Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()

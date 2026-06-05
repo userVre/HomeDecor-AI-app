@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -211,7 +212,26 @@ fun ProfileScreen(
                         state = state,
                         onCreate = { viewModel.selectTab(MainTab.Tools) },
                         onExplore = { viewModel.selectTab(MainTab.Discover) },
-                        onOpen = viewModel::openHistoryResult,
+                        onOpen = { resultId ->
+                            val result = state.workspace.generatedResults.firstOrNull { it.id == resultId }
+                            if (result != null) {
+                                viewModel.openDesignViewer(
+                                    com.ismail.homedecorai.BoardItem(
+                                        id = result.id,
+                                        toolTitle = result.toolTitle,
+                                        imageUrl = result.imageUrl,
+                                        imageUri = result.imageUri,
+                                        roomType = result.roomType,
+                                        style = result.style,
+                                        imageRes = 0,
+                                        status = result.status,
+                                    )
+                                )
+                                true
+                            } else {
+                                false
+                            }
+                        },
                         onFavorite = viewModel::toggleHistoryFavorite,
                         onSaveToProject = viewModel::saveHistoryResultToProject,
                         onDelete = viewModel::deleteHistoryResult,
@@ -243,61 +263,44 @@ fun SimpleProfileHeader(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            if (signedIn) {
-                Surface(
-                    onClick = onSignIn,
-                    shape = RoundedCornerShape(24.dp),
-                    color = StudioPaper,
-                    tonalElevation = 1.dp,
-                    modifier = Modifier.weight(1f).heightIn(min = 58.dp),
-                ) {
-                    Row(
-                        Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        ProfileAvatarPreview(state = state, signedIn = signedIn, modifier = Modifier.size(42.dp))
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                name ?: stringResource(R.string.account_connected),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                email ?: stringResource(R.string.profile_signed_in_sync),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
-            } else {
+            OutlinedButton(
+                onClick = onSettings,
+                shape = CircleShape,
+                modifier = Modifier.height(44.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp),
+            ) {
+                Icon(Icons.Rounded.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
+            }
+            if (!signedIn) {
                 Button(
                     onClick = onSignIn,
                     shape = CircleShape,
                     colors = studioPrimaryButtonColors(),
-                    modifier = Modifier.weight(1f).height(54.dp),
+                    modifier = Modifier.height(44.dp),
+                    contentPadding = PaddingValues(horizontal = 18.dp),
                 ) {
-                    ProfileAvatarPreview(state = state, signedIn = signedIn, modifier = Modifier.size(34.dp))
+                    Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Black, maxLines = 1)
+                    Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Bold, maxLines = 1)
                 }
-            }
-            OutlinedButton(
-                onClick = onSettings,
-                shape = CircleShape,
-                modifier = Modifier.height(54.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp),
-            ) {
-                Icon(Icons.Rounded.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.settings), fontWeight = FontWeight.Black, maxLines = 1)
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ProfileAvatarPreview(state = state, signedIn = signedIn, modifier = Modifier.size(36.dp))
+                    Column {
+                        Text(
+                            name ?: stringResource(R.string.account_connected),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
             }
         }
         ProfileStatusStrip(
@@ -773,7 +776,6 @@ fun PortfolioHistorySection(
     val favoriteResultIds = remember(state.workspace.favorites) {
         state.workspace.favorites.mapNotNull { it.resultId }.toSet()
     }
-    val groupedHistory = remember(historyItems) { groupHistoryResults(historyItems) }
     var deleteCandidate by remember { mutableStateOf<GeneratedResult?>(null) }
 
     deleteCandidate?.let { result ->
@@ -804,46 +806,139 @@ fun PortfolioHistorySection(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ProfileSectionTitle(icon = Icons.AutoMirrored.Rounded.ViewQuilt, title = stringResource(R.string.history_timeline))
-        Text(
-            stringResource(R.string.history_saved_count, historyItems.size),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        ProfileSectionTitle(icon = Icons.AutoMirrored.Rounded.ViewQuilt, title = stringResource(R.string.your_design))
         if (historyItems.isEmpty()) {
-            EmptyPortfolio(onCreate = onCreate, onExplore = onExplore)
+            CollectionEmptyState(
+                icon = Icons.Rounded.Diamond,
+                title = stringResource(R.string.empty_history_title),
+                body = stringResource(R.string.empty_history_body),
+                primaryLabel = stringResource(R.string.try_with_example),
+                onPrimary = onCreate,
+                secondaryLabel = stringResource(R.string.empty_action_explore_discover),
+                onSecondary = onExplore,
+                samples = sampleHistoryCards(),
+            )
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                groupedHistory.forEach { section ->
-                    HistoryTimelineGroup(
-                        section = section,
-                        favoriteResultIds = favoriteResultIds,
-                        onOpen = { result ->
+            val columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2)
+            androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                columns = columns,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.heightIn(max = 800.dp),
+            ) {
+                items(
+                    count = historyItems.size,
+                    key = { historyItems[it].id },
+                ) { index ->
+                    val result = historyItems[index]
+                    val toolTitle = boardToolTitleRes(result.toolTitle)?.let { stringResource(it) } ?: result.toolTitle
+                    val styleLabel = result.style.ifBlank { result.palette }
+                        .takeIf { it.isNotBlank() }
+                        ?.let { localizedOption(it) }
+                    val detail = listOfNotNull(styleLabel, result.budgetLabel.takeIf { it.isNotBlank() })
+                        .joinToString(" - ")
+                        .ifBlank { null }
+                    DesignGridCard(
+                        result = result,
+                        title = toolTitle,
+                        subtitle = detail,
+                        favorite = result.id in favoriteResultIds,
+                        onClick = {
                             if (!onOpen(result.id)) {
                                 Toast.makeText(context, resources.getString(R.string.history_open_failed), Toast.LENGTH_SHORT).show()
                             }
                         },
-                        onFavorite = { result ->
-                            val favorite = onFavorite(result.id)
-                            Toast.makeText(
-                                context,
-                                resources.getString(if (favorite) R.string.history_favorited else R.string.history_unfavorited),
-                                Toast.LENGTH_SHORT,
-                            ).show()
+                        onFavorite = {
+                            onFavorite(result.id)
                         },
-                        onSaveToProject = { result ->
-                            val project = onSaveToProject(result.id)
-                            Toast.makeText(
-                                context,
-                                if (project != null) {
-                                    resources.getString(R.string.history_saved_to_project, project.name)
-                                } else {
-                                    resources.getString(R.string.toast_design_save_failed)
-                                },
-                                Toast.LENGTH_SHORT,
-                            ).show()
+                        onDelete = {
+                            deleteCandidate = result
                         },
-                        onDelete = { result -> deleteCandidate = result },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DesignGridCard(
+    result: GeneratedResult,
+    title: String,
+    subtitle: String?,
+    favorite: Boolean,
+    onClick: () -> Unit,
+    onFavorite: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .background(StudioMist),
+            ) {
+                HistoryThumbnail(result = result, contentDescription = title, modifier = Modifier.fillMaxSize())
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Surface(
+                        onClick = onFavorite,
+                        shape = CircleShape,
+                        color = if (favorite) StudioGold else Color.Black.copy(alpha = 0.35f),
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Star,
+                            contentDescription = null,
+                            modifier = Modifier.padding(7.dp).size(18.dp),
+                            tint = if (favorite) Color.White else Color.White.copy(alpha = 0.85f),
+                        )
+                    }
+                }
+                Surface(
+                    onClick = onDelete,
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.35f),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                        .size(32.dp),
+                ) {
+                    Icon(
+                        Icons.Rounded.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.padding(7.dp).size(18.dp),
+                        tint = Color.White.copy(alpha = 0.85f),
+                    )
+                }
+            }
+            Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (subtitle != null) {
+                    Text(
+                        subtitle,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }

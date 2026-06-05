@@ -489,6 +489,15 @@
   <string name="free_plan">Free plan</string>
   <string name="sign_in">Sign in</string>
   <string name="sign_up">Sign up</string>
+  <string name="your_design">Your Design</string>
+  <string name="rate_this_result">Rate this result</string>
+  <string name="like">Like</string>
+  <string name="dislike">Dislike</string>
+  <string name="room_label">Room</string>
+  <string name="style_label">Style</string>
+  <string name="delete_image">Delete image</string>
+  <string name="no_designs_yet">No designs yet</string>
+  <string name="no_designs_body">Generate your first design and it will appear here.</string>
   <string name="diamonds">Diamonds</string>
   <string name="connection_state">Connection state</string>
   <string name="account_connected">Account connected</string>
