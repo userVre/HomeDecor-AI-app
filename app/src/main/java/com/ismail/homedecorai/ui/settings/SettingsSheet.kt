@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Help
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
@@ -32,6 +33,8 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.RateReview
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -162,7 +165,7 @@ fun SettingsSheet(
                 }
                 Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
             }
-            LazyColumn(contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val actionMessage = (settingsMessage ?: state.settingsMessage ?: state.purchaseMessage)?.takeIf { it.isNotBlank() }
                 if (actionMessage != null) {
                     item {
@@ -195,6 +198,7 @@ fun SettingsSheet(
                         shape = RoundedCornerShape(24.dp),
                         color = StudioPaper,
                         tonalElevation = 1.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(Modifier.padding(vertical = 6.dp)) {
@@ -203,6 +207,28 @@ fun SettingsSheet(
                                 stringResource(R.string.language),
                                 AppLocale.labelFor(context, currentLanguageTag),
                                 onClick = { languagePickerVisible = true },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Star,
+                                stringResource(R.string.rate_us),
+                                stringResource(R.string.rate_us_subtitle),
+                                onClick = { openGooglePlayReview(context) },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Share,
+                                stringResource(R.string.share_app),
+                                stringResource(R.string.share_app_subtitle),
+                                onClick = {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, "https://play.google.com/store/apps/details?id=${context.packageName}")
+                                    }
+                                    runCatching {
+                                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_app_chooser)))
+                                    }
+                                },
                             )
                             SettingsDivider()
                             SettingsRow(
@@ -236,7 +262,7 @@ fun SettingsSheet(
                             )
                             SettingsDivider()
                             SettingsRow(
-                                Icons.Rounded.Star,
+                                Icons.Rounded.Refresh,
                                 stringResource(R.string.restore_purchases),
                                 when {
                                     restoring -> stringResource(R.string.restoring)
@@ -244,39 +270,55 @@ fun SettingsSheet(
                                     else -> stringResource(R.string.restore_purchases_subtitle)
                                 },
                                 onClick = { restorePurchases() },
+                                trailingLoading = restoring,
                             )
-                            SettingsDivider()
+                        }
+                    }
+                }
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = StudioPaper,
+                        tonalElevation = 1.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(Modifier.padding(vertical = 6.dp)) {
                             SettingsRow(
                                 Icons.Rounded.Delete,
                                 stringResource(R.string.delete_account),
                                 stringResource(R.string.delete_account_subtitle),
+                                iconTint = StudioRose,
                                 onClick = {
                                     if (actionBusy) settingsMessage = resources.getString(R.string.settings_action_in_progress) else deleteDialogVisible = true
                                 },
                             )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Person,
-                                if (signedIn) stringResource(R.string.log_out) else stringResource(R.string.sign_in),
-                                if (signedIn) {
-                                    state.signedInEmail ?: stringResource(R.string.logout_subtitle)
-                                } else {
-                                    stringResource(R.string.sign_in_subtitle)
-                                },
-                                onClick = {
-                                    if (actionBusy) {
-                                        settingsMessage = resources.getString(R.string.settings_action_in_progress)
-                                    } else if (signedIn) {
-                                        logoutDialogVisible = true
-                                    } else {
-                                        val opened = openUrlSafely(context, appUrl("/sign-in"))
-                                        setLinkFailureMessage(opened)
-                                        if (opened) onClose()
-                                    }
-                                },
-                            )
+                            if (signedIn) {
+                                SettingsDivider()
+                                SettingsRow(
+                                    Icons.AutoMirrored.Rounded.Logout,
+                                    stringResource(R.string.log_out),
+                                    state.signedInEmail ?: stringResource(R.string.logout_subtitle),
+                                    iconTint = StudioRose,
+                                    onClick = {
+                                        if (actionBusy) {
+                                            settingsMessage = resources.getString(R.string.settings_action_in_progress)
+                                        } else {
+                                            logoutDialogVisible = true
+                                        }
+                                    },
+                                )
+                            }
                         }
                     }
+                }
+                item {
+                    Text(
+                        stringResource(R.string.version_label, "1.0.0"),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    )
                 }
             }
         }
@@ -340,6 +382,8 @@ fun SettingsRow(
     title: String,
     subtitle: String,
     enabled: Boolean = true,
+    iconTint: Color = StudioBlue,
+    trailingLoading: Boolean = false,
     onClick: () -> Unit,
 ) {
     ListItem(
@@ -359,22 +403,30 @@ fun SettingsRow(
             )
         },
         leadingContent = {
-            Surface(shape = CircleShape, color = if (enabled) StudioPrimaryContainer else StudioMist) {
+            Surface(shape = CircleShape, color = if (enabled) iconTint.copy(alpha = 0.12f) else StudioMist) {
                 Icon(
                     icon,
                     contentDescription = null,
-                    tint = if (enabled) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = if (enabled) iconTint else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(9.dp).size(20.dp),
                 )
             }
         },
         trailingContent = {
-            Icon(
-                Icons.AutoMirrored.Rounded.ArrowForward,
-                contentDescription = null,
-                tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(20.dp),
-            )
+            if (trailingLoading) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    Icons.AutoMirrored.Rounded.ArrowForward,
+                    contentDescription = null,
+                    tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         },
         colors = ListItemDefaults.colors(
             containerColor = if (enabled) StudioPaper else StudioMist,

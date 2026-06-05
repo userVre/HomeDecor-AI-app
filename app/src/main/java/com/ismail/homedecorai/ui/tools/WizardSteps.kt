@@ -70,6 +70,8 @@ import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.ThumbDown
+import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -2973,100 +2975,115 @@ fun ResultStep(
                 }
             }
             if (resultReady) {
-                ResultProjectWorkspaceActions(
-                    attachedProject = attachedProject,
-                    isFavorite = isFavorite,
-                    onProject = { projectPickerVisible = true },
-                    onFavorite = {
-                        val favorite = viewModel.toggleFavorite(result)
-                        Toast.makeText(context, resources.getString(if (favorite) R.string.toast_favorite_added else R.string.toast_favorite_removed), Toast.LENGTH_LONG).show()
-                    },
-                    onMoodboard = {
-                        val saved = viewModel.addResultToMoodboard(result, attachedProject?.id)
-                        Toast.makeText(context, resources.getString(if (saved) R.string.toast_moodboard_added else R.string.toast_project_save_failed), Toast.LENGTH_LONG).show()
-                    },
-                )
-                TryAnotherStyleRow(
-                    selectedStyle = state.style.ifBlank { result.style },
-                    onStyle = viewModel::tryAnotherStyle,
-                )
-                OutlinedButton(
-                    onClick = viewModel::previousStage,
-                    shape = CircleShape,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                ) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.undo_edit_design_choices), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(
-                    onClick = {
-                        val saved = viewModel.saveResultToPortfolio(result)
-                        Toast.makeText(context, if (saved) resources.getString(R.string.toast_design_saved) else resources.getString(R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
-                    },
-                    enabled = resultReady,
-                    shape = CircleShape,
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                ) {
-                    Icon(Icons.Rounded.Save, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.save), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            val shared = shareResult(context, result)
-                            if (!shared) {
-                                Toast.makeText(context, resources.getString(R.string.toast_share_failed), Toast.LENGTH_LONG).show()
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = {
+                            val saved = viewModel.saveResultToPortfolio(result)
+                            Toast.makeText(context, if (saved) resources.getString(R.string.toast_design_saved) else resources.getString(R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
+                        },
+                        enabled = resultReady,
+                        shape = CircleShape,
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+                    ) {
+                        Icon(Icons.Rounded.Save, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.save), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val saved = saveResultToGallery(context, result)
+                                Toast.makeText(context, resources.getString(if (saved) R.string.toast_design_downloaded else R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
                             }
-                        }
-                    },
-                    enabled = resultReady,
-                    shape = CircleShape,
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                ) {
-                    Icon(Icons.Rounded.Share, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.share), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        },
+                        enabled = resultReady,
+                        shape = CircleShape,
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+                    ) {
+                        Icon(Icons.Rounded.Download, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.download), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val shared = shareResult(context, result)
+                                if (!shared) {
+                                    Toast.makeText(context, resources.getString(R.string.toast_share_failed), Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        },
+                        enabled = resultReady,
+                        shape = CircleShape,
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp),
+                    ) {
+                        Icon(Icons.Rounded.Share, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.share), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                    }
                 }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            val saved = saveResultToGallery(context, result)
-                            Toast.makeText(
-                                context,
-                                resources.getString(if (saved) R.string.toast_design_downloaded else R.string.toast_design_save_failed),
-                                Toast.LENGTH_LONG,
-                            ).show()
-                        }
-                    },
-                    enabled = resultReady,
+                    onClick = viewModel::generate,
                     shape = CircleShape,
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                 ) {
-                    Icon(Icons.Rounded.Download, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.download), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                OutlinedButton(onClick = viewModel::generate, shape = CircleShape, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.regenerate), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.regenerate), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
                 }
-            }
-            OutlinedButton(
-                onClick = { showOriginal = true },
-                enabled = result != null,
-                shape = CircleShape,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-            ) {
-                Icon(Icons.Rounded.Visibility, contentDescription = null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.view_original))
+                var feedbackState by remember { mutableStateOf<String?>(null) }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.rate_this_result),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(
+                            onClick = {
+                                feedbackState = "liked"
+                                openGooglePlayReview(context)
+                            },
+                            shape = CircleShape,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (feedbackState == "liked") StudioPrimaryContainer else Color.Transparent,
+                            ),
+                            modifier = Modifier.height(44.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.ThumbUp,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = if (feedbackState == "liked") StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.like), fontWeight = FontWeight.SemiBold)
+                        }
+                        OutlinedButton(
+                            onClick = { feedbackState = "disliked" },
+                            shape = CircleShape,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (feedbackState == "disliked") StudioErrorContainer else Color.Transparent,
+                            ),
+                            modifier = Modifier.height(44.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.ThumbDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = if (feedbackState == "disliked") StudioRose else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.dislike), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
             }
         }
     }

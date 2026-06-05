@@ -613,6 +613,9 @@
   <string name="open">Open</string>
   <string name="share_app">Share app</string>
   <string name="share_app_subtitle">Invite someone to try HomeDecor AI</string>
+  <string name="rate_us">Rate us</string>
+  <string name="rate_us_subtitle">Rate us on the Play Store</string>
+  <string name="version_label">Version %1$s</string>
   <string name="share_app_text">Try HomeDecor AI to transform your spaces with AI.</string>
   <string name="share_app_long_text">Try HomeDecor AI to transform interiors, exteriors, gardens, walls, and floors.</string>
   <string name="share_app_share_text">Try HomeDecor AI to transform interiors, exteriors, gardens, walls, and floors: %1$s</string>
