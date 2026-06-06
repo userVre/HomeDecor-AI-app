@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
@@ -145,6 +146,7 @@ private fun AppScaffold(
                 ) {
                     NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, stringResource(tabLabelRes(MainTab.Tools)), viewModel::selectTab)
                     NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, stringResource(tabLabelRes(MainTab.Discover)), viewModel::selectTab)
+                    NavItem(MainTab.MyBoard, state.selectedTab, Icons.Rounded.Dashboard, stringResource(tabLabelRes(MainTab.MyBoard)), viewModel::selectTab)
                     NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
                 }
             }
@@ -157,6 +159,7 @@ private fun AppScaffold(
                     MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
+                    MainTab.MyBoard -> MyBoardScreen(state = state, viewModel = viewModel)
                     MainTab.Profile -> ProfileScreen(state = state, viewModel = viewModel)
                 }
             }

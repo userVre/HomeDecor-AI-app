@@ -49,6 +49,7 @@ data class StepCopy(
 fun tabLabelRes(tab: MainTab): Int = when (tab) {
     MainTab.Tools -> R.string.nav_tools
     MainTab.Discover -> R.string.nav_discover
+    MainTab.MyBoard -> R.string.nav_my_board
     MainTab.Profile -> R.string.nav_profile
     MainTab.Create -> R.string.workflow_interior
 }

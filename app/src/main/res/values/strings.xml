@@ -3,7 +3,8 @@
   <string name="app_name">HomeDecor AI</string>
   <string name="nav_tools">Tools</string>
   <string name="nav_discover">Discover</string>
-  <string name="nav_profile">Profile</string>
+  <string name="nav_my_board">My Board</string>
+  <string name="nav_profile">My Profile</string>
   <string name="pro">Pro</string>
   <string name="pro_upper">PRO</string>
   <string name="upgrade_to_pro">Upgrade to Pro</string>
@@ -1017,4 +1018,42 @@
   <string name="language_name_zh_hans">简体中文</string>
   <string name="language_name_zh_hant">繁體中文</string>
   <string name="language_name_vi">Tiếng Việt</string>
+
+  <!-- My Profile -->
+  <string name="my_profile_title">My Profile</string>
+  <string name="sign_in_to_account">Sign in to your account</string>
+  <string name="sign_in_to_account_body">Save your designs, access favorites,\nand sync your board across devices.</string>
+  <string name="continue_with_google">Continue with Google</string>
+  <string name="free_plan">Free Plan</string>
+  <string name="go_premium">Go Premium</string>
+  <string name="go_premium_body">Unlimited generations &amp; boards</string>
+  <string name="upgrade">Upgrade</string>
+  <string name="account_section">ACCOUNT</string>
+  <string name="settings_section">SETTINGS</string>
+  <string name="edit_profile">Edit Profile</string>
+  <string name="edit_profile_body">Name, photo, bio</string>
+  <string name="privacy_security">Privacy &amp; Security</string>
+  <string name="privacy_security_body">Password, data</string>
+  <string name="my_diamonds">My Diamonds</string>
+  <string name="my_diamonds_body">%1$d diamond · Earn more</string>
+  <string name="notifications">Notifications</string>
+  <string name="notifications_body">Daily rewards, updates</string>
+  <string name="preferences">Preferences</string>
+  <string name="preferences_body">Style, themes, language</string>
+  <string name="help_faq">Help &amp; FAQ</string>
+  <string name="help_faq_body">How-to guides</string>
+  <string name="contact_support">Contact Support</string>
+  <string name="contact_support_body">Chat with us</string>
+  <string name="sign_out">Sign Out</string>
+
+  <!-- My Board -->
+  <string name="my_board_title">My Board</string>
+  <string name="generated_tab">Generated</string>
+  <string name="favorites_tab">Favorites</string>
+  <string name="sign_in_to_view_board">Sign in to view your board</string>
+  <string name="sign_in_to_view_board_body">Your generated images and favorites are saved to your account. Sign in to access them.</string>
+  <string name="generated_images">Generated Images</string>
+  <string name="see_all">See all</string>
+  <string name="favorites_section">Favorites</string>
+  <string name="add_favorite">Add favorite</string>
 </resources>

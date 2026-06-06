@@ -76,6 +76,9 @@ val StudioViolet = StudioAccent
 val StudioPrimaryContainer = HomeDecorColors.AccentContainer
 val StudioProContainer = HomeDecorColors.ProContainer
 val StudioErrorContainer = HomeDecorColors.ErrorContainerColor
+val StudioSuccessContainer = HomeDecorColors.SuccessContainer
+val StudioBrownBtn = Color(0xFF8B6914)
+val StudioBrownDark = Color(0xFF5C4010)
 
 val PaywallBg = HomeDecorColors.Dark
 val PaywallAccent = HomeDecorColors.GoldDeep

@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import java.util.UUID
 
-enum class MainTab { Tools, Create, Discover, Profile }
+enum class MainTab { Tools, Create, Discover, MyBoard, Profile }
 enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
 enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
 
