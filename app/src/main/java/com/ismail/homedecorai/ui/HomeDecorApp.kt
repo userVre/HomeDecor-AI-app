@@ -64,6 +64,7 @@ import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.MainTab
 import com.ismail.homedecorai.ui.auth.AuthSheet
+import com.ismail.homedecorai.ui.board.MyBoardScreen
 import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
 import com.ismail.homedecorai.ui.dialogs.FirstLaunchDisclosure
 import com.ismail.homedecorai.ui.discover.DiscoverScreen

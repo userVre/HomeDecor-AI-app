@@ -302,7 +302,7 @@ private fun SignInHeroCard(
             ) {
                 Text("G", fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.continue_with_google), fontWeight = FontWeight.SemiDark)
+                Text(stringResource(R.string.continue_with_google), fontWeight = FontWeight.SemiBold)
             }
         }
     }

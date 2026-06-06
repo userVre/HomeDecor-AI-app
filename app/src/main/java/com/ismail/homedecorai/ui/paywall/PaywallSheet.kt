@@ -81,7 +81,7 @@ import com.ismail.homedecorai.purchaseAttemptMessageRes
 import com.ismail.homedecorai.rawServiceMessageToKind
 import com.ismail.homedecorai.storeMessageRes
 import com.ismail.homedecorai.ui.components.*
-import com.ismail.homedecorai.ui.profile.PurchaseSyncNotice
+import com.ismail.homedecorai.ui.components.PurchaseSyncNotice
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
 import com.revenuecat.purchases.CustomerInfo

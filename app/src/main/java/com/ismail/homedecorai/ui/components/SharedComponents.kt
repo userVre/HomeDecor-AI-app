@@ -2,6 +2,7 @@ package com.ismail.homedecorai.ui.components
 
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +28,9 @@ import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Diamond
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -58,7 +61,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ismail.homedecorai.BoardItem
+import com.ismail.homedecorai.GeneratedResult
 import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.PendingPurchaseSync
+import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.isGeneratedResult
 import com.ismail.homedecorai.ui.theme.*
@@ -823,6 +829,160 @@ fun ExamplePhotoCard(
             if (selected) {
                 Surface(modifier = Modifier.align(Alignment.TopEnd).padding(6.dp), shape = CircleShape, color = StudioBlue) {
                     Icon(Icons.Rounded.Check, null, Modifier.padding(5.dp).size(14.dp), tint = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProjectHeaderPreview(
+    project: Project,
+    results: List<GeneratedResult>,
+) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            WorkspaceImage(
+                imageUrl = project.coverImageUrl,
+                imageUri = project.coverImageUri ?: project.originalPhotoUris.firstOrNull(),
+                contentDescription = project.name,
+                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(16.dp)),
+            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    project.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    project.roomType.ifBlank { "No room type" },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (results.isNotEmpty()) {
+                    Text(
+                        "${results.size} result${if (results.size > 1) "s" else ""}",
+                        color = StudioBlue,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProjectMetricChip(
+    icon: ImageVector,
+    text: String,
+) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = StudioMist,
+    ) {
+        Row(
+            Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = StudioInk)
+            Text(text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun ProjectResultThumb(
+    title: String,
+    imageUrl: String?,
+    imageUri: String?,
+    imageRes: Int = 0,
+) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = BorderStroke(1.dp, StudioLine),
+        modifier = Modifier.size(100.dp),
+    ) {
+        Box {
+            WorkspaceImage(
+                imageUrl = imageUrl,
+                imageUri = imageUri,
+                imageRes = imageRes,
+                contentDescription = title,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Surface(
+                shape = RoundedCornerShape(bottomStart = 14.dp),
+                color = Color.Black.copy(alpha = 0.54f),
+                modifier = Modifier.align(Alignment.BottomStart),
+            ) {
+                Text(
+                    title,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PurchaseSyncNotice(
+    message: String,
+    pending: Boolean,
+    busy: Boolean,
+    onRetry: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = StudioErrorContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(Icons.Rounded.Error, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
+            Text(
+                message,
+                modifier = Modifier.weight(1f),
+                color = StudioRose,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            if (pending) {
+                OutlinedButton(
+                    onClick = onRetry,
+                    enabled = !busy,
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                    modifier = Modifier.height(38.dp),
+                ) {
+                    Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Retry", fontWeight = FontWeight.Bold)
                 }
             }
         }

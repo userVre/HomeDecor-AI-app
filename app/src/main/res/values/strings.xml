@@ -487,7 +487,7 @@
   <string name="signed_out">Signed out</string>
   <string name="diamonds_count">%1$d diamonds</string>
   <string name="active_pro">Active Pro</string>
-  <string name="free_plan">Free plan</string>
+  <string name="free_plan">Free Plan</string>
   <string name="sign_in">Sign in</string>
   <string name="sign_up">Sign up</string>
   <string name="your_design">Your Design</string>
@@ -1023,8 +1023,6 @@
   <string name="my_profile_title">My Profile</string>
   <string name="sign_in_to_account">Sign in to your account</string>
   <string name="sign_in_to_account_body">Save your designs, access favorites,\nand sync your board across devices.</string>
-  <string name="continue_with_google">Continue with Google</string>
-  <string name="free_plan">Free Plan</string>
   <string name="go_premium">Go Premium</string>
   <string name="go_premium_body">Unlimited generations &amp; boards</string>
   <string name="upgrade">Upgrade</string>
@@ -1038,7 +1036,6 @@
   <string name="my_diamonds_body">%1$d diamond · Earn more</string>
   <string name="notifications">Notifications</string>
   <string name="notifications_body">Daily rewards, updates</string>
-  <string name="preferences">Preferences</string>
   <string name="preferences_body">Style, themes, language</string>
   <string name="help_faq">Help &amp; FAQ</string>
   <string name="help_faq_body">How-to guides</string>
@@ -1053,7 +1050,6 @@
   <string name="sign_in_to_view_board">Sign in to view your board</string>
   <string name="sign_in_to_view_board_body">Your generated images and favorites are saved to your account. Sign in to access them.</string>
   <string name="generated_images">Generated Images</string>
-  <string name="see_all">See all</string>
   <string name="favorites_section">Favorites</string>
   <string name="add_favorite">Add favorite</string>
 </resources>

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,6 +61,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.BoardItem
 import com.ismail.homedecorai.FavoriteItem
+import com.ismail.homedecorai.GeneratedResult
 import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
@@ -266,10 +268,11 @@ private fun GeneratedSection(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(generatedItems, key = { it.id }) { result ->
+                    val boardItem = result.toBoardItem()
                     GeneratedCard(
-                        result = result,
+                        result = boardItem,
                         onClick = {
-                            viewModel.openDesignViewer(result)
+                            viewModel.openDesignViewer(boardItem)
                         },
                     )
                 }
@@ -432,9 +435,9 @@ private fun FavoriteBoardCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (favorite.subtitle.isNotBlank()) {
+                if (favorite.style.isNotBlank() || favorite.roomType.isNotBlank()) {
                     Text(
-                        favorite.subtitle,
+                        favorite.style.ifBlank { favorite.roomType },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -514,3 +517,20 @@ private fun EmptyBoardState() {
         )
     }
 }
+
+private fun GeneratedResult.toBoardItem(): BoardItem = BoardItem(
+    id = id,
+    toolTitle = toolTitle,
+    style = style,
+    roomType = roomType,
+    imageRes = R.drawable.sample_after_luxury,
+    imageUri = imageUri,
+    imageUrl = imageUrl,
+    sourceImageUri = sourceImageUri,
+    sourceImageUrl = sourceImageUrl,
+    status = status,
+    errorMessage = errorMessage,
+    prompt = prompt,
+    budgetLabel = budgetLabel,
+    createdAt = createdAt.toDouble(),
+)

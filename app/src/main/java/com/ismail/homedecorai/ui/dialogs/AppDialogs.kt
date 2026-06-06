@@ -62,9 +62,9 @@ import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.components.WorkspaceImage
-import com.ismail.homedecorai.ui.profile.ProjectHeaderPreview
-import com.ismail.homedecorai.ui.profile.ProjectMetricChip
-import com.ismail.homedecorai.ui.profile.ProjectResultThumb
+import com.ismail.homedecorai.ui.components.ProjectHeaderPreview
+import com.ismail.homedecorai.ui.components.ProjectMetricChip
+import com.ismail.homedecorai.ui.components.ProjectResultThumb
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.formatProjectDate
 
