@@ -28,8 +28,6 @@ import androidx.compose.material.icons.automirrored.rounded.Help
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.RateReview
@@ -246,7 +244,7 @@ fun SettingsSheet(
                             )
                             SettingsDivider()
                             SettingsRow(
-                                Icons.Rounded.Lock,
+                                Icons.Rounded.Policy,
                                 stringResource(R.string.privacy_policy),
                                 stringResource(R.string.privacy_subtitle),
                                 onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/privacy"))) },

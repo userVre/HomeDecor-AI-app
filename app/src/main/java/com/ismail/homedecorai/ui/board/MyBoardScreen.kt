@@ -70,7 +70,6 @@ import com.ismail.homedecorai.isGeneratedResult
 import com.ismail.homedecorai.ui.components.WorkspaceImage
 import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
 import com.ismail.homedecorai.ui.theme.*
-import com.ismail.homedecorai.ui.utility.openAuth
 
 enum class BoardTab { Generated, Favorites }
 
@@ -126,7 +125,7 @@ fun MyBoardScreen(
 
         if (!signedIn) {
             BoardLockedState(
-                onSignIn = { openAuth(context) },
+                onSignIn = { viewModel.openAuth() },
             )
         } else {
             when (selectedTab) {
@@ -322,12 +321,11 @@ private fun FavoritesBoardSection(
             modifier = Modifier.heightIn(max = 600.dp),
         ) {
             items(favorites, key = { it.id }) { favorite ->
+                val boardItem = favorite.toBoardItem()
                 FavoriteBoardCard(
                     favorite = favorite,
                     onClick = {
-                        if (favorite.resultId != null) {
-                            viewModel.openHistoryResult(favorite.resultId)
-                        }
+                        viewModel.openDesignViewer(boardItem)
                     },
                     onDelete = {
                         viewModel.removeFavorite(favorite.id)
@@ -491,5 +489,22 @@ private fun GeneratedResult.toBoardItem(): BoardItem = BoardItem(
     errorMessage = errorMessage,
     prompt = prompt,
     budgetLabel = budgetLabel,
+    createdAt = createdAt.toDouble(),
+)
+
+private fun FavoriteItem.toBoardItem(): BoardItem = BoardItem(
+    id = id,
+    toolTitle = toolId,
+    style = style,
+    roomType = roomType,
+    imageRes = imageRes,
+    imageUri = imageUri,
+    imageUrl = imageUrl,
+    sourceImageUri = null,
+    sourceImageUrl = null,
+    status = "completed",
+    errorMessage = null,
+    prompt = notes,
+    budgetLabel = "",
     createdAt = createdAt.toDouble(),
 )

@@ -78,73 +78,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 @Composable
-fun FeatureRow(
-    icon: ImageVector,
-    text: String,
-) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Surface(shape = CircleShape, color = StudioPrimaryContainer) {
-            Icon(icon, contentDescription = null, tint = StudioBlue, modifier = Modifier.padding(8.dp).size(18.dp))
-        }
-        Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-fun FeatureRowOnDark(icon: ImageVector, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.12f)) {
-            Icon(icon, contentDescription = null, tint = PaywallPremiumGold, modifier = Modifier.padding(8.dp).size(18.dp))
-        }
-        Text(text, color = PaywallTextSecondary, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-fun ComparisonBadge(label: String) {
-    Surface(
-        shape = CircleShape,
-        color = Color.Black.copy(alpha = 0.54f),
-    ) {
-        Text(
-            label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-            color = Color.White,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-        )
-    }
-}
-
-@Composable
-fun CompactFilterChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = {
-            Text(
-                label,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        leadingIcon = if (selected) {
-            {
-                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-            }
-        } else {
-            null
-        },
-        modifier = modifier.heightIn(min = 44.dp),
-    )
-}
-
-@Composable
 fun ValidationNotice(message: String) {
     Surface(
         shape = RoundedCornerShape(18.dp),
@@ -409,51 +342,6 @@ fun ReplaceSuggestionChip(
 }
 
 @Composable
-fun ColorSwatchCard(
-    label: String,
-    color: Color,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val displayLabel = localizedOption(label)
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
-        color = studioStateContainer(selected),
-        tonalElevation = studioStateElevation(selected),
-        modifier = modifier.height(72.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
-    ) {
-        Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(color)
-                    .border(1.dp, StudioLine, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (selected) {
-                    Icon(
-                        Icons.Rounded.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (color == Color(0xFFFAF9F6) || color == Color(0xFFE2E2E2)) Color.Black else Color.White,
-                    )
-                }
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-                Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            }
-        }
-    }
-}
-
-@Composable
 fun ModeCard(
     title: String,
     description: String,
@@ -642,11 +530,6 @@ fun DailyRewardQuietPill(
 }
 
 @Composable
-fun CreditPill(state: HomeDecorUiState) {
-    CreditPill(state = state, compact = false)
-}
-
-@Composable
 fun CreditPill(
     state: HomeDecorUiState,
     compact: Boolean,
@@ -675,54 +558,6 @@ fun CreditPill(
         ) {
             Icon(Icons.Rounded.Diamond, null, Modifier.size(17.dp), tint = if (state.isPro) StudioGold else StudioBlue)
             Text(if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}", fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun BoardCard(item: BoardItem) {
-    val toolTitle = boardToolTitleRes(item.toolTitle)?.let { stringResource(it) } ?: item.toolTitle
-    val ready = item.isGeneratedResult()
-    val failed = item.status == "failed"
-    val statusText = stringResource(
-        when {
-            failed -> R.string.failed
-            ready -> R.string.ready
-            else -> R.string.processing_ellipsis
-        },
-    )
-    ElevatedCard(shape = RoundedCornerShape(20.dp), colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper)) {
-        Box(Modifier.fillMaxWidth().height(208.dp)) {
-            when {
-                failed -> ImageFailureState(modifier = Modifier.fillMaxSize())
-                ready -> WorkspaceImage(
-                    imageUrl = item.imageUrl,
-                    imageUri = item.imageUri,
-                    imageRes = item.imageRes,
-                    contentDescription = toolTitle,
-                    modifier = Modifier.fillMaxSize(),
-                )
-                else -> ImageLoadingState(modifier = Modifier.fillMaxSize())
-            }
-            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.72f)))))
-            Surface(
-                shape = CircleShape,
-                color = if (ready) StudioPrimaryContainer else if (failed) StudioErrorContainer else StudioMist,
-                modifier = Modifier.align(Alignment.TopStart).padding(10.dp),
-            ) {
-                Text(
-                    statusText,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                    color = if (failed) StudioRose else StudioInk,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                )
-            }
-            Column(Modifier.align(Alignment.BottomStart).padding(12.dp)) {
-                Text(toolTitle, color = Color.White, fontWeight = FontWeight.Black, maxLines = 1)
-                Text(stringResource(R.string.design_pair_format, localizedOption(item.roomType), localizedOption(item.style)), color = Color.White.copy(alpha = 0.76f), style = MaterialTheme.typography.labelMedium, maxLines = 1)
-            }
         }
     }
 }

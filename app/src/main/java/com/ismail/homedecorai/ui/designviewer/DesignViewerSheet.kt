@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Diamond
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Save
@@ -32,7 +33,6 @@ import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -105,8 +105,8 @@ fun DesignViewerSheet(
                 Surface(
                     onClick = onBack,
                     shape = RoundedCornerShape(14.dp),
-                    color = Color.White,
-                    shadowElevation = 2.dp,
+                    color = StudioPaper,
+                    tonalElevation = 1.dp,
                     modifier = Modifier.size(44.dp),
                 ) {
                     Icon(
@@ -124,7 +124,8 @@ fun DesignViewerSheet(
                 Surface(
                     onClick = onBack,
                     shape = CircleShape,
-                    color = Color(0xFFF0EDE8),
+                    color = StudioPaper,
+                    tonalElevation = 1.dp,
                     modifier = Modifier.size(44.dp),
                 ) {
                     Icon(
@@ -184,21 +185,20 @@ fun DesignViewerSheet(
                                 radius = 20.dp.toPx(),
                                 center = Offset(handleX, size.height / 2f),
                             )
-                            val barWidth = 3.dp.toPx()
+                            val barWidth = 2.dp.toPx()
+                            val barGap = 4.dp.toPx()
                             val barHeight = 14.dp.toPx()
-                            val barGap = 3.dp.toPx()
-                            val centerY = size.height / 2f
                             drawLine(
                                 color = StudioInk,
-                                start = Offset(handleX - barGap - barWidth / 2, centerY - barHeight / 2),
-                                end = Offset(handleX - barGap - barWidth / 2, centerY + barHeight / 2),
+                                start = Offset(handleX - barGap - barWidth, size.height / 2f - barHeight / 2),
+                                end = Offset(handleX - barGap - barWidth, size.height / 2f + barHeight / 2),
                                 strokeWidth = barWidth,
                                 cap = StrokeCap.Round,
                             )
                             drawLine(
                                 color = StudioInk,
-                                start = Offset(handleX + barGap + barWidth / 2, centerY - barHeight / 2),
-                                end = Offset(handleX + barGap + barWidth / 2, centerY + barHeight / 2),
+                                start = Offset(handleX + barGap, size.height / 2f - barHeight / 2),
+                                end = Offset(handleX + barGap, size.height / 2f + barHeight / 2),
                                 strokeWidth = barWidth,
                                 cap = StrokeCap.Round,
                             )
@@ -206,26 +206,25 @@ fun DesignViewerSheet(
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color.White,
-                        shadowElevation = 2.dp,
+                        shape = CircleShape,
+                        color = StudioBlue,
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .padding(12.dp)
                             .size(40.dp),
                     ) {
                         Icon(
-                            Icons.Rounded.Diamond,
+                            Icons.Rounded.GridView,
                             contentDescription = null,
                             modifier = Modifier.padding(8.dp).size(24.dp),
-                            tint = StudioBlue,
+                            tint = Color.White,
                         )
                     }
 
                     Surface(
                         onClick = { onDelete?.invoke() },
                         shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.35f),
+                        color = Color.Black.copy(alpha = 0.4f),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(12.dp)
@@ -241,7 +240,7 @@ fun DesignViewerSheet(
 
                     Surface(
                         shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.35f),
+                        color = Color.Black.copy(alpha = 0.4f),
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(12.dp)
@@ -249,8 +248,8 @@ fun DesignViewerSheet(
                     ) {
                         Icon(
                             Icons.Rounded.Lock,
-                            contentDescription = stringResource(R.string.lock),
-                            modifier = Modifier.padding(10.dp).size(20.dp),
+                            contentDescription = null,
+                            modifier = Modifier.padding(8.dp).size(24.dp),
                             tint = Color.White,
                         )
                     }
@@ -356,10 +355,6 @@ fun DesignViewerSheet(
 
                 Spacer(Modifier.height(16.dp))
 
-                HorizontalDivider(color = StudioLine)
-
-                Spacer(Modifier.height(12.dp))
-
                 Text(
                     stringResource(R.string.rate_this_result),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -379,7 +374,7 @@ fun DesignViewerSheet(
                             feedbackState = "liked"
                             onLike?.invoke()
                         },
-                        shape = RoundedCornerShape(24.dp),
+                        shape = CircleShape,
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (feedbackState == "liked") StudioPrimaryContainer else Color.Transparent,
                         ),
@@ -400,7 +395,7 @@ fun DesignViewerSheet(
                             feedbackState = "disliked"
                             onDislike?.invoke()
                         },
-                        shape = RoundedCornerShape(24.dp),
+                        shape = CircleShape,
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (feedbackState == "disliked") StudioErrorContainer else Color.Transparent,
                         ),

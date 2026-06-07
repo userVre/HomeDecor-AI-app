@@ -101,31 +101,6 @@ fun UriOrResourceImage(
 }
 
 @Composable
-fun SavedCollectionImage(
-    imageRes: Int,
-    imageUrl: String?,
-    imageUri: String?,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-) {
-    if (imageRes != 0) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = contentDescription,
-            modifier = modifier,
-            contentScale = ContentScale.Crop,
-        )
-    } else {
-        WorkspaceImage(
-            imageUrl = imageUrl,
-            imageUri = imageUri,
-            contentDescription = contentDescription,
-            modifier = modifier,
-        )
-    }
-}
-
-@Composable
 fun WorkspaceImage(
     imageUrl: String?,
     imageUri: String?,

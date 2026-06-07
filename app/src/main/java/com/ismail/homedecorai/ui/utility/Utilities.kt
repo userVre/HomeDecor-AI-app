@@ -104,10 +104,6 @@ fun openAuth(context: android.content.Context) {
     }
 }
 
-fun showToast(context: android.content.Context, message: String) {
-    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-}
-
 fun appUrl(path: String): String {
     val base = BuildConfig.APP_URL.trim().trimEnd('/').ifBlank { "https://homedecor.ai" }
     return if (path.isBlank()) base else base + path
@@ -117,24 +113,6 @@ fun openUrlSafely(context: android.content.Context, url: String): Boolean {
     return runCatching {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }.isSuccess
-}
-
-fun shareTextSafely(context: android.content.Context, text: String): Boolean {
-    return runCatching {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-        }
-        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_app_chooser)))
-    }.isSuccess
-}
-
-fun openUrl(context: android.content.Context, url: String) {
-    runCatching {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }.onFailure {
-        showToast(context, context.getString(R.string.open_link_failed))
-    }
 }
 
 fun openGooglePlayReview(context: android.content.Context) {

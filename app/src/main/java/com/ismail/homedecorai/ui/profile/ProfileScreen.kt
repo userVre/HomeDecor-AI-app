@@ -26,13 +26,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Help
 import androidx.compose.material.icons.automirrored.rounded.Logout
-import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Email
-import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
@@ -123,7 +121,7 @@ fun ProfileScreen(
                             iconTint = StudioGold,
                             title = stringResource(R.string.edit_profile),
                             subtitle = stringResource(R.string.edit_profile_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -132,7 +130,7 @@ fun ProfileScreen(
                             iconTint = StudioRose,
                             title = stringResource(R.string.privacy_security),
                             subtitle = stringResource(R.string.privacy_security_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -166,7 +164,7 @@ fun ProfileScreen(
                             iconTint = StudioBlue,
                             title = stringResource(R.string.notifications),
                             subtitle = stringResource(R.string.notifications_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -175,7 +173,7 @@ fun ProfileScreen(
                             iconTint = StudioBlue,
                             title = stringResource(R.string.help_faq),
                             subtitle = stringResource(R.string.help_faq_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -184,7 +182,7 @@ fun ProfileScreen(
                             iconTint = StudioGreen,
                             title = stringResource(R.string.contact_support),
                             subtitle = stringResource(R.string.contact_support_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                     } else {
                         ProfileRow(
@@ -193,7 +191,7 @@ fun ProfileScreen(
                             iconTint = StudioBlue,
                             title = stringResource(R.string.notifications),
                             subtitle = stringResource(R.string.notifications_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -211,7 +209,7 @@ fun ProfileScreen(
                             iconTint = StudioBlue,
                             title = stringResource(R.string.help_faq),
                             subtitle = stringResource(R.string.help_faq_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -220,7 +218,7 @@ fun ProfileScreen(
                             iconTint = StudioGreen,
                             title = stringResource(R.string.contact_support),
                             subtitle = stringResource(R.string.contact_support_body),
-                            onClick = { },
+                            onClick = viewModel::openSettings,
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -229,7 +227,7 @@ fun ProfileScreen(
                             iconTint = StudioRose,
                             title = stringResource(R.string.sign_out),
                             subtitle = "",
-                            onClick = { },
+                            onClick = viewModel::logOut,
                         )
                     }
                 }
@@ -300,7 +298,7 @@ private fun SignInHeroCard(
                 border = BorderStroke(1.5f.dp, StudioLine),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
-                Text("G", fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
+                Text(stringResource(R.string.google_icon_label), fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.continue_with_google), fontWeight = FontWeight.SemiBold)
             }
@@ -330,7 +328,7 @@ private fun SignedInProfileHero(
                     color = StudioPrimaryContainer,
                     modifier = Modifier.size(72.dp),
                 ) {
-                    val initials = (state.signedInName ?: "U").take(2).uppercase()
+                    val initials = (state.signedInName ?: stringResource(R.string.initials_fallback)).take(2).uppercase()
                     Text(
                         initials,
                         modifier = Modifier.fillMaxSize().padding(1.dp),
@@ -348,7 +346,7 @@ private fun SignedInProfileHero(
                         .padding(end = 2.dp, bottom = 2.dp),
                 ) {
                     Text(
-                        "FREE",
+                        stringResource(R.string.free_badge),
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Black,
@@ -506,7 +504,7 @@ private fun ProfileRow(
         },
         trailingContent = {
             Icon(
-                Icons.Rounded.Add,
+                Icons.AutoMirrored.Rounded.ArrowForward,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 modifier = Modifier.size(18.dp),
