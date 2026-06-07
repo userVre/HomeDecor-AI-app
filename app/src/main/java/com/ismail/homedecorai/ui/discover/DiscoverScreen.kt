@@ -131,7 +131,7 @@ fun DiscoverScreen(
         return
     }
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
-        ScreenHeaderPills(title = stringResource(R.string.nav_discover), trailing = null)
+        ScreenHeaderPills(title = stringResource(R.string.discover_styles_title), trailing = null)
         LazyColumn(
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
@@ -246,23 +246,12 @@ fun DiscoverClusterTabs(
                 tonalElevation = if (active) 4.dp else 1.dp,
                 modifier = Modifier.border(1.dp, if (active) StudioBlue else StudioLine, CircleShape),
             ) {
-                Row(
+                Text(
+                    clusterLabel,
                     modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        when (cluster) {
-                            "Architecture" -> Icons.Rounded.Landscape
-                            "Paysages" -> Icons.Rounded.Brush
-                            else -> Icons.Rounded.Home
-                        },
-                        null,
-                        Modifier.size(17.dp),
-                        tint = StudioBlue,
-                    )
-                    Text(clusterLabel, color = if (active) StudioBlue else StudioInk, fontWeight = FontWeight.Bold)
-                }
+                    color = if (active) StudioBlue else StudioInk,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
@@ -434,7 +423,6 @@ fun GalleryCard(
         colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
         modifier = modifier,
     ) {
-        Column {
         Box(Modifier.fillMaxWidth().height(226.dp)) {
             Image(
                 painter = painterResource(item.imageRes),
@@ -442,18 +430,6 @@ fun GalleryCard(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
-        }
-        Button(
-            onClick = onUseStyle,
-            shape = CircleShape,
-            colors = studioPrimaryButtonColors(),
-            contentPadding = PaddingValues(horizontal = 12.dp),
-            modifier = Modifier.fillMaxWidth().padding(10.dp).height(44.dp),
-        ) {
-            Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(16.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.create_with_style), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
         }
     }
 }

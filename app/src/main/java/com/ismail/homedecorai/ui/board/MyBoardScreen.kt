@@ -31,13 +31,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Diamond
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -96,21 +95,28 @@ fun MyBoardScreen(
             )
         }
 
-        Row(
+        TabRow(
+            selectedTabIndex = selectedTab.ordinal,
+            containerColor = Color.Transparent,
+            contentColor = StudioBrownBtn,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
+                    color = StudioBrownBtn,
+                )
+            },
+            divider = {},
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            BoardTabChip(
-                label = stringResource(R.string.generated_tab),
-                icon = Icons.Rounded.Diamond,
+            Tab(
                 selected = selectedTab == BoardTab.Generated,
                 onClick = { selectedTab = BoardTab.Generated },
+                text = { Text(stringResource(R.string.generated_tab), fontWeight = FontWeight.SemiBold) },
             )
-            BoardTabChip(
-                label = stringResource(R.string.favorites_tab),
-                icon = Icons.Rounded.Star,
+            Tab(
                 selected = selectedTab == BoardTab.Favorites,
                 onClick = { selectedTab = BoardTab.Favorites },
+                text = { Text(stringResource(R.string.favorites_tab), fontWeight = FontWeight.SemiBold) },
             )
         }
 
@@ -136,91 +142,33 @@ fun MyBoardScreen(
 }
 
 @Composable
-private fun BoardTabChip(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = {
-            Text(label, fontWeight = FontWeight.SemiBold, maxLines = 1)
-        },
-        leadingIcon = {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
-        },
-        shape = RoundedCornerShape(20.dp),
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = StudioBrownBtn,
-            selectedLabelColor = Color.White,
-            selectedLeadingIconColor = Color.White,
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            borderColor = StudioLine,
-            selectedBorderColor = StudioBrownBtn,
-            enabled = true,
-            selected = selected,
-        ),
-    )
-}
-
-@Composable
 private fun BoardLockedState(
     onSignIn: () -> Unit,
 ) {
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
-        tonalElevation = 1.dp,
-        border = BorderStroke(1.5f.dp, StudioLine),
-        modifier = Modifier
+    Column(
+        Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            Modifier.padding(36.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        Text(
+            stringResource(R.string.sign_in_to_account_body),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(Modifier.height(20.dp))
+        OutlinedButton(
+            onClick = onSignIn,
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.outlinedButtonColors(containerColor = StudioBrownBtn),
+            modifier = Modifier.fillMaxWidth().height(52.dp),
         ) {
-            Surface(
-                shape = CircleShape,
-                color = StudioMist,
-                modifier = Modifier.size(72.dp),
-            ) {
-                Icon(
-                    Icons.Rounded.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.padding(18.dp).size(36.dp),
-                    tint = StudioLine,
-                )
-            }
-            Spacer(Modifier.height(16.dp))
             Text(
-                stringResource(R.string.sign_in_to_view_board),
-                style = MaterialTheme.typography.titleMedium,
+                stringResource(R.string.continue_with_google),
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
+                color = Color.White,
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.sign_in_to_view_board_body),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Spacer(Modifier.height(20.dp))
-            Button(
-                onClick = onSignIn,
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = StudioBrownBtn),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-            ) {
-                Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Bold)
-            }
         }
     }
 }

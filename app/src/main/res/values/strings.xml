@@ -3,8 +3,9 @@
   <string name="app_name">HomeDecor AI</string>
   <string name="nav_tools">Tools</string>
   <string name="nav_discover">Discover</string>
-  <string name="nav_my_board">My Board</string>
-  <string name="nav_profile">My Profile</string>
+  <string name="discover_styles_title">Discover Styles</string>
+  <string name="nav_my_board">Profile</string>
+  <string name="nav_profile">Settings</string>
   <string name="pro">Pro</string>
   <string name="pro_upper">PRO</string>
   <string name="upgrade_to_pro">Upgrade to Pro</string>
@@ -285,7 +286,9 @@
   <string name="paint_mask_before_generate_replace">Mark the object before generating</string>
   <string name="paint_mask_before_generate_wall">Wall mask needed</string>
   <string name="add_both_images">Add both images</string>
-  <string name="validation_add_source_photo">Add a source photo from Gallery, Camera, or an example to continue.</string>
+  <string name="upload_photo_of">Upload a photo of your %1$s</string>
+  <string name="add_photo_to_continue">Add a photo to continue.</string>
+  <string name="validation_add_source_photo">Add a photo to continue.</string>
   <string name="validation_upload_source_photo">Upload a source photo from Gallery or Camera to continue.</string>
   <string name="validation_choose_option_to_continue">Choose at least one option to continue.</string>
   <string name="validation_choose_palette_to_generate">Choose a color harmony to unlock Generate.</string>
@@ -1020,9 +1023,9 @@
   <string name="language_name_vi">Tiếng Việt</string>
 
   <!-- My Profile -->
-  <string name="my_profile_title">My Profile</string>
+  <string name="my_profile_title">Profile</string>
   <string name="sign_in_to_account">Sign in to your account</string>
-  <string name="sign_in_to_account_body">Save your designs, access favorites,\nand sync your board across devices.</string>
+  <string name="sign_in_to_account_body">Sign in to save your designs, access your board\nacross devices, and keep track of your favorite styles.</string>
   <string name="go_premium">Go Premium</string>
   <string name="go_premium_body">Unlimited generations &amp; boards</string>
   <string name="upgrade">Upgrade</string>
@@ -1044,7 +1047,7 @@
   <string name="sign_out">Sign Out</string>
 
   <!-- My Board -->
-  <string name="my_board_title">My Board</string>
+  <string name="my_board_title">Profile</string>
   <string name="generated_tab">Generated</string>
   <string name="favorites_tab">Favorites</string>
   <string name="sign_in_to_view_board">Sign in to view your board</string>
@@ -1052,4 +1055,56 @@
   <string name="generated_images">Generated Images</string>
   <string name="favorites_section">Favorites</string>
   <string name="add_favorite">Add favorite</string>
+  <string name="free_badge">FREE</string>
+  <string name="google_icon_label">G</string>
+  <string name="initials_fallback">U</string>
+  <string name="moodboard_idea_fallback">Moodboard idea</string>
+  <string name="project_save_fallback">Project save</string>
+  <string name="untitled_project">Untitled project</string>
+  <string name="no_room_type">No room type</string>
+
+  <!-- Paywall (light cream design) -->
+  <string name="paywall_upgrade_pro">✦ UPGRADE PRO</string>
+  <string name="paywall_hero_title">Design Like a Pro.\nNo Limits, Ever.</string>
+  <string name="paywall_hero_subtitle">Create unlimited 4K renders, export cleanly, and access premium styles with no limits.</string>
+  <string name="paywall_feat_4k">4K Quality</string>
+  <string name="paywall_feat_4k_sub">Ultra HD renders</string>
+  <string name="paywall_feat_unlimited">Unlimited</string>
+  <string name="paywall_feat_unlimited_sub">No generation caps</string>
+  <string name="paywall_feat_priority">Priority AI</string>
+  <string name="paywall_feat_priority_sub">Faster processing</string>
+  <string name="paywall_feat_portfolio">Portfolio</string>
+  <string name="paywall_feat_portfolio_sub">Build your collection</string>
+  <string name="paywall_choose_plan">CHOOSE YOUR PLAN</string>
+  <string name="paywall_trial_note">3 days completely free — try everything, cancel before and pay nothing.</string>
+  <string name="paywall_cta_start">✦ Start My 3 Days Free →</string>
+  <string name="paywall_cta_processing">⏳ Processing…</string>
+  <string name="paywall_cta_success">✓ Welcome to Pro!</string>
+  <string name="paywall_cancel_anytime">✓ Cancel anytime · No commitment</string>
+  <string name="paywall_restore">Restore Purchase</string>
+  <string name="paywall_cmp_feature">Feature</string>
+  <string name="paywall_cmp_free">FREE</string>
+  <string name="paywall_cmp_pro">✦ PRO</string>
+  <string name="paywall_cmp_renders">Energy</string>
+  <string name="paywall_cmp_unlimited">∞ Unlimited</string>
+  <string name="paywall_cmp_export">4K Export</string>
+  <string name="paywall_cmp_4k">Included</string>
+  <string name="paywall_cmp_watermark">Watermark</string>
+  <string name="paywall_cmp_yes">Yes</string>
+  <string name="paywall_cmp_none">No Watermark ✓</string>
+  <string name="paywall_cmp_ai">AI Speed</string>
+  <string name="paywall_cmp_standard">Standard</string>
+  <string name="paywall_cmp_priority_pro">Priority</string>
+  <string name="paywall_plan_annual">ANNUAL ACCESS</string>
+  <string name="paywall_best_value">🔥 Best Value</string>
+  <string name="paywall_per_week">/ week</string>
+  <string name="paywall_save_badge">🎉 Save 89% vs weekly</string>
+  <string name="paywall_plan_weekly">WEEKLY ACCESS</string>
+  <string name="paywall_plan_monthly">MONTHLY ACCESS</string>
+  <string name="paywall_annual_price">4.78</string>
+  <string name="paywall_annual_detail">248.65 MAD billed once per year</string>
+  <string name="paywall_weekly_price">44.68</string>
+  <string name="paywall_weekly_detail">44.68 MAD / week · billed weekly</string>
+  <string name="paywall_annual_currency">MAD</string>
+  <string name="paywall_weekly_currency">MAD / wk</string>
 </resources>

@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import java.util.UUID
 
-enum class MainTab { Tools, Create, Discover, MyBoard, Profile }
+enum class MainTab { Tools, Create, Discover, Profile, Settings }
 enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
 enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
 
@@ -1020,25 +1020,6 @@ class HomeDecorViewModel(
         return project
     }
 
-    fun addResultToMoodboard(result: BoardItem?, projectId: String? = null): Boolean {
-        if (result == null || !result.isGeneratedResult()) return false
-        val generated = result.toGeneratedResult(_uiState.value, projectId)
-        workspaceStore.upsertGeneratedResult(generated)
-        workspaceStore.upsertMoodboardItem(
-            MoodboardItem(
-                id = "generated_result:${generated.id}",
-                projectId = projectId ?: generated.projectId,
-                title = listOf(generated.roomType, generated.style, generated.toolTitle)
-                    .filter { it.isNotBlank() }
-                    .joinToString(" - ")
-                    .ifBlank { "Moodboard idea" },
-                imageUrl = generated.imageUrl,
-                source = "generated_result:${generated.id}",
-            )
-        )
-        return true
-    }
-
     fun toggleDiscoverFavorite(item: GalleryItem, section: DiscoverSection): Boolean {
         val source = discoverSource(item)
         var isFavorite = false
@@ -1516,15 +1497,7 @@ class HomeDecorViewModel(
     }
 
     fun openSettings() {
-        _uiState.update {
-            it.copy(
-                settingsVisible = true,
-                storeVisible = false,
-                paywallVisible = false,
-                authVisible = false,
-                settingsMessage = null,
-            )
-        }
+        selectTab(MainTab.Settings)
     }
 
     fun closeSettings() {
@@ -2138,10 +2111,6 @@ class HomeDecorViewModel(
                     }
                 }
         }
-    }
-
-    fun unlockProPreview() {
-        _uiState.update { it.copy(isPro = true, diamonds = it.diamonds + 10, paywallVisible = false) }
     }
 
     private fun toggleLimited(current: List<String>, value: String, limit: Int): List<String> {

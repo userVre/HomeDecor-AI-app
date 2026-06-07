@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
@@ -80,31 +81,54 @@ fun ToolsHeader(
     onPass: () -> Unit,
 ) {
     Surface(color = StudioCanvas, tonalElevation = 0.dp) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 20.dp, vertical = 8.dp)
-                .height(56.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 20.dp, vertical = 8.dp),
         ) {
-            CreditPill(state, compact = true, onClick = onCredits)
-            Text(stringResource(R.string.nav_tools), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            Surface(
-                onClick = onPass,
-                shape = CircleShape,
-                color = if (state.isPro) StudioProContainer else StudioPrimaryContainer,
-                tonalElevation = 1.dp,
-                modifier = Modifier.minimumTouchTarget(),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(if (state.isPro) stringResource(R.string.pro) else stringResource(R.string.upgrade_to_pro), fontWeight = FontWeight.Bold)
+                    Icon(
+                        Icons.Rounded.Diamond,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = StudioBlue,
+                    )
+                    Text(
+                        if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Surface(
+                    onClick = onPass,
+                    shape = CircleShape,
+                    color = if (state.isPro) StudioProContainer else StudioPrimaryContainer,
+                    tonalElevation = 1.dp,
+                    modifier = Modifier.minimumTouchTarget(),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(if (state.isPro) stringResource(R.string.pro) else stringResource(R.string.upgrade_to_pro), fontWeight = FontWeight.Bold)
+                    }
                 }
             }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(R.string.nav_tools),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Black,
+            )
         }
     }
 }

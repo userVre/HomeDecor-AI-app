@@ -69,7 +69,6 @@ import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
 import com.ismail.homedecorai.ui.dialogs.FirstLaunchDisclosure
 import com.ismail.homedecorai.ui.discover.DiscoverScreen
 import com.ismail.homedecorai.ui.paywall.PaywallSheet
-import com.ismail.homedecorai.ui.profile.ProfileScreen
 import com.ismail.homedecorai.ui.settings.SettingsSheet
 import com.ismail.homedecorai.ui.store.DiamondStoreSheet
 import com.ismail.homedecorai.ui.theme.*
@@ -79,6 +78,7 @@ import com.ismail.homedecorai.ui.utility.createCameraUri
 import com.ismail.homedecorai.ui.utility.openAuth
 import com.ismail.homedecorai.ui.utility.openGooglePlayReview
 import com.ismail.homedecorai.ui.utility.tabLabelRes
+import com.ismail.homedecorai.ui.settings.SettingsScreen
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -132,6 +132,7 @@ private fun AppScaffold(
         viewModel.closeDesignViewer()
     }
     Scaffold(
+        containerColor = StudioPaper,
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (state.selectedTab != MainTab.Create && !modalVisible) {
@@ -147,8 +148,8 @@ private fun AppScaffold(
                 ) {
                     NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, stringResource(tabLabelRes(MainTab.Tools)), viewModel::selectTab)
                     NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, stringResource(tabLabelRes(MainTab.Discover)), viewModel::selectTab)
-                    NavItem(MainTab.MyBoard, state.selectedTab, Icons.Rounded.Dashboard, stringResource(tabLabelRes(MainTab.MyBoard)), viewModel::selectTab)
-                    NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
+                    NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Dashboard, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
+                    NavItem(MainTab.Settings, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Settings)), viewModel::selectTab)
                 }
             }
             }
@@ -160,8 +161,8 @@ private fun AppScaffold(
                     MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
-                    MainTab.MyBoard -> MyBoardScreen(state = state, viewModel = viewModel)
-                    MainTab.Profile -> ProfileScreen(state = state, viewModel = viewModel)
+                    MainTab.Profile -> MyBoardScreen(state = state, viewModel = viewModel)
+                    MainTab.Settings -> SettingsScreen(state = state, viewModel = viewModel, currentLanguageTag = currentLanguageTag, onLanguageSelected = onLanguageSelected)
                 }
             }
 
