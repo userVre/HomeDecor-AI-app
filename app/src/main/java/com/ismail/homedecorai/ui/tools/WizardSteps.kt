@@ -57,6 +57,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Brush
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
@@ -309,7 +310,26 @@ fun DesignStepHeader(
                             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     } else {
-                        CreditPill(state, compact = false, onClick = onCredits)
+                        Row(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable(onClick = onCredits)
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.Diamond,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = StudioBlue,
+                            )
+                            Text(
+                                if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
                 Text(

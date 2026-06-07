@@ -32,6 +32,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -145,30 +147,39 @@ fun MyBoardScreen(
 private fun BoardLockedState(
     onSignIn: () -> Unit,
 ) {
-    Column(
-        Modifier
+    Card(
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Text(
-            stringResource(R.string.sign_in_to_account_body),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Spacer(Modifier.height(20.dp))
-        OutlinedButton(
-            onClick = onSignIn,
-            shape = RoundedCornerShape(24.dp),
-            colors = ButtonDefaults.outlinedButtonColors(containerColor = StudioBrownBtn),
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                stringResource(R.string.continue_with_google),
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
+                stringResource(R.string.sign_in_to_account_body),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
             )
+            Spacer(Modifier.height(20.dp))
+            OutlinedButton(
+                onClick = onSignIn,
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = StudioBrownBtn),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) {
+                Text(
+                    stringResource(R.string.continue_with_google),
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
         }
     }
 }
