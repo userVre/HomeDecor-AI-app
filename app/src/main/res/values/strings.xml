@@ -500,6 +500,7 @@
   <string name="room_label">Room</string>
   <string name="style_label">Style</string>
   <string name="delete_image">Delete image</string>
+  <string name="lock">Lock</string>
   <string name="no_designs_yet">No designs yet</string>
   <string name="no_designs_body">Generate your first design and it will appear here.</string>
   <string name="diamonds">Diamonds</string>

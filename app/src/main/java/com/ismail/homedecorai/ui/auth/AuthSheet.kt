@@ -1,5 +1,6 @@
 package com.ismail.homedecorai.ui.auth
 
+import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -32,7 +33,6 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -50,6 +50,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,12 +76,17 @@ fun AuthSheet(
     onAuth: () -> Unit,
 ) {
     var authMode by remember { mutableStateOf(AuthMode.SIGN_IN) }
-    var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    val isEmailValid by remember(email) {
+        derivedStateOf { email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email).matches() }
+    }
+    val isPasswordValid by remember(password) {
+        derivedStateOf { password.length >= 6 }
+    }
+    val isFormValid = isEmailValid && isPasswordValid
 
     val modalTapBlocker = remember { MutableInteractionSource() }
     Box(
@@ -102,20 +108,10 @@ fun AuthSheet(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(
+            Box(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                contentAlignment = Alignment.CenterEnd,
             ) {
-                IconButton(onClick = {
-                    if (authMode == AuthMode.SIGN_UP) authMode = AuthMode.SIGN_IN else onClose()
-                }, modifier = Modifier.size(48.dp)) {
-                    Icon(
-                        if (authMode == AuthMode.SIGN_UP) Icons.Rounded.Close else Icons.Rounded.Close,
-                        contentDescription = stringResource(R.string.close),
-                        tint = StudioInk,
-                    )
-                }
                 IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = StudioInk)
                 }
@@ -130,16 +126,14 @@ fun AuthSheet(
             Spacer(Modifier.height(20.dp))
 
             Text(
-                if (authMode == AuthMode.SIGN_IN) stringResource(R.string.auth_welcome_back)
-                else stringResource(R.string.auth_start_creating),
+                stringResource(R.string.auth_welcome_back),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                if (authMode == AuthMode.SIGN_IN) stringResource(R.string.auth_sign_in_subtitle)
-                else stringResource(R.string.auth_sign_up_subtitle),
+                stringResource(R.string.auth_sign_in_subtitle),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyMedium,
@@ -159,30 +153,15 @@ fun AuthSheet(
                 ) {
                     OutlinedButton(
                         onClick = onAuth,
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                        border = ButtonDefaults.outlinedButtonBorder(enabled = true),
                     ) {
-                        Text("G", fontWeight = FontWeight.Black, color = Color(0xFF4285F4))
+                        Text(stringResource(R.string.google_icon_label), fontWeight = FontWeight.Black, color = Color(0xFF4285F4))
                         Spacer(Modifier.width(10.dp))
                         Text(
-                            if (authMode == AuthMode.SIGN_IN) stringResource(R.string.continue_with_google)
-                            else stringResource(R.string.continue_with_google),
-                            color = StudioInk,
-                        )
-                    }
-
-                    OutlinedButton(
-                        onClick = onAuth,
-                        shape = CircleShape,
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                    ) {
-                        Text("🍎", fontWeight = FontWeight.Black)
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            if (authMode == AuthMode.SIGN_IN) stringResource(R.string.continue_with_apple)
-                            else stringResource(R.string.continue_with_apple),
+                            stringResource(R.string.continue_with_google),
                             color = StudioInk,
                         )
                     }
@@ -195,18 +174,6 @@ fun AuthSheet(
                         HorizontalDivider(modifier = Modifier.weight(1f), color = StudioLine)
                         Text(stringResource(R.string.or), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                         HorizontalDivider(modifier = Modifier.weight(1f), color = StudioLine)
-                    }
-
-                    AnimatedVisibility(visible = authMode == AuthMode.SIGN_UP, enter = fadeIn(), exit = fadeOut()) {
-                        Column {
-                            AuthTextField(
-                                value = fullName,
-                                onValueChange = { fullName = it },
-                                label = stringResource(R.string.full_name),
-                                leadingIcon = Icons.Rounded.Person,
-                            )
-                            Spacer(Modifier.height(12.dp))
-                        }
                     }
 
                     AuthTextField(
@@ -228,56 +195,40 @@ fun AuthSheet(
                         onTogglePassword = { passwordVisible = !passwordVisible },
                     )
 
-                    AnimatedVisibility(visible = authMode == AuthMode.SIGN_UP, enter = fadeIn(), exit = fadeOut()) {
-                        Column {
-                            Spacer(Modifier.height(12.dp))
-                            AuthTextField(
-                                value = confirmPassword,
-                                onValueChange = { confirmPassword = it },
-                                label = stringResource(R.string.confirm_password),
-                                leadingIcon = Icons.Rounded.Lock,
-                                isPassword = true,
-                                passwordVisible = confirmPasswordVisible,
-                                onTogglePassword = { confirmPasswordVisible = !confirmPasswordVisible },
-                            )
-                        }
-                    }
-
-                    if (authMode == AuthMode.SIGN_IN) {
-                        TextButton(
-                            onClick = { },
-                            modifier = Modifier.align(Alignment.End),
-                        ) {
-                            Text(
-                                stringResource(R.string.forgot_password),
-                                color = StudioInk,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
+                    TextButton(
+                        onClick = { },
+                        modifier = Modifier.align(Alignment.End),
+                    ) {
+                        Text(
+                            stringResource(R.string.forgot_password),
+                            color = StudioInk,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
 
                     Spacer(Modifier.height(4.dp))
 
                     Button(
                         onClick = onAuth,
-                        shape = CircleShape,
+                        enabled = isFormValid,
+                        shape = RoundedCornerShape(28.dp),
                         modifier = Modifier.fillMaxWidth().height(54.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (authMode == AuthMode.SIGN_IN) StudioBlue else StudioInk,
-                            contentColor = Color.White,
+                            containerColor = if (isFormValid) StudioBlue else Color(0xFFD9D5CF),
+                            contentColor = if (isFormValid) Color.White else Color(0xFF9E9A93),
+                            disabledContainerColor = Color(0xFFD9D5CF),
+                            disabledContentColor = Color(0xFF9E9A93),
                         ),
                     ) {
                         Text(
-                            if (authMode == AuthMode.SIGN_IN) stringResource(R.string.sign_in)
-                            else stringResource(R.string.create_account),
+                            stringResource(R.string.sign_in),
                             fontWeight = FontWeight.Bold,
                         )
                     }
 
                     Text(
-                        if (authMode == AuthMode.SIGN_IN) stringResource(R.string.auth_data_protected)
-                        else stringResource(R.string.auth_free_to_start),
+                        stringResource(R.string.auth_data_protected),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodySmall,
@@ -294,19 +245,17 @@ fun AuthSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    if (authMode == AuthMode.SIGN_IN) stringResource(R.string.no_account_yet)
-                    else stringResource(R.string.already_have_account),
+                    stringResource(R.string.no_account_yet),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    if (authMode == AuthMode.SIGN_IN) stringResource(R.string.sign_up)
-                    else stringResource(R.string.sign_in),
+                    stringResource(R.string.sign_up),
                     color = StudioInk,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        authMode = if (authMode == AuthMode.SIGN_IN) AuthMode.SIGN_UP else AuthMode.SIGN_IN
+                        authMode = AuthMode.SIGN_UP
                     },
                 )
             }

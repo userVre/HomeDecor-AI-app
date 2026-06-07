@@ -21,10 +21,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Diamond
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Share
@@ -36,7 +36,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -105,16 +104,16 @@ fun DesignViewerSheet(
             ) {
                 Surface(
                     onClick = onBack,
-                    shape = CircleShape,
-                    color = StudioPaper,
-                    tonalElevation = 1.dp,
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White,
+                    shadowElevation = 2.dp,
                     modifier = Modifier.size(44.dp),
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.back),
+                        Icons.Rounded.Diamond,
+                        contentDescription = null,
                         modifier = Modifier.padding(10.dp).size(24.dp),
-                        tint = StudioInk,
+                        tint = StudioBlue,
                     )
                 }
                 Text(
@@ -125,8 +124,7 @@ fun DesignViewerSheet(
                 Surface(
                     onClick = onBack,
                     shape = CircleShape,
-                    color = StudioPaper,
-                    tonalElevation = 1.dp,
+                    color = Color(0xFFF0EDE8),
                     modifier = Modifier.size(44.dp),
                 ) {
                     Icon(
@@ -183,76 +181,79 @@ fun DesignViewerSheet(
                             )
                             drawCircle(
                                 color = Color.White,
-                                radius = 18.dp.toPx(),
+                                radius = 20.dp.toPx(),
                                 center = Offset(handleX, size.height / 2f),
+                            )
+                            val barWidth = 3.dp.toPx()
+                            val barHeight = 14.dp.toPx()
+                            val barGap = 3.dp.toPx()
+                            val centerY = size.height / 2f
+                            drawLine(
+                                color = StudioInk,
+                                start = Offset(handleX - barGap - barWidth / 2, centerY - barHeight / 2),
+                                end = Offset(handleX - barGap - barWidth / 2, centerY + barHeight / 2),
+                                strokeWidth = barWidth,
+                                cap = StrokeCap.Round,
                             )
                             drawLine(
                                 color = StudioInk,
-                                start = Offset(handleX - 7.dp.toPx(), size.height / 2f),
-                                end = Offset(handleX + 7.dp.toPx(), size.height / 2f),
-                                strokeWidth = 2.dp.toPx(),
+                                start = Offset(handleX + barGap + barWidth / 2, centerY - barHeight / 2),
+                                end = Offset(handleX + barGap + barWidth / 2, centerY + barHeight / 2),
+                                strokeWidth = barWidth,
                                 cap = StrokeCap.Round,
                             )
                         }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            ComparisonBadge(stringResource(R.string.before))
-                            ComparisonBadge(stringResource(R.string.after))
-                        }
                     }
 
-                    Row(
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White,
+                        shadowElevation = 2.dp,
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            .padding(12.dp)
+                            .size(40.dp),
                     ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.92f),
-                            modifier = Modifier.size(40.dp),
-                        ) {
-                            Icon(
-                                Icons.Rounded.Refresh,
-                                contentDescription = stringResource(R.string.regenerate),
-                                modifier = Modifier.padding(8.dp).size(24.dp),
-                                tint = StudioBlue,
-                            )
-                        }
+                        Icon(
+                            Icons.Rounded.Diamond,
+                            contentDescription = null,
+                            modifier = Modifier.padding(8.dp).size(24.dp),
+                            tint = StudioBlue,
+                        )
                     }
 
-                    Row(
+                    Surface(
+                        onClick = { onDelete?.invoke() },
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.35f),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            .padding(12.dp)
+                            .size(40.dp),
                     ) {
-                        Surface(
-                            onClick = { onDelete?.invoke() },
-                            shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.92f),
-                            modifier = Modifier.size(40.dp),
-                        ) {
-                            Icon(
-                                Icons.Rounded.Delete,
-                                contentDescription = stringResource(R.string.delete_image),
-                                modifier = Modifier.padding(8.dp).size(24.dp),
-                                tint = StudioRose,
-                            )
-                        }
+                        Icon(
+                            Icons.Rounded.Delete,
+                            contentDescription = stringResource(R.string.delete_image),
+                            modifier = Modifier.padding(8.dp).size(24.dp),
+                            tint = Color.White,
+                        )
                     }
-                }
 
-                if (hasSourceImage) {
-                    Slider(
-                        value = comparePosition,
-                        onValueChange = { comparePosition = it.coerceIn(0.05f, 0.95f) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.35f),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                            .size(40.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Lock,
+                            contentDescription = stringResource(R.string.lock),
+                            modifier = Modifier.padding(10.dp).size(20.dp),
+                            tint = Color.White,
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -313,7 +314,7 @@ fun DesignViewerSheet(
                 ) {
                     Button(
                         onClick = { onRegenerate?.invoke() },
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = StudioBlue),
                         modifier = Modifier.weight(1f).height(52.dp),
                     ) {
@@ -328,7 +329,7 @@ fun DesignViewerSheet(
                                 Toast.makeText(context, if (saved) context.getString(R.string.toast_design_downloaded) else context.getString(R.string.toast_design_save_failed), Toast.LENGTH_LONG).show()
                             }
                         },
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = StudioBlue),
                         modifier = Modifier.weight(1f).height(52.dp),
                     ) {
@@ -343,7 +344,7 @@ fun DesignViewerSheet(
                                 if (!shared) Toast.makeText(context, context.getString(R.string.toast_share_failed), Toast.LENGTH_LONG).show()
                             }
                         },
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = StudioBlue),
                         modifier = Modifier.weight(1f).height(52.dp),
                     ) {
@@ -378,7 +379,7 @@ fun DesignViewerSheet(
                             feedbackState = "liked"
                             onLike?.invoke()
                         },
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (feedbackState == "liked") StudioPrimaryContainer else Color.Transparent,
                         ),
@@ -399,7 +400,7 @@ fun DesignViewerSheet(
                             feedbackState = "disliked"
                             onDislike?.invoke()
                         },
-                        shape = CircleShape,
+                        shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (feedbackState == "disliked") StudioErrorContainer else Color.Transparent,
                         ),
@@ -443,21 +444,5 @@ fun DesignViewerSheet(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ComparisonBadge(label: String) {
-    Surface(
-        shape = RoundedCornerShape(999.dp),
-        color = Color.Black.copy(alpha = 0.58f),
-    ) {
-        Text(
-            label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-            color = Color.White,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-        )
     }
 }
