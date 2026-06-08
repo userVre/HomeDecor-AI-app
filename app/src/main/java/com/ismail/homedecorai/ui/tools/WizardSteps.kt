@@ -1055,7 +1055,7 @@ fun PhotoStep(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Icon(Icons.Rounded.PhotoCamera, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
-                        Text(stringResource(R.string.gallery), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.photos), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                 }
                 HorizontalDivider(color = StudioLine.copy(alpha = 0.5f))

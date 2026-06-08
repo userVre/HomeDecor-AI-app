@@ -17,6 +17,7 @@
   <string name="close">Close</string>
   <string name="return_back">Back</string>
   <string name="gallery">Gallery</string>
+  <string name="photos">Photos</string>
   <string name="camera">Camera</string>
   <string name="example">Example</string>
   <string name="use_example">Use an example</string>
@@ -1068,12 +1069,12 @@
   <string name="paywall_upgrade_pro">✦ UPGRADE PRO</string>
   <string name="paywall_hero_title">Design Like a Pro.\nNo Limits, Ever.</string>
   <string name="paywall_hero_subtitle">Create unlimited 4K renders, export cleanly, and access premium styles with no limits.</string>
-  <string name="paywall_feat_4k">4K Quality</string>
+  <string name="paywall_feat_4k">4K Export</string>
   <string name="paywall_feat_4k_sub">Ultra HD renders</string>
-  <string name="paywall_feat_unlimited">Unlimited</string>
-  <string name="paywall_feat_unlimited_sub">No generation caps</string>
-  <string name="paywall_feat_priority">Priority AI</string>
-  <string name="paywall_feat_priority_sub">Faster processing</string>
+  <string name="paywall_feat_unlimited">No Watermark</string>
+  <string name="paywall_feat_unlimited_sub">Clean exports always</string>
+  <string name="paywall_feat_priority">Unlimited Energy</string>
+  <string name="paywall_feat_priority_sub">No generation limits</string>
   <string name="paywall_feat_portfolio">Portfolio</string>
   <string name="paywall_feat_portfolio_sub">Build your collection</string>
   <string name="paywall_choose_plan">CHOOSE YOUR PLAN</string>

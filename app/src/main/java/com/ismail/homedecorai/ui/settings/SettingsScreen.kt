@@ -210,16 +210,12 @@ private fun SettingsItemRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Surface(shape = CircleShape, color = iconTint.copy(alpha = 0.12f)) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier
-                    .padding(10.dp)
-                    .size(22.dp),
-            )
-        }
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(24.dp),
+        )
         Text(
             title,
             fontWeight = FontWeight.SemiBold,

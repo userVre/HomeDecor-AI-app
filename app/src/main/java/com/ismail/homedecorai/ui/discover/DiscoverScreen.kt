@@ -40,6 +40,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +48,10 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -229,30 +234,39 @@ fun DiscoverHero(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiscoverClusterTabs(
     clusters: List<String>,
     selected: String,
     onSelect: (String) -> Unit,
 ) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        items(clusters) { cluster ->
-            val active = selected == cluster
+    val selectedIndex = clusters.indexOf(selected).coerceAtLeast(0)
+    TabRow(
+        selectedTabIndex = selectedIndex,
+        containerColor = Color.Transparent,
+        contentColor = StudioBlue,
+        indicator = { tabPositions ->
+            TabRowDefaults.SecondaryIndicator(
+                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedIndex]),
+                color = StudioBlue,
+            )
+        },
+        divider = {},
+    ) {
+        clusters.forEachIndexed { index, cluster ->
             val clusterLabel = localizedDiscoverCluster(cluster)
-            Surface(
+            Tab(
+                selected = selected == cluster,
                 onClick = { onSelect(cluster) },
-                shape = CircleShape,
-                color = if (active) StudioPrimaryContainer else StudioPaper,
-                tonalElevation = if (active) 4.dp else 1.dp,
-                modifier = Modifier.border(1.dp, if (active) StudioBlue else StudioLine, CircleShape),
-            ) {
-                Text(
-                    clusterLabel,
-                    modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
-                    color = if (active) StudioBlue else StudioInk,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+                text = {
+                    Text(
+                        clusterLabel,
+                        fontWeight = if (selected == cluster) FontWeight.Bold else FontWeight.Medium,
+                        color = if (selected == cluster) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+            )
         }
     }
 }

@@ -79,26 +79,13 @@ import java.time.ZoneId
 
 @Composable
 fun ValidationNotice(message: String) {
-    Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = StudioErrorContainer,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioRose.copy(alpha = 0.24f), RoundedCornerShape(18.dp)),
-    ) {
-        Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
-            Text(
-                message,
-                modifier = Modifier.weight(1f),
-                color = StudioRose,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
+    Text(
+        message,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.Bold,
+    )
 }
 
 @Composable
