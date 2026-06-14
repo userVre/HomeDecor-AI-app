@@ -255,6 +255,8 @@
   <string name="custom_notes_placeholder">Ejemplo: agregar un rincón de lectura y mantener la puerta libre</string>
   <string name="optional_notes">Notas opcionales</string>
   <string name="optional_notes_placeholder">Ejemplo: agregar un rincón de lectura y mantener la puerta libre</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Agregar detalles</string>
   <string name="add_details_body">Especifica restricciones para optimizar el espacio sin perder tus prioridades.</string>
   <string name="room_type">Tipo de habitación</string>
@@ -864,6 +866,9 @@
   <string name="option_layout_larger_living_room">Sala de estar más amplia</string>
   <string name="option_layout_better_light">Mejor iluminación</string>
   <string name="option_layout_full_reorg">Reorganización completa</string>
+  <string name="option_layout_cozy_reading">Rincón de lectura acogedor</string>
+  <string name="option_layout_pet_friendly">Espacio para mascotas</string>
+  <string name="option_layout_meditation_zone">Zona de meditación</string>
   <string name="option_reference_subtle">Sutil</string>
   <string name="option_reference_balanced">Equilibrado</string>
   <string name="option_reference_faithful">Fiel</string>

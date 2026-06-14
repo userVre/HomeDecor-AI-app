@@ -334,16 +334,16 @@ object HomeDecorCatalog {
     )
 
     val materialLibrary = listOf(
-        "Marbre",
-        "Chêne",
-        "Noyer",
-        "Béton",
+        "Carrara Marble",
+        "Oak Wood",
+        "Walnut",
+        "Concrete",
         "Limewash",
         "Terrazzo",
-        "Carrelage blanc",
-        "Carrelage noir",
-        "Peinture beige chaude",
-        "Peinture sombre élégante",
+        "White Tile",
+        "Black Tile",
+        "Warm Beige",
+        "Dark Elegant",
     )
 
     val floorMaterials = materialLibrary
@@ -356,6 +356,9 @@ object HomeDecorCatalog {
         "Salon plus spacieux",
         "Meilleure lumière",
         "Réorganisation complète",
+        "Coin lecture cozy",
+        "Espace pet-friendly",
+        "Zone méditation",
     )
 
     val referenceStrengths = listOf(
@@ -2027,17 +2030,19 @@ class HomeDecorViewModel(
                         appendAdvancedInstructions(snapshot)
                     }
                     "paint" -> buildString {
-                        append("Wall-only masked material edit. Change only the masked wall area")
-                        if (snapshot.style.isNotBlank()) append(" to ").append(snapshot.style)
-                        append(". Preserve the floor, ceiling, furniture, decor, trim, windows, shadows, camera angle, and every non-wall surface exactly.")
-                        if (snapshot.customPrompt.isNotBlank()) append(" Wall finish notes: ").append(snapshot.customPrompt).append(".")
+                        append("Smart wall paint. Automatically detect all visible walls in the room and apply the selected material to them.")
+                        if (snapshot.style.isNotBlank()) append(" Apply material: ").append(snapshot.style)
+                        append(". Preserve the floor, ceiling, furniture, decor, trim, windows, shadows, camera angle, and every non-wall surface exactly as they are.")
+                        append(" The AI should intelligently identify wall surfaces, respect room geometry, and apply the material realistically with proper lighting and perspective.")
+                        if (snapshot.customPrompt.isNotBlank()) append(" Additional notes: ").append(snapshot.customPrompt).append(".")
                         appendAdvancedInstructions(snapshot)
                     }
                     "floor" -> buildString {
-                        append("Floor-only masked material edit. Change only the masked floor area")
-                        if (snapshot.style.isNotBlank()) append(" to ").append(snapshot.style)
-                        append(". Preserve walls, furniture, decor, baseboards, lighting, contact shadows, camera angle, and every non-floor surface exactly.")
-                        if (snapshot.customPrompt.isNotBlank()) append(" Floor finish notes: ").append(snapshot.customPrompt).append(".")
+                        append("Smart floor restyle. Automatically detect the floor surface in the room and apply the selected material to it.")
+                        if (snapshot.style.isNotBlank()) append(" Apply material: ").append(snapshot.style)
+                        append(". Preserve walls, furniture, decor, baseboards, lighting, contact shadows, camera angle, and every non-floor surface exactly as they are.")
+                        append(" The AI should intelligently identify the floor area, respect perspective lines, and apply the material realistically with proper lighting and shadows.")
+                        if (snapshot.customPrompt.isNotBlank()) append(" Additional notes: ").append(snapshot.customPrompt).append(".")
                         appendAdvancedInstructions(snapshot)
                     }
                     else -> buildString {

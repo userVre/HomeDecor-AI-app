@@ -158,15 +158,23 @@ fun optionLabelRes(label: String): Int? = when (label) {
     "Parquet clair" -> R.string.option_floor_light_wood
     "Parquet foncé" -> R.string.option_floor_dark_wood
     "Marbre" -> R.string.option_floor_marble
+    "Carrara Marble" -> R.string.option_floor_marble
     "Chêne" -> R.string.option_material_oak_wood
+    "Oak Wood" -> R.string.option_material_oak_wood
     "Noyer" -> R.string.option_material_walnut
+    "Walnut" -> R.string.option_material_walnut
     "Béton" -> R.string.option_material_concrete
+    "Concrete" -> R.string.option_material_concrete
     "Limewash" -> R.string.option_material_limewash
     "Terrazzo" -> R.string.option_material_terrazzo
     "Carrelage blanc" -> R.string.option_material_white_tile
+    "White Tile" -> R.string.option_material_white_tile
     "Carrelage noir" -> R.string.option_material_black_tile
+    "Black Tile" -> R.string.option_material_black_tile
     "Peinture beige chaude" -> R.string.option_material_warm_beige_paint
+    "Warm Beige" -> R.string.option_material_warm_beige_paint
     "Peinture sombre élégante" -> R.string.option_material_dark_elegant_paint
+    "Dark Elegant" -> R.string.option_material_dark_elegant_paint
     "Béton ciré" -> R.string.option_floor_polished_concrete
     "Carrelage moderne" -> R.string.option_floor_modern_tile
     "Pierre naturelle" -> R.string.option_floor_natural_stone
@@ -179,6 +187,9 @@ fun optionLabelRes(label: String): Int? = when (label) {
     "Salon plus spacieux" -> R.string.option_layout_larger_living_room
     "Meilleure lumière" -> R.string.option_layout_better_light
     "Réorganisation complète" -> R.string.option_layout_full_reorg
+    "Coin lecture cozy" -> R.string.option_layout_cozy_reading
+    "Espace pet-friendly" -> R.string.option_layout_pet_friendly
+    "Zone méditation" -> R.string.option_layout_meditation_zone
     "Subtil" -> R.string.option_reference_subtle
     "Équilibré" -> R.string.option_reference_balanced
     "Fidèle" -> R.string.option_reference_faithful
@@ -562,12 +573,12 @@ fun stepThreeCopy(tool: DecorTool): StepCopy {
         "paint" -> StepCopy(
             R.string.step_choose_color_title,
             R.string.step_choose_color_body,
-            HomeDecorCatalog.paintColors,
+            HomeDecorCatalog.materialLibrary,
         )
         "floor" -> StepCopy(
             R.string.step_choose_material_title,
             R.string.step_choose_material_body,
-            HomeDecorCatalog.floorMaterials,
+            HomeDecorCatalog.materialLibrary,
         )
         "replace" -> StepCopy(
             R.string.step_describe_replacement_title,
@@ -634,15 +645,23 @@ data class MaterialSwatchSpec(
 )
 
 fun materialSwatchSpec(label: String): MaterialSwatchSpec = when (label) {
+    "Carrara Marble" -> MaterialSwatchSpec(Color(0xFFF7F4EE), Color(0xFF9A948B), MaterialPattern.Vein)
     "Marbre" -> MaterialSwatchSpec(Color(0xFFF7F4EE), Color(0xFF9A948B), MaterialPattern.Vein)
+    "Oak Wood" -> MaterialSwatchSpec(Color(0xFFD7AD6F), Color(0xFF8E6335), MaterialPattern.Wood)
     "Chêne" -> MaterialSwatchSpec(Color(0xFFD7AD6F), Color(0xFF8E6335), MaterialPattern.Wood)
+    "Walnut" -> MaterialSwatchSpec(Color(0xFF6E4529), Color(0xFF2D1B12), MaterialPattern.Wood)
     "Noyer" -> MaterialSwatchSpec(Color(0xFF6E4529), Color(0xFF2D1B12), MaterialPattern.Wood)
+    "Concrete" -> MaterialSwatchSpec(Color(0xFFAAA79F), Color(0xFF6F716E), MaterialPattern.Concrete)
     "Béton" -> MaterialSwatchSpec(Color(0xFFAAA79F), Color(0xFF6F716E), MaterialPattern.Concrete)
     "Limewash" -> MaterialSwatchSpec(Color(0xFFE7E0D4), Color(0xFFC8BFAF), MaterialPattern.Limewash)
     "Terrazzo" -> MaterialSwatchSpec(Color(0xFFECE3D3), Color(0xFF5C8374), MaterialPattern.Terrazzo)
+    "White Tile" -> MaterialSwatchSpec(Color(0xFFF8F8F5), Color(0xFFC9C9C1), MaterialPattern.Tile)
     "Carrelage blanc" -> MaterialSwatchSpec(Color(0xFFF8F8F5), Color(0xFFC9C9C1), MaterialPattern.Tile)
+    "Black Tile" -> MaterialSwatchSpec(Color(0xFF171717), Color(0xFF686868), MaterialPattern.Tile)
     "Carrelage noir" -> MaterialSwatchSpec(Color(0xFF171717), Color(0xFF686868), MaterialPattern.Tile)
+    "Warm Beige" -> MaterialSwatchSpec(Color(0xFFE4D0B8), Color(0xFFC5A987), MaterialPattern.Paint)
     "Peinture beige chaude" -> MaterialSwatchSpec(Color(0xFFE4D0B8), Color(0xFFC5A987), MaterialPattern.Paint)
+    "Dark Elegant" -> MaterialSwatchSpec(Color(0xFF232625), Color(0xFF606663), MaterialPattern.Paint)
     "Peinture sombre élégante" -> MaterialSwatchSpec(Color(0xFF232625), Color(0xFF606663), MaterialPattern.Paint)
     else -> MaterialSwatchSpec(Color(0xFFE4D8C9), Color(0xFF9A8B78), MaterialPattern.Paint)
 }
@@ -956,9 +975,20 @@ fun formatHistoryItemDate(createdAt: Long): String {
 fun wizardStepNumber(stage: WizardStage, tool: DecorTool? = null): Int {
     return when (stage) {
         WizardStage.Photo -> 1
-        WizardStage.Space -> 2
-        WizardStage.Style -> if (tool?.id in listOf("reference", "paint", "floor")) 2 else 3
-        WizardStage.Refine -> if (tool?.id in listOf("reference", "paint", "floor", "layout")) 2 else if (tool?.id in listOf("garden", "replace")) 3 else 4
+        WizardStage.Space -> when (tool?.id) {
+            "paint", "floor" -> 1
+            else -> 2
+        }
+        WizardStage.Style -> when (tool?.id) {
+            "paint", "floor" -> 2
+            "reference" -> 2
+            else -> 3
+        }
+        WizardStage.Refine -> when (tool?.id) {
+            "reference", "paint", "floor", "layout" -> 2
+            "garden", "replace" -> 3
+            else -> 4
+        }
         WizardStage.Processing -> wizardTotalSteps(tool)
         WizardStage.Result -> wizardTotalSteps(tool)
     }

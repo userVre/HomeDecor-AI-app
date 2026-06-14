@@ -32,11 +32,9 @@
   <string name="close">Закрыть</string>
   <string name="return_back">Назад</string>
   <string name="gallery">Галерея</string>
-  <string name="photos">Фото</string>
   <string name="camera">Камера</string>
   <string name="example">Пример</string>
   <string name="use_example">Использовать пример</string>
-  <string name="try_with_example">Попробовать с примером</string>
   <string name="example_photos">Примеры фотографий</string>
   <string name="import_action">Импорт</string>
   <string name="import_photo">Импортировать фото</string>
@@ -257,6 +255,8 @@
   <string name="custom_notes_placeholder">Пример: добавить уголок для чтения и не загораживать дверь</string>
   <string name="optional_notes">Необязательные заметки</string>
   <string name="optional_notes_placeholder">Пример: добавить уголок для чтения и не загораживать дверь</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Добавьте детали</string>
   <string name="add_details_body">Укажите ограничения для оптимизации пространства без потери приоритетов.</string>
   <string name="room_type">Тип комнаты</string>
@@ -866,6 +866,9 @@
   <string name="option_layout_larger_living_room">Более просторная гостиная</string>
   <string name="option_layout_better_light">Лучшее освещение</string>
   <string name="option_layout_full_reorg">Полная реорганизация</string>
+  <string name="option_layout_cozy_reading">Уютный уголок для чтения</string>
+  <string name="option_layout_pet_friendly">Дружелюбное к животным пространство</string>
+  <string name="option_layout_meditation_zone">Зона для медитации</string>
   <string name="option_reference_subtle">Умеренный</string>
   <string name="option_reference_balanced">Сбалансированный</string>
   <string name="option_reference_faithful">Точный</string>

@@ -255,6 +255,8 @@
   <string name="custom_notes_placeholder">Exemplo: adicionar um canto de leitura e manter a porta livre</string>
   <string name="optional_notes">Notas opcionais</string>
   <string name="optional_notes_placeholder">Exemplo: adicionar um canto de leitura e manter a porta livre</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Adicionar detalhes</string>
   <string name="add_details_body">Especifique restrições para otimizar o espaço sem perder suas prioridades.</string>
   <string name="room_type">Tipo de cômodo</string>
@@ -865,6 +867,9 @@
   <string name="option_layout_larger_living_room">Sala de estar mais espaçosa</string>
   <string name="option_layout_better_light">Melhor iluminação</string>
   <string name="option_layout_full_reorg">Reorganização completa</string>
+  <string name="option_layout_cozy_reading">Canto de leitura aconchegante</string>
+  <string name="option_layout_pet_friendly">Espaço pet-friendly</string>
+  <string name="option_layout_meditation_zone">Zona de meditação</string>
   <string name="option_reference_subtle">Sutil</string>
   <string name="option_reference_balanced">Equilibrado</string>
   <string name="option_reference_faithful">Fiel</string>

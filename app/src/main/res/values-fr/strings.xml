@@ -192,6 +192,8 @@
   <string name="custom_notes_placeholder">Exemple : prévoir un coin lecture et laisser la porte dégagée</string>
   <string name="optional_notes">Notes optionnelles</string>
   <string name="optional_notes_placeholder">Exemple : prevoir un coin lecture et laisser la porte degagee</string>
+  <string name="layout_optional_constraints">Contraintes optionnelles / Notes personnalisees</string>
+  <string name="layout_optional_constraints_placeholder">Exemple : garder 90 cm de passage, ne pas bloquer la fenetre…</string>
   <string name="add_details_title">Ajoutez des détails</string>
   <string name="add_details_body">Précisez les contraintes pour optimiser l’espace sans perdre vos priorités.</string>
   <string name="room_type">Type de chambre</string>
@@ -335,7 +337,6 @@
   <string name="invalid_input_error">L\'entree n\'est pas valide.</string>
   <string name="step_validation_error">L\'etape %1$d sur %2$d contient des erreurs.</string>
   <string name="dismiss">Ignorer</string>
-  <string name="retry">Reessayer</string>
   <string name="discover_cluster_interiors">Intérieur</string>
   <string name="discover_cluster_architecture">Extérieur</string>
   <string name="discover_cluster_landscapes">Jardin</string>
@@ -650,6 +651,9 @@
   <string name="option_layout_larger_living_room">Salon plus spacieux</string>
   <string name="option_layout_better_light">Meilleure lumière</string>
   <string name="option_layout_full_reorg">Réorganisation complète</string>
+  <string name="option_layout_cozy_reading">Coin lecture cozy</string>
+  <string name="option_layout_pet_friendly">Espace pet-friendly</string>
+  <string name="option_layout_meditation_zone">Zone méditation</string>
   <string name="option_reference_subtle">Subtil</string>
   <string name="option_reference_balanced">Équilibré</string>
   <string name="option_reference_faithful">Fidèle</string>

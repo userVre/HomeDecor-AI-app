@@ -32,11 +32,9 @@
   <string name="close">Stäng</string>
   <string name="return_back">Tillbaka</string>
   <string name="gallery">Galleri</string>
-  <string name="photos">Foton</string>
   <string name="camera">Kamera</string>
   <string name="example">Exempel</string>
   <string name="use_example">Använd ett exempel</string>
-  <string name="try_with_example">Prova med exempel</string>
   <string name="example_photos">Exempelfoton</string>
   <string name="import_action">Importera</string>
   <string name="import_photo">Importera foto</string>
@@ -257,6 +255,8 @@
   <string name="custom_notes_placeholder">Exempel: lägg till en läsvinkel och håll dörren fri</string>
   <string name="optional_notes">Valfria anteckningar</string>
   <string name="optional_notes_placeholder">Exempel: lägg till en läsvinkel och håll dörren fri</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Lägg till detaljer</string>
   <string name="add_details_body">Specificera begränsningar för att optimera utrymmet utan att förlora dina prioriteringar.</string>
   <string name="room_type">Rumstyp</string>
@@ -866,6 +866,9 @@
   <string name="option_layout_larger_living_room">Rummligare vardagsrum</string>
   <string name="option_layout_better_light">Bättre belysning</string>
   <string name="option_layout_full_reorg">Fullständig omorganisering</string>
+  <string name="option_layout_cozy_reading">Trevligt läshörn</string>
+  <string name="option_layout_pet_friendly">Hundvänligt utrymme</string>
+  <string name="option_layout_meditation_zone">Meditationszon</string>
   <string name="option_reference_subtle">Subtil</string>
   <string name="option_reference_balanced">Balanserad</string>
   <string name="option_reference_faithful">Troget</string>

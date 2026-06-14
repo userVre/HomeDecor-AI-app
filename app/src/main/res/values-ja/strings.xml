@@ -255,6 +255,8 @@
   <string name="custom_notes_placeholder">例：読書コーナーを追加し、ドアの周りを確保</string>
   <string name="optional_notes">オプションノート</string>
   <string name="optional_notes_placeholder">例：読書コーナーを追加し、ドアの周りを確保</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">詳細を追加</string>
   <string name="add_details_body">優先事項を損なわずにスペースを最適化するための制約を指定してください。</string>
   <string name="room_type">部屋タイプ</string>
@@ -854,6 +856,9 @@
   <string name="option_layout_larger_living_room">より広いリビング</string>
   <string name="option_layout_better_light">より良い光</string>
   <string name="option_layout_full_reorg">完全な再編成</string>
+  <string name="option_layout_cozy_reading">居心地の良い読書コーナー</string>
+  <string name="option_layout_pet_friendly">ペットフレンドリーなスペース</string>
+  <string name="option_layout_meditation_zone">瞑想ゾーン</string>
   <string name="option_reference_subtle">控えめ</string>
   <string name="option_reference_balanced">バランス</string>
   <string name="option_reference_faithful">忠実</string>

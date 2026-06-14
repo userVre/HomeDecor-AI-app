@@ -57,7 +57,7 @@ object FlowValidationRules {
 
     /**
      * Wall Paint flow validation rules
-     * Steps: Photo -> Style (Mask + Color)
+     * Steps: Photo -> Style (Material selection, auto-detect walls)
      */
     fun wallPaintRules(): Map<WizardStage, List<ValidationRuleConfig>> = mapOf(
         WizardStage.Photo to listOf(
@@ -68,19 +68,15 @@ object FlowValidationRules {
         ),
         WizardStage.Style to listOf(
             ValidationRuleConfig(
-                fieldId = ValidationFields.MASK,
-                errorMessageRes = R.string.mark_area_before_generate,
-            ),
-            ValidationRuleConfig(
                 fieldId = ValidationFields.STYLE_SELECTION,
-                errorMessageRes = R.string.validation_choose_option_to_continue,
+                errorMessageRes = R.string.choose_material_before_generate,
             ),
         ),
     )
 
     /**
      * Floor Restyle flow validation rules
-     * Steps: Photo -> Style (Mask + Material)
+     * Steps: Photo -> Style (Material selection, auto-detect floor)
      */
     fun floorRestyleRules(): Map<WizardStage, List<ValidationRuleConfig>> = mapOf(
         WizardStage.Photo to listOf(
@@ -91,12 +87,8 @@ object FlowValidationRules {
         ),
         WizardStage.Style to listOf(
             ValidationRuleConfig(
-                fieldId = ValidationFields.MASK,
-                errorMessageRes = R.string.mark_area_before_generate,
-            ),
-            ValidationRuleConfig(
                 fieldId = ValidationFields.STYLE_SELECTION,
-                errorMessageRes = R.string.validation_choose_option_to_continue,
+                errorMessageRes = R.string.choose_material_before_generate,
             ),
         ),
     )

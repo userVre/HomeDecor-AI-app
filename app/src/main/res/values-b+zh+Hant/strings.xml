@@ -32,11 +32,9 @@
   <string name="close">關閉</string>
   <string name="return_back">返回</string>
   <string name="gallery">從圖庫中選擇</string>
-  <string name="photos">照片</string>
   <string name="camera">拍照</string>
   <string name="example">範例</string>
   <string name="use_example">使用範例</string>
-  <string name="try_with_example">使用範例試試</string>
   <string name="example_photos">範例照片</string>
   <string name="import_action">匯入</string>
   <string name="import_photo">匯入照片</string>
@@ -257,6 +255,8 @@
   <string name="custom_notes_placeholder">例如：新增一個閱讀角落並保持門口暢通</string>
   <string name="optional_notes">選填備註</string>
   <string name="optional_notes_placeholder">例如：新增一個閱讀角落並保持門口暢通</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">新增詳細資訊</string>
   <string name="add_details_body">指定限制條件以在不失去優先事項的情況下優化空間。</string>
   <string name="room_type">房間類型</string>
@@ -866,6 +866,9 @@
   <string name="option_layout_larger_living_room">更寬敞的客廳</string>
   <string name="option_layout_better_light">更好的光線</string>
   <string name="option_layout_full_reorg">完全重組</string>
+  <string name="option_layout_cozy_reading">舒適的閱讀角</string>
+  <string name="option_layout_pet_friendly">寵物友善空間</string>
+  <string name="option_layout_meditation_zone">冥想區域</string>
   <string name="option_reference_subtle">微妙</string>
   <string name="option_reference_balanced">平衡</string>
   <string name="option_reference_faithful">忠實</string>

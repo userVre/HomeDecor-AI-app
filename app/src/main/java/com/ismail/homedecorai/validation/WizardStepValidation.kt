@@ -82,15 +82,15 @@ private fun validatePhotoStep(state: HomeDecorUiState, toolId: String): WizardSt
 private fun validateSpaceStep(state: HomeDecorUiState, toolId: String): WizardStepValidation {
     return when (toolId) {
         "paint", "floor" -> {
-            val hasMask = state.maskStrokes.hasVisibleMaskPaint()
+            val hasStyle = state.selectedStyles.isNotEmpty()
             WizardStepValidation(
-                canProceed = hasMask,
-                validationMessage = if (!hasMask) {
-                    if (toolId == "floor") "Mark the floor area before generating."
-                    else "Mark the walls or surfaces before generating."
+                canProceed = hasStyle,
+                validationMessage = if (!hasStyle) {
+                    if (toolId == "floor") "Choose a floor material before generating."
+                    else "Choose a wall material before generating."
                 } else null,
-                isStepValid = hasMask,
-                completedRequiredFields = if (hasMask) 1 else 0,
+                isStepValid = hasStyle,
+                completedRequiredFields = if (hasStyle) 1 else 0,
                 totalRequiredFields = 1,
             )
         }
@@ -145,37 +145,27 @@ private fun validateSpaceStep(state: HomeDecorUiState, toolId: String): WizardSt
 private fun validateStyleStep(state: HomeDecorUiState, toolId: String): WizardStepValidation {
     return when (toolId) {
         "paint" -> {
-            val hasMask = state.maskStrokes.hasVisibleMaskPaint()
-            val hasStyle = state.selectedStyles.isNotEmpty() || state.customPrompt.isNotBlank()
-            val canGenerate = hasStyle && hasMask
-            val message = when {
-                !hasMask -> "Mark the walls or surfaces before generating."
-                !hasStyle -> "Choose a wall material or describe the wall finish before generating."
-                else -> null
-            }
+            val hasStyle = state.selectedStyles.isNotEmpty()
+            val canGenerate = hasStyle
+            val message = if (!hasStyle) "Choose a wall material before generating." else null
             WizardStepValidation(
                 canProceed = canGenerate,
                 validationMessage = message,
                 isStepValid = canGenerate,
-                completedRequiredFields = listOf(hasMask, hasStyle).count { it },
-                totalRequiredFields = 2,
+                completedRequiredFields = if (hasStyle) 1 else 0,
+                totalRequiredFields = 1,
             )
         }
         "floor" -> {
-            val hasMask = state.maskStrokes.hasVisibleMaskPaint()
-            val hasStyle = state.selectedStyles.isNotEmpty() || state.customPrompt.isNotBlank()
-            val canGenerate = hasStyle && hasMask
-            val message = when {
-                !hasMask -> "Mark the floor area before generating."
-                !hasStyle -> "Choose a floor material or describe the floor finish before generating."
-                else -> null
-            }
+            val hasStyle = state.selectedStyles.isNotEmpty()
+            val canGenerate = hasStyle
+            val message = if (!hasStyle) "Choose a floor material before generating." else null
             WizardStepValidation(
                 canProceed = canGenerate,
                 validationMessage = message,
                 isStepValid = canGenerate,
-                completedRequiredFields = listOf(hasMask, hasStyle).count { it },
-                totalRequiredFields = 2,
+                completedRequiredFields = if (hasStyle) 1 else 0,
+                totalRequiredFields = 1,
             )
         }
         "replace" -> {

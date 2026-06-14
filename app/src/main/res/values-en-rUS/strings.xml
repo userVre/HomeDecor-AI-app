@@ -194,6 +194,8 @@
   <string name="custom_notes_placeholder">Example: add a reading corner and keep the door clear</string>
   <string name="optional_notes">Optional notes</string>
   <string name="optional_notes_placeholder">Example: add a reading corner and keep the door clear</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Add details</string>
   <string name="add_details_body">Specify constraints to optimize the space without losing your priorities.</string>
   <string name="room_type">Room Type</string>
@@ -678,6 +680,9 @@
   <string name="option_layout_larger_living_room">More spacious living room</string>
   <string name="option_layout_better_light">Better light</string>
   <string name="option_layout_full_reorg">Full reorganization</string>
+  <string name="option_layout_cozy_reading">Cozy reading nook</string>
+  <string name="option_layout_pet_friendly">Pet-friendly space</string>
+  <string name="option_layout_meditation_zone">Meditation zone</string>
   <string name="option_reference_subtle">Subtle</string>
   <string name="option_reference_balanced">Balanced</string>
   <string name="option_reference_faithful">Faithful</string>

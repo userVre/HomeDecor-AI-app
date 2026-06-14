@@ -32,11 +32,9 @@
   <string name="close">إغلاق</string>
   <string name="return_back">رجوع</string>
   <string name="gallery">المعرض</string>
-  <string name="photos">الصور</string>
   <string name="camera">الكاميرا</string>
   <string name="example">مثال</string>
   <string name="use_example">استخدم مثالاً</string>
-  <string name="try_with_example">جرّب مع مثال</string>
   <string name="example_photos">صور نموذجية</string>
   <string name="import_action">استيراد</string>
   <string name="import_photo">استيراد صورة</string>
@@ -257,6 +255,8 @@
   <string name="custom_notes_placeholder">مثال: أضف زاوية قراءة واترك الباب واضحاً</string>
   <string name="optional_notes">ملاحظات اختيارية</string>
   <string name="optional_notes_placeholder">مثال: أضف زاوية قراءة واترك الباب واضحاً</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">أضف تفاصيل</string>
   <string name="add_details_body">حدد قيوداً لتحسين المساحة دون فقدان أولوياتك.</string>
   <string name="room_type">نوع الغرفة</string>
@@ -866,6 +866,9 @@
   <string name="option_layout_larger_living_room">غرفة معيشة أوسع</string>
   <string name="option_layout_better_light">إضاءة أفضل</string>
   <string name="option_layout_full_reorg">إعادة تنظيم كاملة</string>
+  <string name="option_layout_cozy_reading">زاوية قراءة مريحة</string>
+  <string name="option_layout_pet_friendly">مساحة صديقة للحيوانات الأليفة</string>
+  <string name="option_layout_meditation_zone">منطقة للتأمل</string>
   <string name="option_reference_subtle">خفيف</string>
   <string name="option_reference_balanced">متوازن</string>
   <string name="option_reference_faithful">وفي</string>

@@ -339,27 +339,46 @@ fun ModeCard(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(22.dp),
-        color = studioStateContainer(selected),
-        tonalElevation = studioStateElevation(selected),
-        modifier = modifier.height(188.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(22.dp)),
+        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
+        modifier = modifier.height(188.dp).border(
+            if (selected) 2.dp else 1.dp,
+            if (selected) StudioBlue else StudioLine,
+            RoundedCornerShape(22.dp),
+        ),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Surface(shape = CircleShape, color = studioStateIconContainer(selected)) {
-                Icon(
-                    if (title.contains("Renovation")) Icons.Rounded.AutoAwesome else Icons.Rounded.Brush,
-                    contentDescription = null,
-                    modifier = Modifier.padding(10.dp).size(22.dp),
-                    tint = studioStateIconContent(selected),
+        Box {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(shape = CircleShape, color = if (selected) StudioBlue else StudioMist) {
+                    Icon(
+                        if (title.contains("Renovation")) Icons.Rounded.AutoAwesome else Icons.Rounded.Brush,
+                        contentDescription = null,
+                        modifier = Modifier.padding(10.dp).size(22.dp),
+                        tint = if (selected) Color.White else StudioBlue,
+                    )
+                }
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 2)
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 2)
-            Text(
-                description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 5,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (selected) {
+                Surface(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
+                    shape = CircleShape,
+                    color = StudioBlue,
+                ) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        modifier = Modifier.padding(5.dp).size(14.dp),
+                        tint = Color.White,
+                    )
+                }
+            }
         }
     }
 }
@@ -375,33 +394,52 @@ fun PaletteChoiceCard(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        color = studioStateContainer(selected),
-        tonalElevation = studioStateElevation(selected),
+        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
         modifier = modifier
             .width(96.dp)
             .height(142.dp)
-            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
+            .border(
+                if (selected) 2.dp else 1.dp,
+                if (selected) StudioBlue else StudioLine,
+                RoundedCornerShape(18.dp),
+            ),
     ) {
-        Column {
-            if (label == "Suggestion IA") {
-                Box(Modifier.fillMaxWidth().height(82.dp).background(StudioMist), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = StudioBlue)
-                }
-            } else {
-                Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))) {
-                    paletteColors(label).forEach { color ->
-                        Box(Modifier.weight(1f).fillMaxSize().background(color))
+        Box {
+            Column {
+                if (label == "Suggestion IA") {
+                    Box(Modifier.fillMaxWidth().height(82.dp).background(StudioMist), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = StudioBlue)
+                    }
+                } else {
+                    Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))) {
+                        paletteColors(label).forEach { color ->
+                            Box(Modifier.weight(1f).fillMaxSize().background(color))
+                        }
                     }
                 }
+                Text(
+                    displayLabel,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Text(
-                displayLabel,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (selected) {
+                Surface(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
+                    shape = CircleShape,
+                    color = StudioBlue,
+                ) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        modifier = Modifier.padding(4.dp).size(12.dp),
+                        tint = Color.White,
+                    )
+                }
+            }
         }
     }
 }

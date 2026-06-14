@@ -32,11 +32,9 @@
   <string name="close">닫기</string>
   <string name="return_back">뒤로</string>
   <string name="gallery">갤러리</string>
-  <string name="photos">사진</string>
   <string name="camera">카메라</string>
   <string name="example">예제</string>
   <string name="use_example">예제 사용</string>
-  <string name="try_with_example">예제로 시도</string>
   <string name="example_photos">예제 사진</string>
   <string name="import_action">가져오기</string>
   <string name="import_photo">사진 가져오기</string>
@@ -257,6 +255,8 @@
   <string name="custom_notes_placeholder">예: 독서 코너 추가, 문 주변 통로 확보</string>
   <string name="optional_notes">선택 메모</string>
   <string name="optional_notes_placeholder">예: 독서 코너 추가, 문 주변 통로 확보</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">세부 사항 추가</string>
   <string name="add_details_body">우선 순위를 잃지 않으면서 공간을 최적화할 제약 조건을 지정하세요.</string>
   <string name="room_type">방 유형</string>
@@ -866,6 +866,9 @@
   <string name="option_layout_larger_living_room">더 넓은 거실</string>
   <string name="option_layout_better_light">더 좋은 조명</string>
   <string name="option_layout_full_reorg">전체 재배치</string>
+  <string name="option_layout_cozy_reading">아늑한 독서 코너</string>
+  <string name="option_layout_pet_friendly">반려동물 친화적 공간</string>
+  <string name="option_layout_meditation_zone">명상 존</string>
   <string name="option_reference_subtle">미묘한</string>
   <string name="option_reference_balanced">균형 잡힌</string>
   <string name="option_reference_faithful">충실한</string>

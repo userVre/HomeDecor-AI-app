@@ -255,6 +255,8 @@
   <string name="custom_notes_placeholder">Ví dụ: thêm góc đọc sách và giữ cửa thông thoáng</string>
   <string name="optional_notes">Ghi chú tùy chọn</string>
   <string name="optional_notes_placeholder">Ví dụ: thêm góc đọc sách và giữ cửa thông thoáng</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Thêm chi tiết</string>
   <string name="add_details_body">Chỉ rõ hạn chế để tối ưu hóa không gian mà không mất ưu tiên.</string>
   <string name="room_type">Loại phòng</string>
@@ -864,6 +866,9 @@
   <string name="option_layout_larger_living_room">Phòng khách rộng rãi hơn</string>
   <string name="option_layout_better_light">Ánh sáng tốt hơn</string>
   <string name="option_layout_full_reorg">Tổ chức lại toàn bộ</string>
+  <string name="option_layout_cozy_reading">Góc đọc sách ấm cúng</string>
+  <string name="option_layout_pet_friendly">Không gian thân thiện với thú cưng</string>
+  <string name="option_layout_meditation_zone">Khu vực thiền</string>
   <string name="option_reference_subtle">Nhẹ nhàng</string>
   <string name="option_reference_balanced">Cân bằng</string>
   <string name="option_reference_faithful">Trung thành</string>

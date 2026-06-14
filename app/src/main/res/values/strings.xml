@@ -112,9 +112,9 @@
   <string name="step_choose_space_title">Choose your space</string>
   <string name="step_choose_space_body">Select the room type to adapt the render to the space.</string>
   <string name="step_choose_color_title">Choose wall material</string>
-  <string name="step_choose_color_body">Pick a swatch for the masked wall only, then add optional finish notes.</string>
-  <string name="step_choose_material_title">Choose the material</string>
-  <string name="step_choose_material_body">Pick a swatch for the masked floor only. AI will respect perspective, light, and furniture contact shadows.</string>
+  <string name="step_choose_color_body">Select a material for your walls. AI will detect and apply it automatically.</string>
+  <string name="step_choose_material_title">Choose floor material</string>
+  <string name="step_choose_material_body">Select a material for your floor. AI will detect and apply it automatically.</string>
   <string name="step_describe_replacement_title">Describe the replacement</string>
   <string name="step_describe_replacement_body">Choose a suggestion or describe precisely the new object to integrate.</string>
   <string name="step_transfer_strength_title">Transfer intensity</string>
@@ -253,8 +253,12 @@
   <string name="people_count_placeholder">Example: 2 adults, 1 child</string>
   <string name="custom_notes">Custom notes</string>
   <string name="custom_notes_placeholder">Example: add a reading corner and keep the door clear</string>
+  <string name="custom_notes_paint_placeholder">Add custom notes for your wall style…</string>
+  <string name="custom_notes_floor_placeholder">Add custom notes for your floor style…</string>
   <string name="optional_notes">Optional notes</string>
   <string name="optional_notes_placeholder">Example: add a reading corner and keep the door clear</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Add details</string>
   <string name="add_details_body">Specify constraints to optimize the space without losing your priorities.</string>
   <string name="room_type">Room type</string>
@@ -305,6 +309,9 @@
   <string name="validation_add_source_photo">Add a photo to continue.</string>
   <string name="validation_upload_source_photo">Upload a source photo from Gallery or Camera to continue.</string>
   <string name="validation_choose_option_to_continue">Choose at least one option to continue.</string>
+  <string name="choose_a_mode">Choose a mode</string>
+  <string name="choose_color">Choose color…</string>
+  <string name="upload_style_reference_helper">Upload a style reference to continue.</string>
   <string name="validation_choose_palette_to_generate">Choose a color harmony to unlock Generate.</string>
   <string name="validation_select_layout_goal">Select at least one planning goal to unlock Generate.</string>
   <string name="validation_mark_floor_to_generate">Mark the floor area before generating.</string>
@@ -407,6 +414,7 @@
   <string name="real_mask_required_error">A real marked area is required.</string>
   <string name="read_selected_image_failed">Could not read the selected image.</string>
   <string name="mark_area_before_generate">Mark the area before generating.</string>
+  <string name="choose_material_before_generate">Choose a wall/floor material before generating.</string>
   <string name="ai_generation_unavailable">AI generation is unavailable right now.</string>
   <string name="no_diamonds_recharge">No diamonds left. Recharge to continue.</string>
   <string name="image_prepare_failed">Could not prepare this image.</string>
@@ -423,7 +431,6 @@
   <string name="invalid_input_error">The input is not valid.</string>
   <string name="step_validation_error">Step %1$d of %2$d has errors.</string>
   <string name="dismiss">Dismiss</string>
-  <string name="retry">Retry</string>
   <string name="discover_cluster_interiors">Interior</string>
   <string name="discover_cluster_architecture">Exterior</string>
   <string name="discover_cluster_landscapes">Garden</string>
@@ -870,6 +877,9 @@
   <string name="option_layout_larger_living_room">More spacious living room</string>
   <string name="option_layout_better_light">Better light</string>
   <string name="option_layout_full_reorg">Full reorganization</string>
+  <string name="option_layout_cozy_reading">Cozy reading nook</string>
+  <string name="option_layout_pet_friendly">Pet-friendly space</string>
+  <string name="option_layout_meditation_zone">Meditation zone</string>
   <string name="option_reference_subtle">Subtle</string>
   <string name="option_reference_balanced">Balanced</string>
   <string name="option_reference_faithful">Faithful</string>

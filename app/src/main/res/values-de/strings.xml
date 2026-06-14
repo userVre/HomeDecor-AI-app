@@ -255,6 +255,8 @@
   <string name="custom_notes_placeholder">Beispiel: Leseecke hinzufügen und Tür freihalten</string>
   <string name="optional_notes">Optionale Anmerkungen</string>
   <string name="optional_notes_placeholder">Beispiel: Leseecke hinzufügen und Tür freihalten</string>
+  <string name="layout_optional_constraints">Optional constraints / Custom notes</string>
+  <string name="layout_optional_constraints_placeholder">Example: keep 90 cm of passage, do not block the window…</string>
   <string name="add_details_title">Details hinzufügen</string>
   <string name="add_details_body">Geben Sie Einschränkungen an, um den Raum zu optimieren, ohne Ihre Prioritäten zu verlieren.</string>
   <string name="room_type">Raumtyp</string>
@@ -417,7 +419,7 @@
   <string name="image_loading_body">Ihr Rendering wird jetzt geladen.</string>
   <string name="image_unavailable_title">Bild nicht verfügbar</string>
   <string name="image_unavailable_body">Dieses Bild konnte gerade nicht geladen werden.</string>
-  <parameter name="content">  <string name="error_offline_retry">Sie scheinen offline zu sein. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
+  <string name="error_offline_retry">Sie scheinen offline zu sein. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
   <string name="error_timeout_retry">Dies dauert länger als erwartet. Versuchen Sie es in einem Moment erneut.</string>
   <string name="discover_cluster_interiors">Innenraum</string>
   <string name="discover_cluster_architecture">Außenbereich</string>
@@ -865,6 +867,9 @@
   <string name="option_layout_larger_living_room">Geräumigeres Wohnzimmer</string>
   <string name="option_layout_better_light">Besseres Licht</string>
   <string name="option_layout_full_reorg">Vollständige Neuorganisation</string>
+  <string name="option_layout_cozy_reading">Gemütliche Leseecke</string>
+  <string name="option_layout_pet_friendly">Haustierfreundlicher Raum</string>
+  <string name="option_layout_meditation_zone">Meditationszone</string>
   <string name="option_reference_subtle">Dezent</string>
   <string name="option_reference_balanced">Ausgewogen</string>
   <string name="option_reference_faithful">Treuhändig</string>

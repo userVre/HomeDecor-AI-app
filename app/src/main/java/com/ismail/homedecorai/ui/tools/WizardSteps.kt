@@ -162,6 +162,7 @@ import com.ismail.homedecorai.ui.components.*
 import com.ismail.homedecorai.ui.dialogs.*
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
+import com.ismail.homedecorai.ui.components.ValidationAlertBanner
 import com.ismail.homedecorai.validation.WizardValidationState
 import com.ismail.homedecorai.validation.rememberStepValidation
 
@@ -248,8 +249,8 @@ fun CreateScreen(
                     PhotoStep(state = state, viewModel = viewModel)
                 }
                 WizardStage.Space -> when (state.selectedTool.id) {
-                    "floor" -> FloorMaskStep(state = state, viewModel = viewModel)
-                    "paint" -> WallSurfaceStep(state = state, viewModel = viewModel)
+                    "floor" -> SpecializedGenerateStep(state = state, viewModel = viewModel)
+                    "paint" -> SpecializedGenerateStep(state = state, viewModel = viewModel)
                     "replace" -> ObjectMaskStep(state = state, viewModel = viewModel)
                     "reference" -> ReferencePhotoStep(state = state, viewModel = viewModel)
                     "layout" -> LayoutPlanningStep(state = state, viewModel = viewModel)
@@ -391,7 +392,7 @@ fun StepScaffold(
     body: String? = null,
     buttonLabel: String,
     buttonIcon: ImageVector = Icons.Rounded.AutoAwesome,
-    buttonEnabled: Boolean = true,
+    canProceed: Boolean = true,
     validationMessage: String? = null,
     contentBottomPadding: Dp = 18.dp,
     protectBottomInsets: Boolean = false,
@@ -399,6 +400,12 @@ fun StepScaffold(
     onButton: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    var showValidationBanner by remember { mutableStateOf(false) }
+
+    LaunchedEffect(canProceed) {
+        if (canProceed) showValidationBanner = false
+    }
+
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -407,7 +414,7 @@ fun StepScaffold(
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val hasValidationError = !validationMessage.isNullOrBlank()
+                    val hasValidationError = showValidationBanner && !validationMessage.isNullOrBlank()
                     Text(
                         title,
                         style = MaterialTheme.typography.headlineSmall,
@@ -441,9 +448,18 @@ fun StepScaffold(
                 Modifier.fillMaxWidth().height(58.dp)
             }
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (showValidationBanner && !validationMessage.isNullOrBlank()) {
+                    ValidationAlertBanner(message = validationMessage)
+                }
                 Button(
-                    onClick = onButton,
-                    enabled = buttonEnabled,
+                    onClick = {
+                        if (canProceed) {
+                            showValidationBanner = false
+                            onButton()
+                        } else {
+                            showValidationBanner = true
+                        }
+                    },
                     shape = CircleShape,
                     colors = studioPrimaryButtonColors(),
                     modifier = buttonModifier,
@@ -494,12 +510,12 @@ fun ReferenceImagesStep(
         examplesForTool(state.selectedTool).firstOrNull { it.label == selectedLabel }
     }
     StepScaffold(
-        eyebrow = stringResource(R.string.step_count_format, 1, wizardTotalSteps(state.selectedTool)),
+        eyebrow = "",
         title = stringResource(R.string.reference_two_images_title),
         body = stringResource(R.string.reference_two_images_body),
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
-        buttonEnabled = canContinue,
+        canProceed = canContinue,
         validationMessage = missingHint,
         onButton = viewModel::nextStage,
     ) {
@@ -530,14 +546,16 @@ fun ReferenceImagesStep(
                 onCamera = referenceImageInputActions.openCamera,
                 onExample = { viewModel.selectReferenceExample(editorialReference) },
             )
-            OutlinedButton(
-                onClick = viewModel::tryWithExample,
-                shape = CircleShape,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-            ) {
-                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.try_with_example))
+            if (!hasRoom || !hasReference) {
+                OutlinedButton(
+                    onClick = viewModel::tryWithExample,
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                ) {
+                    Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.try_with_example))
+                }
             }
         }
     }
@@ -557,28 +575,34 @@ fun ReferenceDualImagePicker(
     onCamera: () -> Unit,
     onExample: () -> Unit,
 ) {
+    val dashedBorderStroke = BorderStroke(1.5.dp, StudioLine.copy(alpha = 0.6f))
     Surface(
         shape = RoundedCornerShape(26.dp),
-        color = studioStateContainer(selected),
-        tonalElevation = studioStateElevation(selected),
+        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(26.dp)),
+            .then(
+                if (!selected) {
+                    Modifier.border(dashedBorderStroke, RoundedCornerShape(26.dp))
+                } else {
+                    Modifier.border(1.5.dp, StudioBlue.copy(alpha = 0.36f), RoundedCornerShape(26.dp))
+                }
+            ),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Surface(shape = CircleShape, color = studioStateIconContainer(selected)) {
+                Surface(shape = CircleShape, color = if (selected) StudioBlue else StudioMist) {
                     Icon(
-                        if (selected) Icons.Rounded.Check else Icons.Rounded.AutoAwesome,
+                        if (selected) Icons.Rounded.Check else Icons.Rounded.PhotoLibrary,
                         contentDescription = null,
                         modifier = Modifier.padding(9.dp).size(19.dp),
-                        tint = studioStateIconContent(selected),
+                        tint = if (selected) Color.White else StudioBlue,
                     )
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
                     Text(
-                        if (selected) selectedText else body,
+                        if (selected) selectedText else stringResource(R.string.upload_style_reference_helper),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -589,7 +613,7 @@ fun ReferenceDualImagePicker(
                     .fillMaxWidth()
                     .height(172.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(StudioMist),
+                    .background(if (selected) Color.Transparent else StudioMist),
             ) {
                 if (selected) {
                     UriOrResourceImage(
@@ -604,11 +628,13 @@ fun ReferenceDualImagePicker(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        Surface(shape = CircleShape, color = StudioPaper) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.padding(12.dp).size(24.dp), tint = StudioBlue)
-                        }
+                        Icon(
+                            Icons.Rounded.PhotoLibrary,
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = StudioBlue.copy(alpha = 0.6f),
+                        )
                         Spacer(Modifier.height(10.dp))
-                        Text(stringResource(R.string.reference_empty_preview_title), fontWeight = FontWeight.Black)
                         Text(
                             missingHint,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -618,22 +644,24 @@ fun ReferenceDualImagePicker(
                     }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = onGallery, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
-                    Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(7.dp))
-                    Text(stringResource(R.string.gallery))
+            if (!selected) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(onClick = onGallery, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                        Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(7.dp))
+                        Text(stringResource(R.string.gallery))
+                    }
+                    OutlinedButton(onClick = onCamera, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                        Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(7.dp))
+                        Text(stringResource(R.string.camera))
+                    }
                 }
-                OutlinedButton(onClick = onCamera, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
-                    Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(7.dp))
-                    Text(stringResource(R.string.camera))
+                OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+                    Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.example))
                 }
-            }
-            OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(48.dp)) {
-                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.example))
             }
         }
     }
@@ -864,7 +892,7 @@ fun ChoiceStep(
         body = stringResource(copy.bodyRes),
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
-        buttonEnabled = stepValidation.canProceed,
+        canProceed = stepValidation.canProceed,
         validationMessage = stepValidation.validationMessage,
         onButton = onContinue,
     ) {
@@ -933,11 +961,9 @@ fun PhotoStep(
         body = if (!hasMainPhoto) copyBody else null,
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
-        buttonEnabled = true,
+        canProceed = hasMainPhoto,
         validationMessage = stepValidation.validationMessage,
-        onButton = {
-            if (hasMainPhoto) viewModel.nextStage()
-        },
+        onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
             if (!hasMainPhoto) {
@@ -1083,28 +1109,13 @@ fun PhotoStep(
 fun MaterialLibrarySection(
     options: List<String>,
     selected: List<String>,
-    target: String,
     onSelect: (String) -> Unit,
 ) {
     val selectedMaterial = selected.firstOrNull()
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.material_library), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            Text(
-                stringResource(if (target == "floor") R.string.material_library_floor_scope else R.string.material_library_wall_scope),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
         selectedMaterial?.let {
             SelectedMaterialPreview(
                 label = it,
-                target = target,
             )
         }
         options.chunked(2).forEach { row ->
@@ -1126,7 +1137,6 @@ fun MaterialLibrarySection(
 @Composable
 fun SelectedMaterialPreview(
     label: String,
-    target: String,
 ) {
     val displayLabel = localizedOption(label)
     Surface(
@@ -1143,13 +1153,6 @@ fun SelectedMaterialPreview(
             MaterialSwatchThumb(label = label, selected = true, modifier = Modifier.size(52.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioInk)
-                Text(
-                    stringResource(if (target == "floor") R.string.material_selected_floor_preview else R.string.material_selected_wall_preview),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
             }
             Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
         }
@@ -1257,13 +1260,15 @@ fun SpecializedGenerateStep(
     val stepTitle = stringResource(stepCopy.titleRes)
     val stepBody = stringResource(stepCopy.bodyRes)
     val selected = state.selectedStyles
-    val requiresMask = state.selectedTool.id in setOf("paint", "floor", "replace")
+    val requiresMask = state.selectedTool.id in setOf("replace")
     val replacementPrompt = state.customPrompt.trim()
     val hasReplacementPrompt = replacementPrompt.isValidReplacementPrompt()
     val localizedReplacement = localizedReplacementPrompt(replacementPrompt)
     val hasRequiredMask = remember(state.maskStrokes, state.selectedTool.id) {
-        if (state.selectedTool.id in setOf("paint", "floor", "replace")) {
+        if (state.selectedTool.id == "replace") {
             state.maskStrokes.hasVisibleMaskPaint()
+        } else if (state.selectedTool.id in setOf("paint", "floor")) {
+            true
         } else {
             state.maskStrokes.any { !it.erase && it.points.size > 1 }
         }
@@ -1271,20 +1276,18 @@ fun SpecializedGenerateStep(
     val hasReferenceImages = state.selectedTool.id != "reference" ||
         (state.selectedPhotos.firstOrNull() != null &&
             (state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null))
-    val isPaintOrFloor = state.selectedTool.id in setOf("paint", "floor")
     
     // Unified validation replaces all inline canGenerate/disabledReason logic
     val stepValidation = rememberStepValidation(state)
-    val canGenerate = stepValidation.canProceed
-    val disabledReason = stepValidation.validationMessage
+    val isPaintOrFloor = state.selectedTool.id in setOf("paint", "floor")
     
     StepScaffold(
         eyebrow = stringResource(R.string.step_count_format, wizardStepNumber(state.wizardStage, state.selectedTool), wizardTotalSteps(state.selectedTool)),
         title = stepTitle,
         body = stepBody,
         buttonLabel = stringResource(R.string.generate),
-        buttonEnabled = canGenerate,
-        validationMessage = disabledReason,
+        canProceed = stepValidation.canProceed,
+        validationMessage = stepValidation.validationMessage,
         contentBottomPadding = if (isPaintOrFloor) 32.dp else 18.dp,
         protectBottomInsets = isPaintOrFloor,
         buttonAllowsTwoLines = isPaintOrFloor,
@@ -1302,27 +1305,6 @@ fun SpecializedGenerateStep(
             } else {
                 SourcePreviewCard(state = state)
             }
-            if (state.selectedTool.id in setOf("paint", "floor")) {
-                val maskLabel = if (state.selectedTool.id == "floor") {
-                    stringResource(R.string.mask_floor_marked)
-                } else {
-                    stringResource(R.string.mask_wall_marked)
-                }
-                MaskPreviewCard(
-                    state = state,
-                    title = stringResource(R.string.mask_preview_title),
-                    body = stringResource(R.string.mask_preview_body),
-                )
-                SurfaceMaskStatus(
-                    hasMask = hasRequiredMask,
-                    readyText = stringResource(R.string.mask_ready, maskLabel),
-                    requiredText = if (state.selectedTool.id == "floor") {
-                        stringResource(R.string.mask_required_floor)
-                    } else {
-                        stringResource(R.string.mask_required_wall)
-                    },
-                )
-            }
             if (state.selectedTool.id == "replace") {
                 MaskPreviewCard(
                     state = state,
@@ -1335,7 +1317,6 @@ fun SpecializedGenerateStep(
                     MaterialLibrarySection(
                         options = stepCopy.options,
                         selected = selected,
-                        target = if (state.selectedTool.id == "floor") "floor" else "wall",
                         onSelect = viewModel::setStyle,
                     )
                 } else {
@@ -1393,6 +1374,23 @@ fun SpecializedGenerateStep(
                     }
                 }
             }
+            if (state.selectedTool.id in setOf("paint", "floor")) {
+                OutlinedTextField(
+                    value = state.customPrompt,
+                    onValueChange = viewModel::setCustomPrompt,
+                    label = { Text(stringResource(R.string.custom_notes)) },
+                    placeholder = {
+                        Text(
+                            if (state.selectedTool.id == "paint") stringResource(R.string.custom_notes_paint_placeholder)
+                            else stringResource(R.string.custom_notes_floor_placeholder),
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 4,
+                    shape = RoundedCornerShape(18.dp),
+                )
+            } else {
             OutlinedTextField(
                 value = state.customPrompt,
                 onValueChange = viewModel::setCustomPrompt,
@@ -1408,8 +1406,6 @@ fun SpecializedGenerateStep(
                 placeholder = {
                     Text(
                         when (state.selectedTool.id) {
-                            "paint" -> stringResource(R.string.prompt_paint)
-                            "floor" -> stringResource(R.string.prompt_floor)
                             "replace" -> stringResource(R.string.prompt_replace)
                             "reference" -> stringResource(R.string.custom_notes_placeholder)
                             else -> stringResource(R.string.prompt_optional)
@@ -1434,6 +1430,7 @@ fun SpecializedGenerateStep(
                     null
                 },
             )
+            }
             if (state.selectedTool.id == "replace") {
                 ReplacementReadinessSummary(
                     hasMask = hasRequiredMask,
@@ -1617,7 +1614,8 @@ fun ReferencePhotoStep(
         title = stringResource(R.string.step_add_reference_title),
         body = stringResource(R.string.step_add_reference_body),
         buttonLabel = stringResource(R.string.continue_action),
-        buttonEnabled = hasReference,
+        canProceed = hasReference,
+        validationMessage = if (hasReference) null else stringResource(R.string.reference_missing_error),
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -1754,8 +1752,8 @@ fun MaskEditorStep(
         title = title,
         body = body,
         buttonLabel = stringResource(R.string.continue_action),
-        buttonEnabled = hasMask,
-        validationMessage = if (hasMask) null else disabledLabel,
+        canProceed = hasMask,
+        validationMessage = disabledLabel,
         contentBottomPadding = if (isSurfaceMask) 32.dp else 18.dp,
         protectBottomInsets = isSurfaceMask,
         buttonAllowsTwoLines = isSurfaceMask,
@@ -2165,9 +2163,14 @@ fun LayoutPlanningStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val firstPhoto = state.selectedPhotos.firstOrNull()
     val stepValidation = rememberStepValidation(state)
     val canGenerate = stepValidation.canProceed
+    var showValidationBanner by remember { mutableStateOf(false) }
+
+    LaunchedEffect(canGenerate) {
+        if (canGenerate) showValidationBanner = false
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -2176,13 +2179,6 @@ fun LayoutPlanningStep(
         contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.layout_plan_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                Text(stringResource(R.string.layout_plan_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        // Unified error display replaces inline GenerationErrorNotice
         if (!state.generationError.isNullOrBlank()) {
             item {
                 UnifiedWizardError(
@@ -2193,37 +2189,9 @@ fun LayoutPlanningStep(
             }
         }
         item {
-            Surface(
-                shape = RoundedCornerShape(24.dp),
-                color = StudioPaper,
-                tonalElevation = 2.dp,
-                modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
-            ) {
-                Row(
-                    Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Box(Modifier.size(86.dp).clip(RoundedCornerShape(18.dp))) {
-                        UriOrResourceImage(
-                            uri = firstPhoto?.uri,
-                            imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
-                            contentDescription = stringResource(R.string.room_photo),
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(stringResource(R.string.room_photo), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                        Text(stringResource(R.string.room_photo_layout_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioGreen, modifier = Modifier.size(22.dp))
-                }
-            }
-        }
-        item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                HomeDecorCatalog.layoutGoals.chunked(2).forEach { row ->
+                HomeDecorCatalog.layoutGoals.chunked(3).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.forEach { option ->
                             LayoutGoalChip(
@@ -2233,25 +2201,41 @@ fun LayoutPlanningStep(
                                 modifier = Modifier.weight(1f),
                             )
                         }
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             }
         }
         item {
-            LayoutConstraintFields(state = state, viewModel = viewModel)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = state.layoutConstraints,
+                    onValueChange = viewModel::setLayoutConstraints,
+                    label = { Text(stringResource(R.string.layout_optional_constraints)) },
+                    placeholder = { Text(stringResource(R.string.layout_optional_constraints_placeholder)) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
+                    minLines = 3,
+                    shape = RoundedCornerShape(18.dp),
+                )
+            }
         }
         item {
             AdvancedControls(state = state, viewModel = viewModel)
         }
         item {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                stepValidation.validationMessage?.let { message ->
-                    ValidationNotice(message)
+                if (showValidationBanner && !stepValidation.validationMessage.isNullOrBlank()) {
+                    ValidationAlertBanner(message = stepValidation.validationMessage)
                 }
                 Button(
-                    onClick = viewModel::generate,
-                    enabled = canGenerate,
+                    onClick = {
+                        if (canGenerate) {
+                            showValidationBanner = false
+                            viewModel.generate()
+                        } else {
+                            showValidationBanner = true
+                        }
+                    },
                     shape = CircleShape,
                     colors = studioPrimaryButtonColors(),
                     modifier = Modifier
@@ -2261,7 +2245,7 @@ fun LayoutPlanningStep(
                     Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (canGenerate) stringResource(R.string.layout_generate) else stringResource(R.string.layout_select_goal_to_generate),
+                        stringResource(R.string.layout_generate),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -2281,113 +2265,47 @@ fun LayoutGoalChip(
     modifier: Modifier = Modifier,
 ) {
     val displayLabel = localizedOption(label)
-    val container = if (selected) StudioBlue else StudioPaper
-    val content = if (selected) Color.White else StudioInk
+    val borderColor = if (selected) StudioBlue else StudioLine
+    val borderWidth = if (selected) 2.dp else 1.dp
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        color = container,
-        tonalElevation = if (selected) 4.dp else 1.dp,
-        modifier = modifier.height(82.dp).border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(18.dp)),
+        color = StudioPaper,
+        modifier = modifier.height(64.dp).border(borderWidth, borderColor, RoundedCornerShape(18.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp),
+            Modifier.padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(32.dp)
                     .clip(CircleShape)
-                    .background(if (selected) Color.White.copy(alpha = 0.18f) else StudioMist),
+                    .background(if (selected) StudioBlue.copy(alpha = 0.10f) else StudioMist),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     if (selected) Icons.Rounded.Check else choiceIcon(label),
                     contentDescription = null,
-                    modifier = Modifier.size(if (selected) 18.dp else 19.dp),
-                    tint = if (selected) Color.White else StudioBlue,
+                    modifier = Modifier.size(if (selected) 16.dp else 18.dp),
+                    tint = if (selected) StudioBlue else StudioInk.copy(alpha = 0.5f),
                 )
             }
             Text(
                 displayLabel,
                 modifier = Modifier.weight(1f),
-                color = content,
+                color = StudioInk,
                 style = if (displayLabel.length > 12) {
-                    MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, lineHeight = 18.sp)
+                    MaterialTheme.typography.titleMedium.copy(fontSize = 13.sp, lineHeight = 17.sp)
                 } else {
                     MaterialTheme.typography.titleMedium
                 },
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-    }
-}
-
-@Composable
-fun LayoutConstraintFields(
-    state: HomeDecorUiState,
-    viewModel: HomeDecorViewModel,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.constraints), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            OutlinedTextField(
-                value = state.layoutConstraints,
-                onValueChange = viewModel::setLayoutConstraints,
-                placeholder = { Text(stringResource(R.string.constraints_placeholder)) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp),
-                minLines = 2,
-                shape = RoundedCornerShape(18.dp),
-            )
-        }
-        OutlinedTextField(
-            value = state.palette,
-            onValueChange = viewModel::setPaletteText,
-            label = { Text(stringResource(R.string.furniture_to_keep)) },
-            placeholder = { Text(stringResource(R.string.furniture_to_keep_placeholder)) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
-            shape = RoundedCornerShape(18.dp),
-            singleLine = true,
-        )
-        OutlinedTextField(
-            value = state.mobilierASupprimer,
-            onValueChange = viewModel::setMobilierASupprimerText,
-            label = { Text(stringResource(R.string.furniture_to_remove)) },
-            placeholder = { Text(stringResource(R.string.furniture_to_remove_placeholder)) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
-            shape = RoundedCornerShape(18.dp),
-            singleLine = true,
-        )
-        OutlinedTextField(
-            value = state.mobilierADeplacer,
-            onValueChange = viewModel::setMobilierADeplacerText,
-            label = { Text(stringResource(R.string.furniture_to_move)) },
-            placeholder = { Text(stringResource(R.string.furniture_to_move_placeholder)) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
-            shape = RoundedCornerShape(18.dp),
-            singleLine = true,
-        )
-        OutlinedTextField(
-            value = state.style,
-            onValueChange = viewModel::setStyleText,
-            label = { Text(stringResource(R.string.people_count)) },
-            placeholder = { Text(stringResource(R.string.people_count_placeholder)) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp),
-            shape = RoundedCornerShape(18.dp),
-            singleLine = true,
-        )
-        OutlinedTextField(
-            value = state.customPrompt,
-            onValueChange = viewModel::setCustomPrompt,
-            label = { Text(stringResource(R.string.optional_notes)) },
-            placeholder = { Text(stringResource(R.string.optional_notes_placeholder)) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp),
-            minLines = 3,
-            shape = RoundedCornerShape(18.dp),
-        )
     }
 }
 
@@ -2403,21 +2321,17 @@ fun RefineStep(
             title = stringResource(R.string.add_details_title),
             body = stringResource(R.string.add_details_body),
             buttonLabel = stringResource(R.string.generate),
-            buttonEnabled = stepValidation.canProceed,
+            canProceed = stepValidation.canProceed,
             validationMessage = stepValidation.validationMessage,
             onButton = viewModel::generate,
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 OutlinedTextField(value = state.roomType, onValueChange = viewModel::setRoomTypeText, label = { Text(stringResource(R.string.room_type)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
-                OutlinedTextField(value = state.style, onValueChange = viewModel::setStyleText, label = { Text(stringResource(R.string.people_count)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
-                OutlinedTextField(value = state.palette, onValueChange = viewModel::setPaletteText, label = { Text(stringResource(R.string.furniture_to_keep)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
-                OutlinedTextField(value = state.mobilierASupprimer, onValueChange = viewModel::setMobilierASupprimerText, label = { Text(stringResource(R.string.furniture_to_remove)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
-                OutlinedTextField(value = state.mobilierADeplacer, onValueChange = viewModel::setMobilierADeplacerText, label = { Text(stringResource(R.string.furniture_to_move)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
                 OutlinedTextField(
                     value = state.customPrompt,
                     onValueChange = viewModel::setCustomPrompt,
-                    label = { Text(stringResource(R.string.important_constraints)) },
-                    placeholder = { Text(stringResource(R.string.important_constraints_placeholder)) },
+                    label = { Text(stringResource(R.string.layout_optional_constraints)) },
+                    placeholder = { Text(stringResource(R.string.layout_optional_constraints_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
                     shape = RoundedCornerShape(18.dp),
@@ -2434,7 +2348,7 @@ fun RefineStep(
         body = stringResource(copy.bodyRes),
         buttonLabel = stringResource(R.string.generate_my_design),
         buttonIcon = Icons.Rounded.AutoAwesome,
-        buttonEnabled = stepValidation.canProceed,
+        canProceed = stepValidation.canProceed,
         validationMessage = stepValidation.validationMessage,
         onButton = viewModel::generate,
     ) {
@@ -2446,8 +2360,11 @@ fun RefineStep(
                 onDismiss = viewModel::clearGenerationError,
             )
             if (state.selectedTool.id !in listOf("facade", "garden", "paint")) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.choose_a_mode), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         HomeDecorCatalog.designModes.forEach { (mode, description) ->
                             ModeCard(
@@ -2461,8 +2378,11 @@ fun RefineStep(
                     }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.step_color_harmony_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(stringResource(R.string.step_color_harmony_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.choose_color), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.fillMaxWidth().height(548.dp),
@@ -2608,33 +2528,52 @@ fun PaletteChoiceCard(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        color = studioStateContainer(selected),
-        tonalElevation = studioStateElevation(selected),
+        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
         modifier = modifier
             .width(96.dp)
             .height(142.dp)
-            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
+            .border(
+                if (selected) 2.dp else 1.dp,
+                if (selected) StudioBlue else StudioLine,
+                RoundedCornerShape(18.dp),
+            ),
     ) {
-        Column {
-            if (label == "Suggestion IA") {
-                Box(Modifier.fillMaxWidth().height(82.dp).background(StudioMist), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = StudioBlue)
-                }
-            } else {
-                Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))) {
-                    paletteColors(label).forEach { color ->
-                        Box(Modifier.weight(1f).fillMaxSize().background(color))
+        Box {
+            Column {
+                if (label == "Suggestion IA") {
+                    Box(Modifier.fillMaxWidth().height(82.dp).background(StudioMist), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = StudioBlue)
+                    }
+                } else {
+                    Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))) {
+                        paletteColors(label).forEach { color ->
+                            Box(Modifier.weight(1f).fillMaxSize().background(color))
+                        }
                     }
                 }
+                Text(
+                    displayLabel,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            Text(
-                displayLabel,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (selected) {
+                Surface(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
+                    shape = CircleShape,
+                    color = StudioBlue,
+                ) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        modifier = Modifier.padding(4.dp).size(12.dp),
+                        tint = Color.White,
+                    )
+                }
+            }
         }
     }
 }
@@ -2672,10 +2611,10 @@ fun ProcessingStep(
     }
 
     val progress = when (visibleStep.coerceIn(0, 3)) {
-        0 -> 0.26f
-        1 -> 0.52f
-        2 -> 0.78f
-        else -> 0.94f
+        0 -> 0.15f
+        1 -> 0.40f
+        2 -> 0.70f
+        else -> 0.92f
     }
     val heroImage = processingHeroImage(state.selectedTool.id)
     Column(
@@ -2686,18 +2625,18 @@ fun ProcessingStep(
         verticalArrangement = Arrangement.Center,
     ) {
         Surface(
-            shape = RoundedCornerShape(30.dp),
+            shape = RoundedCornerShape(28.dp),
             color = StudioPaper,
-            tonalElevation = 3.dp,
-            border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+            tonalElevation = 4.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine.copy(alpha = 0.5f)),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(178.dp)
-                        .clip(RoundedCornerShape(24.dp))
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(22.dp))
                         .background(StudioMist),
                 ) {
                     Image(
@@ -2706,7 +2645,7 @@ fun ProcessingStep(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                     )
-                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.58f)))))
+                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)))))
                     Surface(
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.92f),
@@ -2717,7 +2656,7 @@ fun ProcessingStep(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(7.dp),
                         ) {
-                            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(17.dp), tint = StudioBlue)
+                            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp), tint = StudioBlue)
                             Text(stringResource(R.string.generation_progress_badge), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = StudioInk)
                         }
                     }
@@ -2738,27 +2677,47 @@ fun ProcessingStep(
                         )
                     }
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     LinearProgressIndicator(
                         progress = { progress },
-                        modifier = Modifier.fillMaxWidth().height(9.dp).clip(CircleShape),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
                     )
-                    steps.forEachIndexed { index, label ->
-                        GenerationProgressRow(
-                            label = label,
-                            index = index,
-                            visibleStep = visibleStep,
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        steps.forEachIndexed { index, label ->
+                            GenerationStepDot(
+                                label = label,
+                                index = index,
+                                visibleStep = visibleStep,
+                            )
+                        }
                     }
                 }
-                Surface(shape = RoundedCornerShape(18.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        message.ifBlank { stringResource(R.string.processing_transform) },
+                Surface(shape = RoundedCornerShape(16.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
+                    Row(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = StudioBlue,
+                        )
+                        Text(
+                            message.ifBlank { stringResource(R.string.processing_transform) },
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
         }
@@ -2766,42 +2725,50 @@ fun ProcessingStep(
 }
 
 @Composable
-fun GenerationProgressRow(
+fun GenerationStepDot(
     label: String,
     index: Int,
     visibleStep: Int,
 ) {
     val completed = index < visibleStep
     val active = index == visibleStep
-    val container = when {
-        completed -> StudioPrimaryContainer
-        active -> StudioProContainer
-        else -> StudioMist
-    }
-    val content = when {
+    val dotColor = when {
         completed -> StudioBlue
         active -> StudioGold
+        else -> StudioLine
+    }
+    val textColor = when {
+        completed -> StudioBlue
+        active -> StudioInk
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.width(72.dp),
     ) {
-        Surface(shape = CircleShape, color = container) {
-            Icon(
-                if (completed) Icons.Rounded.Check else Icons.Rounded.AutoAwesome,
-                contentDescription = null,
-                modifier = Modifier.padding(7.dp).size(16.dp),
-                tint = content,
-            )
+        Surface(
+            shape = CircleShape,
+            color = dotColor,
+            modifier = Modifier.size(10.dp),
+        ) {
+            if (completed) {
+                Icon(
+                    Icons.Rounded.Check,
+                    contentDescription = null,
+                    modifier = Modifier.padding(2.dp).size(6.dp),
+                    tint = Color.White,
+                )
+            }
         }
         Text(
             label,
-            modifier = Modifier.weight(1f),
-            color = if (active || completed) StudioInk else MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = if (active || completed) FontWeight.Black else FontWeight.Medium,
+            style = MaterialTheme.typography.labelSmall,
+            color = textColor,
+            fontWeight = if (active || completed) FontWeight.Bold else FontWeight.Medium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
         )
     }
 }
