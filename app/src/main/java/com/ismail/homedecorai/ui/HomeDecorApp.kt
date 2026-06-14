@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Dashboard
+import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
@@ -136,22 +137,35 @@ private fun AppScaffold(
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (state.selectedTab != MainTab.Create && !modalVisible) {
-            NavigationBar(
-                modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars),
-                tonalElevation = 0.dp,
-                containerColor = StudioPaper,
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(StudioPaper)
+                        .windowInsetsPadding(WindowInsets.navigationBars),
                 ) {
-                    NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, stringResource(tabLabelRes(MainTab.Tools)), viewModel::selectTab)
-                    NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, stringResource(tabLabelRes(MainTab.Discover)), viewModel::selectTab)
-                    NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Dashboard, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
-                    NavItem(MainTab.Settings, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Settings)), viewModel::selectTab)
+                    NavigationBar(
+                        modifier = Modifier.fillMaxWidth(),
+                        tonalElevation = 0.dp,
+                        containerColor = StudioPaper,
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, stringResource(tabLabelRes(MainTab.Tools)), viewModel::selectTab)
+                            NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, stringResource(tabLabelRes(MainTab.Discover)), viewModel::selectTab)
+                            NavItemPremium(
+                                selectedTab = state.selectedTab,
+                                icon = Icons.Rounded.Diamond,
+                                label = stringResource(tabLabelRes(MainTab.UpgradePro)),
+                                onClick = { viewModel.openPaywall() },
+                            )
+                            NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Dashboard, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
+                            NavItem(MainTab.Settings, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Settings)), viewModel::selectTab)
+                        }
+                    }
                 }
-            }
             }
         },
     ) { padding ->
@@ -161,6 +175,7 @@ private fun AppScaffold(
                     MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
+                    MainTab.UpgradePro -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Profile -> MyBoardScreen(state = state, viewModel = viewModel)
                     MainTab.Settings -> SettingsScreen(state = state, viewModel = viewModel, currentLanguageTag = currentLanguageTag, onLanguageSelected = onLanguageSelected)
                 }
@@ -278,6 +293,49 @@ private fun NavItem(
             style = MaterialTheme.typography.labelSmall,
             color = if (selected) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+        )
+    }
+}
+
+@Composable
+private fun NavItemPremium(
+    selectedTab: MainTab,
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .width(70.dp)
+            .minimumTouchTarget()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(role = Role.Tab) { onClick() }
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .height(30.dp)
+                .clip(CircleShape)
+                .background(HomeDecorColors.ProContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                icon,
+                contentDescription = label,
+                tint = StudioGold,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Text(
+            label,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelSmall,
+            color = StudioGold,
+            fontWeight = FontWeight.Bold,
         )
     }
 }

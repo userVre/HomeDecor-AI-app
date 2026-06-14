@@ -3,7 +3,6 @@ package com.ismail.homedecorai.ui.discover
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,9 +30,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Brush
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Landscape
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.AlertDialog
@@ -41,10 +37,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -63,7 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -298,10 +291,7 @@ fun DiscoverSectionRow(
                 GalleryCard(
                     item = item,
                     isFavorite = discoverSource(item) in favoriteSources,
-                    onClick = { onPreview(item) },
-                    onFavorite = { onFavorite(item) },
-                    onMoodboard = { onMoodboard(item) },
-                    onUseStyle = { onUseStyle(item) },
+                    onClick = { onUseStyle(item) },
                 )
             }
         }
@@ -352,10 +342,7 @@ fun DiscoverDetailScreen(
                     item = item,
                     isFavorite = discoverSource(item) in favoriteSources,
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { onPreview(item) },
-                    onFavorite = { onFavorite(item) },
-                    onMoodboard = { onMoodboard(item) },
-                    onUseStyle = { onUseStyle(item) },
+                    onClick = { onUseStyle(item) },
                 )
             }
         }
@@ -426,9 +413,6 @@ fun GalleryCard(
     isFavorite: Boolean,
     modifier: Modifier = Modifier.width(196.dp),
     onClick: () -> Unit,
-    onFavorite: () -> Unit,
-    onMoodboard: () -> Unit,
-    onUseStyle: () -> Unit,
 ) {
     val itemTitle = localizedGalleryTitle(item)
     ElevatedCard(
@@ -445,24 +429,5 @@ fun GalleryCard(
                 contentScale = ContentScale.Crop,
             )
         }
-    }
-}
-
-@Composable
-fun DiscoverIconAction(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    active: Boolean = false,
-) {
-    FilledIconButton(
-        onClick = onClick,
-        modifier = Modifier.size(48.dp),
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = Color.White.copy(alpha = 0.92f),
-            contentColor = if (active) StudioGold else StudioBlue,
-        ),
-    ) {
-        Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp))
     }
 }

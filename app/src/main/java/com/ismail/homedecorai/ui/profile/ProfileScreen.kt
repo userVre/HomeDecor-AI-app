@@ -252,33 +252,12 @@ private fun SignInHeroCard(
             Modifier.padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Surface(
-                shape = CircleShape,
-                color = StudioMist,
-                border = BorderStroke(1.5f.dp, StudioLine),
-                modifier = Modifier.size(72.dp),
-            ) {
-                Icon(
-                    Icons.Rounded.Person,
-                    contentDescription = null,
-                    modifier = Modifier.padding(18.dp).size(36.dp),
-                    tint = StudioLine,
-                )
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(
-                stringResource(R.string.sign_in_to_account),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(6.dp))
             Text(
                 stringResource(R.string.sign_in_to_account_body),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall,
-                lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
+                style = MaterialTheme.typography.bodyMedium,
+                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
             )
             Spacer(Modifier.height(20.dp))
             Button(
@@ -287,8 +266,6 @@ private fun SignInHeroCard(
                 colors = ButtonDefaults.buttonColors(containerColor = StudioBrownBtn),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
-                Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(10.dp))
@@ -298,8 +275,6 @@ private fun SignInHeroCard(
                 border = BorderStroke(1.5f.dp, StudioLine),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
-                Text(stringResource(R.string.google_icon_label), fontWeight = FontWeight.Bold, color = Color(0xFF4285F4))
-                Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.continue_with_google), fontWeight = FontWeight.SemiBold)
             }
         }

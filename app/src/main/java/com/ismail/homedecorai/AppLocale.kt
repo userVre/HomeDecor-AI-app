@@ -14,6 +14,7 @@ data class AppLanguageOption(
 object AppLocale {
     private const val PREFS_NAME = "home_decor_locale"
     private const val PREF_LANGUAGE_TAG = "language_tag"
+    private const val PREF_FIRST_LAUNCH_DONE = "first_launch_language_done"
     const val SYSTEM_LANGUAGE_TAG = "system"
     private const val DEFAULT_LANGUAGE_TAG = "en-US"
 
@@ -36,11 +37,67 @@ object AppLocale {
         AppLanguageOption(tag = "vi", labelRes = R.string.language_name_vi),
     )
 
+    private val countryToLanguage = mapOf(
+        "US" to "en-US", "GB" to "en-US", "AU" to "en-US", "NZ" to "en-US",
+        "IE" to "en-US", "SG" to "en-US", "IN" to "en-US", "ZA" to "en-US",
+        "FR" to "fr", "BE" to "fr", "CH" to "fr", "MC" to "fr", "LU" to "fr",
+        "MA" to "ar", "TN" to "ar", "DZ" to "ar", "EG" to "ar",
+        "SA" to "ar", "AE" to "ar", "QA" to "ar", "KW" to "ar",
+        "BH" to "ar", "OM" to "ar", "JO" to "ar", "LB" to "ar",
+        "IQ" to "ar", "SY" to "ar", "YE" to "ar", "LY" to "ar", "SD" to "ar",
+        "DE" to "de", "AT" to "de", "LI" to "de",
+        "IT" to "it", "SM" to "it", "VA" to "it",
+        "ES" to "es", "AD" to "es",
+        "MX" to "es-MX", "CO" to "es-MX", "AR" to "es-MX", "CL" to "es-MX",
+        "PE" to "es-MX", "VE" to "es-MX", "EC" to "es-MX", "BO" to "es-MX",
+        "PY" to "es-MX", "UY" to "es-MX", "CR" to "es-MX", "PA" to "es-MX",
+        "GT" to "es-MX", "HN" to "es-MX", "SV" to "es-MX", "NI" to "es-MX",
+        "DO" to "es-MX", "CU" to "es-MX", "PR" to "es-MX",
+        "JP" to "ja",
+        "KR" to "ko",
+        "PT" to "pt", "MO" to "pt",
+        "BR" to "pt-BR",
+        "RU" to "ru", "BY" to "ru",
+        "CN" to "zh-Hans",
+        "TW" to "zh-Hant", "HK" to "zh-Hant",
+        "SE" to "sv", "FI" to "sv",
+        "VN" to "vi",
+    )
+
+    fun detectLanguageFromSystem(context: Context): String {
+        val configuration = context.resources.configuration
+        val deviceLocale = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            configuration.locales.get(0)
+        } else {
+            @Suppress("DEPRECATION")
+            configuration.locale
+        }
+        val country = deviceLocale.country
+        if (country.isNotBlank()) {
+            countryToLanguage[country.uppercase(Locale.ROOT)]?.let { return it }
+        }
+        return normalizeManualLanguageTag(deviceLocale.toLanguageTag())
+    }
+
+    private fun autoDetectOnFirstLaunch(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (prefs.getBoolean(PREF_FIRST_LAUNCH_DONE, false)) {
+            return SYSTEM_LANGUAGE_TAG
+        }
+        prefs.edit().putBoolean(PREF_FIRST_LAUNCH_DONE, true).apply()
+        val detected = detectLanguageFromSystem(context)
+        prefs.edit().putString(PREF_LANGUAGE_TAG, detected).apply()
+        return detected
+    }
+
     fun readLanguageTag(context: Context): String {
         val saved = context
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getString(PREF_LANGUAGE_TAG, null)
-        return normalizePreferenceTag(saved)
+        if (saved != null) {
+            return normalizePreferenceTag(saved)
+        }
+        return autoDetectOnFirstLaunch(context)
     }
 
     fun saveLanguageTag(context: Context, languageTag: String): String {

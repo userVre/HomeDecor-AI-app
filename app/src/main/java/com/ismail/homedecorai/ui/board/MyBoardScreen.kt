@@ -1,6 +1,5 @@
 package com.ismail.homedecorai.ui.board
 
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -26,21 +25,21 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,7 +52,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,19 +64,17 @@ import com.ismail.homedecorai.GeneratedResult
 import com.ismail.homedecorai.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
-import com.ismail.homedecorai.isGeneratedResult
 import com.ismail.homedecorai.ui.components.WorkspaceImage
-import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
 import com.ismail.homedecorai.ui.theme.*
 
 enum class BoardTab { Generated, Favorites }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MyBoardScreen(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val context = LocalContext.current
     val signedIn = !state.viewer.isGuest || state.signedInName != null
     var selectedTab by remember { mutableStateOf(BoardTab.Generated) }
 
@@ -88,95 +84,123 @@ fun MyBoardScreen(
             .background(StudioCanvas)
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            Text(
-                stringResource(R.string.my_board_title),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black,
+        Spacer(Modifier.height(48.dp))
+
+        if (!signedIn) {
+            SignInCard(
+                onSignIn = { viewModel.openAuth() },
             )
         }
 
-        TabRow(
+        Spacer(Modifier.height(if (signedIn) 24.dp else 16.dp))
+
+        PrimaryTabRow(
             selectedTabIndex = selectedTab.ordinal,
             containerColor = Color.Transparent,
             contentColor = StudioBrownBtn,
-            indicator = { tabPositions ->
+            indicator = {
                 TabRowDefaults.SecondaryIndicator(
-                    Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
+                    Modifier.tabIndicatorOffset(selectedTab.ordinal),
                     color = StudioBrownBtn,
+                    height = 3.dp,
                 )
             },
-            divider = {},
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            divider = {
+                TabRowDefaults.SecondaryIndicator(
+                    color = StudioMist,
+                    height = 1.dp,
+                )
+            },
+            modifier = Modifier.padding(horizontal = 20.dp),
         ) {
             Tab(
                 selected = selectedTab == BoardTab.Generated,
                 onClick = { selectedTab = BoardTab.Generated },
-                text = { Text(stringResource(R.string.generated_tab), fontWeight = FontWeight.SemiBold) },
+                text = {
+                    Text(
+                        stringResource(R.string.generated_tab),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                },
             )
             Tab(
                 selected = selectedTab == BoardTab.Favorites,
                 onClick = { selectedTab = BoardTab.Favorites },
-                text = { Text(stringResource(R.string.favorites_tab), fontWeight = FontWeight.SemiBold) },
+                text = {
+                    Text(
+                        stringResource(R.string.favorites_tab),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                },
             )
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(24.dp))
 
-        if (!signedIn) {
-            BoardLockedState(
-                onSignIn = { viewModel.openAuth() },
+        when (selectedTab) {
+            BoardTab.Generated -> GeneratedSection(
+                state = state,
+                viewModel = viewModel,
             )
-        } else {
-            when (selectedTab) {
-                BoardTab.Generated -> GeneratedSection(
-                    state = state,
-                    viewModel = viewModel,
-                )
-                BoardTab.Favorites -> FavoritesBoardSection(
-                    state = state,
-                    viewModel = viewModel,
-                )
-            }
+            BoardTab.Favorites -> FavoritesBoardSection(
+                state = state,
+                viewModel = viewModel,
+            )
         }
     }
 }
 
 @Composable
-private fun BoardLockedState(
+private fun SignInCard(
     onSignIn: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
+            .padding(horizontal = 20.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = StudioPaper,
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, StudioLine),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             Text(
-                stringResource(R.string.sign_in_to_account_body),
+                stringResource(R.string.sign_in_to_view_board),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                stringResource(R.string.sign_in_to_view_board_body),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
+                lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
             )
-            Spacer(Modifier.height(20.dp))
             OutlinedButton(
                 onClick = onSignIn,
                 shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.outlinedButtonColors(containerColor = StudioBrownBtn),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = StudioBrownBtn,
+                ),
+                border = BorderStroke(1.dp, StudioBrownBtn),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
             ) {
                 Text(
-                    stringResource(R.string.continue_with_google),
+                    stringResource(R.string.sign_in),
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
         }
@@ -188,7 +212,6 @@ private fun GeneratedSection(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val context = LocalContext.current
     val generatedItems = remember(state.workspace.generatedResults) {
         state.workspace.generatedResults
             .filter { it.status != "failed" && (!it.imageUrl.isNullOrBlank() || !it.imageUri.isNullOrBlank()) }
@@ -329,7 +352,11 @@ private fun FavoritesBoardSection(
                     },
                     onDelete = {
                         viewModel.removeFavorite(favorite.id)
-                        Toast.makeText(context, context.getString(R.string.toast_favorite_removed), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.toast_favorite_removed),
+                            Toast.LENGTH_SHORT,
+                        ).show()
                     },
                 )
             }
@@ -369,7 +396,7 @@ private fun FavoriteBoardCard(
                     modifier = Modifier.fillMaxSize(),
                 )
                 Surface(
-                    shape = CircleShape,
+                    shape = RoundedCornerShape(10.dp),
                     color = Color.White.copy(alpha = 0.85f),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -447,7 +474,7 @@ private fun EmptyBoardState() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Surface(
-            shape = CircleShape,
+            shape = RoundedCornerShape(20.dp),
             color = StudioMist,
             modifier = Modifier.size(64.dp),
         ) {

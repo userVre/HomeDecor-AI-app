@@ -274,14 +274,13 @@ private fun TopBar(onClose: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(
-            onClick = onClose,
-            modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(Color.Black.copy(alpha = 0.08f)),
-        ) {
-            Icon(Icons.Rounded.Close, contentDescription = null, tint = PaywallTextPrimary, modifier = Modifier.size(16.dp))
+        IconButton(onClick = onClose, modifier = Modifier.size(40.dp)) {
+            Icon(
+                Icons.Rounded.Close,
+                contentDescription = null,
+                tint = Color(0xFF6B6B6B),
+                modifier = Modifier.size(24.dp),
+            )
         }
 
         Surface(
@@ -303,7 +302,7 @@ private fun TopBar(onClose: () -> Unit) {
             }
         }
 
-        Spacer(Modifier.size(34.dp))
+        Spacer(Modifier.size(32.dp))
     }
 }
 
@@ -386,9 +385,9 @@ private fun ComparisonTableSection() {
                 Text(stringResource(R.string.paywall_cmp_pro).uppercase(), style = DmSansBold.copy(fontSize = 10.sp), color = PaywallAccent, modifier = Modifier.width(65.dp), textAlign = TextAlign.Center)
             }
             ComparisonRow(stringResource(R.string.paywall_cmp_renders), "3", stringResource(R.string.paywall_cmp_unlimited))
-            ComparisonRow(stringResource(R.string.paywall_cmp_export), "HD", stringResource(R.string.paywall_cmp_4k))
-            ComparisonRow(stringResource(R.string.paywall_cmp_watermark), stringResource(R.string.paywall_cmp_yes), stringResource(R.string.paywall_cmp_none))
-            ComparisonRow(stringResource(R.string.paywall_cmp_ai), stringResource(R.string.paywall_cmp_standard), stringResource(R.string.paywall_cmp_priority_pro))
+            ComparisonRow(stringResource(R.string.paywall_cmp_4k_export), stringResource(R.string.paywall_cmp_4k_export_free), stringResource(R.string.paywall_cmp_4k_export_pro))
+            ComparisonRow(stringResource(R.string.paywall_cmp_no_watermark), stringResource(R.string.paywall_cmp_no_watermark_free), stringResource(R.string.paywall_cmp_no_watermark_pro))
+            ComparisonRow(stringResource(R.string.paywall_cmp_ai_speed), stringResource(R.string.paywall_cmp_ai_speed_free), stringResource(R.string.paywall_cmp_ai_speed_pro))
         }
     }
 }

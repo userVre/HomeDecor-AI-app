@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -61,7 +60,6 @@ fun ToolsScreen(
         ToolsHeader(
             state = state,
             onCredits = viewModel::openDiamondStore,
-            onPass = viewModel::openPaywall,
         )
         LazyColumn(
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 28.dp),
@@ -78,57 +76,37 @@ fun ToolsScreen(
 fun ToolsHeader(
     state: HomeDecorUiState,
     onCredits: () -> Unit,
-    onPass: () -> Unit,
 ) {
     Surface(color = StudioCanvas, tonalElevation = 0.dp) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Icon(
-                        Icons.Rounded.Diamond,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = StudioBlue,
-                    )
-                    Text(
-                        if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                Surface(
-                    onClick = onPass,
-                    shape = CircleShape,
-                    color = if (state.isPro) StudioProContainer else StudioPrimaryContainer,
-                    tonalElevation = 1.dp,
-                    modifier = Modifier.minimumTouchTarget(),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(if (state.isPro) stringResource(R.string.pro) else stringResource(R.string.upgrade_to_pro), fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-            Spacer(Modifier.height(4.dp))
             Text(
                 stringResource(R.string.nav_tools),
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = MaterialTheme.typography.headlineLarge.fontSize * 1.6f),
                 fontWeight = FontWeight.Black,
+                modifier = Modifier.weight(1f),
             )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Icon(
+                    Icons.Rounded.Diamond,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = StudioBlue,
+                )
+                Text(
+                    if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }
@@ -165,14 +143,6 @@ fun ToolCard(
                         ),
                     ),
             )
-            Surface(
-                shape = CircleShape,
-                color = Color.White.copy(alpha = 0.92f),
-                tonalElevation = 4.dp,
-                modifier = Modifier.align(Alignment.TopStart).padding(18.dp),
-            ) {
-                Icon(toolIcon(tool), contentDescription = null, tint = StudioBlue, modifier = Modifier.padding(12.dp).size(22.dp))
-            }
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)

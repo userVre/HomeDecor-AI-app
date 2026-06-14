@@ -66,6 +66,7 @@ import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material.icons.rounded.Settings
@@ -161,6 +162,8 @@ import com.ismail.homedecorai.ui.components.*
 import com.ismail.homedecorai.ui.dialogs.*
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
+import com.ismail.homedecorai.validation.WizardValidationState
+import com.ismail.homedecorai.validation.rememberStepValidation
 
 
 private data class ImageInputActions(
@@ -304,15 +307,22 @@ fun DesignStepHeader(
             Box(
                 modifier = Modifier.fillMaxWidth().height(48.dp),
             ) {
-                Box(modifier = Modifier.align(Alignment.CenterStart)) {
-                    if (step > 1) {
-                        IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
-                        }
-                    } else {
+                Text(
+                    localizedWorkflowTitle(state.selectedTool),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                ) {
+                    if (step == 1) {
                         Row(
                             modifier = Modifier
-                                .clip(CircleShape)
                                 .clickable(onClick = onCredits)
                                 .padding(horizontal = 8.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -331,31 +341,41 @@ fun DesignStepHeader(
                             )
                         }
                     }
+                    IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
+                    }
                 }
-                Text(
-                    localizedWorkflowTitle(state.selectedTool),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-                IconButton(onClick = onClose, modifier = Modifier.align(Alignment.CenterEnd).size(48.dp)) {
-                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
+                if (step > 1) {
+                    Box(modifier = Modifier.align(Alignment.CenterStart)) {
+                        IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
+                        }
+                    }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(5.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 Text(
                     stringResource(R.string.step_count_format, step, totalSteps),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     repeat(totalSteps) { index ->
                         val active = index < step
                         Box(
-                            modifier = Modifier.weight(1f).height(5.dp).clip(CircleShape).background(if (active) StudioBlue else StudioLine)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(5.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(if (active) StudioBlue else StudioLine)
                         )
                     }
                 }
@@ -387,16 +407,17 @@ fun StepScaffold(
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val hasValidationError = !validationMessage.isNullOrBlank()
                     Text(
                         title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Black,
-                        color = if (buttonEnabled && !validationMessage.isNullOrBlank()) MaterialTheme.colorScheme.error else Color.Unspecified,
+                        color = if (hasValidationError) MaterialTheme.colorScheme.error else Color.Unspecified,
                     )
                     if (body != null) {
                         Text(body, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    if (buttonEnabled && !validationMessage.isNullOrBlank()) {
+                    if (hasValidationError) {
                         Text(
                             validationMessage,
                             style = MaterialTheme.typography.bodyMedium,
@@ -420,9 +441,6 @@ fun StepScaffold(
                 Modifier.fillMaxWidth().height(58.dp)
             }
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (!buttonEnabled && !validationMessage.isNullOrBlank()) {
-                    ValidationNotice(validationMessage)
-                }
                 Button(
                     onClick = onButton,
                     enabled = buttonEnabled,
@@ -520,9 +538,6 @@ fun ReferenceImagesStep(
                 Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.try_with_example))
-            }
-            if (missingHint != null) {
-                ReferenceContinueHint(missingHint)
             }
         }
     }
@@ -842,14 +857,15 @@ fun ChoiceStep(
     visualStyleCards: Boolean = false,
     visualBuildingCards: Boolean = false,
 ) {
+    val stepValidation = rememberStepValidation(state)
     StepScaffold(
         eyebrow = eyebrow,
         title = stringResource(copy.titleRes),
         body = stringResource(copy.bodyRes),
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
-        buttonEnabled = selected.isNotEmpty(),
-        validationMessage = stringResource(R.string.validation_choose_option_to_continue),
+        buttonEnabled = stepValidation.canProceed,
+        validationMessage = stepValidation.validationMessage,
         onButton = onContinue,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -898,8 +914,6 @@ fun PhotoStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    val isLayoutTool = state.selectedTool.id == "layout"
-    val allowExamplePhotos = true
     val imageInputActions = rememberImageInputActions { uri ->
         viewModel.setPhoto(uri)
     }
@@ -911,12 +925,8 @@ fun PhotoStep(
         stringResource(copy.titleRes)
     }
     val copyBody = stringResource(copy.bodyRes)
+    val stepValidation = rememberStepValidation(state)
     val hasMainPhoto = state.selectedPhotos.isNotEmpty()
-    val validationMsg = if (!hasMainPhoto && allowExamplePhotos) {
-        stringResource(R.string.add_photo_to_continue)
-    } else if (!hasMainPhoto) {
-        stringResource(R.string.validation_upload_source_photo)
-    } else null
     StepScaffold(
         eyebrow = stringResource(R.string.step_count_format, 1, wizardTotalSteps(state.selectedTool)),
         title = if (!hasMainPhoto) copyTitle else stringResource(R.string.photo_added),
@@ -924,7 +934,7 @@ fun PhotoStep(
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
         buttonEnabled = true,
-        validationMessage = validationMsg,
+        validationMessage = stepValidation.validationMessage,
         onButton = {
             if (hasMainPhoto) viewModel.nextStage()
         },
@@ -937,23 +947,36 @@ fun PhotoStep(
                     color = StudioPaper,
                     modifier = Modifier.fillMaxWidth().height(200.dp).border(1.dp, StudioLine, RoundedCornerShape(26.dp)),
                 ) {
-                    Column(
-                        Modifier.padding(22.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Surface(shape = CircleShape, color = StudioPrimaryContainer, modifier = Modifier.size(64.dp)) {
-                            Icon(
-                                Icons.Rounded.PhotoCamera,
-                                contentDescription = null,
-                                tint = StudioBlue,
-                                modifier = Modifier.padding(16.dp).size(32.dp),
-                            )
+                        Surface(
+                            shape = CircleShape,
+                            color = StudioBlue.copy(alpha = 0.10f),
+                            modifier = Modifier.size(72.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Rounded.PhotoCamera,
+                                    contentDescription = null,
+                                    tint = StudioBlue,
+                                    modifier = Modifier.size(32.dp),
+                                )
+                                Icon(
+                                    Icons.Rounded.Add,
+                                    contentDescription = null,
+                                    tint = StudioBlue,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(2.dp)
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(StudioPaper)
+                                        .padding(2.dp),
+                                )
+                            }
                         }
-                        Spacer(Modifier.height(12.dp))
-                        Text(copyTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(4.dp))
-                        Text(copyBody, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             } else {
@@ -973,34 +996,6 @@ fun PhotoStep(
                     onAdd = { showUploadSheet = true },
                     onRemove = viewModel::removePhoto,
                 )
-            }
-            if (allowExamplePhotos) {
-                OutlinedButton(
-                    onClick = {
-                        val example = examplesForTool(state.selectedTool).first().label
-                        viewModel.selectExamplePhoto(example)
-                    },
-                    shape = CircleShape,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) {
-                    Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.try_with_example))
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(R.string.example_photos), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(examplesForTool(state.selectedTool), key = { "example-${it.label}" }) { photo ->
-                            ExamplePhotoCard(
-                                photo = photo,
-                                selected = state.selectedPhotos.any { it.exampleLabel == photo.label },
-                                onClick = {
-                                    viewModel.selectExamplePhoto(photo.label)
-                                },
-                            )
-                        }
-                    }
-                }
             }
         }
     }
@@ -1054,7 +1049,7 @@ fun PhotoStep(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Icon(Icons.Rounded.PhotoCamera, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
                         Text(stringResource(R.string.photos), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -1277,41 +1272,17 @@ fun SpecializedGenerateStep(
         (state.selectedPhotos.firstOrNull() != null &&
             (state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null))
     val isPaintOrFloor = state.selectedTool.id in setOf("paint", "floor")
-    val canGenerate = when (state.selectedTool.id) {
-        "replace" -> hasRequiredMask && hasReplacementPrompt
-        "reference" -> selected.isNotEmpty() && hasReferenceImages
-        else -> (selected.isNotEmpty() || state.customPrompt.isNotBlank()) && (!requiresMask || hasRequiredMask)
-    }
-    val disabledReason = when {
-        requiresMask && !hasRequiredMask -> when (state.selectedTool.id) {
-            "floor" -> stringResource(R.string.validation_mark_floor_to_generate)
-            "replace" -> stringResource(R.string.validation_mark_object_to_generate)
-            else -> stringResource(R.string.validation_mark_wall_to_generate)
-        }
-        state.selectedTool.id == "reference" && !hasReferenceImages -> stringResource(R.string.reference_missing_error)
-        state.selectedTool.id == "reference" && selected.isEmpty() -> stringResource(R.string.validation_choose_transfer_strength)
-        state.selectedTool.id == "replace" && !hasReplacementPrompt -> stringResource(R.string.replacement_prompt_required_error)
-        state.selectedTool.id == "paint" && selected.isEmpty() && state.customPrompt.isBlank() -> stringResource(R.string.validation_choose_color_or_prompt)
-        state.selectedTool.id == "floor" && selected.isEmpty() && state.customPrompt.isBlank() -> stringResource(R.string.validation_choose_material_or_prompt)
-        else -> null
-    }
+    
+    // Unified validation replaces all inline canGenerate/disabledReason logic
+    val stepValidation = rememberStepValidation(state)
+    val canGenerate = stepValidation.canProceed
+    val disabledReason = stepValidation.validationMessage
+    
     StepScaffold(
         eyebrow = stringResource(R.string.step_count_format, wizardStepNumber(state.wizardStage, state.selectedTool), wizardTotalSteps(state.selectedTool)),
         title = stepTitle,
         body = stepBody,
-        buttonLabel = if (requiresMask && !hasRequiredMask) {
-            when (state.selectedTool.id) {
-                "floor" -> stringResource(R.string.paint_mask_before_generate_floor)
-                "replace" -> stringResource(R.string.paint_mask_before_generate_replace)
-                else -> stringResource(R.string.paint_mask_before_generate_wall)
-            }
-        } else if (state.selectedTool.id == "reference" && !hasReferenceImages) {
-            stringResource(R.string.add_both_images)
-        } else if (state.selectedTool.id == "replace" && !hasReplacementPrompt) {
-            stringResource(R.string.choose_replacement_before_generate)
-        } else {
-            stringResource(R.string.generate)
-        },
+        buttonLabel = stringResource(R.string.generate),
         buttonEnabled = canGenerate,
         validationMessage = disabledReason,
         contentBottomPadding = if (isPaintOrFloor) 32.dp else 18.dp,
@@ -1320,12 +1291,12 @@ fun SpecializedGenerateStep(
         onButton = viewModel::generate,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (!state.generationError.isNullOrBlank()) {
-                GenerationErrorNotice(
-                    message = state.generationError,
-                    onRetry = viewModel::generate,
-                )
-            }
+            // Unified error display replaces inline GenerationErrorNotice/EnhancedGenerationErrorNotice
+            UnifiedWizardError(
+                message = state.generationError.orEmpty(),
+                onRetry = viewModel::generate,
+                onDismiss = viewModel::clearGenerationError,
+            )
             if (state.selectedTool.id == "reference") {
                 ReferenceStylePreview(state = state)
             } else {
@@ -1782,9 +1753,9 @@ fun MaskEditorStep(
         eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
         title = title,
         body = body,
-        buttonLabel = if (hasMask) stringResource(R.string.continue_action) else disabledLabel,
+        buttonLabel = stringResource(R.string.continue_action),
         buttonEnabled = hasMask,
-        validationMessage = disabledLabel,
+        validationMessage = if (hasMask) null else disabledLabel,
         contentBottomPadding = if (isSurfaceMask) 32.dp else 18.dp,
         protectBottomInsets = isSurfaceMask,
         buttonAllowsTwoLines = isSurfaceMask,
@@ -2195,8 +2166,8 @@ fun LayoutPlanningStep(
     viewModel: HomeDecorViewModel,
 ) {
     val firstPhoto = state.selectedPhotos.firstOrNull()
-    val hasPlanningGoal = state.selectedRooms.isNotEmpty()
-    val canGenerate = firstPhoto != null && hasPlanningGoal
+    val stepValidation = rememberStepValidation(state)
+    val canGenerate = stepValidation.canProceed
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -2211,11 +2182,13 @@ fun LayoutPlanningStep(
                 Text(stringResource(R.string.layout_plan_body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        // Unified error display replaces inline GenerationErrorNotice
         if (!state.generationError.isNullOrBlank()) {
             item {
-                GenerationErrorNotice(
+                UnifiedWizardError(
                     message = state.generationError,
                     onRetry = viewModel::generate,
+                    onDismiss = viewModel::clearGenerationError,
                 )
             }
         }
@@ -2273,14 +2246,8 @@ fun LayoutPlanningStep(
         }
         item {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (!canGenerate) {
-                    ValidationNotice(
-                        if (firstPhoto == null) {
-                            stringResource(R.string.validation_add_source_photo)
-                        } else {
-                            stringResource(R.string.validation_select_layout_goal)
-                        },
-                    )
+                stepValidation.validationMessage?.let { message ->
+                    ValidationNotice(message)
                 }
                 Button(
                     onClick = viewModel::generate,
@@ -2294,7 +2261,7 @@ fun LayoutPlanningStep(
                     Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (hasPlanningGoal) stringResource(R.string.layout_generate) else stringResource(R.string.layout_select_goal_to_generate),
+                        if (canGenerate) stringResource(R.string.layout_generate) else stringResource(R.string.layout_select_goal_to_generate),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -2429,14 +2396,15 @@ fun RefineStep(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
+    val stepValidation = rememberStepValidation(state)
     if (state.selectedTool.id == "layout") {
         StepScaffold(
             eyebrow = stringResource(R.string.step_count_format, 3, wizardTotalSteps(state.selectedTool)),
             title = stringResource(R.string.add_details_title),
             body = stringResource(R.string.add_details_body),
             buttonLabel = stringResource(R.string.generate),
-            buttonEnabled = state.selectedRooms.isNotEmpty(),
-            validationMessage = stringResource(R.string.validation_select_layout_goal),
+            buttonEnabled = stepValidation.canProceed,
+            validationMessage = stepValidation.validationMessage,
             onButton = viewModel::generate,
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -2466,17 +2434,17 @@ fun RefineStep(
         body = stringResource(copy.bodyRes),
         buttonLabel = stringResource(R.string.generate_my_design),
         buttonIcon = Icons.Rounded.AutoAwesome,
-        buttonEnabled = state.selectedPalettes.isNotEmpty(),
-        validationMessage = stringResource(R.string.validation_choose_palette_to_generate),
+        buttonEnabled = stepValidation.canProceed,
+        validationMessage = stepValidation.validationMessage,
         onButton = viewModel::generate,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            if (!state.generationError.isNullOrBlank()) {
-                GenerationErrorNotice(
-                    message = state.generationError,
-                    onRetry = viewModel::generate,
-                )
-            }
+            // Unified error display replaces inline GenerationErrorNotice
+            UnifiedWizardError(
+                message = state.generationError.orEmpty(),
+                onRetry = viewModel::generate,
+                onDismiss = viewModel::clearGenerationError,
+            )
             if (state.selectedTool.id !in listOf("facade", "garden", "paint")) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)

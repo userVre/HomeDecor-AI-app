@@ -20,8 +20,10 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import java.util.UUID
+import com.ismail.homedecorai.validation.WizardValidationEngine
+import com.ismail.homedecorai.validation.createStateMap
 
-enum class MainTab { Tools, Create, Discover, Profile, Settings }
+enum class MainTab { Tools, Create, Discover, UpgradePro, Profile, Settings }
 enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
 enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
 
@@ -854,6 +856,7 @@ class HomeDecorViewModel(
     private val appContext = context.applicationContext
     private val preferences = context.applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     private var anonymousId = preferences.getString(KEY_ANONYMOUS_ID, null) ?: newAnonymousId()
+    private val validationEngine = WizardValidationEngine()
     private val _uiState = MutableStateFlow(
         HomeDecorUiState(
             progressMessage = text(R.string.progress_preparing_studio),
@@ -1435,6 +1438,10 @@ class HomeDecorViewModel(
         }
     }
 
+    fun clearGenerationError() {
+        _uiState.update { it.copy(generationError = null) }
+    }
+
     fun selectReplacementSuggestion(suggestion: String) {
         _uiState.update {
             it.copy(
@@ -1854,6 +1861,54 @@ class HomeDecorViewModel(
         }
     }
 
+    /**
+     * Get the current validation state for the wizard
+     */
+    fun getCurrentValidationState(): com.ismail.homedecorai.validation.WizardValidationState {
+        val snapshot = _uiState.value
+        val stateMap = createStateMap(
+            hasPhoto = snapshot.selectedPhotos.isNotEmpty() || snapshot.selectedPhotoUri != null,
+            selectedRooms = snapshot.selectedRooms,
+            selectedStyles = snapshot.selectedStyles,
+            selectedPalettes = snapshot.selectedPalettes,
+            maskStrokes = snapshot.maskStrokes,
+            customPrompt = snapshot.customPrompt,
+            hasReferenceImages = hasReferenceFlowImages(snapshot),
+            layoutGoalSelected = snapshot.selectedRooms.isNotEmpty(),
+        )
+        
+        return validationEngine.validateWizard(
+            toolId = snapshot.selectedTool.id,
+            currentStep = snapshot.wizardStage,
+            state = stateMap,
+            context = appContext,
+        )
+    }
+
+    /**
+     * Validate a specific step and return the validation state
+     */
+    fun validateStep(step: WizardStage): com.ismail.homedecorai.validation.StepValidationState {
+        val snapshot = _uiState.value
+        val stateMap = createStateMap(
+            hasPhoto = snapshot.selectedPhotos.isNotEmpty() || snapshot.selectedPhotoUri != null,
+            selectedRooms = snapshot.selectedRooms,
+            selectedStyles = snapshot.selectedStyles,
+            selectedPalettes = snapshot.selectedPalettes,
+            maskStrokes = snapshot.maskStrokes,
+            customPrompt = snapshot.customPrompt,
+            hasReferenceImages = hasReferenceFlowImages(snapshot),
+            layoutGoalSelected = snapshot.selectedRooms.isNotEmpty(),
+        )
+        
+        return validationEngine.validateSingleStep(
+            toolId = snapshot.selectedTool.id,
+            step = step,
+            state = stateMap,
+            context = appContext,
+        )
+    }
+
     private fun ViewerSummary.claimedWithinLocalDay(now: Long = System.currentTimeMillis()): Boolean {
         val claimedAt = lastClaimAt?.toLong() ?: return false
         if (claimedAt <= 0 || claimedAt > now) return false
@@ -1884,42 +1939,42 @@ class HomeDecorViewModel(
 
     fun generate() {
         val snapshot = _uiState.value
-        if (snapshot.selectedTool.id == "layout" && snapshot.selectedRooms.isEmpty()) {
-            _uiState.update {
-                it.copy(
-                    wizardStage = WizardStage.Space,
-                    generationError = text(R.string.layout_goal_required_error),
-                )
+        
+        // Use unified validation engine
+        val stateMap = createStateMap(
+            hasPhoto = snapshot.selectedPhotos.isNotEmpty() || snapshot.selectedPhotoUri != null,
+            selectedRooms = snapshot.selectedRooms,
+            selectedStyles = snapshot.selectedStyles,
+            selectedPalettes = snapshot.selectedPalettes,
+            maskStrokes = snapshot.maskStrokes,
+            customPrompt = snapshot.customPrompt,
+            hasReferenceImages = hasReferenceFlowImages(snapshot),
+            layoutGoalSelected = snapshot.selectedRooms.isNotEmpty(),
+        )
+        
+        val validationResult = validationEngine.validateWizard(
+            toolId = snapshot.selectedTool.id,
+            currentStep = snapshot.wizardStage,
+            state = stateMap,
+            context = appContext,
+        )
+        
+        // Handle validation errors with unified error handling
+        if (!validationResult.canGenerate) {
+            val primaryError = validationResult.currentStepPrimaryMessage
+            if (primaryError != null) {
+                val errorStep = determineErrorStep(snapshot.selectedTool.id, primaryError.fieldId)
+                _uiState.update {
+                    it.copy(
+                        wizardStage = errorStep,
+                        generationError = text(primaryError.messageRes),
+                    )
+                }
             }
             return
         }
-        if (snapshot.selectedTool.id == "reference" && !hasReferenceFlowImages(snapshot)) {
-            _uiState.update {
-                it.copy(
-                    wizardStage = WizardStage.Photo,
-                    generationError = text(R.string.reference_missing_error),
-                )
-            }
-            return
-        }
-        if (snapshot.selectedTool.id == "replace" && !snapshot.maskStrokes.hasVisibleMaskPaint()) {
-            _uiState.update {
-                it.copy(
-                    wizardStage = WizardStage.Space,
-                    generationError = text(R.string.real_mask_required_error),
-                )
-            }
-            return
-        }
-        if (snapshot.selectedTool.id == "replace" && !snapshot.customPrompt.isValidReplacementPrompt()) {
-            _uiState.update {
-                it.copy(
-                    wizardStage = WizardStage.Style,
-                    generationError = text(R.string.replacement_prompt_required_error),
-                )
-            }
-            return
-        }
+        
+        // Check diamonds
         if (snapshot.diamonds <= 0 && !snapshot.isPro) {
             _uiState.update {
                 it.copy(
@@ -2218,6 +2273,31 @@ class HomeDecorViewModel(
             else -> error.toAppErrorKind(appContext)
         }
         return text(kind.generationMessageRes())
+    }
+
+    /**
+     * Determine which wizard step to navigate to based on the validation error field
+     */
+    private fun determineErrorStep(toolId: String, fieldId: String): WizardStage {
+        return when (fieldId) {
+            com.ismail.homedecorai.validation.ValidationFields.PHOTO -> WizardStage.Photo
+            com.ismail.homedecorai.validation.ValidationFields.ROOM_SELECTION,
+            com.ismail.homedecorai.validation.ValidationFields.LAYOUT_GOAL -> WizardStage.Space
+            com.ismail.homedecorai.validation.ValidationFields.MASK -> WizardStage.Space
+            com.ismail.homedecorai.validation.ValidationFields.REFERENCE_IMAGE -> WizardStage.Space
+            com.ismail.homedecorai.validation.ValidationFields.STYLE_SELECTION,
+            com.ismail.homedecorai.validation.ValidationFields.REPLACEMENT_PROMPT -> WizardStage.Style
+            com.ismail.homedecorai.validation.ValidationFields.PALETTE_SELECTION -> WizardStage.Refine
+            else -> {
+                // Default navigation based on tool type
+                when (toolId) {
+                    "paint", "floor" -> WizardStage.Style
+                    "replace" -> WizardStage.Space
+                    "layout" -> WizardStage.Space
+                    else -> WizardStage.Refine
+                }
+            }
+        }
     }
 
     private fun friendlyPurchaseSyncError(error: Throwable, @StringRes fallback: Int): String {
