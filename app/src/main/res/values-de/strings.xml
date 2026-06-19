@@ -270,12 +270,7 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">Zu wählende Palette</string>
   <string name="replacement_suggestions">Ersetzungsvorschläge</string>
-  <string name="material_library">Materialbibliothek</string>
-  <string name="material_library_wall_scope">Nur Wände</string>
-  <string name="material_library_floor_scope">Nur Boden</string>
   <string name="material_selected_preview">Vorschau für den maskierten Bereich ausgewählt.</string>
-  <string name="material_selected_wall_preview">Vorschau nur für den maskierten Wandbereich ausgewählt.</string>
-  <string name="material_selected_floor_preview">Vorschau nur für den maskierten Bodenbereich ausgewählt.</string>
   <string name="transfer_options">Übertragungsoptionen</string>
   <string name="replacement_object">Ersetzungsobjekt</string>
   <string name="prompt_paint">Optional: Nur- Wand-Oberflächendetails hinzufügen</string>
@@ -299,9 +294,6 @@
   <string name="replacement_result_mask_used">Maske</string>
   <string name="replacement_result_object">Ersetzungsobjekt</string>
   <string name="replacement_result_status">Ergebnisstatus</string>
-  <string name="paint_mask_before_generate_floor">Bodenmaske benötigt</string>
-  <string name="paint_mask_before_generate_replace">Objekt vor der Generierung markieren</string>
-  <string name="paint_mask_before_generate_wall">Wandmaske benötigt</string>
   <string name="add_both_images">Beide Bilder hinzufügen</string>
   <string name="upload_photo_of">Laden Sie ein Foto Ihres %1$s hoch</string>
   <string name="add_photo_to_continue">Fügen Sie ein Foto hinzu, um fortzufahren.</string>
@@ -870,6 +862,9 @@
   <string name="option_layout_cozy_reading">Gemütliche Leseecke</string>
   <string name="option_layout_pet_friendly">Haustierfreundlicher Raum</string>
   <string name="option_layout_meditation_zone">Meditationszone</string>
+  <string name="option_layout_multi_use_zone">Mehrzweckzone</string>
+  <string name="option_layout_work_from_home">Arbeiten von zu Hause</string>
+  <string name="option_layout_kids_play_area">Kinderspielbereich</string>
   <string name="option_reference_subtle">Dezent</string>
   <string name="option_reference_balanced">Ausgewogen</string>
   <string name="option_reference_faithful">Treuhändig</string>

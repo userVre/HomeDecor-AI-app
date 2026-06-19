@@ -53,15 +53,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
-import com.ismail.homedecorai.MainTab
+import com.ismail.homedecorai.model.MainTab
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.auth.AuthSheet
 import com.ismail.homedecorai.ui.theme.*
@@ -90,7 +91,6 @@ fun ProfileScreen(
                 Text(
                     stringResource(R.string.my_profile_title),
                     style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Black,
                 )
             }
 
@@ -266,7 +266,7 @@ private fun SignInHeroCard(
                 colors = ButtonDefaults.buttonColors(containerColor = StudioBrownBtn),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
-                Text(stringResource(R.string.sign_in), fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.sign_in))
             }
             Spacer(Modifier.height(10.dp))
             OutlinedButton(
@@ -275,7 +275,7 @@ private fun SignInHeroCard(
                 border = BorderStroke(1.5f.dp, StudioLine),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
-                Text(stringResource(R.string.continue_with_google), fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.continue_with_google))
             }
         }
     }
@@ -308,7 +308,6 @@ private fun SignedInProfileHero(
                         initials,
                         modifier = Modifier.fillMaxSize().padding(1.dp),
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Black,
                         color = StudioBlue,
                         textAlign = TextAlign.Center,
                     )
@@ -324,7 +323,6 @@ private fun SignedInProfileHero(
                         stringResource(R.string.free_badge),
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Black,
                         color = Color.White,
                     )
                 }
@@ -333,7 +331,6 @@ private fun SignedInProfileHero(
                 Text(
                     state.signedInName ?: stringResource(R.string.account_connected),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -358,7 +355,6 @@ private fun SignedInProfileHero(
                         Text(
                             stringResource(R.string.free_plan),
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
                             color = StudioGold,
                         )
                     }
@@ -388,7 +384,6 @@ private fun UpgradeBanner(
                     Text(
                         stringResource(R.string.go_premium),
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
                         color = Color.White,
                     )
                 }
@@ -403,12 +398,15 @@ private fun UpgradeBanner(
                 onClick = onUpgrade,
                 shape = RoundedCornerShape(20.dp),
                 color = Color(0xFFF0D98A),
+                modifier = Modifier.semantics {
+                    contentDescription = "Upgrade to PRO"
+                    role = Role.Button
+                },
             ) {
                 Text(
                     stringResource(R.string.upgrade),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
                     color = StudioBrownDark,
                 )
             }
@@ -422,7 +420,6 @@ private fun ProfileSectionLabel(label: String) {
         label,
         modifier = Modifier.padding(horizontal = 4.dp),
         style = MaterialTheme.typography.labelMedium,
-        fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
@@ -455,7 +452,7 @@ private fun ProfileRow(
 ) {
     ListItem(
         headlineContent = {
-            Text(title, fontWeight = FontWeight.SemiBold)
+            Text(title)
         },
         supportingContent = if (subtitle.isNotBlank()) {
             {
@@ -490,6 +487,7 @@ private fun ProfileRow(
         ),
         modifier = Modifier
             .fillMaxWidth()
+            .minimumTouchTarget()
             .semantics { role = Role.Button }
             .clickable(onClick = onClick),
     )

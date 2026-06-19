@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">Paleta a elegir</string>
   <string name="replacement_suggestions">Sugerencias de reemplazo</string>
-  <string name="material_library">Biblioteca de materiales</string>
-  <string name="material_library_wall_scope">Solo pared</string>
-  <string name="material_library_floor_scope">Solo suelo</string>
-  <string name="material_selected_wall_preview">Vista previa seleccionada solo para el área de pared enmascarada.</string>
-  <string name="material_selected_floor_preview">Vista previa seleccionada solo para el área de suelo enmascarado.</string>
   <string name="transfer_options">Opciones de transferencia</string>
   <string name="replacement_object">Objeto de reemplazo</string>
   <string name="prompt_paint">Opcional: agrega detalles de acabado solo para la pared</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">Máscara</string>
   <string name="replacement_result_object">Objeto de reemplazo</string>
   <string name="replacement_result_status">Estado del resultado</string>
-  <string name="paint_mask_before_generate_floor">Máscara de suelo necesaria</string>
-  <string name="paint_mask_before_generate_replace">Marca el objeto antes de generar</string>
-  <string name="paint_mask_before_generate_wall">Máscara de pared necesaria</string>
   <string name="add_both_images">Agrega ambas imágenes</string>
   <string name="upload_photo_of">Sube una foto de tu %1$s</string>
   <string name="add_photo_to_continue">Agrega una foto para continuar.</string>
@@ -869,6 +861,9 @@
   <string name="option_layout_cozy_reading">Rincón de lectura acogedor</string>
   <string name="option_layout_pet_friendly">Espacio para mascotas</string>
   <string name="option_layout_meditation_zone">Zona de meditación</string>
+  <string name="option_layout_multi_use_zone">Zona de uso múltiple</string>
+  <string name="option_layout_work_from_home">Trabajar desde casa</string>
+  <string name="option_layout_kids_play_area">Área de juego para niños</string>
   <string name="option_reference_subtle">Sutil</string>
   <string name="option_reference_balanced">Equilibrado</string>
   <string name="option_reference_faithful">Fiel</string>

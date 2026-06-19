@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">要選擇的調色板</string>
   <string name="replacement_suggestions">替換建議</string>
-  <string name="material_library">材質庫</string>
-  <string name="material_library_wall_scope">僅限牆壁</string>
-  <string name="material_library_floor_scope">僅限地板</string>
-  <string name="material_selected_wall_preview">僅為遮罩的牆壁區域預覽已選擇。</string>
-  <string name="material_selected_floor_preview">僅為遮罩的地板區域預覽已選擇。</string>
   <string name="transfer_options">轉移選項</string>
   <string name="replacement_object">替換物件</string>
   <string name="prompt_paint">選填：新增僅限牆壁的飾面細節</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">遮罩</string>
   <string name="replacement_result_object">替換物件</string>
   <string name="replacement_result_status">結果狀態</string>
-  <string name="paint_mask_before_generate_floor">需要地板遮罩</string>
-  <string name="paint_mask_before_generate_replace">生成前請標記物件</string>
-  <string name="paint_mask_before_generate_wall">需要牆壁遮罩</string>
   <string name="add_both_images">新增兩張圖片</string>
   <string name="upload_photo_of">上傳您%1$s的照片</string>
   <string name="add_photo_to_continue">新增照片以繼續。</string>
@@ -869,6 +861,9 @@
   <string name="option_layout_cozy_reading">舒適的閱讀角</string>
   <string name="option_layout_pet_friendly">寵物友善空間</string>
   <string name="option_layout_meditation_zone">冥想區域</string>
+  <string name="option_layout_multi_use_zone">多功能區域</string>
+  <string name="option_layout_work_from_home">居家辦公</string>
+  <string name="option_layout_kids_play_area">兒童遊戲區</string>
   <string name="option_reference_subtle">微妙</string>
   <string name="option_reference_balanced">平衡</string>
   <string name="option_reference_faithful">忠實</string>

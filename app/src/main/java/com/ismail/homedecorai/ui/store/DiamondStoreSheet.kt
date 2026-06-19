@@ -61,9 +61,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ismail.homedecorai.DiamondPack
+import com.ismail.homedecorai.model.DiamondPack
 import com.ismail.homedecorai.HomeDecorCatalog
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.purchaseAttemptMessageRes
 import com.ismail.homedecorai.rawServiceMessageToKind
@@ -246,10 +246,17 @@ fun DiamondStoreSheet(
                                 Icon(Icons.Rounded.Diamond, null, Modifier.padding(12.dp).size(26.dp), tint = StudioGold)
                             }
                             Column(Modifier.weight(1f)) {
-                                Text(stringResource(R.string.current_balance), color = StudioInk, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                                Text(stringResource(R.string.current_balance), color = StudioInk, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                                 Text(stringResource(R.string.diamonds_amount, state.diamonds), color = HomeDecorColors.InkSoft)
                             }
-                            IconButton(onClick = onClose) {
+                            val closeDescription = stringResource(R.string.close)
+                            IconButton(
+                                onClick = onClose,
+                                modifier = Modifier.minimumTouchTarget().semantics {
+                                    contentDescription = closeDescription
+                                    role = Role.Button
+                                },
+                            ) {
                                 Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = StudioInk)
                             }
                         }
@@ -263,7 +270,7 @@ fun DiamondStoreSheet(
                     )
                 }
                 item {
-                    Text(stringResource(R.string.get_more_credits), color = StudioInk, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.get_more_credits), color = StudioInk, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 }
                 if (storeLoading) {
                     item {
@@ -353,7 +360,7 @@ fun DiamondPackRow(
                 Icon(Icons.Rounded.Diamond, null, Modifier.padding(10.dp).size(22.dp), tint = if (unavailable) bodyColor else StudioGold)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.pack_title, packTitle), color = titleColor, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.pack_title, packTitle), color = titleColor, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (packBadge != null) {
                     Surface(shape = RoundedCornerShape(6.dp), color = StudioPrimaryContainer, border = androidx.compose.foundation.BorderStroke(1.dp, HomeDecorColors.Accent.copy(alpha = 0.40f))) {
                         Text(
@@ -361,7 +368,7 @@ fun DiamondPackRow(
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                             color = HomeDecorColors.Accent,
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -369,7 +376,7 @@ fun DiamondPackRow(
                 }
                 Text(stringResource(R.string.diamonds_amount, pack.diamonds), color = bodyColor)
                 if (unavailable) {
-                    Text(stringResource(R.string.pack_not_available_in_store), color = HomeDecorColors.ErrorColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.pack_not_available_in_store), color = HomeDecorColors.ErrorColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 } else if (packDescription.isNotBlank()) {
                     Text(packDescription, color = bodyColor, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
@@ -393,7 +400,7 @@ fun DiamondPackRow(
                         unavailable -> stringResource(R.string.unavailable)
                         else -> pack.price
                     },
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

@@ -1,6 +1,7 @@
 package com.ismail.homedecorai
 
 import android.content.Context
+import com.ismail.homedecorai.model.DecorTool
 import dev.convex.android.ConvexClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
@@ -340,7 +341,11 @@ class HomeDecorRepository(
         val response = if (responseCode in 200..299) {
             connection.inputStream.bufferedReader().use { it.readText() }
         } else {
-            throw AppRecoverableException(AppErrorKind.Generation)
+            val errorBody = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            throw AppRecoverableException(
+                AppErrorKind.Generation,
+                java.io.IOException("Upload failed ($responseCode): $errorBody"),
+            )
         }
         return json.decodeFromString(StorageUploadResponse.serializer(), response).storageId
     }

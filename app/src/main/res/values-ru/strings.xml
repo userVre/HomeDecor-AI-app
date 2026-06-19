@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">Палитра для выбора</string>
   <string name="replacement_suggestions">Предложения замены</string>
-  <string name="material_library">Библиотека материалов</string>
-  <string name="material_library_wall_scope">Только стены</string>
-  <string name="material_library_floor_scope">Только пол</string>
-  <string name="material_selected_wall_preview">Предпросмотр выбранного для замаскированной области стены.</string>
-  <string name="material_selected_floor_preview">Предпросмотр выбранного для замаскированной области пола.</string>
   <string name="transfer_options">Параметры переноса</string>
   <string name="replacement_object">Объект замены</string>
   <string name="prompt_paint">Необязательно: добавьте детали отделки только для стен</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">Маска</string>
   <string name="replacement_result_object">Объект замены</string>
   <string name="replacement_result_status">Статус результата</string>
-  <string name="paint_mask_before_generate_floor">Необходима маска пола</string>
-  <string name="paint_mask_before_generate_replace">Отметьте объект перед созданием</string>
-  <string name="paint_mask_before_generate_wall">Необходима маска стены</string>
   <string name="add_both_images">Добавьте оба изображения</string>
   <string name="upload_photo_of">Загрузите фото вашего %1$s</string>
   <string name="add_photo_to_continue">Добавьте фото для продолжения.</string>
@@ -869,6 +861,9 @@
   <string name="option_layout_cozy_reading">Уютный уголок для чтения</string>
   <string name="option_layout_pet_friendly">Дружелюбное к животным пространство</string>
   <string name="option_layout_meditation_zone">Зона для медитации</string>
+  <string name="option_layout_multi_use_zone">Многофункциональная зона</string>
+  <string name="option_layout_work_from_home">Работа из дома</string>
+  <string name="option_layout_kids_play_area">Детская игровая зона</string>
   <string name="option_reference_subtle">Умеренный</string>
   <string name="option_reference_balanced">Сбалансированный</string>
   <string name="option_reference_faithful">Точный</string>

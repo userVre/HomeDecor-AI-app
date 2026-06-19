@@ -5,4 +5,10 @@
         <item name="android:fontFamily">sans</item>
         <item name="android:colorAccent">#386A20</item>
     </style>
+
+    <style name="Theme.HomeDecor.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FFFCF7</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.HomeDecor</item>
+    </style>
 </resources>

@@ -1,0 +1,160 @@
+# Reference Style Transfer Flow Redesign
+
+## Context
+
+The Reference Style Transfer tool in HomeDecor AI uses a multi-step wizard flow: **Photo → Style → Refine → Processing → Result**. The user wants to modernize the UI across all steps with cleaner visuals, better validation UX, and a premium processing screen. All changes target Kotlin/Jetpack Compose with Material 3 Expressive design.
+
+**Primary file:** `app/src/main/java/com/ismail/homedecorai/ui/tools/WizardSteps.kt` (3426 lines)
+**Supporting files:** `SharedComponents.kt`, `WizardStepValidation.kt`, `strings.xml`
+
+---
+
+## Step 1: Upload Screen — Remove Step Indicators & Redesign Upload Card
+
+**File:** `WizardSteps.kt`
+
+### 1a. Remove step indicators for the reference tool
+
+The `DesignStepHeader` (line 294) shows `Step X/Y` text + a progress bar. For the reference tool's Photo stage, hide these.
+
+**Change:** Add a `showStepIndicator: Boolean = true` parameter to `DesignStepHeader`. In `CreateScreen` (line 226), pass `showStepIndicator = false` when `state.selectedTool.id == "reference" && state.wizardStage == WizardStage.Photo`.
+
+In `DesignStepHeader`, wrap the step counter text + progress bar Row (lines 357-383) in `if (showStepIndicator)`.
+
+### 1b. Redesign ReferenceDualImagePicker upload card
+
+**Current (line 564):** The card has a dashed border, a circular icon badge in the header row, and a large preview area. The user wants:
+- Clean dashed border (already present, keep `BorderStroke(1.5.dp, StudioLine.copy(alpha = 0.6f))`)
+- Subtle upload icon in the empty state (replace `Icons.Rounded.PhotoLibrary` with `Icons.Rounded.CloudUpload` for a more modern feel)
+- Remove the redundant title inside the container — keep only helper text "Upload a style reference to continue." (already uses `upload_style_reference_helper` string)
+- Remove the header row with circular checkmark/library icon when not selected — just show the upload area directly
+
+**Specific changes to `ReferenceDualImagePicker` (line 564-668):**
+- When `!selected`: Remove the header Row (lines 593-609). Instead, show a clean centered layout: upload icon + helper text + action buttons
+- Replace `Icons.Rounded.PhotoLibrary` with `Icons.Rounded.CloudUpload` in the empty state (line 633)
+- Keep the dashed border on the outer Surface
+- When `selected`: Show the image preview without the bottom decorative checkmarks/star icons (the selected state already shows image + text, which is clean)
+
+### 1c. Remove bottom decorative icons after photo selection
+
+The `ReferenceImagesStep` (line 483) shows an "Try with example" `OutlinedButton` at the bottom (lines 549-559) when `!hasRoom || !hasReference`. The user wants this removed or simplified. **Change:** Remove the `OutlinedButton` block (lines 549-559) from `ReferenceImagesStep`. Users can still use the "Example" button inside each picker card.
+
+---
+
+## Step 2: Style/Options Screen — Validation Banner & Icon Upgrade
+
+**File:** `WizardSteps.kt`
+
+### 2a. Validation banner for style selection
+
+The `SpecializedGenerateStep` (line 1255) already uses `rememberStepValidation(state)` and passes `canProceed`/`validationMessage` to `StepScaffold`. For the reference tool, `validateStyleStep` in `WizardStepValidation.kt` (line 188) requires `hasStyle = state.selectedStyles.isNotEmpty()` and shows "Choose a transfer intensity before generating."
+
+**No code change needed** — the validation logic already works. The `StepScaffold` (line 388) shows `ValidationAlertBanner` when the user taps Continue without selecting. The message is already "Choose a transfer intensity before generating." which is close to "Choose at least one option to continue."
+
+**Change:** Update the validation message in `WizardStepValidation.kt` line 199 from `"Choose a transfer intensity before generating."` to `"Choose at least one option to continue."` to match the user's spec.
+
+### 2b. Replace low-quality icons in option cards
+
+The `ExpressiveChoiceChip` (SharedComponents.kt line 229) uses `choiceIcon(label)` which returns various Material icons per label. The user wants "high-quality, modern, minimal vector icons."
+
+**Change:** Update the `choiceIcon` function in `Localization.kt` (line 612) to use more modern/consistent icons. Replace any clunky icons with clean Material Rounded icons:
+- Use `Icons.Rounded.AutoAwesome` for AI/suggestion options
+- Use `Icons.Rounded.Style` for style options  
+- Use `Icons.Rounded.Texture` for texture/material options
+- Use `Icons.Rounded.Landscape` for landscape/outdoor options
+- Use `Icons.Rounded.Chair` for furniture options
+- Use `Icons.Rounded.ColorLens` for color options
+- Use `Icons.Rounded.Home` for home/room options
+- Use `Icons.Rounded.Park` for garden options
+- Keep `Icons.Rounded.Check` for the selected state (already used)
+
+Also update the icon container in `ExpressiveChoiceChip` (SharedComponents.kt line 248-258) to use a cleaner style: reduce the circle size slightly and use `StudioMist` for unselected background instead of `studioStateIconContainer(selected)`.
+
+---
+
+## Step 4: Design & Color Selection Screen — Clean Up Titles & Active Indicators
+
+**File:** `WizardSteps.kt`
+
+### 4a. Remove duplicate section titles
+
+The `RefineStep` (line 2313) has two section blocks:
+- Design mode section (lines 2362-2379): Title "Design mode" + subtitle "Choose a mode"
+- Color Harmony section (lines 2381-2401): Title "Color harmony" + subtitle "Choose color..."
+
+**Current:** Both use `Text(stringResource(R.string.step_design_mode_title))` and `Text(stringResource(R.string.choose_a_mode))` for design mode, and `Text(stringResource(R.string.step_color_harmony_title))` + `Text(stringResource(R.string.choose_color))` for color harmony.
+
+**Issue:** The user says "remove duplicate or repetitive section titles." Looking at the code, there's no actual duplication — each section has one title + one subtitle. The user may be seeing the titles as redundant because they're visually heavy (`headlineSmall` + `titleMedium` + `bodyMedium` stacking).
+
+**Change:** Simplify the section headers:
+- Design mode: Keep title "Design mode" (`step_design_mode_title`), keep subtitle "Choose a mode" (`choose_a_mode`)
+- Color Harmony: Keep title "Color harmony" (`step_color_harmony_title`), keep subtitle "Choose color..." (`choose_color`)
+- Remove the outer `Column(verticalArrangement = Arrangement.spacedBy(2.dp))` wrapper around title+subtitle in both sections — just use a single `Text` for the section title with a lighter style
+
+### 4b. Simplify active item indicators on PaletteChoiceCard
+
+**Current `PaletteChoiceCard` (WizardSteps.kt line 2521):**
+- Selected: `StudioPrimaryContainer.copy(alpha = 0.3f)` background + `2.dp StudioBlue` border + blue checkmark circle at top-right
+- Unselected: `StudioPaper` background + `1.dp StudioLine` border
+
+**Change:** Use a cleaner border-only highlight for selected state:
+- Selected: Keep `StudioPaper` background (no color fill), use `2.dp StudioBlue` border, keep the checkmark circle
+- Unselected: Keep as-is
+- This means changing line 2531 from `if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper` to just `StudioPaper` (always)
+
+Apply the same pattern to `ModeCard` (SharedComponents.kt line 332):
+- Selected: Keep `StudioPaper` background, use `2.dp StudioBlue` border, keep checkmark
+- Change line 342 from `if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper` to `StudioPaper`
+
+---
+
+## Step 4: Processing/Loading Screen — Premium Redesign
+
+**File:** `WizardSteps.kt`
+
+### Current ProcessingStep (line 2582)
+
+Already has: hero image, progress bar, step dots, status message. The user wants a "clean, modern card with a dynamic horizontal progress bar showing steps."
+
+### Changes to ProcessingStep:
+
+1. **Keep the existing card structure** but refine the visual:
+   - Keep `RoundedCornerShape(28.dp)` card with `StudioPaper` background
+   - Keep the hero image section (lines 2635-2679)
+
+2. **Redesign the progress section** (lines 2680-2700):
+   - Keep `LinearProgressIndicator` but increase height from `8.dp` to `10.dp` for better visibility
+   - Add animated color gradient to the progress bar: use `Brush.horizontalGradient` with `StudioBlue` to `StudioSky` 
+   - Keep the step labels below but improve typography: use `labelSmall` with `FontWeight.Medium` for inactive, `FontWeight.Black` for active
+
+3. **Redesign the status message card** (lines 2701-2721):
+   - Replace the `StudioMist` background with a subtle gradient or `StudioPrimaryContainer.copy(alpha = 0.15f)`
+   - Use `Icons.Rounded.AutoAwesome` with a subtle pulse animation (optional, using `animateFloatAsState`)
+   - Keep the message text styling
+
+4. **Update GenerationStepDot** (line 2728):
+   - Increase dot size from `10.dp` to `12.dp`
+   - Use `StudioBlue` for completed, `StudioGold` for active (already correct)
+   - Add a subtle scale animation for the active dot using `animateFloatAsState`
+
+---
+
+## Files Modified
+
+| File | Changes |
+|------|---------|
+| `WizardSteps.kt` | DesignStepHeader, ReferenceImagesStep, ReferenceDualImagePicker, SpecializedGenerateStep (validation msg), RefineStep, PaletteChoiceCard, ProcessingStep, GenerationStepDot |
+| `SharedComponents.kt` | ModeCard, ExpressiveChoiceChip icon container |
+| `WizardStepValidation.kt` | Update validation message string for reference style step |
+| `Localization.kt` | Update choiceIcon() to use modern vector icons |
+| `values/strings.xml` | May need new string resources for updated copy |
+
+---
+
+## Verification
+
+1. Build the project: `./gradlew assembleDebug`
+2. Run lint: `./gradlew lintDebug`
+3. Visual check: Launch the reference tool flow and verify each step
+4. Validation check: Try proceeding without selecting a style on Step 2 — confirm red banner appears
+5. Processing check: Trigger a generation and verify the progress bar animates smoothly through all 4 steps

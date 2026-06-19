@@ -209,11 +209,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">Palette to choose</string>
   <string name="replacement_suggestions">Replacement suggestions</string>
-  <string name="material_library">Material Library</string>
-  <string name="material_library_wall_scope">Wall only</string>
-  <string name="material_library_floor_scope">Floor only</string>
-  <string name="material_selected_wall_preview">Preview selected for the masked wall area only.</string>
-  <string name="material_selected_floor_preview">Preview selected for the masked floor area only.</string>
   <string name="transfer_options">Transfer options</string>
   <string name="replacement_object">Replacement object</string>
   <string name="prompt_paint">Optional: add wall-only finish details</string>
@@ -237,9 +232,6 @@
   <string name="replacement_result_mask_used">Mask</string>
   <string name="replacement_result_object">Replacement object</string>
   <string name="replacement_result_status">Result status</string>
-  <string name="paint_mask_before_generate_floor">Floor mask needed</string>
-  <string name="paint_mask_before_generate_replace">Mark the object before generating</string>
-  <string name="paint_mask_before_generate_wall">Wall mask needed</string>
   <string name="add_both_images">Add both images</string>
   <string name="validation_add_source_photo">Add a source photo from Gallery, Camera, or an example to continue.</string>
   <string name="validation_upload_source_photo">Upload a source photo from Gallery or Camera to continue.</string>
@@ -683,6 +675,9 @@
   <string name="option_layout_cozy_reading">Cozy reading nook</string>
   <string name="option_layout_pet_friendly">Pet-friendly space</string>
   <string name="option_layout_meditation_zone">Meditation zone</string>
+  <string name="option_layout_multi_use_zone">Multi-use zone</string>
+  <string name="option_layout_work_from_home">Work from home</string>
+  <string name="option_layout_kids_play_area">Kids play area</string>
   <string name="option_reference_subtle">Subtle</string>
   <string name="option_reference_balanced">Balanced</string>
   <string name="option_reference_faithful">Faithful</string>

@@ -3,15 +3,12 @@
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,836 +17,7 @@ import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.util.Calendar
 import java.util.UUID
-import com.ismail.homedecorai.validation.WizardValidationEngine
-import com.ismail.homedecorai.validation.createStateMap
-
-enum class MainTab { Tools, Create, Discover, UpgradePro, Profile, Settings }
-enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
-enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
-
-data class DecorTool(
-    val id: String,
-    val title: String,
-    val description: String,
-    val imageRes: Int,
-    val serviceType: String,
-)
-
-data class AdvancedControlSpec(
-    val keepOptions: List<String>,
-    val changeOptions: List<String>,
-)
-
-data class GalleryItem(
-    val id: String,
-    val title: String,
-    val category: String,
-    val imageRes: Int,
-)
-
-data class DiscoverSection(
-    val id: String,
-    val title: String,
-    val cluster: String,
-    val serviceToolId: String,
-    val items: List<GalleryItem>,
-)
-
-data class BoardItem(
-    val id: String,
-    val toolTitle: String,
-    val style: String,
-    val roomType: String,
-    val imageRes: Int,
-    val imageUri: String? = null,
-    val imageUrl: String? = null,
-    val sourceImageUri: String? = null,
-    val sourceImageUrl: String? = null,
-    val status: String = "ready",
-    val errorMessage: String? = null,
-    val prompt: String? = null,
-    val budgetLabel: String = "",
-    val createdAt: Double = 0.0,
-)
-
-fun BoardItem.isGeneratedResult(): Boolean =
-    status == "ready" && (imageUrl?.isNotBlank() == true || imageRes != 0)
-
-data class SelectedPhoto(
-    val uri: Uri? = null,
-    val exampleLabel: String? = null,
-)
-
-data class MaskPoint(val x: Float, val y: Float)
-
-data class MaskStroke(
-    val points: List<MaskPoint>,
-    val brushSize: Float,
-    val erase: Boolean = false,
-)
-
-fun List<MaskStroke>.hasVisibleMaskPaint(): Boolean {
-    val bitmap = toMaskBitmap(size = 128)
-    for (x in 0 until bitmap.width step 2) {
-        for (y in 0 until bitmap.height step 2) {
-            if (android.graphics.Color.alpha(bitmap.getPixel(x, y)) > 0) {
-                return true
-            }
-        }
-    }
-    return false
-}
-
-fun String.isValidReplacementPrompt(): Boolean =
-    trim().let { prompt -> prompt.length >= 3 && prompt.any { it.isLetterOrDigit() } }
-
-private fun List<MaskStroke>.toMaskBitmap(size: Int): Bitmap {
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-    val canvas = Canvas(bitmap)
-    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeCap = Paint.Cap.ROUND
-        strokeJoin = Paint.Join.ROUND
-    }
-    val strokeScale = size / 1024f
-    forEach { stroke ->
-        if (stroke.points.size < 2) return@forEach
-        paint.strokeWidth = stroke.brushSize.coerceIn(8f, 96f) * strokeScale
-        paint.color = if (stroke.erase) Color.TRANSPARENT else Color.WHITE
-        paint.xfermode = if (stroke.erase) android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR) else null
-        val path = Path().apply {
-            val first = stroke.points.first()
-            moveTo(first.x.coerceIn(0f, 1f) * size, first.y.coerceIn(0f, 1f) * size)
-            stroke.points.drop(1).forEach { point ->
-                lineTo(point.x.coerceIn(0f, 1f) * size, point.y.coerceIn(0f, 1f) * size)
-            }
-        }
-        canvas.drawPath(path, paint)
-    }
-    return bitmap
-}
-
-data class DiamondPack(
-    val id: String,
-    val title: String,
-    val diamonds: Int,
-    val price: String,
-    val badge: String? = null,
-    val description: String = "",
-)
-
-sealed class PendingPurchaseSync {
-    data class Diamond(
-        val packId: String,
-        val transactionId: String,
-        val productIdentifier: String,
-        val packageIdentifier: String?,
-        val amount: Double,
-        val currencyCode: String,
-        val purchasedAt: Double,
-    ) : PendingPurchaseSync()
-
-    data class Subscription(
-        val plan: String,
-        val subscriptionType: String,
-        val entitlement: String,
-        val purchasedAt: Double?,
-        val subscriptionEnd: Double?,
-    ) : PendingPurchaseSync()
-}
-
-data class HomeDecorUiState(
-    val selectedTab: MainTab = MainTab.Tools,
-    val selectedTool: DecorTool = HomeDecorCatalog.tools.first(),
-    val wizardStage: WizardStage = WizardStage.Photo,
-    val selectedPhotoUri: Uri? = null,
-    val selectedExampleLabel: String? = null,
-    val selectedPhotos: List<SelectedPhoto> = emptyList(),
-    val selectedReferenceUri: Uri? = null,
-    val selectedReferenceExampleLabel: String? = null,
-    val selectedReferenceDiscoverItemId: String? = null,
-    val selectedRooms: List<String> = emptyList(),
-    val selectedStyles: List<String> = emptyList(),
-    val selectedPalettes: List<String> = emptyList(),
-    val roomType: String = "",
-    val style: String = "",
-    val palette: String = "",
-    val designMode: String = "Preserve Layout",
-    val budgetMode: String = "",
-    val avoidOptions: List<String> = emptyList(),
-    val keepOptions: List<String> = emptyList(),
-    val changeOptions: List<String> = emptyList(),
-    val preserveRestOfImage: Boolean = false,
-    val customPrompt: String = "",
-    val layoutConstraints: String = "",
-    val mobilierASupprimer: String = "",
-    val mobilierADeplacer: String = "",
-    val progressMessage: String = "",
-    val diamonds: Int = 1,
-    val eliteStreakDay: Int = 1,
-    val claimedToday: Boolean = false,
-    val elitePassSyncState: ElitePassSyncState = ElitePassSyncState.Loading,
-    val elitePassSyncMessage: String = "",
-    val eliteLastClaimWasDaySeven: Boolean = false,
-    val storeVisible: Boolean = false,
-    val paywallVisible: Boolean = false,
-    val authVisible: Boolean = false,
-    val settingsVisible: Boolean = false,
-    val signedInName: String? = null,
-    val signedInEmail: String? = null,
-    val viewer: ViewerSummary = ViewerSummary(),
-    val board: List<BoardItem> = emptyList(),
-    val disclosureAccepted: Boolean = false,
-    val isPro: Boolean = false,
-    val generationError: String? = null,
-    val maskStrokes: List<MaskStroke> = emptyList(),
-    val undoneMaskStrokes: List<MaskStroke> = emptyList(),
-    val brushSize: Float = 28f,
-    val eraserSelected: Boolean = false,
-    val purchaseMessage: String? = null,
-    val purchaseBusy: Boolean = false,
-    val pendingPurchaseSync: PendingPurchaseSync? = null,
-    val settingsMessage: String? = null,
-    val settingsBusy: Boolean = false,
-    val workspace: CreativeWorkspaceState = CreativeWorkspaceState(),
-    val designViewerVisible: Boolean = false,
-    val designViewerResult: BoardItem? = null,
-)
-
-object HomeDecorCatalog {
-    val tools = listOf(
-        DecorTool(
-            id = "interior",
-            title = "Design d'intérieur",
-            description = "Redéfinissez votre espace avec l'IA.",
-            imageRes = R.drawable.tool_interior,
-            serviceType = "redesign",
-        ),
-        DecorTool(
-            id = "facade",
-            title = "Conception extérieure",
-            description = "Réinventez l'extérieur de votre maison avec un style de façade de classe mondiale.",
-            imageRes = R.drawable.tool_exterior,
-            serviceType = "redesign",
-        ),
-        DecorTool(
-            id = "garden",
-            title = "Conception de jardin",
-            description = "Concevez de superbes jardins et espaces extérieurs sans effort.",
-            imageRes = R.drawable.tool_garden,
-            serviceType = "redesign",
-        ),
-        DecorTool(
-            id = "paint",
-            title = "Peinture intelligente",
-            description = "Affinez vos murs avec des palettes de couleurs sur mesure et des textures design.",
-            imageRes = R.drawable.tool_paint,
-            serviceType = "paint",
-        ),
-        DecorTool(
-            id = "floor",
-            title = "Relooking du sol",
-            description = "Élevez les fondations de votre pièce avec des matériaux et des finitions haut de gamme.",
-            imageRes = R.drawable.tool_floor,
-            serviceType = "floor",
-        ),
-        DecorTool(
-            id = "layout",
-            title = "Agencement Intelligent",
-            description = "Optimisez l'agencement pour un confort maximal.",
-            imageRes = R.drawable.tool_layout,
-            serviceType = "layout",
-        ),
-        DecorTool(
-            id = "replace",
-            title = "Remplacer des objets",
-            description = "Masquez un objet dans votre photo et remplacez-le avec des retouches AI précises.",
-            imageRes = R.drawable.tool_replace,
-            serviceType = "replace",
-        ),
-        DecorTool(
-            id = "reference",
-            title = "Transfert de style de référence",
-            description = "Importez une référence visuelle et appliquez son style à votre pièce.",
-            imageRes = R.drawable.tool_reference,
-            serviceType = "reference",
-        ),
-    )
-
-    val rooms = listOf(
-        "Salon",
-        "Chambre à coucher",
-        "Cuisine",
-        "Salle de bain",
-        "Bureau à domicile",
-        "Salle à manger",
-        "Chambre d'enfant",
-        "Cinéma maison",
-        "Salle de jeux",
-        "Entrée / couloir",
-        "Bibliothèque",
-        "Blanchisserie",
-    )
-
-    val buildingTypes = listOf(
-        "Appartement",
-        "Maison",
-        "Immeuble de bureaux",
-        "Résidentiel",
-        "Vente au détail",
-        "Villa",
-    )
-
-    val outdoorSpaces = listOf(
-        "Cour arrière",
-        "Terrasse",
-        "Patio",
-        "Cour",
-        "Piscine",
-        "Jardin avant",
-    )
-
-    val gardenStyles = listOf(
-        "Noël",
-        "Moderne",
-        "Tropicale",
-        "Minimaliste",
-        "Méditerranéen",
-        "Japandi",
-        "Rustique",
-        "Zen",
-        "Anglais",
-        "Paysage",
-        "Bohème",
-        "Scandinave",
-    )
-
-    val maskTargets = listOf(
-        "Mur",
-        "Sol",
-        "Sofa",
-        "Table",
-        "Cabinet",
-        "Éclairage",
-    )
-
-    val materialLibrary = listOf(
-        "Carrara Marble",
-        "Oak Wood",
-        "Walnut",
-        "Concrete",
-        "Limewash",
-        "Terrazzo",
-        "White Tile",
-        "Black Tile",
-        "Warm Beige",
-        "Dark Elegant",
-    )
-
-    val floorMaterials = materialLibrary
-
-    val layoutGoals = listOf(
-        "Circulation ouverte",
-        "Plus de rangement",
-        "Coin bureau",
-        "Espace familial",
-        "Salon plus spacieux",
-        "Meilleure lumière",
-        "Réorganisation complète",
-        "Coin lecture cozy",
-        "Espace pet-friendly",
-        "Zone méditation",
-    )
-
-    val referenceStrengths = listOf(
-        "Subtil",
-        "Équilibré",
-        "Fidèle",
-        "Très fidèle",
-    )
-
-    val referenceOptions = listOf(
-        "Palette seulement",
-        "Matériaux",
-        "Mobilier",
-        "Lumière",
-        "Ambiance complète",
-    )
-
-    val budgetModes = listOf(
-        "Low budget",
-        "Medium budget",
-        "Luxury",
-    )
-
-    val avoidOptions = listOf(
-        "no dark colors",
-        "no structural changes",
-        "no plants",
-        "keep windows",
-        "no furniture changes",
-    )
-
-    val advancedControlSpecs = mapOf(
-        "interior" to AdvancedControlSpec(
-            keepOptions = listOf("agencement", "fenêtres", "sol", "mobilier principal"),
-            changeOptions = listOf("style", "couleurs", "décor", "éclairage"),
-        ),
-        "facade" to AdvancedControlSpec(
-            keepOptions = listOf("structure", "fenêtres", "toit", "entrée"),
-            changeOptions = listOf("façade", "couleurs", "éclairage", "paysage"),
-        ),
-        "garden" to AdvancedControlSpec(
-            keepOptions = listOf("agencement", "arbres", "piscine", "terrasse", "clôture"),
-            changeOptions = listOf("plantes", "éclairage", "mobilier", "chemins"),
-        ),
-        "layout" to AdvancedControlSpec(
-            keepOptions = listOf("murs", "fenêtres", "portes", "mobilier important"),
-            changeOptions = listOf("organisation", "circulation", "rangement", "zones"),
-        ),
-        "reference" to AdvancedControlSpec(
-            keepOptions = listOf("agencement", "mobilier", "couleurs principales"),
-            changeOptions = listOf("style", "ambiance", "matériaux", "décor"),
-        ),
-    )
-
-    val protectRestToolIds = setOf("replace", "paint", "floor")
-
-    val paintColors = materialLibrary
-
-    val replaceSuggestions = listOf(
-        "Remplacer le sofa",
-        "Remplacer la table",
-        "Remplacer la lampe",
-        "Remplacer le tapis",
-        "Remplacer l'art mural",
-        "Remplacer la plante",
-        "Remplacer la chaise",
-        "Remplacer le cabinet",
-    )
-
-    val replacementTemplatePrompts = mapOf(
-        "Remplacer le sofa" to "modern sofa matching the room scale, perspective, and light",
-        "Remplacer la table" to "refined table matching the room scale, perspective, and light",
-        "Remplacer la lampe" to "elegant lamp matching the room scale, perspective, and light",
-        "Remplacer le tapis" to "textured area rug matching the room scale, perspective, and light",
-        "Remplacer l'art mural" to "framed wall art matching the room scale, perspective, and light",
-        "Remplacer la plante" to "healthy indoor plant matching the room scale, perspective, and light",
-        "Remplacer la chaise" to "comfortable accent chair matching the room scale, perspective, and light",
-        "Remplacer le cabinet" to "streamlined cabinet matching the room scale, perspective, and light",
-    )
-
-    val styles = listOf(
-        "Moderne",
-        "Luxe",
-        "Japandi",
-        "Cyberpunk",
-        "Tropicale",
-        "Minimaliste",
-        "Scandinave",
-        "Bohème",
-        "Midcentury",
-        "Art Deco",
-        "Côtier",
-        "Rustique",
-        "Vintage",
-        "Méditerranéen",
-        "Glam",
-        "Campagne française",
-    )
-
-    val palettes = listOf(
-        "Mélange organisé",
-        "Gris millénaire",
-        "Mirage en terre cuite",
-        "Teintes forestières",
-        "Verger de pêchers",
-        "Fleur fuchsia",
-        "Gemme d'émeraude",
-        "Brise pastel",
-        "Brume océanique",
-        "Crépuscule de velours",
-        "Rêve d'améthyste",
-        "Fuchsia Noir",
-        "Sable doré",
-        "Bleu profond",
-        "Rose poudré",
-        "Vert sauge",
-        "Terracotta chaleureux",
-        "Noir et blanc",
-        "Bleu canard",
-        "Mauve doux",
-        " Jaune moutarde",
-        " Vert forêt",
-        " Rouge brique",
-        " Bleu ciel",
-    )
-
-    val designModes = listOf(
-        "Conserver la structure" to "Gardez les murs, ouvertures et volumes en place tout en améliorant le style.",
-        "Rénover librement" to "Autorisez l'IA à proposer une transformation plus ambitieuse et créative.",
-    )
-
-    val diamondPacks = listOf(
-        DiamondPack("starter", "Découverte", 10, "19,80 MAD", description = "Pour tester plusieurs idées sans engagement."),
-        DiamondPack("designer", "Designer", 30, "49,65 MAD", "POPULAIRE", "Le meilleur équilibre pour explorer une pièce complète."),
-        DiamondPack("architect", "Architecte", 100, "129,25 MAD", description = "Pensé pour les séries de concepts et variantes."),
-        DiamondPack("estate", "Studio", 300, "249,00 MAD", "MEILLEURE OFFRE", "Crédits profonds pour gros projets et portfolios."),
-    )
-
-    val gallery = tools.mapIndexed { index, tool ->
-        GalleryItem(
-            id = tool.id,
-            title = tool.title,
-            category = if (index < 3) "Spaces" else "Tools",
-            imageRes = tool.imageRes,
-        )
-    }
-
-    private fun numberedDiscoverItems(idPrefix: String, category: String, vararg imageRes: Int): List<GalleryItem> =
-        imageRes.mapIndexed { index, image ->
-            val number = index + 1
-            GalleryItem("$idPrefix-$number", "$category $number", category, image)
-        }
-
-    val discoverSections = listOf(
-        DiscoverSection(
-            id = "kitchen",
-            title = "Cuisine",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "kitchen",
-                "Cuisine",
-                R.drawable.assets_media_discover_generated_kitchen_kitchen1,
-                R.drawable.assets_media_discover_generated_kitchen_kitchen2,
-                R.drawable.assets_media_discover_generated_kitchen_kitchen3,
-                R.drawable.assets_media_discover_generated_kitchen_kitchen4,
-                R.drawable.assets_media_discover_generated_kitchen_kitchen5,
-                R.drawable.assets_media_discover_generated_kitchen_kitchen6,
-                R.drawable.assets_media_discover_generated_kitchen_kitchen7,
-            ),
-        ),
-        DiscoverSection(
-            id = "living-room",
-            title = "Salon",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "living",
-                "Salon",
-                R.drawable.assets_media_discover_generated_livingroom_livingroom1,
-                R.drawable.assets_media_discover_generated_livingroom_livingroom2,
-                R.drawable.assets_media_discover_generated_livingroom_livingroom3,
-                R.drawable.assets_media_discover_generated_livingroom_livingroom4,
-                R.drawable.assets_media_discover_generated_livingroom_livingroom5,
-                R.drawable.assets_media_discover_generated_livingroom_livingroom6,
-                R.drawable.assets_media_discover_generated_livingroom_livingroom7,
-            ),
-        ),
-        DiscoverSection(
-            id = "bedroom",
-            title = "Chambre",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "bedroom",
-                "Chambre",
-                R.drawable.assets_media_discover_generated_bedroom_bedroom1,
-                R.drawable.assets_media_discover_generated_bedroom_bedroom2,
-                R.drawable.assets_media_discover_generated_bedroom_bedroom3,
-                R.drawable.assets_media_discover_generated_bedroom_bedroom4,
-                R.drawable.assets_media_discover_generated_bedroom_bedroom5,
-                R.drawable.assets_media_discover_generated_bedroom_bedroom6,
-                R.drawable.assets_media_discover_generated_bedroom_bedroom7,
-            ),
-        ),
-        DiscoverSection(
-            id = "bathroom",
-            title = "Salle de bain",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "bathroom",
-                "Salle de bain",
-                R.drawable.assets_media_discover_home_homebathroom,
-                R.drawable.assets_media_discover_wallscenes_lavendermistbath,
-                R.drawable.assets_media_styles_styleluxury,
-            ),
-        ),
-        DiscoverSection(
-            id = "dining",
-            title = "Salle à manger",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "dining",
-                "Salle à manger",
-                R.drawable.assets_media_discover_home_homediningroom,
-                R.drawable.assets_media_styles_styleartdeco,
-                R.drawable.assets_media_styles_stylemediterranean,
-            ),
-        ),
-        DiscoverSection(
-            id = "home-office",
-            title = "Bureau à domicile",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "office",
-                "Bureau",
-                R.drawable.assets_media_discover_home_homehomeoffice,
-                R.drawable.assets_media_discover_home_homestudy,
-                R.drawable.assets_media_styles_stylemidcentury,
-            ),
-        ),
-        DiscoverSection(
-            id = "library",
-            title = "Bibliothèque",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "library",
-                "Bibliothèque",
-                R.drawable.assets_media_discover_home_homelibrary,
-                R.drawable.assets_media_styles_stylevintage,
-                R.drawable.assets_media_styles_stylerustic,
-            ),
-        ),
-        DiscoverSection(
-            id = "hall",
-            title = "Entrée / couloir",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "hall",
-                "Entrée",
-                R.drawable.assets_media_discover_home_homehall,
-                R.drawable.assets_media_styles_stylefrenchcountry,
-                R.drawable.assets_media_styles_stylecoastal,
-            ),
-        ),
-        DiscoverSection(
-            id = "gaming",
-            title = "Salle de jeux",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "gaming",
-                "Loisir",
-                R.drawable.assets_media_discover_home_homegamingroom,
-                R.drawable.assets_media_styles_stylecyberpunk,
-                R.drawable.assets_media_styles_stylemodern,
-            ),
-        ),
-        DiscoverSection(
-            id = "laundry",
-            title = "Blanchisserie",
-            cluster = "Intérieurs",
-            serviceToolId = "interior",
-            items = numberedDiscoverItems(
-                "laundry",
-                "Service",
-                R.drawable.assets_media_discover_home_homelaundry,
-                R.drawable.assets_media_styles_stylescandinavian,
-                R.drawable.assets_media_styles_styleminimalist,
-            ),
-        ),
-        DiscoverSection(
-            id = "villa",
-            title = "Villa",
-            cluster = "Architecture",
-            serviceToolId = "facade",
-            items = numberedDiscoverItems(
-                "villa",
-                "Villa",
-                R.drawable.assets_media_discover_exterior_exteriormodernvilla,
-                R.drawable.assets_media_discover_generated_exterior_exterior1,
-                R.drawable.assets_media_discover_generated_exterior_exterior2,
-            ),
-        ),
-        DiscoverSection(
-            id = "house",
-            title = "Maison",
-            cluster = "Architecture",
-            serviceToolId = "facade",
-            items = numberedDiscoverItems(
-                "house",
-                "Maison",
-                R.drawable.tool_exterior,
-                R.drawable.assets_media_discover_generated_exterior_exterior7,
-            ),
-        ),
-        DiscoverSection(
-            id = "apartment",
-            title = "Appartement",
-            cluster = "Architecture",
-            serviceToolId = "facade",
-            items = numberedDiscoverItems(
-                "apartment",
-                "Appartement",
-                R.drawable.assets_media_discover_exterior_exteriorapartmentblock,
-                R.drawable.assets_media_discover_generated_exterior_exterior3,
-            ),
-        ),
-        DiscoverSection(
-            id = "office-building",
-            title = "Immeuble de bureaux",
-            cluster = "Architecture",
-            serviceToolId = "facade",
-            items = numberedDiscoverItems(
-                "office-building",
-                "Immeuble de bureaux",
-                R.drawable.assets_media_discover_exterior_exteriorglassoffice,
-                R.drawable.assets_media_discover_generated_exterior_exterior4,
-            ),
-        ),
-        DiscoverSection(
-            id = "retail",
-            title = "Vente au détail",
-            cluster = "Architecture",
-            serviceToolId = "facade",
-            items = numberedDiscoverItems(
-                "retail",
-                "Vente au détail",
-                R.drawable.assets_media_discover_exterior_exteriorretailstorefront,
-                R.drawable.assets_media_discover_generated_exterior_exterior5,
-            ),
-        ),
-        DiscoverSection(
-            id = "residential",
-            title = "Résidentiel",
-            cluster = "Architecture",
-            serviceToolId = "facade",
-            items = numberedDiscoverItems(
-                "residential",
-                "Résidentiel",
-                R.drawable.assets_media_discover_exterior_exteriorpoolhouse,
-                R.drawable.assets_media_discover_exterior_exteriorstonemanor,
-                R.drawable.assets_media_discover_generated_exterior_exterior6,
-            ),
-        ),
-        DiscoverSection(
-            id = "wall-scenes",
-            title = "Murs",
-            cluster = "Intérieurs",
-            serviceToolId = "paint",
-            items = listOf(
-                GalleryItem("wall-1", "Ivoire doux", "Mur", R.drawable.assets_media_discover_wallscenes_softivorykitchen),
-                GalleryItem("wall-2", "Vert sauge", "Mur", R.drawable.assets_media_discover_wallscenes_sagegreensuite),
-                GalleryItem("wall-3", "Bleu nuit", "Mur", R.drawable.assets_media_discover_wallscenes_midnightnavybedroom),
-                GalleryItem("wall-4", "Charbon galerie", "Mur", R.drawable.assets_media_discover_wallscenes_gallerycharcoallounge),
-                GalleryItem("wall-5", "Terre cuite", "Mur", R.drawable.assets_media_discover_wallscenes_terracottadining),
-                GalleryItem("wall-6", "Rose poudré", "Mur", R.drawable.assets_media_discover_wallscenes_dustyroseretreat),
-                GalleryItem("wall-7", "Vert olive", "Mur", R.drawable.assets_media_discover_wallscenes_deepolivestudy),
-                GalleryItem("wall-8", "Gris perle", "Mur", R.drawable.assets_media_discover_wallscenes_pearlgraysalon),
-            ),
-        ),
-        DiscoverSection(
-            id = "floors",
-            title = "Sols",
-            cluster = "Intérieurs",
-            serviceToolId = "floor",
-            items = listOf(
-                GalleryItem("floor-1", "Chêne naturel", "Sol", R.drawable.assets_media_discover_floorscenes_naturaloakparquet),
-                GalleryItem("floor-2", "Noyer", "Sol", R.drawable.assets_media_discover_floorscenes_heritagewalnutplank),
-                GalleryItem("floor-3", "Marbre", "Sol", R.drawable.assets_media_discover_floorscenes_polishedcarraramarble),
-                GalleryItem("floor-4", "Béton poli", "Sol", R.drawable.assets_media_discover_floorscenes_industrialgrayconcrete),
-                GalleryItem("floor-5", "Chevron", "Sol", R.drawable.assets_media_discover_floorscenes_walnutchevron),
-                GalleryItem("floor-6", "Terre cuite", "Sol", R.drawable.assets_media_discover_floorscenes_terracottaateliertile),
-                GalleryItem("floor-7", "Carrelage ardoise", "Sol", R.drawable.assets_media_discover_floorscenes_modernslatetile),
-                GalleryItem("floor-8", "Tapis ivoire", "Sol", R.drawable.assets_media_discover_floorscenes_plushivorycarpet),
-                GalleryItem("floor-9", "Chêne patiné", "Sol", R.drawable.assets_media_discover_floorscenes_weatheredoakstudio),
-            ),
-        ),
-        DiscoverSection(
-            id = "garden",
-            title = "Jardin",
-            cluster = "Paysages",
-            serviceToolId = "garden",
-            items = numberedDiscoverItems(
-                "garden",
-                "Jardin",
-                R.drawable.assets_media_discover_garden_gardenfiresidepatio,
-                R.drawable.assets_media_discover_generated_garden_garden1,
-                R.drawable.assets_media_discover_generated_garden_garden2,
-            ),
-        ),
-        DiscoverSection(
-            id = "backyard",
-            title = "Cour arrière",
-            cluster = "Paysages",
-            serviceToolId = "garden",
-            items = numberedDiscoverItems(
-                "backyard",
-                "Cour arrière",
-                R.drawable.assets_media_discover_garden_gardenbackyard,
-                R.drawable.assets_media_discover_generated_garden_garden3,
-            ),
-        ),
-        DiscoverSection(
-            id = "terrace",
-            title = "Terrasse",
-            cluster = "Paysages",
-            serviceToolId = "garden",
-            items = numberedDiscoverItems(
-                "terrace",
-                "Terrasse",
-                R.drawable.assets_media_discover_garden_gardenterrace,
-                R.drawable.assets_media_discover_garden_gardendeck,
-            ),
-        ),
-        DiscoverSection(
-            id = "patio",
-            title = "Patio",
-            cluster = "Paysages",
-            serviceToolId = "garden",
-            items = numberedDiscoverItems(
-                "patio",
-                "Patio",
-                R.drawable.assets_media_discover_garden_gardenpatio,
-                R.drawable.assets_media_discover_generated_garden_garden4,
-            ),
-        ),
-        DiscoverSection(
-            id = "yard",
-            title = "Cour",
-            cluster = "Paysages",
-            serviceToolId = "garden",
-            items = numberedDiscoverItems(
-                "yard",
-                "Cour",
-                R.drawable.assets_media_discover_generated_garden_garden5,
-                R.drawable.assets_media_discover_generated_garden_garden6,
-                R.drawable.assets_media_discover_generated_garden_garden7,
-            ),
-        ),
-        DiscoverSection(
-            id = "pool",
-            title = "Piscine",
-            cluster = "Paysages",
-            serviceToolId = "garden",
-            items = numberedDiscoverItems(
-                "pool",
-                "Piscine",
-                R.drawable.assets_media_discover_garden_gardenswimmingpool,
-                R.drawable.assets_media_discover_garden_gardenpoolcourtyard,
-            ),
-        ),
-        DiscoverSection(
-            id = "front-garden",
-            title = "Jardin avant",
-            cluster = "Paysages",
-            serviceToolId = "garden",
-            items = numberedDiscoverItems(
-                "front-garden",
-                "Jardin avant",
-                R.drawable.assets_media_discover_garden_gardenfrontyard,
-                R.drawable.assets_media_discover_garden_gardenvillaentry,
-            ),
-        ),
-    )
-}
+import com.ismail.homedecorai.model.*
 
 class HomeDecorViewModel(
     private val repository: HomeDecorRepository,
@@ -859,14 +27,11 @@ class HomeDecorViewModel(
     private val appContext = context.applicationContext
     private val preferences = context.applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     private var anonymousId = preferences.getString(KEY_ANONYMOUS_ID, null) ?: newAnonymousId()
-    private val validationEngine = WizardValidationEngine()
     private val _uiState = MutableStateFlow(
         HomeDecorUiState(
             progressMessage = text(R.string.progress_preparing_studio),
             elitePassSyncMessage = text(R.string.elite_pass_sync_initial),
             disclosureAccepted = preferences.getBoolean(KEY_DISCLOSURE_ACCEPTED, false),
-            workspace = workspaceStore.state.value,
-            board = workspaceStore.state.value.generatedResults.toBoardItems(),
         )
     )
     val uiState: StateFlow<HomeDecorUiState> = _uiState.asStateFlow()
@@ -874,6 +39,15 @@ class HomeDecorViewModel(
     private fun text(@StringRes resId: Int): String = appContext.getString(resId)
 
     init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val workspace = workspaceStore.awaitState()
+            _uiState.update { state ->
+                state.copy(
+                    workspace = workspace,
+                    board = workspace.generatedResults.toBoardItems(),
+                )
+            }
+        }
         viewModelScope.launch {
             workspaceStore.state.collect { workspace ->
                 _uiState.update { state ->
@@ -901,6 +75,7 @@ class HomeDecorViewModel(
                             elitePassSyncState = ElitePassSyncState.Synced,
                             elitePassSyncMessage = text(R.string.elite_pass_synced),
                             board = archive,
+                            isAppReady = true,
                         )
                     }
                 }
@@ -909,6 +84,7 @@ class HomeDecorViewModel(
                         it.copy(
                             elitePassSyncState = ElitePassSyncState.LocalOnly,
                             elitePassSyncMessage = text(R.string.elite_pass_local_sync),
+                            isAppReady = true,
                         )
                     }
                 }
@@ -1507,7 +683,7 @@ class HomeDecorViewModel(
     }
 
     fun openSettings() {
-        selectTab(MainTab.Settings)
+        _uiState.update { it.copy(settingsVisible = true) }
     }
 
     fun closeSettings() {
@@ -1864,54 +1040,6 @@ class HomeDecorViewModel(
         }
     }
 
-    /**
-     * Get the current validation state for the wizard
-     */
-    fun getCurrentValidationState(): com.ismail.homedecorai.validation.WizardValidationState {
-        val snapshot = _uiState.value
-        val stateMap = createStateMap(
-            hasPhoto = snapshot.selectedPhotos.isNotEmpty() || snapshot.selectedPhotoUri != null,
-            selectedRooms = snapshot.selectedRooms,
-            selectedStyles = snapshot.selectedStyles,
-            selectedPalettes = snapshot.selectedPalettes,
-            maskStrokes = snapshot.maskStrokes,
-            customPrompt = snapshot.customPrompt,
-            hasReferenceImages = hasReferenceFlowImages(snapshot),
-            layoutGoalSelected = snapshot.selectedRooms.isNotEmpty(),
-        )
-        
-        return validationEngine.validateWizard(
-            toolId = snapshot.selectedTool.id,
-            currentStep = snapshot.wizardStage,
-            state = stateMap,
-            context = appContext,
-        )
-    }
-
-    /**
-     * Validate a specific step and return the validation state
-     */
-    fun validateStep(step: WizardStage): com.ismail.homedecorai.validation.StepValidationState {
-        val snapshot = _uiState.value
-        val stateMap = createStateMap(
-            hasPhoto = snapshot.selectedPhotos.isNotEmpty() || snapshot.selectedPhotoUri != null,
-            selectedRooms = snapshot.selectedRooms,
-            selectedStyles = snapshot.selectedStyles,
-            selectedPalettes = snapshot.selectedPalettes,
-            maskStrokes = snapshot.maskStrokes,
-            customPrompt = snapshot.customPrompt,
-            hasReferenceImages = hasReferenceFlowImages(snapshot),
-            layoutGoalSelected = snapshot.selectedRooms.isNotEmpty(),
-        )
-        
-        return validationEngine.validateSingleStep(
-            toolId = snapshot.selectedTool.id,
-            step = step,
-            state = stateMap,
-            context = appContext,
-        )
-    }
-
     private fun ViewerSummary.claimedWithinLocalDay(now: Long = System.currentTimeMillis()): Boolean {
         val claimedAt = lastClaimAt?.toLong() ?: return false
         if (claimedAt <= 0 || claimedAt > now) return false
@@ -1942,41 +1070,7 @@ class HomeDecorViewModel(
 
     fun generate() {
         val snapshot = _uiState.value
-        
-        // Use unified validation engine
-        val stateMap = createStateMap(
-            hasPhoto = snapshot.selectedPhotos.isNotEmpty() || snapshot.selectedPhotoUri != null,
-            selectedRooms = snapshot.selectedRooms,
-            selectedStyles = snapshot.selectedStyles,
-            selectedPalettes = snapshot.selectedPalettes,
-            maskStrokes = snapshot.maskStrokes,
-            customPrompt = snapshot.customPrompt,
-            hasReferenceImages = hasReferenceFlowImages(snapshot),
-            layoutGoalSelected = snapshot.selectedRooms.isNotEmpty(),
-        )
-        
-        val validationResult = validationEngine.validateWizard(
-            toolId = snapshot.selectedTool.id,
-            currentStep = snapshot.wizardStage,
-            state = stateMap,
-            context = appContext,
-        )
-        
-        // Handle validation errors with unified error handling
-        if (!validationResult.canGenerate) {
-            val primaryError = validationResult.currentStepPrimaryMessage
-            if (primaryError != null) {
-                val errorStep = determineErrorStep(snapshot.selectedTool.id, primaryError.fieldId)
-                _uiState.update {
-                    it.copy(
-                        wizardStage = errorStep,
-                        generationError = text(primaryError.messageRes),
-                    )
-                }
-            }
-            return
-        }
-        
+
         // Check diamonds
         if (snapshot.diamonds <= 0 && !snapshot.isPro) {
             _uiState.update {
@@ -2202,7 +1296,9 @@ class HomeDecorViewModel(
             val bytes = appContext.resources.openRawResource(resId).use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream)
                     ?: error(text(R.string.prepare_example_failed))
-                bitmap.toJpegBytes()
+                val result = bitmap.toJpegBytes()
+                if (bitmap.isRecycled.not()) bitmap.recycle()
+                result
             }
             return SourceImage(bytes, "image/jpeg")
         }
@@ -2211,7 +1307,9 @@ class HomeDecorViewModel(
         val bytes = appContext.resources.openRawResource(resId).use { stream ->
             val bitmap = BitmapFactory.decodeStream(stream)
                 ?: error(text(R.string.prepare_example_failed))
-            bitmap.toJpegBytes()
+            val result = bitmap.toJpegBytes()
+            if (bitmap.isRecycled.not()) bitmap.recycle()
+            result
         }
         return SourceImage(bytes, "image/jpeg")
     }
@@ -2224,12 +1322,15 @@ class HomeDecorViewModel(
             ?.let { imageRes ->
                 val bitmap = BitmapFactory.decodeResource(appContext.resources, imageRes)
                     ?: error(text(R.string.prepare_reference_failed))
-                return SourceImage(bitmap.toJpegBytes(), "image/jpeg")
+                val result = SourceImage(bitmap.toJpegBytes(), "image/jpeg")
+                if (bitmap.isRecycled.not()) bitmap.recycle()
+                return result
             }
         if (snapshot.selectedReferenceExampleLabel != null) {
             val bitmap = BitmapFactory.decodeResource(appContext.resources, R.drawable.tool_reference)
                 ?: error(text(R.string.prepare_reference_failed))
             val bytes = bitmap.toJpegBytes()
+            if (bitmap.isRecycled.not()) bitmap.recycle()
             return SourceImage(bytes, "image/jpeg")
         }
         return null
@@ -2247,25 +1348,31 @@ class HomeDecorViewModel(
         val bytes = appContext.contentResolver.openInputStream(uri)?.use { stream ->
             val bitmap = BitmapFactory.decodeStream(stream)
                 ?: error(text(R.string.read_selected_image_failed))
-            bitmap.toJpegBytes()
+            val result = bitmap.toJpegBytes()
+            if (bitmap.isRecycled.not()) bitmap.recycle()
+            result
         }
             ?: error(text(R.string.read_selected_image_failed))
         return SourceImage(bytes, "image/jpeg")
     }
 
     private fun Bitmap.toJpegBytes(): ByteArray {
-        return ByteArrayOutputStream().use { output ->
+        val bytes = ByteArrayOutputStream().use { output ->
             compress(Bitmap.CompressFormat.JPEG, 94, output)
             output.toByteArray()
         }
+        if (isRecycled.not()) recycle()
+        return bytes
     }
 
     private fun List<MaskStroke>.toMaskPngBytes(): ByteArray {
         val bitmap = toMaskBitmap(size = 1024)
-        return ByteArrayOutputStream().use { output ->
+        val bytes = ByteArrayOutputStream().use { output ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
             output.toByteArray()
         }
+        if (bitmap.isRecycled.not()) bitmap.recycle()
+        return bytes
     }
 
     private fun friendlyGenerationError(error: Throwable): String {
@@ -2278,31 +1385,6 @@ class HomeDecorViewModel(
             else -> error.toAppErrorKind(appContext)
         }
         return text(kind.generationMessageRes())
-    }
-
-    /**
-     * Determine which wizard step to navigate to based on the validation error field
-     */
-    private fun determineErrorStep(toolId: String, fieldId: String): WizardStage {
-        return when (fieldId) {
-            com.ismail.homedecorai.validation.ValidationFields.PHOTO -> WizardStage.Photo
-            com.ismail.homedecorai.validation.ValidationFields.ROOM_SELECTION,
-            com.ismail.homedecorai.validation.ValidationFields.LAYOUT_GOAL -> WizardStage.Space
-            com.ismail.homedecorai.validation.ValidationFields.MASK -> WizardStage.Space
-            com.ismail.homedecorai.validation.ValidationFields.REFERENCE_IMAGE -> WizardStage.Space
-            com.ismail.homedecorai.validation.ValidationFields.STYLE_SELECTION,
-            com.ismail.homedecorai.validation.ValidationFields.REPLACEMENT_PROMPT -> WizardStage.Style
-            com.ismail.homedecorai.validation.ValidationFields.PALETTE_SELECTION -> WizardStage.Refine
-            else -> {
-                // Default navigation based on tool type
-                when (toolId) {
-                    "paint", "floor" -> WizardStage.Style
-                    "replace" -> WizardStage.Space
-                    "layout" -> WizardStage.Space
-                    else -> WizardStage.Refine
-                }
-            }
-        }
     }
 
     private fun friendlyPurchaseSyncError(error: Throwable, @StringRes fallback: Int): String {

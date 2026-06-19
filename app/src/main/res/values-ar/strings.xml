@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">اللوحة المراد اختيارها</string>
   <string name="replacement_suggestions">اقتراحات الاستبدال</string>
-  <string name="material_library">مكتبة المواد</string>
-  <string name="material_library_wall_scope">الجدار فقط</string>
-  <string name="material_library_floor_scope">الأرضية فقط</string>
-  <string name="material_selected_wall_preview">معاينة محددة لمنطقة الجدار المحددة بالقناع فقط.</string>
-  <string name="material_selected_floor_preview">معاينة محددة لمنطقة الأرضية المحددة بالقناع فقط.</string>
   <string name="transfer_options">خيارات النقل</string>
   <string name="replacement_object">عنصر الاستبدال</string>
   <string name="prompt_paint">اختياري: أضف تفاصيل تشطيب الجدار فقط</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">القناع</string>
   <string name="replacement_result_object">عنصر الاستبدال</string>
   <string name="replacement_result_status">حالة النتيجة</string>
-  <string name="paint_mask_before_generate_floor">قناع الأرضية مطلوب</string>
-  <string name="paint_mask_before_generate_replace">حدد العنصر قبل الإنشاء</string>
-  <string name="paint_mask_before_generate_wall">قناع الجدار مطلوب</string>
   <string name="add_both_images">أضف الصورتين</string>
   <string name="upload_photo_of">ارفع صورة لـ %1$s</string>
   <string name="add_photo_to_continue">أضف صورة للمتابعة.</string>
@@ -869,6 +861,9 @@
   <string name="option_layout_cozy_reading">زاوية قراءة مريحة</string>
   <string name="option_layout_pet_friendly">مساحة صديقة للحيوانات الأليفة</string>
   <string name="option_layout_meditation_zone">منطقة للتأمل</string>
+  <string name="option_layout_multi_use_zone">منطقة متعددة الاستخدامات</string>
+  <string name="option_layout_work_from_home">العمل من المنزل</string>
+  <string name="option_layout_kids_play_area">منطقة ألعاب الأطفال</string>
   <string name="option_reference_subtle">خفيف</string>
   <string name="option_reference_balanced">متوازن</string>
   <string name="option_reference_faithful">وفي</string>

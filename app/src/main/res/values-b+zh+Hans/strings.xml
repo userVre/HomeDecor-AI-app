@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">要选择的调色板</string>
   <string name="replacement_suggestions">替换建议</string>
-  <string name="material_library">材质库</string>
-  <string name="material_library_wall_scope">仅墙壁</string>
-  <string name="material_library_floor_scope">仅地板</string>
-  <string name="material_selected_wall_preview">仅为遮罩的墙壁区域预览所选内容。</string>
-  <string name="material_selected_floor_preview">仅为遮罩的地板区域预览所选内容。</string>
   <string name="transfer_options">迁移选项</string>
   <string name="replacement_object">替换物体</string>
   <string name="prompt_paint">可选：添加仅墙壁的饰面细节</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">遮罩</string>
   <string name="replacement_result_object">替换物体</string>
   <string name="replacement_result_status">结果状态</string>
-  <string name="paint_mask_before_generate_floor">需要地板遮罩</string>
-  <string name="paint_mask_before_generate_replace">在生成前标记物体</string>
-  <string name="paint_mask_before_generate_wall">需要墙壁遮罩</string>
   <string name="add_both_images">添加两张图片</string>
   <string name="upload_photo_of">上传您%1$s的照片</string>
   <string name="add_photo_to_continue">添加照片以继续。</string>
@@ -869,6 +861,9 @@
   <string name="option_layout_cozy_reading">舒适的阅读角</string>
   <string name="option_layout_pet_friendly">宠物友好空间</string>
   <string name="option_layout_meditation_zone">冥想区域</string>
+  <string name="option_layout_multi_use_zone">多功能区域</string>
+  <string name="option_layout_work_from_home">居家办公</string>
+  <string name="option_layout_kids_play_area">儿童游乐区</string>
   <string name="option_reference_subtle">微妙</string>
   <string name="option_reference_balanced">平衡</string>
   <string name="option_reference_faithful">忠实</string>

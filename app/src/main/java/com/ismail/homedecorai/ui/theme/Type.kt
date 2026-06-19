@@ -9,57 +9,63 @@ import androidx.compose.ui.unit.sp
 object HomeDecorType {
     val DisplayLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Black,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
-        letterSpacing = (-0.25).sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 40.sp,
+        lineHeight = 48.sp,
+        letterSpacing = (-0.5).sp,
     )
     val DisplayMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Black,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
+        letterSpacing = (-0.25).sp,
     )
     val DisplaySmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
+        letterSpacing = 0.sp,
     )
     val HeadlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Black,
-        fontSize = 26.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
         lineHeight = 32.sp,
+        letterSpacing = 0.sp,
     )
     val HeadlineMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 30.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp,
     )
     val HeadlineSmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 18.sp,
         lineHeight = 26.sp,
+        letterSpacing = 0.sp,
     )
     val TitleLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
-        lineHeight = 24.sp,
+        lineHeight = 26.sp,
+        letterSpacing = 0.sp,
     )
     val TitleMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
-        lineHeight = 22.sp,
-        letterSpacing = 0.15.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.1.sp,
     )
     val TitleSmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,

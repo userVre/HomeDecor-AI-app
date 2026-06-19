@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">Bảng màu cần chọn</string>
   <string name="replacement_suggestions">Gợi ý thay thế</string>
-  <string name="material_library">Thư viện vật liệu</string>
-  <string name="material_library_wall_scope">Chỉ tường</string>
-  <string name="material_library_floor_scope">Chỉ sàn</string>
-  <string name="material_selected_floor_preview">Xem trước đã chọn cho vùng sàn đã đánh dấu.</string>
-  <string name="material_selected_wall_preview">Xem trước đã chọn cho vùng tường đã đánh dấu.</string>
   <string name="transfer_options">Tùy chọn chuyển đổi</string>
   <string name="replacement_object">Vật thể thay thế</string>
   <string name="prompt_paint">Tùy chọn: thêm chi tiết hoàn thiện cho tường</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">Mặt nạ</string>
   <string name="replacement_result_object">Vật thể thay thế</string>
   <string name="replacement_result_status">Trạng thái kết quả</string>
-  <string name="paint_mask_before_generate_floor">Cần mặt nạ sàn</string>
-  <string name="paint_mask_before_generate_replace">Đánh dấu vật thể trước khi tạo</string>
-  <string name="paint_mask_before_generate_wall">Cần mặt nạ tường</string>
   <string name="add_both_images">Thêm cả hai hình ảnh</string>
   <string name="upload_photo_of">Tải lên ảnh %1$s của bạn</string>
   <string name="add_photo_to_continue">Thêm ảnh để tiếp tục.</string>
@@ -869,6 +861,9 @@
   <string name="option_layout_cozy_reading">Góc đọc sách ấm cúng</string>
   <string name="option_layout_pet_friendly">Không gian thân thiện với thú cưng</string>
   <string name="option_layout_meditation_zone">Khu vực thiền</string>
+  <string name="option_layout_multi_use_zone">Khu vực đa năng</string>
+  <string name="option_layout_work_from_home">Làm việc tại nhà</string>
+  <string name="option_layout_kids_play_area">Khu vui chơi trẻ em</string>
   <string name="option_reference_subtle">Nhẹ nhàng</string>
   <string name="option_reference_balanced">Cân bằng</string>
   <string name="option_reference_faithful">Trung thành</string>

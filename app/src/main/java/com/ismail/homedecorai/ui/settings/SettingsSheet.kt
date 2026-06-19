@@ -61,7 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.AppLocale
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.rawServiceMessageToKind
 import com.ismail.homedecorai.storeMessageRes
@@ -161,7 +161,7 @@ fun SettingsSheet(
                 IconButton(onClick = onClose) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
-                Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
             }
             LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val actionMessage = (settingsMessage ?: state.settingsMessage ?: state.purchaseMessage)?.takeIf { it.isNotBlank() }
@@ -388,7 +388,6 @@ fun SettingsRow(
         headlineContent = {
             Text(
                 title,
-                fontWeight = FontWeight.Bold,
                 color = if (enabled) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },

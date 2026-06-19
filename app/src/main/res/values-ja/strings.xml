@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">選択するパレット</string>
   <string name="replacement_suggestions">置換の提案</string>
-  <string name="material_library">素材ライブラリ</string>
-  <string name="material_library_wall_scope">壁のみ</string>
-  <string name="material_library_floor_scope">床のみ</string>
-  <string name="material_selected_wall_preview">マスクされた壁エリアのみに選択されたプレビュー。</string>
-  <string name="material_selected_floor_preview">マスクされた床エリアのみに選択されたプレビュー。</string>
   <string name="transfer_options">転送オプション</string>
   <string name="replacement_object">置換オブジェクト</string>
   <string name="prompt_paint">オプション：壁のみの仕上げ詳細を追加</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">マスク</string>
   <string name="replacement_result_object">置換オブジェクト</string>
   <string name="replacement_result_status">結果のステータス</string>
-  <string name="paint_mask_before_generate_floor">床のマスクが必要</string>
-  <string name="paint_mask_before_generate_replace">生成前にオブジェクトをマーク</string>
-  <string name="paint_mask_before_generate_wall">壁のマスクが必要</string>
   <string name="add_both_images">両方の画像を追加</string>
   <string name="upload_photo_of">%1$s の写真をアップロード</string>
   <string name="add_photo_to_continue">続行するには写真を追加してください。</string>
@@ -859,6 +851,9 @@
   <string name="option_layout_cozy_reading">居心地の良い読書コーナー</string>
   <string name="option_layout_pet_friendly">ペットフレンドリーなスペース</string>
   <string name="option_layout_meditation_zone">瞑想ゾーン</string>
+  <string name="option_layout_multi_use_zone">多目的ゾーン</string>
+  <string name="option_layout_work_from_home">在宅ワーク</string>
+  <string name="option_layout_kids_play_area">キッズプレイエリア</string>
   <string name="option_reference_subtle">控えめ</string>
   <string name="option_reference_balanced">バランス</string>
   <string name="option_reference_faithful">忠実</string>

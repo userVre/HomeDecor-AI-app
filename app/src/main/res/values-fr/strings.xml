@@ -230,9 +230,7 @@
   <string name="replacement_result_mask_used">Masque</string>
   <string name="replacement_result_object">Objet de remplacement</string>
   <string name="replacement_result_status">Statut du résultat</string>
-  <string name="paint_mask_before_generate_floor">Masque du sol requis</string>
-  <string name="paint_mask_before_generate_replace">Marquez l’objet avant de générer</string>
-  <string name="paint_mask_before_generate_wall">Masque mural requis</string>
+
   <string name="add_both_images">Ajoutez les deux images</string>
   <string name="validation_add_source_photo">Ajoutez une photo source depuis la galerie, la camera ou un exemple pour continuer.</string>
   <string name="validation_upload_source_photo">Importez une photo source depuis la galerie ou la camera pour continuer.</string>
@@ -654,6 +652,9 @@
   <string name="option_layout_cozy_reading">Coin lecture cozy</string>
   <string name="option_layout_pet_friendly">Espace pet-friendly</string>
   <string name="option_layout_meditation_zone">Zone méditation</string>
+  <string name="option_layout_multi_use_zone">Zone multi-usage</string>
+  <string name="option_layout_work_from_home">Espace télétravail</string>
+  <string name="option_layout_kids_play_area">Espace jeux enfants</string>
   <string name="option_reference_subtle">Subtil</string>
   <string name="option_reference_balanced">Équilibré</string>
   <string name="option_reference_faithful">Fidèle</string>
@@ -863,11 +864,6 @@
   <string name="history_unfavorited">Retiré des favoris.</string>
   <string name="history_yesterday">Hier</string>
   <string name="keep_controls_title">Garder</string>
-  <string name="material_library">Bibliothèque de matériaux</string>
-  <string name="material_library_floor_scope">Sol uniquement</string>
-  <string name="material_library_wall_scope">Mur uniquement</string>
-  <string name="material_selected_floor_preview">Aperçu sélectionné pour la zone de sol masquée uniquement.</string>
-  <string name="material_selected_wall_preview">Aperçu sélectionné pour la zone de mur masquée uniquement.</string>
   <string name="new_project">Nouveau projet</string>
   <string name="no_projects_yet">Pas encore de projet. Créez-en un à partir de ce résultat.</string>
   <string name="option_advanced_circulation">Circulation</string>

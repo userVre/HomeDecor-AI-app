@@ -56,9 +56,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.AppLocale
-import com.ismail.homedecorai.BoardItem
+import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.GeneratedResult
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.components.WorkspaceImage
@@ -195,7 +195,7 @@ fun LanguagePickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     ListItem(
-                        headlineContent = { Text(stringResource(R.string.language_system_default), fontWeight = FontWeight.Bold) },
+                        headlineContent = { Text(stringResource(R.string.language_system_default), fontWeight = FontWeight.SemiBold) },
                         trailingContent = {
                             if (systemSelected) {
                                 Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue)
@@ -215,7 +215,7 @@ fun LanguagePickerDialog(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         ListItem(
-                            headlineContent = { Text(stringResource(language.labelRes), fontWeight = FontWeight.Bold) },
+                            headlineContent = { Text(stringResource(language.labelRes), fontWeight = FontWeight.SemiBold) },
                             trailingContent = {
                                 if (selected) {
                                     Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue)
@@ -264,7 +264,7 @@ fun AddToProjectDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.save_to_project), fontWeight = FontWeight.Black) },
+        title = { Text(stringResource(R.string.save_to_project), fontWeight = FontWeight.SemiBold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -307,7 +307,7 @@ fun AddToProjectDialog(
                                         modifier = Modifier.size(54.dp).clip(RoundedCornerShape(14.dp)),
                                     )
                                     Column(Modifier.weight(1f)) {
-                                        Text(project.name, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(project.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         Text(
                                             project.roomType.ifBlank { stringResource(R.string.project_room_unspecified) },
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -382,7 +382,7 @@ fun ProjectDetailDialog(
     var styleInfo by remember(project.id) { mutableStateOf(project.styleInfo) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.project_workspace_title), fontWeight = FontWeight.Black) },
+        title = { Text(stringResource(R.string.project_workspace_title), fontWeight = FontWeight.SemiBold) },
         text = {
             LazyColumn(
                 modifier = Modifier.heightIn(max = 520.dp),
@@ -442,7 +442,7 @@ fun ProjectDetailDialog(
                 }
                 if (projectResults.isNotEmpty()) {
                     item {
-                        Text(stringResource(R.string.project_generated_results), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.project_generated_results), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     }
                     item {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -454,7 +454,7 @@ fun ProjectDetailDialog(
                 }
                 if (projectFavorites.isNotEmpty()) {
                     item {
-                        Text(stringResource(R.string.project_favorites), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.project_favorites), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     }
                     item {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -504,7 +504,7 @@ fun ProjectEditorDialog(
     var styleInfo by remember { mutableStateOf(initialStyleInfo) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title, fontWeight = FontWeight.Black) },
+        title = { Text(title, fontWeight = FontWeight.SemiBold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -591,7 +591,7 @@ fun GenerationErrorNotice(
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                 modifier = Modifier.height(48.dp),
             ) {
-                Text(stringResource(R.string.retry), fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.retry), fontWeight = FontWeight.SemiBold)
             }
         }
     }

@@ -270,11 +270,6 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">Palett att välja</string>
   <string name="replacement_suggestions">Ersättningsförslag</string>
-  <string name="material_library">Materialbibliotek</string>
-  <string name="material_library_wall_scope">Bara vägg</string>
-  <string name="material_library_floor_scope">Bara golv</string>
-  <string name="material_selected_wall_preview">Förhandsvisning för den maskerade väggytan.</string>
-  <string name="material_selected_floor_preview">Förhandsvisning för den maskerade golvytan.</string>
   <string name="transfer_options">Överföringsalternativ</string>
   <string name="replacement_object">Ersättningsobjekt</string>
   <string name="prompt_paint">Valfritt: lägg till väggfinish detaljer</string>
@@ -298,9 +293,6 @@
   <string name="replacement_result_mask_used">Mask</string>
   <string name="replacement_result_object">Ersättningsobjekt</string>
   <string name="replacement_result_status">Resultatstatus</string>
-  <string name="paint_mask_before_generate_floor">Golvmask behövs</string>
-  <string name="paint_mask_before_generate_replace">Markera objektet innan generering</string>
-  <string name="paint_mask_before_generate_wall">Väggmask behövs</string>
   <string name="add_both_images">Lägg till båda bilderna</string>
   <string name="upload_photo_of">Ladda upp ett foto av din %1$s</string>
   <string name="add_photo_to_continue">Lägg till ett foto för att fortsätta.</string>
@@ -869,6 +861,9 @@
   <string name="option_layout_cozy_reading">Trevligt läshörn</string>
   <string name="option_layout_pet_friendly">Hundvänligt utrymme</string>
   <string name="option_layout_meditation_zone">Meditationszon</string>
+  <string name="option_layout_multi_use_zone">Mångbrukszom</string>
+  <string name="option_layout_work_from_home">Hemmaarbete</string>
+  <string name="option_layout_kids_play_area">Barnens lekområde</string>
   <string name="option_reference_subtle">Subtil</string>
   <string name="option_reference_balanced">Balanserad</string>
   <string name="option_reference_faithful">Troget</string>

@@ -41,12 +41,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.AppLocale
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.dialogs.DeleteAccountDialog
@@ -104,7 +106,7 @@ fun SettingsScreen(
                         Text(
                             stringResource(R.string.settings),
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = StudioCanvas),
@@ -201,7 +203,10 @@ private fun SettingsItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { role = Role.Button }
+            .semantics {
+                role = Role.Button
+                contentDescription = title
+            }
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -239,7 +244,7 @@ private fun LanguagePickerContent(
             Text(
                 stringResource(R.string.language),
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
         }
@@ -275,9 +280,19 @@ private fun LanguageRow(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val languageDescription = if (selected) {
+        stringResource(R.string.a11y_language_selected_format, label)
+    } else {
+        label
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .semantics {
+                this.selected = selected
+                contentDescription = languageDescription
+                role = Role.Button
+            }
             .clickable(onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -291,7 +306,7 @@ private fun LanguageRow(
         if (selected) {
             Icon(
                 Icons.Rounded.Check,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.a11y_check_icon),
                 tint = StudioBlue,
                 modifier = Modifier.size(22.dp),
             )

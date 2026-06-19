@@ -15,16 +15,18 @@ object HomeDecorShape {
     val ExtraExtraExtraLarge = RoundedCornerShape(28.dp)
     val Full = RoundedCornerShape(9999.dp)
 
-    val Card = RoundedCornerShape(20.dp)
-    val CardLarge = RoundedCornerShape(24.dp)
-    val Sheet = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-    val Dialog = RoundedCornerShape(28.dp)
-    val Button = RoundedCornerShape(9999.dp)
-    val Chip = RoundedCornerShape(9999.dp)
-    val Input = RoundedCornerShape(16.dp)
-    val Badge = RoundedCornerShape(9999.dp)
-    val Image = RoundedCornerShape(16.dp)
-    val ImageLarge = RoundedCornerShape(20.dp)
+    val Card = RoundedCornerShape(16.dp)
+    val CardLarge = RoundedCornerShape(20.dp)
+    val Sheet = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    val Dialog = RoundedCornerShape(24.dp)
+    val Button = RoundedCornerShape(12.dp)
+    val Chip = RoundedCornerShape(8.dp)
+    val Input = RoundedCornerShape(12.dp)
+    val Badge = RoundedCornerShape(8.dp)
+    val Image = RoundedCornerShape(12.dp)
+    val ImageLarge = RoundedCornerShape(16.dp)
+    val FAB = RoundedCornerShape(16.dp)
+    val TopAppBar = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
 }
 
 val HomeDecorShapes = Shapes(

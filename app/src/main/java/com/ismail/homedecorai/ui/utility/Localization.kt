@@ -7,31 +7,41 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.ViewQuilt
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Brush
+import androidx.compose.material.icons.rounded.AirlineSeatFlat
+import androidx.compose.material.icons.rounded.Chair
+import androidx.compose.material.icons.rounded.Cabin
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.DesktopWindows
+import androidx.compose.material.icons.rounded.Eco
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Landscape
+import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.TableChart
+import androidx.compose.material.icons.rounded.Texture
+import androidx.compose.material.icons.rounded.Toys
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import com.ismail.homedecorai.DecorTool
-import com.ismail.homedecorai.DiamondPack
-import com.ismail.homedecorai.DiscoverSection
+import com.ismail.homedecorai.model.DecorTool
+import com.ismail.homedecorai.model.DiamondPack
+import com.ismail.homedecorai.model.DiscoverSection
 import com.ismail.homedecorai.FavoriteItem
-import com.ismail.homedecorai.GalleryItem
+import com.ismail.homedecorai.model.GalleryItem
 import com.ismail.homedecorai.GeneratedResult
 import com.ismail.homedecorai.HomeDecorCatalog
-import com.ismail.homedecorai.HomeDecorUiState
-import com.ismail.homedecorai.MainTab
+import com.ismail.homedecorai.model.HomeDecorUiState
+import com.ismail.homedecorai.model.MainTab
 import com.ismail.homedecorai.MoodboardItem
 import com.ismail.homedecorai.R
-import com.ismail.homedecorai.SelectedPhoto
-import com.ismail.homedecorai.WizardStage
+import com.ismail.homedecorai.model.SelectedPhoto
+import com.ismail.homedecorai.model.WizardStage
 import com.revenuecat.purchases.Package
 import java.text.DateFormat
 import java.time.Instant
@@ -47,11 +57,9 @@ data class StepCopy(
 
 @StringRes
 fun tabLabelRes(tab: MainTab): Int = when (tab) {
-    MainTab.Tools -> R.string.nav_tools
+    MainTab.Home -> R.string.nav_home
     MainTab.Discover -> R.string.nav_discover
-    MainTab.UpgradePro -> R.string.nav_upgrade_pro
-    MainTab.Profile -> R.string.nav_my_board
-    MainTab.Settings -> R.string.nav_profile
+    MainTab.Profile -> R.string.nav_profile
     MainTab.Create -> R.string.workflow_interior
 }
 
@@ -132,6 +140,9 @@ fun optionLabelRes(label: String): Int? = when (label) {
     "Piscine" -> R.string.option_outdoor_pool
     "Jardin avant" -> R.string.option_outdoor_front_garden
     "Noël" -> R.string.option_garden_christmas
+    "Zen" -> R.string.option_garden_zen
+    "Anglais" -> R.string.option_garden_english
+    "Paysage" -> R.string.option_garden_landscape
     "Moderne" -> R.string.option_style_modern
     "Luxe" -> R.string.option_style_luxury
     "Japandi" -> R.string.option_style_japandi
@@ -158,8 +169,10 @@ fun optionLabelRes(label: String): Int? = when (label) {
     "Parquet clair" -> R.string.option_floor_light_wood
     "Parquet foncé" -> R.string.option_floor_dark_wood
     "Marbre" -> R.string.option_floor_marble
+    "Marble" -> R.string.option_floor_marble
     "Carrara Marble" -> R.string.option_floor_marble
     "Chêne" -> R.string.option_material_oak_wood
+    "Oak" -> R.string.option_material_oak_wood
     "Oak Wood" -> R.string.option_material_oak_wood
     "Noyer" -> R.string.option_material_walnut
     "Walnut" -> R.string.option_material_walnut
@@ -173,8 +186,10 @@ fun optionLabelRes(label: String): Int? = when (label) {
     "Black Tile" -> R.string.option_material_black_tile
     "Peinture beige chaude" -> R.string.option_material_warm_beige_paint
     "Warm Beige" -> R.string.option_material_warm_beige_paint
+    "Beige" -> R.string.option_material_warm_beige_paint
     "Peinture sombre élégante" -> R.string.option_material_dark_elegant_paint
     "Dark Elegant" -> R.string.option_material_dark_elegant_paint
+    "Dark" -> R.string.option_material_dark_elegant_paint
     "Béton ciré" -> R.string.option_floor_polished_concrete
     "Carrelage moderne" -> R.string.option_floor_modern_tile
     "Pierre naturelle" -> R.string.option_floor_natural_stone
@@ -190,6 +205,9 @@ fun optionLabelRes(label: String): Int? = when (label) {
     "Coin lecture cozy" -> R.string.option_layout_cozy_reading
     "Espace pet-friendly" -> R.string.option_layout_pet_friendly
     "Zone méditation" -> R.string.option_layout_meditation_zone
+    "Zone multi-usage" -> R.string.option_layout_multi_use_zone
+    "Espace télétravail" -> R.string.option_layout_work_from_home
+    "Espace jeux enfants" -> R.string.option_layout_kids_play_area
     "Subtil" -> R.string.option_reference_subtle
     "Équilibré" -> R.string.option_reference_balanced
     "Fidèle" -> R.string.option_reference_faithful
@@ -496,7 +514,7 @@ fun boardToolTitleRes(title: String): Int? = when (title) {
     "Relooking du sol", "floor" -> R.string.tool_floor_title
     "Agencement Intelligent", "layout" -> R.string.tool_layout_title
     "Remplacer des objets", "replace" -> R.string.tool_replace_title
-    "Transfert de style de référence", "reference" -> R.string.tool_reference_title
+    "Transfert de style", "reference" -> R.string.tool_reference_title
     "HomeDecor AI" -> R.string.app_name
     else -> null
 }
@@ -624,7 +642,24 @@ fun choiceIcon(label: String): ImageVector {
         label.contains("Transfert", ignoreCase = true) -> Icons.Rounded.AutoAwesome
         label.contains("Circulation", ignoreCase = true) -> Icons.Rounded.Explore
         label.contains("Lumi", ignoreCase = true) -> Icons.Rounded.Star
+        label.contains("multi-usage", ignoreCase = true) -> Icons.Rounded.Layers
+        label.contains("télétravail", ignoreCase = true) -> Icons.Rounded.DesktopWindows
+        label.contains("jeux enfants", ignoreCase = true) -> Icons.Rounded.Toys
         else -> Icons.Rounded.Home
+    }
+}
+
+fun replacementIcon(label: String): ImageVector {
+    return when {
+        label.contains("sofa", ignoreCase = true) -> Icons.Rounded.AirlineSeatFlat
+        label.contains("table", ignoreCase = true) -> Icons.Rounded.TableChart
+        label.contains("lampe", ignoreCase = true) -> Icons.Rounded.Lightbulb
+        label.contains("tapis", ignoreCase = true) -> Icons.Rounded.Texture
+        label.contains("art mural", ignoreCase = true) -> Icons.Rounded.Image
+        label.contains("plante", ignoreCase = true) -> Icons.Rounded.Eco
+        label.contains("chaise", ignoreCase = true) -> Icons.Rounded.Chair
+        label.contains("cabinet", ignoreCase = true) -> Icons.Rounded.Cabin
+        else -> Icons.Rounded.AutoAwesome
     }
 }
 
@@ -645,24 +680,16 @@ data class MaterialSwatchSpec(
 )
 
 fun materialSwatchSpec(label: String): MaterialSwatchSpec = when (label) {
-    "Carrara Marble" -> MaterialSwatchSpec(Color(0xFFF7F4EE), Color(0xFF9A948B), MaterialPattern.Vein)
-    "Marbre" -> MaterialSwatchSpec(Color(0xFFF7F4EE), Color(0xFF9A948B), MaterialPattern.Vein)
-    "Oak Wood" -> MaterialSwatchSpec(Color(0xFFD7AD6F), Color(0xFF8E6335), MaterialPattern.Wood)
-    "Chêne" -> MaterialSwatchSpec(Color(0xFFD7AD6F), Color(0xFF8E6335), MaterialPattern.Wood)
-    "Walnut" -> MaterialSwatchSpec(Color(0xFF6E4529), Color(0xFF2D1B12), MaterialPattern.Wood)
-    "Noyer" -> MaterialSwatchSpec(Color(0xFF6E4529), Color(0xFF2D1B12), MaterialPattern.Wood)
-    "Concrete" -> MaterialSwatchSpec(Color(0xFFAAA79F), Color(0xFF6F716E), MaterialPattern.Concrete)
-    "Béton" -> MaterialSwatchSpec(Color(0xFFAAA79F), Color(0xFF6F716E), MaterialPattern.Concrete)
+    "Marble", "Carrara Marble", "Marbre" -> MaterialSwatchSpec(Color(0xFFF7F4EE), Color(0xFF9A948B), MaterialPattern.Vein)
+    "Oak", "Oak Wood", "Chêne" -> MaterialSwatchSpec(Color(0xFFD7AD6F), Color(0xFF8E6335), MaterialPattern.Wood)
+    "Walnut", "Noyer" -> MaterialSwatchSpec(Color(0xFF6E4529), Color(0xFF2D1B12), MaterialPattern.Wood)
+    "Concrete", "Béton" -> MaterialSwatchSpec(Color(0xFFAAA79F), Color(0xFF6F716E), MaterialPattern.Concrete)
     "Limewash" -> MaterialSwatchSpec(Color(0xFFE7E0D4), Color(0xFFC8BFAF), MaterialPattern.Limewash)
     "Terrazzo" -> MaterialSwatchSpec(Color(0xFFECE3D3), Color(0xFF5C8374), MaterialPattern.Terrazzo)
-    "White Tile" -> MaterialSwatchSpec(Color(0xFFF8F8F5), Color(0xFFC9C9C1), MaterialPattern.Tile)
-    "Carrelage blanc" -> MaterialSwatchSpec(Color(0xFFF8F8F5), Color(0xFFC9C9C1), MaterialPattern.Tile)
-    "Black Tile" -> MaterialSwatchSpec(Color(0xFF171717), Color(0xFF686868), MaterialPattern.Tile)
-    "Carrelage noir" -> MaterialSwatchSpec(Color(0xFF171717), Color(0xFF686868), MaterialPattern.Tile)
-    "Warm Beige" -> MaterialSwatchSpec(Color(0xFFE4D0B8), Color(0xFFC5A987), MaterialPattern.Paint)
-    "Peinture beige chaude" -> MaterialSwatchSpec(Color(0xFFE4D0B8), Color(0xFFC5A987), MaterialPattern.Paint)
-    "Dark Elegant" -> MaterialSwatchSpec(Color(0xFF232625), Color(0xFF606663), MaterialPattern.Paint)
-    "Peinture sombre élégante" -> MaterialSwatchSpec(Color(0xFF232625), Color(0xFF606663), MaterialPattern.Paint)
+    "White Tile", "Carrelage blanc" -> MaterialSwatchSpec(Color(0xFFF8F8F5), Color(0xFFC9C9C1), MaterialPattern.Tile)
+    "Black Tile", "Carrelage noir" -> MaterialSwatchSpec(Color(0xFF171717), Color(0xFF686868), MaterialPattern.Tile)
+    "Beige", "Warm Beige", "Peinture beige chaude" -> MaterialSwatchSpec(Color(0xFFE4D0B8), Color(0xFFC5A987), MaterialPattern.Paint)
+    "Dark", "Dark Elegant", "Peinture sombre élégante" -> MaterialSwatchSpec(Color(0xFF232625), Color(0xFF606663), MaterialPattern.Paint)
     else -> MaterialSwatchSpec(Color(0xFFE4D8C9), Color(0xFF9A8B78), MaterialPattern.Paint)
 }
 
@@ -1057,8 +1084,13 @@ fun selectedPhotoImageRes(state: HomeDecorUiState, slot: SelectedPhoto): Int {
 
 fun choiceImageRes(label: String): Int {
     return when (label) {
+        "Moderne" -> R.drawable.assets_media_styles_stylemodern
+        "Noël" -> R.drawable.assets_media_styles_stylemodern
         "Luxe" -> R.drawable.assets_media_styles_styleluxury
         "Japandi" -> R.drawable.assets_media_styles_stylejapandi
+        "Zen" -> R.drawable.assets_media_styles_styleminimalist
+        "Anglais" -> R.drawable.assets_media_styles_stylefrenchcountry
+        "Paysage" -> R.drawable.assets_media_discover_generated_garden_garden5
         "Cyberpunk" -> R.drawable.assets_media_styles_stylecyberpunk
         "Tropicale" -> R.drawable.assets_media_styles_styletropical
         "Minimaliste" -> R.drawable.assets_media_styles_styleminimalist

@@ -11,7 +11,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import com.ismail.homedecorai.BoardItem
+import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.BuildConfig
 import com.ismail.homedecorai.R
 import kotlinx.coroutines.Dispatchers

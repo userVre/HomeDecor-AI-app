@@ -65,7 +65,7 @@ fun PreviewTile(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -93,8 +93,9 @@ fun UriOrResourceImage(
             }
         }
     }
-    if (bitmap != null) {
-        Image(bitmap = bitmap!!, contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
+    val currentBitmap = bitmap
+    if (currentBitmap != null) {
+        Image(bitmap = currentBitmap, contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
     } else {
         Image(painter = painterResource(imageRes), contentDescription = contentDescription, modifier = modifier, contentScale = ContentScale.Crop)
     }
@@ -149,10 +150,11 @@ fun NetworkOrResourceImage(
         }
         loading = false
     }
+    val currentBitmap = bitmap
     when {
-        bitmap != null -> {
+        currentBitmap != null -> {
             Image(
-                bitmap = bitmap!!,
+                bitmap = currentBitmap,
                 contentDescription = contentDescription,
                 modifier = modifier,
                 contentScale = ContentScale.Crop,
@@ -192,7 +194,7 @@ fun ImageLoadingState(modifier: Modifier = Modifier) {
             Text(
                 stringResource(R.string.image_loading_title),
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = StudioInk,
                 textAlign = TextAlign.Center,
             )
@@ -223,7 +225,7 @@ fun ImageFailureState(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(28.dp), tint = StudioRose)
-            Text(stringResource(R.string.image_unavailable_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = StudioRose, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.image_unavailable_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = StudioRose, textAlign = TextAlign.Center)
             Text(stringResource(R.string.image_unavailable_body), style = MaterialTheme.typography.bodySmall, color = StudioInk, textAlign = TextAlign.Center)
         }
     }

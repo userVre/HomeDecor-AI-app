@@ -270,12 +270,7 @@
   <string name="design_pair_format">%1$s / %2$s</string>
   <string name="palette_to_choose">Paleta a escolher</string>
   <string name="replacement_suggestions">Sugestões de substituição</string>
-  <string name="material_library">Biblioteca de materiais</string>
-  <string name="material_library_wall_scope">Apenas parede</string>
-  <string name="material_library_floor_scope">Apenas piso</string>
   <string name="material_selected_preview">Pré-visualização selecionada apenas para a área mascarada.</string>
-  <string name="material_selected_wall_preview">Pré-visualização selecionada apenas para a área da parede mascarada.</string>
-  <string name="material_selected_floor_preview">Pré-visualização selecionada apenas para a área do piso mascarado.</string>
   <string name="transfer_options">Opções de transferência</string>
   <string name="replacement_object">Objeto de substituição</string>
   <string name="prompt_paint">Opcional: adicione detalhes de acabamento apenas para a parede</string>
@@ -299,9 +294,6 @@
   <string name="replacement_result_mask_used">Máscara</string>
   <string name="replacement_result_object">Objeto de substituição</string>
   <string name="replacement_result_status">Status do resultado</string>
-  <string name="paint_mask_before_generate_floor">Máscara de piso necessária</string>
-  <string name="paint_mask_before_generate_replace">Marque o objeto antes de gerar</string>
-  <string name="paint_mask_before_generate_wall">Máscara de parede necessária</string>
   <string name="add_both_images">Adicione ambas as imagens</string>
   <string name="upload_photo_of">Envie uma foto do seu %1$s</string>
   <string name="add_photo_to_continue">Adicione uma foto para continuar.</string>
@@ -871,6 +863,9 @@
   <string name="option_layout_cozy_reading">Canto de leitura aconchegante</string>
   <string name="option_layout_pet_friendly">Espaço pet-friendly</string>
   <string name="option_layout_meditation_zone">Zona de meditação</string>
+  <string name="option_layout_multi_use_zone">Zona de uso múltiplo</string>
+  <string name="option_layout_work_from_home">Trabalhar em casa</string>
+  <string name="option_layout_kids_play_area">Área de brincadeiras infantis</string>
   <string name="option_reference_subtle">Sutil</string>
   <string name="option_reference_balanced">Equilibrado</string>
   <string name="option_reference_faithful">Fiel</string>

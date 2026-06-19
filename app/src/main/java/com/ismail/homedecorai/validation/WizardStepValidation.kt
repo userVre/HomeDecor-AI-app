@@ -2,10 +2,10 @@ package com.ismail.homedecorai.validation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.ismail.homedecorai.HomeDecorUiState
-import com.ismail.homedecorai.WizardStage
-import com.ismail.homedecorai.hasVisibleMaskPaint
-import com.ismail.homedecorai.isValidReplacementPrompt
+import com.ismail.homedecorai.model.HomeDecorUiState
+import com.ismail.homedecorai.model.WizardStage
+import com.ismail.homedecorai.model.hasVisibleMaskPaint
+import com.ismail.homedecorai.model.isValidReplacementPrompt
 
 /**
  * Unified validation state for a single wizard step.
@@ -85,10 +85,7 @@ private fun validateSpaceStep(state: HomeDecorUiState, toolId: String): WizardSt
             val hasStyle = state.selectedStyles.isNotEmpty()
             WizardStepValidation(
                 canProceed = hasStyle,
-                validationMessage = if (!hasStyle) {
-                    if (toolId == "floor") "Choose a floor material before generating."
-                    else "Choose a wall material before generating."
-                } else null,
+                validationMessage = if (!hasStyle) "Choose a wall/floor material before generating." else null,
                 isStepValid = hasStyle,
                 completedRequiredFields = if (hasStyle) 1 else 0,
                 totalRequiredFields = 1,
@@ -147,7 +144,7 @@ private fun validateStyleStep(state: HomeDecorUiState, toolId: String): WizardSt
         "paint" -> {
             val hasStyle = state.selectedStyles.isNotEmpty()
             val canGenerate = hasStyle
-            val message = if (!hasStyle) "Choose a wall material before generating." else null
+            val message = if (!hasStyle) "Choose a wall/floor material before generating." else null
             WizardStepValidation(
                 canProceed = canGenerate,
                 validationMessage = message,
@@ -159,7 +156,7 @@ private fun validateStyleStep(state: HomeDecorUiState, toolId: String): WizardSt
         "floor" -> {
             val hasStyle = state.selectedStyles.isNotEmpty()
             val canGenerate = hasStyle
-            val message = if (!hasStyle) "Choose a floor material before generating." else null
+            val message = if (!hasStyle) "Choose a wall/floor material before generating." else null
             WizardStepValidation(
                 canProceed = canGenerate,
                 validationMessage = message,
@@ -244,9 +241,3 @@ private fun validateRefineStep(state: HomeDecorUiState, toolId: String): WizardS
         }
     }
 }
-
-/**
- * Get the localized validation error string for the current step.
- * Used by StepScaffold to display the validation message.
- */
-fun WizardStepValidation.localizedMessage(): String? = validationMessage

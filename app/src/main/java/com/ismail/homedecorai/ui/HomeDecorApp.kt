@@ -1,19 +1,19 @@
 ﻿package com.ismail.homedecorai.ui
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,49 +21,43 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Dashboard
-import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.core.content.ContextCompat
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.R
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
-import com.ismail.homedecorai.MainTab
+import com.ismail.homedecorai.model.MainTab
 import com.ismail.homedecorai.ui.auth.AuthSheet
 import com.ismail.homedecorai.ui.board.MyBoardScreen
 import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
@@ -75,11 +69,9 @@ import com.ismail.homedecorai.ui.store.DiamondStoreSheet
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.tools.CreateScreen
 import com.ismail.homedecorai.ui.tools.ToolsScreen
-import com.ismail.homedecorai.ui.utility.createCameraUri
 import com.ismail.homedecorai.ui.utility.openAuth
 import com.ismail.homedecorai.ui.utility.openGooglePlayReview
 import com.ismail.homedecorai.ui.utility.tabLabelRes
-import com.ismail.homedecorai.ui.settings.SettingsScreen
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -91,11 +83,60 @@ fun HomeDecorApp(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     HomeDecorTheme {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            AppScaffold(
-                state = state,
-                viewModel = viewModel,
-                currentLanguageTag = currentLanguageTag,
-                onLanguageSelected = onLanguageSelected,
+            if (!state.isAppReady) {
+                BrandingLoadingScreen()
+            } else {
+                AppScaffold(
+                    state = state,
+                    viewModel = viewModel,
+                    currentLanguageTag = currentLanguageTag,
+                    onLanguageSelected = onLanguageSelected,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BrandingLoadingScreen() {
+    var showContent by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        showContent = true
+    }
+    val alpha by animateFloatAsState(
+        targetValue = if (showContent) 1f else 0f,
+        animationSpec = tween(durationMillis = 400),
+        label = "splash_alpha",
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+        contentAlignment = Alignment.Center,
+    ) {
+        val loadingDescription = stringResource(R.string.loading_ellipsis)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher),
+                contentDescription = stringResource(R.string.app_name),
+                modifier = Modifier.size(80.dp),
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(28.dp)
+                    .semantics { contentDescription = loadingDescription },
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primaryContainer,
+                strokeWidth = 3.dp,
+            )
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -117,11 +158,11 @@ private fun AppScaffold(
         !state.disclosureAccepted
     BackHandler(enabled = state.storeVisible) {
         viewModel.closeDiamondStore()
-        viewModel.selectTab(MainTab.Tools)
+        viewModel.selectTab(MainTab.Home)
     }
     BackHandler(enabled = state.paywallVisible) {
         viewModel.closePaywall()
-        viewModel.selectTab(MainTab.Tools)
+        viewModel.selectTab(MainTab.Home)
     }
     BackHandler(enabled = state.authVisible) {
         viewModel.closeAuth()
@@ -133,51 +174,24 @@ private fun AppScaffold(
         viewModel.closeDesignViewer()
     }
     Scaffold(
-        containerColor = StudioPaper,
+        containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (state.selectedTab != MainTab.Create && !modalVisible) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(StudioPaper)
-                        .windowInsetsPadding(WindowInsets.navigationBars),
-                ) {
-                    NavigationBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        tonalElevation = 0.dp,
-                        containerColor = StudioPaper,
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            NavItem(MainTab.Tools, state.selectedTab, Icons.Rounded.Home, stringResource(tabLabelRes(MainTab.Tools)), viewModel::selectTab)
-                            NavItem(MainTab.Discover, state.selectedTab, Icons.Rounded.Explore, stringResource(tabLabelRes(MainTab.Discover)), viewModel::selectTab)
-                            NavItemPremium(
-                                selectedTab = state.selectedTab,
-                                icon = Icons.Rounded.Diamond,
-                                label = stringResource(tabLabelRes(MainTab.UpgradePro)),
-                                onClick = { viewModel.openPaywall() },
-                            )
-                            NavItem(MainTab.Profile, state.selectedTab, Icons.Rounded.Dashboard, stringResource(tabLabelRes(MainTab.Profile)), viewModel::selectTab)
-                            NavItem(MainTab.Settings, state.selectedTab, Icons.Rounded.Person, stringResource(tabLabelRes(MainTab.Settings)), viewModel::selectTab)
-                        }
-                    }
-                }
+                HomeDecorNavigationBar(
+                    selectedTab = state.selectedTab,
+                    onSelectTab = viewModel::selectTab,
+                )
             }
         },
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             AnimatedContent(targetState = state.selectedTab, label = "tab") { tab ->
                 when (tab) {
-                    MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
+                    MainTab.Home -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
-                    MainTab.UpgradePro -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Profile -> MyBoardScreen(state = state, viewModel = viewModel)
-                    MainTab.Settings -> SettingsScreen(state = state, viewModel = viewModel, currentLanguageTag = currentLanguageTag, onLanguageSelected = onLanguageSelected)
                 }
             }
 
@@ -187,7 +201,7 @@ private fun AppScaffold(
                         state = state,
                         onClose = {
                             viewModel.closeDiamondStore()
-                            viewModel.selectTab(MainTab.Tools)
+                            viewModel.selectTab(MainTab.Home)
                         },
                         onFulfill = viewModel::fulfillDiamondPurchase,
                         onRetrySync = viewModel::retryPurchaseSync,
@@ -199,7 +213,7 @@ private fun AppScaffold(
                         state = state,
                         onClose = {
                             viewModel.closePaywall()
-                            viewModel.selectTab(MainTab.Tools)
+                            viewModel.selectTab(MainTab.Home)
                         },
                         onSubscription = viewModel::syncSubscriptionFromRevenueCat,
                         onRetrySync = viewModel::retryPurchaseSync,
@@ -252,7 +266,43 @@ private fun AppScaffold(
 }
 
 @Composable
-private fun NavItem(
+private fun HomeDecorNavigationBar(
+    selectedTab: MainTab,
+    onSelectTab: (MainTab) -> Unit,
+) {
+    NavigationBar(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        tonalElevation = 0.dp,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        NavItem(
+            tab = MainTab.Home,
+            selectedTab = selectedTab,
+            icon = Icons.Rounded.Home,
+            label = stringResource(tabLabelRes(MainTab.Home)),
+            onSelect = onSelectTab,
+        )
+        NavItem(
+            tab = MainTab.Discover,
+            selectedTab = selectedTab,
+            icon = Icons.Rounded.Explore,
+            label = stringResource(tabLabelRes(MainTab.Discover)),
+            onSelect = onSelectTab,
+        )
+        NavItem(
+            tab = MainTab.Profile,
+            selectedTab = selectedTab,
+            icon = Icons.Rounded.Person,
+            label = stringResource(tabLabelRes(MainTab.Profile)),
+            onSelect = onSelectTab,
+        )
+    }
+}
+
+@Composable
+private fun RowScope.NavItem(
     tab: MainTab,
     selectedTab: MainTab,
     icon: ImageVector,
@@ -260,165 +310,31 @@ private fun NavItem(
     onSelect: (MainTab) -> Unit,
 ) {
     val selected = selectedTab == tab
-    Column(
-        modifier = Modifier
-            .width(70.dp)
-            .minimumTouchTarget()
-            .clip(RoundedCornerShape(20.dp))
-            .semantics { this.selected = selected }
-            .clickable(role = Role.Tab) { onSelect(tab) }
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .width(50.dp)
-                .height(30.dp)
-                .clip(CircleShape)
-                .background(if (selected) StudioPrimaryContainer else Color.Transparent),
-            contentAlignment = Alignment.Center,
-        ) {
+    NavigationBarItem(
+        selected = selected,
+        onClick = { onSelect(tab) },
+        icon = {
             Icon(
                 icon,
                 contentDescription = label,
-                tint = if (selected) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-        Text(
-            label,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (selected) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-        )
-    }
-}
-
-@Composable
-private fun NavItemPremium(
-    selectedTab: MainTab,
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .width(70.dp)
-            .minimumTouchTarget()
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(role = Role.Tab) { onClick() }
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .width(50.dp)
-                .height(30.dp)
-                .clip(CircleShape)
-                .background(HomeDecorColors.ProContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                icon,
-                contentDescription = label,
-                tint = StudioGold,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-        Text(
-            label,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelSmall,
-            color = StudioGold,
-            fontWeight = FontWeight.Bold,
-        )
-    }
-}
-
-@Composable
-private fun ScreenColumn(
-    title: String,
-    subtitle: String? = null,
-    trailing: (@Composable () -> Unit)? = null,
-    content: @Composable () -> Unit,
-) {
-    Column(Modifier.fillMaxSize().background(StudioCanvas)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                if (subtitle != null) {
-                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            trailing?.invoke()
-        }
-        content()
-    }
-}
-
-private data class ImageInputActions(
-    val openGallery: () -> Unit,
-    val openCamera: () -> Unit,
-)
-
-@Composable
-private fun rememberImageInputActions(
-    onImageSelected: (Uri) -> Unit,
-): ImageInputActions {
-    val context = LocalContext.current
-    val currentOnImageSelected by rememberUpdatedState(onImageSelected)
-    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
-
-    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        uri?.let(currentOnImageSelected)
-    }
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
-        val capturedUri = pendingCameraUri
-        pendingCameraUri = null
-        if (saved && capturedUri != null) {
-            currentOnImageSelected(capturedUri)
-        }
-    }
-
-    fun launchCameraCapture() {
-        val uri = createCameraUri(context)
-        pendingCameraUri = uri
-        runCatching { cameraLauncher.launch(uri) }
-            .onFailure { pendingCameraUri = null }
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            launchCameraCapture()
-        } else {
-            pendingCameraUri = null
-        }
-    }
-
-    return ImageInputActions(
-        openGallery = {
-            galleryLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                modifier = Modifier.size(22.dp),
             )
         },
-        openCamera = {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                launchCameraCapture()
-            } else {
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
+        label = {
+            Text(
+                label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+            )
         },
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = MaterialTheme.colorScheme.primary,
+            selectedTextColor = MaterialTheme.colorScheme.primary,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
     )
 }

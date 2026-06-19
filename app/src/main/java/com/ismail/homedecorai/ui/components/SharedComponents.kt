@@ -60,33 +60,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ismail.homedecorai.BoardItem
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
+import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.GeneratedResult
-import com.ismail.homedecorai.HomeDecorUiState
-import com.ismail.homedecorai.PendingPurchaseSync
+import com.ismail.homedecorai.model.HomeDecorUiState
+import com.ismail.homedecorai.model.PendingPurchaseSync
 import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.R
-import com.ismail.homedecorai.isGeneratedResult
+import com.ismail.homedecorai.model.isGeneratedResult
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.boardToolTitleRes
 import com.ismail.homedecorai.ui.utility.choiceIcon
 import com.ismail.homedecorai.ui.utility.choiceImageRes
 import com.ismail.homedecorai.ui.utility.localizedOption
-import com.ismail.homedecorai.ui.utility.paletteColors
-import com.ismail.homedecorai.ui.utility.ExamplePhoto
+import com.ismail.homedecorai.ui.utility.replacementIcon
 import java.time.LocalDate
 import java.time.ZoneId
-
-@Composable
-fun ValidationNotice(message: String) {
-    Text(
-        message,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        color = MaterialTheme.colorScheme.error,
-        style = MaterialTheme.typography.bodyMedium,
-        fontWeight = FontWeight.Bold,
-    )
-}
 
 @Composable
 fun SettingsDivider() {
@@ -121,7 +114,7 @@ fun ToolToggle(
     ) {
         Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (selected) Color.White else StudioInk)
-            Text(label, color = if (selected) Color.White else StudioInk, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, color = if (selected) Color.White else StudioInk, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -163,7 +156,7 @@ fun MaskActionButton(
                 Text(
                     label,
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = contentColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -181,21 +174,40 @@ fun StyleChoiceCard(
     large: Boolean = false,
 ) {
     val displayLabel = localizedOption(label)
+    val cardShape = RoundedCornerShape(16.dp)
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 0.97f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "styleCardScale",
+    )
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
-        color = studioStateContainer(selected),
-        tonalElevation = studioStateElevation(selected),
+        shape = cardShape,
+        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.18f) else Color.White,
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (large) 162.dp else 164.dp)
-            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
+            .height(if (large) 148.dp else 140.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .semantics {
+                this.selected = selected
+                contentDescription = displayLabel
+            }
+            .border(
+                if (selected) 2.dp else 1.dp,
+                if (selected) StudioBlue else StudioLine.copy(alpha = 0.7f),
+                cardShape,
+            ),
     ) {
         Column {
-            Box(Modifier.fillMaxWidth().height(if (large) 100.dp else 108.dp), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(if (large) 88.dp else 80.dp),
+                contentAlignment = Alignment.BottomCenter,
+            ) {
                 if (label == "Suggestion IA") {
-                    Surface(shape = RoundedCornerShape(22.dp), color = StudioMist, tonalElevation = 1.dp) {
-                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(18.dp).size(34.dp), tint = StudioBlue)
+                    Surface(shape = RoundedCornerShape(14.dp), color = StudioMist, tonalElevation = 1.dp) {
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(14.dp).size(28.dp), tint = StudioBlue)
                     }
                 } else {
                     Image(
@@ -204,19 +216,49 @@ fun StyleChoiceCard(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                     )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f)),
+                                    startY = 0f,
+                                ),
+                            ),
+                    )
+                    Text(
+                        displayLabel,
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 6.dp, vertical = 4.dp),
+                    )
                 }
                 if (selected) {
-                    Surface(modifier = Modifier.align(Alignment.TopEnd).padding(7.dp), shape = CircleShape, color = Color.White) {
-                        Icon(Icons.Rounded.Check, null, Modifier.padding(5.dp).size(15.dp), tint = StudioBlue)
+                    Surface(
+                        modifier = Modifier.align(Alignment.TopEnd).padding(5.dp),
+                        shape = CircleShape,
+                        color = StudioBlue,
+                    ) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            null,
+                            modifier = Modifier.padding(4.dp).size(13.dp),
+                            tint = Color.White,
+                        )
                     }
                 }
             }
-            Box(Modifier.fillMaxWidth().height(if (large) 62.dp else 56.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth().height(if (large) 60.dp else 60.dp), contentAlignment = Alignment.Center) {
                 Text(
                     displayLabel,
                     modifier = Modifier.padding(horizontal = 8.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -233,12 +275,24 @@ fun ExpressiveChoiceChip(
     modifier: Modifier = Modifier,
 ) {
     val displayLabel = localizedOption(label)
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "chipScale",
+    )
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
         color = studioStateContainer(selected),
         tonalElevation = studioStateElevation(selected),
-        modifier = modifier.height(78.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
+        modifier = modifier
+            .height(78.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .semantics {
+                this.selected = selected
+                contentDescription = displayLabel
+            }
+            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
     ) {
         Row(
             Modifier.padding(horizontal = 10.dp),
@@ -264,7 +318,65 @@ fun ExpressiveChoiceChip(
                 } else {
                     MaterialTheme.typography.titleMedium
                 },
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+fun IntensityChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val displayLabel = localizedOption(label)
+    val containerColor = if (selected) StudioBlue.copy(alpha = 0.08f) else StudioPaper
+    val borderColor = if (selected) StudioBlue else StudioLine
+    val borderWidth = if (selected) 2.dp else 1.dp
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = containerColor,
+        modifier = modifier
+            .height(78.dp)
+            .semantics {
+                this.selected = selected
+                contentDescription = displayLabel
+            }
+            .border(borderWidth, borderColor, RoundedCornerShape(18.dp)),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(if (selected) StudioBlue else StudioMist),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    if (selected) Icons.Rounded.Check else choiceIcon(label),
+                    null,
+                    Modifier.size(if (selected) 17.dp else 19.dp),
+                    tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                displayLabel,
+                modifier = Modifier.weight(1f),
+                style = if (displayLabel.length > 12) {
+                    MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, lineHeight = 18.sp)
+                } else {
+                    MaterialTheme.typography.titleMedium
+                },
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -280,37 +392,33 @@ fun ReplaceSuggestionChip(
     modifier: Modifier = Modifier,
 ) {
     val displayLabel = localizedOption(label)
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(16.dp)
     val containerColor = if (selected) StudioBlue else StudioPaper
     val contentColor = if (selected) Color.White else StudioInk
     Surface(
         onClick = onClick,
         shape = shape,
         color = containerColor,
-        tonalElevation = if (selected) 6.dp else 1.dp,
+        tonalElevation = if (selected) 4.dp else 0.dp,
         modifier = modifier
-            .height(78.dp)
+            .height(64.dp)
+            .semantics {
+                this.selected = selected
+                contentDescription = displayLabel
+            }
             .border(if (selected) 2.dp else 1.dp, if (selected) StudioBlue else StudioLine, shape),
     ) {
         Row(
-            Modifier.padding(horizontal = 10.dp),
+            Modifier.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(if (selected) Color.White.copy(alpha = 0.2f) else StudioPrimaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    if (selected) Icons.Rounded.Check else choiceIcon(label),
-                    contentDescription = null,
-                    modifier = Modifier.size(if (selected) 18.dp else 19.dp),
-                    tint = if (selected) Color.White else StudioBlue,
-                )
-            }
+            Icon(
+                if (selected) Icons.Rounded.Check else replacementIcon(label),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (selected) Color.White else StudioBlue,
+            )
             Text(
                 displayLabel,
                 modifier = Modifier.weight(1f),
@@ -320,7 +428,7 @@ fun ReplaceSuggestionChip(
                 } else {
                     MaterialTheme.typography.titleMedium
                 },
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -340,7 +448,13 @@ fun ModeCard(
         onClick = onClick,
         shape = RoundedCornerShape(22.dp),
         color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
-        modifier = modifier.height(188.dp).border(
+        modifier = modifier
+            .height(188.dp)
+            .semantics {
+                this.selected = selected
+                contentDescription = "$title. $description"
+            }
+            .border(
             if (selected) 2.dp else 1.dp,
             if (selected) StudioBlue else StudioLine,
             RoundedCornerShape(22.dp),
@@ -356,7 +470,7 @@ fun ModeCard(
                         tint = if (selected) Color.White else StudioBlue,
                     )
                 }
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 2)
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2)
                 Text(
                     description,
                     style = MaterialTheme.typography.bodySmall,
@@ -375,67 +489,6 @@ fun ModeCard(
                         Icons.Rounded.Check,
                         contentDescription = null,
                         modifier = Modifier.padding(5.dp).size(14.dp),
-                        tint = Color.White,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PaletteChoiceCard(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val displayLabel = localizedOption(label)
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
-        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
-        modifier = modifier
-            .width(96.dp)
-            .height(142.dp)
-            .border(
-                if (selected) 2.dp else 1.dp,
-                if (selected) StudioBlue else StudioLine,
-                RoundedCornerShape(18.dp),
-            ),
-    ) {
-        Box {
-            Column {
-                if (label == "Suggestion IA") {
-                    Box(Modifier.fillMaxWidth().height(82.dp).background(StudioMist), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = StudioBlue)
-                    }
-                } else {
-                    Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))) {
-                        paletteColors(label).forEach { color ->
-                            Box(Modifier.weight(1f).fillMaxSize().background(color))
-                        }
-                    }
-                }
-                Text(
-                    displayLabel,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            if (selected) {
-                Surface(
-                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
-                    shape = CircleShape,
-                    color = StudioBlue,
-                ) {
-                    Icon(
-                        Icons.Rounded.Check,
-                        contentDescription = null,
-                        modifier = Modifier.padding(4.dp).size(12.dp),
                         tint = Color.White,
                     )
                 }
@@ -487,7 +540,7 @@ fun DailyRewardCard(
                     stringResource(R.string.daily_reward_title),
                     color = titleColor,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -521,11 +574,11 @@ fun DailyRewardCard(
                 contentPadding = PaddingValues(horizontal = 13.dp),
                 modifier = Modifier.height(44.dp),
             ) {
-                Icon(if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Add, null, Modifier.size(16.dp))
+                Icon(if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Add, contentDescription = null, Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(
                     stringResource(if (claimedToday) R.string.daily_reward_claimed else R.string.daily_reward_claim),
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                 )
             }
@@ -547,7 +600,7 @@ fun DailyRewardQuietPill(
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
             color = if (dark) Color.White.copy(alpha = 0.78f) else HomeDecorColors.InkSoft,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -581,8 +634,8 @@ fun CreditPill(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            Icon(Icons.Rounded.Diamond, null, Modifier.size(17.dp), tint = if (state.isPro) StudioGold else StudioBlue)
-            Text(if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}", fontWeight = FontWeight.Bold)
+            Icon(Icons.Rounded.Diamond, contentDescription = null, Modifier.size(17.dp), tint = if (state.isPro) StudioGold else StudioBlue)
+            Text(if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}", fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -601,7 +654,7 @@ fun ReferenceImagePicker(
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(8.dp).size(18.dp), tint = StudioBlue)
             }
             Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.reference_picker_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.reference_picker_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(stringResource(R.string.reference_picker_body), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -625,7 +678,7 @@ fun ReferenceImagePicker(
                     )
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(if (selectedUri != null || selectedExample != null) stringResource(R.string.reference_added) else stringResource(R.string.no_reference), fontWeight = FontWeight.Black)
+                    Text(if (selectedUri != null || selectedExample != null) stringResource(R.string.reference_added) else stringResource(R.string.no_reference), fontWeight = FontWeight.SemiBold)
                     Text(
                         if (selectedUri != null || selectedExample != null) stringResource(R.string.reference_picker_selected_body) else stringResource(R.string.reference_picker_empty_body),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -645,51 +698,6 @@ fun ReferenceImagePicker(
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.example))
-            }
-        }
-    }
-}
-
-@Composable
-fun ExamplePhotoCard(
-    photo: ExamplePhoto,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val label = stringResource(photo.labelRes)
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
-        color = StudioPaper,
-        tonalElevation = studioStateElevation(selected),
-        modifier = Modifier.width(112.dp).height(104.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
-    ) {
-        Box {
-            Image(
-                painter = painterResource(photo.imageRes),
-                contentDescription = label,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.58f)))))
-            Surface(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(7.dp),
-                shape = CircleShape,
-                color = Color.Black.copy(alpha = 0.45f),
-            ) {
-                Text(
-                    label,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            if (selected) {
-                Surface(modifier = Modifier.align(Alignment.TopEnd).padding(6.dp), shape = CircleShape, color = StudioBlue) {
-                    Icon(Icons.Rounded.Check, null, Modifier.padding(5.dp).size(14.dp), tint = Color.White)
-                }
             }
         }
     }
@@ -722,7 +730,7 @@ fun ProjectHeaderPreview(
                 Text(
                     project.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -738,7 +746,7 @@ fun ProjectHeaderPreview(
                         "${results.size} result${if (results.size > 1) "s" else ""}",
                         color = StudioBlue,
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -761,7 +769,7 @@ fun ProjectMetricChip(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = StudioInk)
-            Text(text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text(text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -798,7 +806,7 @@ fun ProjectResultThumb(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -830,7 +838,7 @@ fun PurchaseSyncNotice(
                 modifier = Modifier.weight(1f),
                 color = StudioRose,
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
             )
             if (pending) {
                 OutlinedButton(
@@ -842,7 +850,7 @@ fun PurchaseSyncNotice(
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Retry", fontWeight = FontWeight.Bold)
+                    Text("Retry", fontWeight = FontWeight.SemiBold)
                 }
             }
         }

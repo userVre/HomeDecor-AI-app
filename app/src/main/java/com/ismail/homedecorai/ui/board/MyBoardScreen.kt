@@ -58,10 +58,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ismail.homedecorai.BoardItem
+import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.FavoriteItem
 import com.ismail.homedecorai.GeneratedResult
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.components.WorkspaceImage
@@ -119,7 +119,7 @@ fun MyBoardScreen(
                 text = {
                     Text(
                         stringResource(R.string.generated_tab),
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge,
                     )
                 },
@@ -130,7 +130,7 @@ fun MyBoardScreen(
                 text = {
                     Text(
                         stringResource(R.string.favorites_tab),
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.labelLarge,
                     )
                 },
@@ -175,7 +175,7 @@ private fun SignInCard(
             Text(
                 stringResource(R.string.sign_in_to_view_board),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
             )
             Text(
@@ -199,7 +199,7 @@ private fun SignInCard(
             ) {
                 Text(
                     stringResource(R.string.sign_in),
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
@@ -229,7 +229,7 @@ private fun GeneratedSection(
             Text(
                 stringResource(R.string.generated_images),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
             )
             Text(
                 stringResource(R.string.see_all),
@@ -324,7 +324,7 @@ private fun FavoritesBoardSection(
             Text(
                 stringResource(R.string.favorites_section),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
             )
             Text(
                 stringResource(R.string.see_all),
@@ -489,7 +489,7 @@ private fun EmptyBoardState() {
         Text(
             stringResource(R.string.no_designs_yet),
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(6.dp))

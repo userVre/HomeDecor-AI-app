@@ -1,9 +1,11 @@
 package com.ismail.homedecorai
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
@@ -161,8 +163,14 @@ class LocalWorkspaceStore(context: Context) {
         encodeDefaults = true
         isLenient = true
     }
-    private val _state = MutableStateFlow(readState())
+    private val _state = MutableStateFlow(CreativeWorkspaceState())
     val state: StateFlow<CreativeWorkspaceState> = _state.asStateFlow()
+
+    suspend fun awaitState(): CreativeWorkspaceState = withContext(Dispatchers.IO) {
+        val loaded = readState()
+        _state.value = loaded
+        loaded
+    }
 
     fun createProject(
         name: String,

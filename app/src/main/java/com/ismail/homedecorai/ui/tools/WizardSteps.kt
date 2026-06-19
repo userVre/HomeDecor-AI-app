@@ -11,6 +11,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -142,28 +146,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-import com.ismail.homedecorai.BoardItem
-import com.ismail.homedecorai.DecorTool
+import com.ismail.homedecorai.model.BoardItem
+import com.ismail.homedecorai.model.DecorTool
 
 import com.ismail.homedecorai.HomeDecorCatalog
-import com.ismail.homedecorai.HomeDecorUiState
+import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
-import com.ismail.homedecorai.MainTab
-import com.ismail.homedecorai.MaskPoint
-import com.ismail.homedecorai.MaskStroke
+import com.ismail.homedecorai.model.MainTab
+import com.ismail.homedecorai.model.MaskPoint
+import com.ismail.homedecorai.model.MaskStroke
 import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.R
 
-import com.ismail.homedecorai.WizardStage
-import com.ismail.homedecorai.hasVisibleMaskPaint
-import com.ismail.homedecorai.isGeneratedResult
-import com.ismail.homedecorai.isValidReplacementPrompt
+import com.ismail.homedecorai.model.WizardStage
+import com.ismail.homedecorai.model.hasVisibleMaskPaint
+import com.ismail.homedecorai.model.isGeneratedResult
+import com.ismail.homedecorai.model.isValidReplacementPrompt
 import com.ismail.homedecorai.ui.components.*
 import com.ismail.homedecorai.ui.dialogs.*
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
 import com.ismail.homedecorai.ui.components.ValidationAlertBanner
-import com.ismail.homedecorai.validation.WizardValidationState
 import com.ismail.homedecorai.validation.rememberStepValidation
 
 
@@ -229,7 +232,7 @@ fun CreateScreen(
 ) {
     BackHandler(enabled = true) {
         if (state.wizardStage == WizardStage.Photo) {
-            viewModel.selectTab(MainTab.Tools)
+            viewModel.selectTab(MainTab.Home)
         } else {
             viewModel.previousStage()
         }
@@ -238,7 +241,7 @@ fun CreateScreen(
         DesignStepHeader(
             state = state,
             onBack = viewModel::previousStage,
-            onClose = { viewModel.selectTab(MainTab.Tools) },
+            onClose = { viewModel.selectTab(MainTab.Home) },
             onCredits = viewModel::openDiamondStore,
         )
         AnimatedContent(targetState = state.wizardStage, label = "wizard", modifier = Modifier.weight(1f)) { stage ->
@@ -258,7 +261,7 @@ fun CreateScreen(
                         val isGarden = state.selectedTool.id == "garden"
                         ChoiceStep(
                             state = state,
-                            eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
+                            eyebrow = "",
                             copy = stepTwoCopy(state.selectedTool),
                             selected = if (isGarden) state.selectedStyles else state.selectedRooms,
                             onSelect = if (isGarden) viewModel::setStyle else viewModel::setRoom,
@@ -272,7 +275,7 @@ fun CreateScreen(
                     "paint", "floor", "replace", "reference" -> SpecializedGenerateStep(state = state, viewModel = viewModel)
                     else -> ChoiceStep(
                         state = state,
-                        eyebrow = stringResource(R.string.step_count_format, 3, wizardTotalSteps(state.selectedTool)),
+                        eyebrow = "",
                         copy = stepThreeCopy(state.selectedTool),
                         selected = state.selectedStyles,
                         onSelect = viewModel::setStyle,
@@ -300,10 +303,11 @@ fun DesignStepHeader(
 ) {
     val step = wizardStepNumber(state.wizardStage, state.selectedTool)
     val totalSteps = wizardTotalSteps(state.selectedTool)
+    val progress = step.toFloat() / totalSteps.toFloat()
     Surface(color = StudioPaper, tonalElevation = 2.dp) {
         Column(
-            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 0.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -322,8 +326,13 @@ fun DesignStepHeader(
                     horizontalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
                     if (step == 1) {
+                        val creditsDescription = stringResource(R.string.a11y_open_diamond_store)
                         Row(
                             modifier = Modifier
+                                .semantics {
+                                    contentDescription = creditsDescription
+                                    role = Role.Button
+                                }
                                 .clickable(onClick = onCredits)
                                 .padding(horizontal = 8.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -331,14 +340,14 @@ fun DesignStepHeader(
                         ) {
                             Icon(
                                 Icons.Rounded.Diamond,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.a11y_diamond_credits),
                                 modifier = Modifier.size(18.dp),
                                 tint = StudioBlue,
                             )
                             Text(
                                 if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }
@@ -354,33 +363,22 @@ fun DesignStepHeader(
                     }
                 }
             }
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    stringResource(R.string.step_count_format, step, totalSteps),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium,
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    repeat(totalSteps) { index ->
-                        val active = index < step
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(5.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(if (active) StudioBlue else StudioLine)
-                        )
-                    }
-                }
-            }
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color = StudioBlue,
+                trackColor = StudioMist,
+            )
+            Text(
+                stringResource(R.string.step_count_format, step, totalSteps),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+            )
+            Spacer(Modifier.height(2.dp))
         }
     }
 }
@@ -394,7 +392,8 @@ fun StepScaffold(
     buttonIcon: ImageVector = Icons.Rounded.AutoAwesome,
     canProceed: Boolean = true,
     validationMessage: String? = null,
-    contentBottomPadding: Dp = 18.dp,
+    onValidationFailed: (() -> Unit)? = null,
+    contentBottomPadding: Dp = 24.dp,
     protectBottomInsets: Boolean = false,
     buttonAllowsTwoLines: Boolean = false,
     onButton: () -> Unit,
@@ -409,28 +408,17 @@ fun StepScaffold(
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = contentBottomPadding),
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = contentBottomPadding + 88.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val hasValidationError = showValidationBanner && !validationMessage.isNullOrBlank()
                     Text(
                         title,
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Black,
-                        color = if (hasValidationError) MaterialTheme.colorScheme.error else Color.Unspecified,
                     )
                     if (body != null) {
                         Text(body, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    if (hasValidationError) {
-                        Text(
-                            validationMessage,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.SemiBold,
-                        )
                     }
                 }
             }
@@ -441,35 +429,57 @@ fun StepScaffold(
         } else {
             Modifier
         }
-        Surface(color = StudioPaper, tonalElevation = 3.dp, modifier = bottomBarModifier) {
+        Surface(
+            color = StudioPaper,
+            tonalElevation = 1.dp,
+            shadowElevation = 4.dp,
+            modifier = bottomBarModifier,
+        ) {
             val buttonModifier = if (buttonAllowsTwoLines) {
-                Modifier.fillMaxWidth().heightIn(min = 58.dp)
+                Modifier.fillMaxWidth().heightIn(min = 56.dp)
             } else {
-                Modifier.fillMaxWidth().height(58.dp)
+                Modifier.fillMaxWidth().height(56.dp)
             }
-            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 if (showValidationBanner && !validationMessage.isNullOrBlank()) {
                     ValidationAlertBanner(message = validationMessage)
                 }
                 Button(
                     onClick = {
                         if (canProceed) {
-                            showValidationBanner = false
-                            onButton()
+                            if (showValidationBanner) {
+                                showValidationBanner = false
+                                onButton()
+                            } else if (!validationMessage.isNullOrBlank()) {
+                                showValidationBanner = true
+                                onValidationFailed?.invoke()
+                            } else {
+                                onButton()
+                            }
                         } else {
                             showValidationBanner = true
+                            onValidationFailed?.invoke()
                         }
                     },
                     shape = CircleShape,
-                    colors = studioPrimaryButtonColors(),
-                    modifier = buttonModifier,
+                    colors = if (canProceed) {
+                        studioPrimaryButtonColors()
+                    } else {
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        )
+                    },
+                    modifier = buttonModifier.disabledSemantics(canProceed),
                 ) {
                     Icon(buttonIcon, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
                         buttonLabel,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
                         maxLines = if (buttonAllowsTwoLines) 2 else 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -600,7 +610,7 @@ fun ReferenceDualImagePicker(
                     )
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         if (selected) selectedText else stringResource(R.string.upload_style_reference_helper),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -646,15 +656,25 @@ fun ReferenceDualImagePicker(
             }
             if (!selected) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = onGallery, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                    OutlinedButton(
+                        onClick = onGallery,
+                        shape = CircleShape,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                    ) {
                         Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(7.dp))
-                        Text(stringResource(R.string.gallery))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.gallery), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    OutlinedButton(onClick = onCamera, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                    OutlinedButton(
+                        onClick = onCamera,
+                        shape = CircleShape,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                    ) {
                         Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(7.dp))
-                        Text(stringResource(R.string.camera))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.camera), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(48.dp)) {
@@ -682,7 +702,7 @@ fun ReferenceContinueHint(message: String) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
-            Text(message, color = StudioRose, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Text(message, color = StudioRose, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -710,7 +730,7 @@ fun SourcePreviewCard(state: HomeDecorUiState) {
                 )
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.source_photo_preview), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.source_photo_preview), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(stringResource(R.string.source_photo_preview_body), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             }
             Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioGreen, modifier = Modifier.size(20.dp))
@@ -733,7 +753,7 @@ fun MaskPreviewCard(
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioBlue)
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             }
             Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             MaskPreviewBox(state = state)
@@ -763,7 +783,7 @@ fun MaskPreviewBox(state: HomeDecorUiState) {
                 if (points.size >= 2) {
                     points.zipWithNext().forEach { (start, end) ->
                         drawLine(
-                            color = if (stroke.erase) Color.Transparent else StudioSky.copy(alpha = 0.62f),
+                            color = if (stroke.erase) Color.Transparent else StudioAccent.copy(alpha = 0.62f),
                             start = Offset(start.x * size.width, start.y * size.height),
                             end = Offset(end.x * size.width, end.y * size.height),
                             strokeWidth = stroke.brushSize,
@@ -791,7 +811,7 @@ fun ReferenceStylePreview(state: HomeDecorUiState) {
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp)),
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.reference_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+            Text(stringResource(R.string.reference_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 PreviewTile(
                     title = stringResource(R.string.your_room),
@@ -901,9 +921,9 @@ fun ChoiceStep(
             val gridRows = (copy.options.size + 2) / 3
             LazyVerticalGrid(
                 columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3),
-                modifier = Modifier.fillMaxWidth().height(((if (visualBuildingCards) (copy.options.size + 1) / 2 else gridRows) * if (visualBuildingCards) 174 else 176).dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth().height(((if (visualBuildingCards) (copy.options.size + 1) / 2 else gridRows) * if (visualBuildingCards) 160 else 152).dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 userScrollEnabled = false,
             ) {
                 items(copy.options, key = { it }) { option ->
@@ -933,7 +953,7 @@ fun ChoiceStep(
         }
     }
     }
-    }
+}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -956,7 +976,7 @@ fun PhotoStep(
     val stepValidation = rememberStepValidation(state)
     val hasMainPhoto = state.selectedPhotos.isNotEmpty()
     StepScaffold(
-        eyebrow = stringResource(R.string.step_count_format, 1, wizardTotalSteps(state.selectedTool)),
+        eyebrow = "",
         title = if (!hasMainPhoto) copyTitle else stringResource(R.string.photo_added),
         body = if (!hasMainPhoto) copyBody else null,
         buttonLabel = stringResource(R.string.continue_action),
@@ -967,44 +987,14 @@ fun PhotoStep(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
             if (!hasMainPhoto) {
-                Surface(
-                    onClick = { showUploadSheet = true },
-                    shape = RoundedCornerShape(26.dp),
-                    color = StudioPaper,
-                    modifier = Modifier.fillMaxWidth().height(200.dp).border(1.dp, StudioLine, RoundedCornerShape(26.dp)),
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = StudioBlue.copy(alpha = 0.10f),
-                            modifier = Modifier.size(72.dp),
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Rounded.PhotoCamera,
-                                    contentDescription = null,
-                                    tint = StudioBlue,
-                                    modifier = Modifier.size(32.dp),
-                                )
-                                Icon(
-                                    Icons.Rounded.Add,
-                                    contentDescription = null,
-                                    tint = StudioBlue,
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .padding(2.dp)
-                                        .size(22.dp)
-                                        .clip(CircleShape)
-                                        .background(StudioPaper)
-                                        .padding(2.dp),
-                                )
-                            }
-                        }
-                    }
-                }
+                MoziUploadCard(
+                    onGallery = { imageInputActions.openGallery() },
+                    onCamera = { imageInputActions.openCamera() },
+                    onExample = {
+                        val example = examplesForTool(state.selectedTool).first().label
+                        viewModel.selectExamplePhoto(example)
+                    },
+                )
             } else {
                 Card(shape = RoundedCornerShape(24.dp)) {
                     Box(Modifier.fillMaxWidth().aspectRatio(1.18f)) {
@@ -1029,7 +1019,7 @@ fun PhotoStep(
     if (showUploadSheet) {
         ModalBottomSheet(
             onDismissRequest = { showUploadSheet = false },
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             containerColor = StudioPaper,
         ) {
             Column(
@@ -1039,7 +1029,7 @@ fun PhotoStep(
                 Text(
                     stringResource(R.string.add_photo),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
                 Surface(
@@ -1106,6 +1096,101 @@ fun PhotoStep(
 }
 
 @Composable
+private fun MoziUploadCard(
+    onGallery: () -> Unit,
+    onCamera: () -> Unit,
+    onExample: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = Color.Transparent,
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.5.dp, StudioLine.copy(alpha = 0.7f), RoundedCornerShape(24.dp)),
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(StudioMist.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = StudioPrimaryContainer,
+                        modifier = Modifier.size(64.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Rounded.PhotoCamera,
+                                contentDescription = null,
+                                tint = StudioBlue,
+                                modifier = Modifier.size(30.dp),
+                            )
+                        }
+                    }
+                    Text(
+                        stringResource(R.string.upload_photo_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = onGallery,
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) {
+                    Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        stringResource(R.string.gallery),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                OutlinedButton(
+                    onClick = onCamera,
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) {
+                    Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        stringResource(R.string.camera),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            OutlinedButton(
+                onClick = onExample,
+                shape = CircleShape,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+            ) {
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.try_with_example))
+            }
+        }
+    }
+}
+
+@Composable
 fun MaterialLibrarySection(
     options: List<String>,
     selected: List<String>,
@@ -1141,7 +1226,7 @@ fun SelectedMaterialPreview(
     val displayLabel = localizedOption(label)
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = StudioPrimaryContainer,
+        color = StudioMist,
         tonalElevation = 1.dp,
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioBlue.copy(alpha = 0.26f), RoundedCornerShape(18.dp)),
     ) {
@@ -1152,7 +1237,7 @@ fun SelectedMaterialPreview(
         ) {
             MaterialSwatchThumb(label = label, selected = true, modifier = Modifier.size(52.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioInk)
+                Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioInk)
             }
             Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
         }
@@ -1173,7 +1258,13 @@ fun MaterialSwatchCard(
         shape = shape,
         color = studioStateContainer(selected),
         tonalElevation = studioStateElevation(selected),
-        modifier = modifier.height(104.dp).border(if (selected) 2.dp else 1.dp, studioStateBorder(selected), shape),
+        modifier = modifier
+            .height(104.dp)
+            .semantics {
+                this.selected = selected
+                contentDescription = displayLabel
+            }
+            .border(if (selected) 2.dp else 1.dp, studioStateBorder(selected), shape),
     ) {
         Column(
             Modifier.padding(10.dp),
@@ -1183,7 +1274,7 @@ fun MaterialSwatchCard(
             Text(
                 displayLabel,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.SemiBold,
                 color = StudioInk,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -1260,29 +1351,15 @@ fun SpecializedGenerateStep(
     val stepTitle = stringResource(stepCopy.titleRes)
     val stepBody = stringResource(stepCopy.bodyRes)
     val selected = state.selectedStyles
-    val requiresMask = state.selectedTool.id in setOf("replace")
     val replacementPrompt = state.customPrompt.trim()
     val hasReplacementPrompt = replacementPrompt.isValidReplacementPrompt()
-    val localizedReplacement = localizedReplacementPrompt(replacementPrompt)
-    val hasRequiredMask = remember(state.maskStrokes, state.selectedTool.id) {
-        if (state.selectedTool.id == "replace") {
-            state.maskStrokes.hasVisibleMaskPaint()
-        } else if (state.selectedTool.id in setOf("paint", "floor")) {
-            true
-        } else {
-            state.maskStrokes.any { !it.erase && it.points.size > 1 }
-        }
-    }
-    val hasReferenceImages = state.selectedTool.id != "reference" ||
-        (state.selectedPhotos.firstOrNull() != null &&
-            (state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null))
     
     // Unified validation replaces all inline canGenerate/disabledReason logic
     val stepValidation = rememberStepValidation(state)
     val isPaintOrFloor = state.selectedTool.id in setOf("paint", "floor")
     
     StepScaffold(
-        eyebrow = stringResource(R.string.step_count_format, wizardStepNumber(state.wizardStage, state.selectedTool), wizardTotalSteps(state.selectedTool)),
+        eyebrow = "",
         title = stepTitle,
         body = stepBody,
         buttonLabel = stringResource(R.string.generate),
@@ -1293,56 +1370,98 @@ fun SpecializedGenerateStep(
         buttonAllowsTwoLines = isPaintOrFloor,
         onButton = viewModel::generate,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            // Unified error display replaces inline GenerationErrorNotice/EnhancedGenerationErrorNotice
-            UnifiedWizardError(
-                message = state.generationError.orEmpty(),
-                onRetry = viewModel::generate,
-                onDismiss = viewModel::clearGenerationError,
-            )
-            if (state.selectedTool.id == "reference") {
-                ReferenceStylePreview(state = state)
-            } else {
-                SourcePreviewCard(state = state)
-            }
-            if (state.selectedTool.id == "replace") {
-                MaskPreviewCard(
-                    state = state,
-                    title = stringResource(R.string.mask_preview_title),
-                    body = stringResource(R.string.mask_preview_body),
+        if (state.selectedTool.id == "replace") {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                UnifiedWizardError(
+                    message = state.generationError.orEmpty(),
+                    onRetry = viewModel::generate,
+                    onDismiss = viewModel::clearGenerationError,
                 )
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (state.selectedTool.id in setOf("paint", "floor")) {
-                    MaterialLibrarySection(
-                        options = stepCopy.options,
-                        selected = selected,
-                        onSelect = viewModel::setStyle,
-                    )
-                } else {
-                if (state.selectedTool.id == "replace") {
-                    Text(stringResource(R.string.replacement_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                }
+                OutlinedTextField(
+                    value = state.customPrompt,
+                    onValueChange = viewModel::setCustomPrompt,
+                    label = { Text(stringResource(R.string.replacement_object)) },
+                    placeholder = {
+                        Text(stringResource(R.string.prompt_replace))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    shape = RoundedCornerShape(18.dp),
+                    isError = state.customPrompt.isNotBlank() && !hasReplacementPrompt,
+                    supportingText = {
+                        Text(
+                            if (state.customPrompt.isBlank() || hasReplacementPrompt) {
+                                stringResource(R.string.describe_new_object)
+                            } else {
+                                stringResource(R.string.replacement_prompt_required_error)
+                            },
+                        )
+                    },
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.replacement_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     stepCopy.options.chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             row.forEach { option ->
-                                if (state.selectedTool.id == "replace") {
-                                    val optionPrompt = localizedOption(option)
-                                    val templatePrompt = HomeDecorCatalog.replacementTemplatePrompts[option].orEmpty()
-                                    ReplaceSuggestionChip(
+                                val optionPrompt = localizedOption(option)
+                                val templatePrompt = HomeDecorCatalog.replacementTemplatePrompts[option].orEmpty()
+                                ReplaceSuggestionChip(
+                                    label = option,
+                                    selected = option in selected ||
+                                        optionPrompt in selected ||
+                                        templatePrompt in selected ||
+                                        replacementPrompt == option ||
+                                        replacementPrompt == optionPrompt ||
+                                        replacementPrompt == templatePrompt,
+                                    onClick = {
+                                        viewModel.selectReplacementSuggestion(option)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            if (row.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+                AdvancedControls(state = state, viewModel = viewModel)
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                UnifiedWizardError(
+                    message = state.generationError.orEmpty(),
+                    onRetry = viewModel::generate,
+                    onDismiss = viewModel::clearGenerationError,
+                )
+                if (state.selectedTool.id != "reference") {
+                    SourcePreviewCard(state = state)
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (state.selectedTool.id in setOf("paint", "floor")) {
+                        MaterialLibrarySection(
+                            options = stepCopy.options,
+                            selected = selected,
+                            onSelect = viewModel::setStyle,
+                        )
+                    } else if (state.selectedTool.id == "reference") {
+                        stepCopy.options.chunked(2).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                row.forEach { option ->
+                                    IntensityChip(
                                         label = option,
-                                        selected = option in selected ||
-                                            optionPrompt in selected ||
-                                            templatePrompt in selected ||
-                                            replacementPrompt == option ||
-                                            replacementPrompt == optionPrompt ||
-                                            replacementPrompt == templatePrompt,
+                                        selected = option in selected,
                                         onClick = {
-                                            viewModel.selectReplacementSuggestion(option)
+                                            viewModel.setStyle(option)
                                         },
                                         modifier = Modifier.weight(1f),
                                     )
-                                } else {
+                                }
+                                if (row.size == 1) Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    } else {
+                        stepCopy.options.chunked(2).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                row.forEach { option ->
                                     ExpressiveChoiceChip(
                                         label = option,
                                         selected = option in selected,
@@ -1352,93 +1471,59 @@ fun SpecializedGenerateStep(
                                         modifier = Modifier.weight(1f),
                                     )
                                 }
+                                if (row.size == 1) Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+                if (state.selectedTool.id == "reference") {
+                    Text(stringResource(R.string.transfer_options), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    HomeDecorCatalog.referenceOptions.chunked(2).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            row.forEach { option ->
+                                IntensityChip(
+                                    label = option,
+                                    selected = option in state.selectedPalettes,
+                                    onClick = { viewModel.setPalette(option) },
+                                    modifier = Modifier.weight(1f),
+                                )
                             }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
                         }
                     }
                 }
-            }
-            if (state.selectedTool.id == "reference") {
-                Text(stringResource(R.string.transfer_options), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                HomeDecorCatalog.referenceOptions.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        row.forEach { option ->
-                            ExpressiveChoiceChip(
-                                label = option,
-                                selected = option in state.selectedPalettes,
-                                onClick = { viewModel.setPalette(option) },
-                                modifier = Modifier.weight(1f),
+                if (state.selectedTool.id in setOf("paint", "floor")) {
+                    OutlinedTextField(
+                        value = state.customPrompt,
+                        onValueChange = viewModel::setCustomPrompt,
+                        label = { Text(stringResource(R.string.custom_notes)) },
+                        placeholder = {
+                            Text(
+                                if (state.selectedTool.id == "paint") stringResource(R.string.custom_notes_paint_placeholder)
+                                else stringResource(R.string.custom_notes_floor_placeholder),
                             )
-                        }
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
-                    }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 1,
+                        maxLines = 4,
+                        shape = RoundedCornerShape(18.dp),
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = state.customPrompt,
+                        onValueChange = viewModel::setCustomPrompt,
+                        label = {
+                            Text(stringResource(R.string.custom_notes))
+                        },
+                        placeholder = {
+                            Text(stringResource(R.string.custom_notes_placeholder))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        shape = RoundedCornerShape(18.dp),
+                    )
                 }
             }
-            if (state.selectedTool.id in setOf("paint", "floor")) {
-                OutlinedTextField(
-                    value = state.customPrompt,
-                    onValueChange = viewModel::setCustomPrompt,
-                    label = { Text(stringResource(R.string.custom_notes)) },
-                    placeholder = {
-                        Text(
-                            if (state.selectedTool.id == "paint") stringResource(R.string.custom_notes_paint_placeholder)
-                            else stringResource(R.string.custom_notes_floor_placeholder),
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2,
-                    maxLines = 4,
-                    shape = RoundedCornerShape(18.dp),
-                )
-            } else {
-            OutlinedTextField(
-                value = state.customPrompt,
-                onValueChange = viewModel::setCustomPrompt,
-                label = when (state.selectedTool.id) {
-                    "replace" -> {
-                        { Text(stringResource(R.string.replacement_object)) }
-                    }
-                    "reference" -> {
-                        { Text(stringResource(R.string.custom_notes)) }
-                    }
-                    else -> null
-                },
-                placeholder = {
-                    Text(
-                        when (state.selectedTool.id) {
-                            "replace" -> stringResource(R.string.prompt_replace)
-                            "reference" -> stringResource(R.string.custom_notes_placeholder)
-                            else -> stringResource(R.string.prompt_optional)
-                        },
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = if (state.selectedTool.id in setOf("replace", "reference")) 4 else 3,
-                shape = RoundedCornerShape(18.dp),
-                isError = state.selectedTool.id == "replace" && state.customPrompt.isNotBlank() && !hasReplacementPrompt,
-                supportingText = if (state.selectedTool.id == "replace") {
-                    {
-                        Text(
-                            if (state.customPrompt.isBlank() || hasReplacementPrompt) {
-                                stringResource(R.string.describe_new_object)
-                            } else {
-                                stringResource(R.string.replacement_prompt_required_error)
-                            },
-                        )
-                    }
-                } else {
-                    null
-                },
-            )
-            }
-            if (state.selectedTool.id == "replace") {
-                ReplacementReadinessSummary(
-                    hasMask = hasRequiredMask,
-                    hasReplacementPrompt = hasReplacementPrompt,
-                    replacementPrompt = localizedReplacement,
-                )
-            }
-            AdvancedControls(state = state, viewModel = viewModel)
         }
     }
 }
@@ -1461,6 +1546,7 @@ fun AdvancedControls(
             .toList()
     }
     var expanded by remember(state.selectedTool.id) { mutableStateOf(false) }
+    val advancedControlsDescription = stringResource(R.string.a11y_advance_controls)
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = StudioPaper,
@@ -1471,13 +1557,17 @@ fun AdvancedControls(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics {
+                        contentDescription = advancedControlsDescription
+                        role = Role.Button
+                    }
                     .clickable { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Icon(Icons.Rounded.Settings, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(stringResource(R.string.advanced_controls), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.advanced_controls), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.advanced_controls_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 }
                 Icon(
@@ -1511,7 +1601,7 @@ fun AdvancedControls(
                 }
                 if (!protectionOnly) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.budget_mode), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.budget_mode), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             HomeDecorCatalog.budgetModes.forEach { mode ->
                                     CompactFilterChip(
@@ -1524,7 +1614,7 @@ fun AdvancedControls(
                         }
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.avoid_these), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.avoid_these), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         HomeDecorCatalog.avoidOptions.chunked(2).forEach { row ->
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 row.forEach { option ->
@@ -1541,7 +1631,7 @@ fun AdvancedControls(
                     }
                     if (recentStyles.isNotEmpty()) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.recent_styles), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.recent_styles), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 items(recentStyles, key = { "recent-style-$it" }) { style ->
                                     CompactFilterChip(
@@ -1566,7 +1656,7 @@ fun AdvancedControls(
                     ) {
                         Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.try_with_example), fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.try_with_example), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -1582,7 +1672,7 @@ fun AdvancedOptionGroup(
     onToggle: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
         options.chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { option ->
@@ -1610,7 +1700,7 @@ fun ReferencePhotoStep(
     }
     val hasReference = state.selectedReferenceUri != null || state.selectedReferenceExampleLabel != null
     StepScaffold(
-        eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
+        eyebrow = "",
         title = stringResource(R.string.step_add_reference_title),
         body = stringResource(R.string.step_add_reference_body),
         buttonLabel = stringResource(R.string.continue_action),
@@ -1627,19 +1717,25 @@ fun ReferencePhotoStep(
                 onExample = { viewModel.selectReferenceExample(editorialReference) },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = referenceImageInputActions.openGallery, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+                OutlinedButton(
+                    onClick = referenceImageInputActions.openGallery,
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) {
                     Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.gallery))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.gallery), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 OutlinedButton(
                     onClick = referenceImageInputActions.openCamera,
                     shape = CircleShape,
                     modifier = Modifier.weight(1f).height(48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
                 ) {
                     Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.camera))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.camera), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             OutlinedButton(
@@ -1708,9 +1804,10 @@ fun ObjectMaskStep(
         disabledLabel = stringResource(R.string.mask_object_disabled),
         target = "object",
         imageDescription = stringResource(R.string.mask_object_description),
-        emptyStateTitle = stringResource(R.string.mask_object_empty_title),
-        emptyStateBody = stringResource(R.string.mask_object_empty_body),
+        emptyStateTitle = null,
+        emptyStateBody = null,
         polishedControls = true,
+        forceEnableButton = true,
     )
 }
 
@@ -1727,9 +1824,11 @@ fun MaskEditorStep(
     emptyStateBody: String? = null,
     polishedControls: Boolean = false,
     allowAutoDetect: Boolean = target != "object",
+    forceEnableButton: Boolean = false,
 ) {
     val requiresVisibleMask = target in setOf("floor", "wall", "object")
     val isSurfaceMask = target in setOf("floor", "wall")
+    val isObjectMask = target == "object"
     val hasMask = remember(state.maskStrokes, target) {
         if (requiresVisibleMask) {
             state.maskStrokes.hasVisibleMaskPaint()
@@ -1747,24 +1846,42 @@ fun MaskEditorStep(
     } else {
         stringResource(R.string.mask_required_wall)
     }
+    val objectStepValidation = if (isObjectMask) rememberStepValidation(state) else null
+    val buttonCanProceed = if (forceEnableButton) true else (objectStepValidation?.canProceed ?: hasMask)
     StepScaffold(
-        eyebrow = stringResource(R.string.step_count_format, 2, wizardTotalSteps(state.selectedTool)),
+        eyebrow = "",
         title = title,
         body = body,
         buttonLabel = stringResource(R.string.continue_action),
-        canProceed = hasMask,
-        validationMessage = disabledLabel,
+        canProceed = buttonCanProceed,
+        validationMessage = objectStepValidation?.validationMessage ?: disabledLabel,
         contentBottomPadding = if (isSurfaceMask) 32.dp else 18.dp,
         protectBottomInsets = isSurfaceMask,
         buttonAllowsTwoLines = isSurfaceMask,
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            if (isObjectMask && !hasMask && emptyStateTitle != null) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        emptyStateTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    if (!emptyStateBody.isNullOrBlank()) {
+                        Text(
+                            emptyStateBody,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
             MaskCanvas(
                 state = state,
                 imageDescription = imageDescription,
-                emptyStateTitle = emptyStateTitle,
-                emptyStateBody = emptyStateBody,
+                emptyStateTitle = null,
+                emptyStateBody = null,
                 hasVisibleMask = hasMask,
                 readyLabel = if (isSurfaceMask) stringResource(R.string.mask_ready, surfaceLabel) else null,
                 onStroke = viewModel::addMaskStroke,
@@ -1900,12 +2017,12 @@ fun MaskEditorStep(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(stringResource(R.string.brush_size), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.brush_size), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Text(
                             "${state.brushSize.toInt()} px",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                     Slider(value = state.brushSize, onValueChange = viewModel::setBrushSize, valueRange = 8f..72f)
@@ -1972,14 +2089,14 @@ fun BrushSizeControl(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(R.string.brush_size), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.brush_size), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 Surface(shape = CircleShape, color = StudioPrimaryContainer) {
                     Text(
                         "${brushSize.toInt()} px",
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = StudioBlue,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -2064,7 +2181,7 @@ fun MaskCanvas(
                 if (points.size < 2) return
                 points.zipWithNext().forEach { (start, end) ->
                     drawLine(
-                        color = if (stroke.erase) Color.Transparent else StudioSky.copy(alpha = 0.62f),
+                        color = if (stroke.erase) Color.Transparent else StudioAccent.copy(alpha = 0.62f),
                         start = Offset(start.x * size.width, start.y * size.height),
                         end = Offset(end.x * size.width, end.y * size.height),
                         strokeWidth = stroke.brushSize,
@@ -2090,24 +2207,7 @@ fun MaskCanvas(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
-                    Text(readyLabel, color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
-        }
-        if (!hasMask && emptyStateTitle != null) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = StudioBlack.copy(alpha = 0.78f),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(14.dp)
-                    .fillMaxWidth(),
-            ) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(emptyStateTitle, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-                    if (!emptyStateBody.isNullOrBlank()) {
-                        Text(emptyStateBody, color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodyMedium)
-                    }
+                    Text(readyLabel, color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -2133,9 +2233,9 @@ fun SurfacePanel(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Surface(shape = CircleShape, color = StudioPaper) {
-                    Icon(icon, null, Modifier.padding(8.dp).size(18.dp), tint = StudioInk)
+                    Icon(icon, contentDescription = null, Modifier.padding(8.dp).size(18.dp), tint = StudioInk)
                 }
-                Text(title, fontWeight = FontWeight.Black, color = if (selected) StudioBlue else StudioInk)
+                Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) StudioBlue else StudioInk)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(
@@ -2176,7 +2276,7 @@ fun LayoutPlanningStep(
             .fillMaxSize()
             .imePadding()
             .windowInsetsPadding(WindowInsets.navigationBars),
-        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 120.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         if (!state.generationError.isNullOrBlank()) {
@@ -2190,7 +2290,7 @@ fun LayoutPlanningStep(
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 HomeDecorCatalog.layoutGoals.chunked(3).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.forEach { option ->
@@ -2220,9 +2320,6 @@ fun LayoutPlanningStep(
             }
         }
         item {
-            AdvancedControls(state = state, viewModel = viewModel)
-        }
-        item {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (showValidationBanner && !stepValidation.validationMessage.isNullOrBlank()) {
                     ValidationAlertBanner(message = stepValidation.validationMessage)
@@ -2237,17 +2334,25 @@ fun LayoutPlanningStep(
                         }
                     },
                     shape = CircleShape,
-                    colors = studioPrimaryButtonColors(),
+                    colors = if (canGenerate) {
+                        studioPrimaryButtonColors()
+                    } else {
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(58.dp),
+                        .height(58.dp)
+                        .disabledSemantics(canGenerate),
                 ) {
                     Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
                         stringResource(R.string.layout_generate),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -2267,11 +2372,26 @@ fun LayoutGoalChip(
     val displayLabel = localizedOption(label)
     val borderColor = if (selected) StudioBlue else StudioLine
     val borderWidth = if (selected) 2.dp else 1.dp
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (selected) 0.96f else 1f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessLow,
+        ),
+        label = "goalChipScale",
+    )
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
         color = StudioPaper,
-        modifier = modifier.height(64.dp).border(borderWidth, borderColor, RoundedCornerShape(18.dp)),
+        modifier = modifier
+            .height(64.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .semantics {
+                this.selected = selected
+                contentDescription = displayLabel
+            }
+            .border(borderWidth, borderColor, RoundedCornerShape(18.dp)),
     ) {
         Row(
             Modifier.padding(horizontal = 14.dp),
@@ -2282,13 +2402,13 @@ fun LayoutGoalChip(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(if (selected) StudioBlue.copy(alpha = 0.10f) else StudioMist),
+                    .background(StudioMist),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    if (selected) Icons.Rounded.Check else choiceIcon(label),
+                    choiceIcon(label),
                     contentDescription = null,
-                    modifier = Modifier.size(if (selected) 16.dp else 18.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = if (selected) StudioBlue else StudioInk.copy(alpha = 0.5f),
                 )
             }
@@ -2317,7 +2437,7 @@ fun RefineStep(
     val stepValidation = rememberStepValidation(state)
     if (state.selectedTool.id == "layout") {
         StepScaffold(
-            eyebrow = stringResource(R.string.step_count_format, 3, wizardTotalSteps(state.selectedTool)),
+            eyebrow = "",
             title = stringResource(R.string.add_details_title),
             body = stringResource(R.string.add_details_body),
             buttonLabel = stringResource(R.string.generate),
@@ -2343,7 +2463,7 @@ fun RefineStep(
     }
     val copy = stepFourCopy(state.selectedTool)
     StepScaffold(
-        eyebrow = stringResource(R.string.step_count_format, wizardStepNumber(state.wizardStage, state.selectedTool), wizardTotalSteps(state.selectedTool)),
+        eyebrow = "",
         title = stringResource(copy.titleRes),
         body = stringResource(copy.bodyRes),
         buttonLabel = stringResource(R.string.generate_my_design),
@@ -2362,7 +2482,7 @@ fun RefineStep(
             if (state.selectedTool.id !in listOf("facade", "garden", "paint")) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text(stringResource(R.string.choose_a_mode), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -2380,7 +2500,7 @@ fun RefineStep(
             }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(stringResource(R.string.step_color_harmony_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(R.string.step_color_harmony_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.choose_color), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 LazyVerticalGrid(
@@ -2417,7 +2537,7 @@ fun RefineStep(
             val briefStyle = state.style.takeIf { it.isNotBlank() }?.let { localizedOption(it) } ?: stringResource(R.string.style_to_choose)
             Surface(shape = RoundedCornerShape(22.dp), color = StudioBlack) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.design_brief), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.design_brief), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(
                             R.string.design_pair_format,
@@ -2532,6 +2652,10 @@ fun PaletteChoiceCard(
         modifier = modifier
             .width(96.dp)
             .height(142.dp)
+            .semantics {
+                this.selected = selected
+                contentDescription = displayLabel
+            }
             .border(
                 if (selected) 2.dp else 1.dp,
                 if (selected) StudioBlue else StudioLine,
@@ -2641,7 +2765,7 @@ fun ProcessingStep(
                 ) {
                     Image(
                         painter = painterResource(heroImage),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.a11y_processing_hero),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                     )
@@ -2657,7 +2781,7 @@ fun ProcessingStep(
                             horizontalArrangement = Arrangement.spacedBy(7.dp),
                         ) {
                             Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp), tint = StudioBlue)
-                            Text(stringResource(R.string.generation_progress_badge), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = StudioInk)
+                            Text(stringResource(R.string.generation_progress_badge), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = StudioInk)
                         }
                     }
                     Column(
@@ -2668,7 +2792,7 @@ fun ProcessingStep(
                             stringResource(R.string.generation_progress_title),
                             color = Color.White,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.SemiBold,
                         )
                         Text(
                             stringResource(R.string.generation_progress_body),
@@ -2783,14 +2907,14 @@ fun LayoutResultSummary(state: HomeDecorUiState) {
         tonalElevation = 2.dp,
     ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.layout_changes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioBlue)
+            Text(stringResource(R.string.layout_changes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
             Text(
                 layoutChangeSummary(state),
                 style = MaterialTheme.typography.bodyLarge,
                 color = StudioInk,
             )
             Spacer(Modifier.height(2.dp))
-            Text(stringResource(R.string.layout_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioBlue)
+            Text(stringResource(R.string.layout_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
             layoutSuggestions(state).forEach { suggestion ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                     Icon(Icons.Rounded.Check, null, Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
@@ -2851,7 +2975,7 @@ fun ReplacementResultSummary(
             Text(
                 stringResource(R.string.replacement_result_title),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.SemiBold,
                 color = StudioBlue,
             )
             Text(
@@ -2883,7 +3007,7 @@ fun ReplacementResultRow(
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
         Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = StudioBlue, fontWeight = FontWeight.Bold)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = StudioBlue, fontWeight = FontWeight.SemiBold)
             Text(value, style = MaterialTheme.typography.bodyMedium, color = StudioInk)
         }
     }
@@ -3004,7 +3128,7 @@ fun ResultStep(
             }
             Surface(shape = RoundedCornerShape(22.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp))) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(stringResource(if (isReplaceResult) R.string.replacement_summary else R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text(stringResource(if (isReplaceResult) R.string.replacement_summary else R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.metadata_service, localizedWorkflowTitle(state.selectedTool)))
                     if (isReplaceResult) {
                         Text(stringResource(R.string.metadata_replacement_object, replacementPrompt.ifBlank { stringResource(R.string.no_custom_prompt) }))
@@ -3030,7 +3154,7 @@ fun ResultStep(
                     ) {
                         Icon(Icons.Rounded.Save, contentDescription = null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.save), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.save), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                     Button(
                         onClick = {
@@ -3045,7 +3169,7 @@ fun ResultStep(
                     ) {
                         Icon(Icons.Rounded.Download, contentDescription = null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.download), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.download), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                     Button(
                         onClick = {
@@ -3062,7 +3186,7 @@ fun ResultStep(
                     ) {
                         Icon(Icons.Rounded.Share, contentDescription = null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.share), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.share), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                 }
                 OutlinedButton(
@@ -3072,7 +3196,7 @@ fun ResultStep(
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.regenerate), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.regenerate), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                 }
                 var feedbackState by remember { mutableStateOf<String?>(null) }
                 Column(
@@ -3139,7 +3263,7 @@ fun BeforeAfterResultSlider(
 ) {
     var comparePosition by remember(result.id) { mutableStateOf(0.5f) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.before_after_slider), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.before_after_slider), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
@@ -3222,7 +3346,7 @@ fun ComparisonBadge(label: String) {
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
             color = Color.White,
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
@@ -3234,7 +3358,7 @@ fun TryAnotherStyleRow(
 ) {
     val styles = remember { listOf("Japandi", "Luxe", "Moderne", "Minimaliste", "Marocain", "Scandinave") }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.try_another_style), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.try_another_style), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(styles) { style ->
                 val selected = selectedStyle.split(" + ").any { it.trim() == style }
@@ -3273,7 +3397,7 @@ fun ResultProjectWorkspaceActions(
                     Icon(Icons.Rounded.Layers, null, Modifier.padding(10.dp).size(20.dp), tint = StudioBlue)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.result_workspace_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioInk)
+                    Text(stringResource(R.string.result_workspace_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioInk)
                     Text(
                         attachedProject?.let { stringResource(R.string.result_workspace_project, it.name) }
                             ?: stringResource(R.string.result_workspace_body),
@@ -3349,10 +3473,10 @@ fun ResultContentsSummary(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.result_contains_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = StudioBlue)
+            Text(stringResource(R.string.result_contains_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
             Text(description, color = StudioInk, style = MaterialTheme.typography.bodyMedium)
             if (resultReady) {
-                Text(stringResource(R.string.result_saved_to_profile_history), color = StudioInk, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.result_saved_to_profile_history), color = StudioInk, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -3379,7 +3503,7 @@ fun ResultStateNotice(
             Surface(shape = CircleShape, color = StudioPrimaryContainer) {
                 Icon(icon, contentDescription = null, modifier = Modifier.padding(16.dp).size(28.dp), tint = StudioBlue)
             }
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
     }
@@ -3392,7 +3516,7 @@ fun ResultImageCard(
     image: @Composable () -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black)
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
         Card(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
             image()
         }

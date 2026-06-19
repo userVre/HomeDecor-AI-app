@@ -58,9 +58,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ismail.homedecorai.BoardItem
+import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.R
-import com.ismail.homedecorai.isGeneratedResult
+import com.ismail.homedecorai.model.isGeneratedResult
 import com.ismail.homedecorai.ui.components.WorkspaceImage
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.saveResultToGallery
@@ -119,7 +119,7 @@ fun DesignViewerSheet(
                 Text(
                     stringResource(R.string.your_design),
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Surface(
                     onClick = onBack,
@@ -276,7 +276,7 @@ fun DesignViewerSheet(
                             Text(
                                 result.roomType.ifBlank { stringResource(R.string.room_type) },
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -297,7 +297,7 @@ fun DesignViewerSheet(
                             Text(
                                 result.style.ifBlank { stringResource(R.string.style_to_choose) },
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -319,7 +319,7 @@ fun DesignViewerSheet(
                     ) {
                         Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.regenerate), fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(stringResource(R.string.regenerate), fontWeight = FontWeight.SemiBold, maxLines = 1)
                     }
                     Button(
                         onClick = {
@@ -334,7 +334,7 @@ fun DesignViewerSheet(
                     ) {
                         Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.save), fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(stringResource(R.string.save), fontWeight = FontWeight.SemiBold, maxLines = 1)
                     }
                     Button(
                         onClick = {
@@ -349,7 +349,7 @@ fun DesignViewerSheet(
                     ) {
                         Icon(Icons.Rounded.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.share), fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(stringResource(R.string.share), fontWeight = FontWeight.SemiBold, maxLines = 1)
                     }
                 }
 
@@ -427,7 +427,7 @@ fun DesignViewerSheet(
                         Text(
                             stringResource(R.string.no_designs_yet),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(

@@ -1,0 +1,5 @@
+[mcp_servers.agent-native-plans]
+url = "https://plan.agent-native.com/_agent-native/mcp"
+
+[mcp_servers.plan]
+url = "https://plan.agent-native.com/_agent-native/mcp"

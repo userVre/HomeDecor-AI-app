@@ -115,7 +115,7 @@ fun AuthSheet(
             Text(
                 stringResource(R.string.auth_welcome_back),
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(8.dp))
@@ -147,7 +147,7 @@ fun AuthSheet(
                     ) {
                         Text(
                             "\uD83D\uDD35",
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF4285F4),
                         )
                         Spacer(Modifier.width(10.dp))
@@ -216,7 +216,7 @@ fun AuthSheet(
                     ) {
                         Text(
                             stringResource(R.string.sign_in_button),
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
 
@@ -246,7 +246,7 @@ fun AuthSheet(
                     stringResource(R.string.sign_up),
                     color = StudioInk,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable { },
                 )
             }
