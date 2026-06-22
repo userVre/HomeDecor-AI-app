@@ -9,7 +9,7 @@ import android.net.Uri
 import com.ismail.homedecorai.CreativeWorkspaceState
 import com.ismail.homedecorai.ViewerSummary
 
-enum class MainTab { Tools, Discover, Upgrade, MyBoard, Profile, Create }
+enum class MainTab { Tools, Discover, Upgrade, Profile, MyBoard, Create }
 enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
 enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
 

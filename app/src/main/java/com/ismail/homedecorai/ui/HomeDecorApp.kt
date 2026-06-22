@@ -192,19 +192,19 @@ private fun AppScaffold(
             AnimatedContent(targetState = state.selectedTab, label = "tab") { tab ->
                 when (tab) {
                     MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
-                    MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
                     MainTab.Upgrade -> UpgradeScreen(
                         state = state,
                         onOpenPaywall = viewModel::openPaywall,
                     )
-                    MainTab.MyBoard -> MyBoardScreen(state = state, viewModel = viewModel)
                     MainTab.Profile -> ProfileScreen(
                         state = state,
                         viewModel = viewModel,
                         currentLanguageTag = currentLanguageTag,
                         onLanguageSelected = onLanguageSelected,
                     )
+                    MainTab.MyBoard -> MyBoardScreen(state = state, viewModel = viewModel)
+                    MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                 }
             }
 
@@ -311,17 +311,17 @@ private fun HomeDecorNavigationBar(
             onSelect = onSelectTab,
         )
         NavItem(
-            tab = MainTab.MyBoard,
-            selectedTab = selectedTab,
-            icon = Icons.Rounded.GridView,
-            label = stringResource(tabLabelRes(MainTab.MyBoard)),
-            onSelect = onSelectTab,
-        )
-        NavItem(
             tab = MainTab.Profile,
             selectedTab = selectedTab,
             icon = Icons.Rounded.Person,
             label = stringResource(tabLabelRes(MainTab.Profile)),
+            onSelect = onSelectTab,
+        )
+        NavItem(
+            tab = MainTab.MyBoard,
+            selectedTab = selectedTab,
+            icon = Icons.Rounded.GridView,
+            label = stringResource(tabLabelRes(MainTab.MyBoard)),
             onSelect = onSelectTab,
         )
     }
