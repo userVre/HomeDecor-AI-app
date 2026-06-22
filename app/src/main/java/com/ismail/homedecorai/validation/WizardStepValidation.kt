@@ -126,6 +126,16 @@ private fun validateSpaceStep(state: HomeDecorUiState, toolId: String): WizardSt
                 totalRequiredFields = 1,
             )
         }
+        "garden" -> {
+            val hasSelection = state.selectedStyles.isNotEmpty()
+            WizardStepValidation(
+                canProceed = hasSelection,
+                validationMessage = if (!hasSelection) "Choose at least one option to continue." else null,
+                isStepValid = hasSelection,
+                completedRequiredFields = if (hasSelection) 1 else 0,
+                totalRequiredFields = 1,
+            )
+        }
         else -> {
             val hasSelection = state.selectedRooms.isNotEmpty()
             WizardStepValidation(
