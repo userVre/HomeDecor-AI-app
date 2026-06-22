@@ -609,6 +609,9 @@
   <string name="option_building_retail">Vente au détail</string>
   <string name="option_building_villa">Villa</string>
   <string name="option_garden_christmas">Noël</string>
+  <string name="option_garden_zen">Zen</string>
+  <string name="option_garden_english">Jardin anglais</string>
+  <string name="option_garden_landscape">Paysage</string>
   <string name="option_style_modern">Moderne</string>
   <string name="option_style_luxury">Luxe</string>
   <string name="option_style_japandi">Japondi</string>

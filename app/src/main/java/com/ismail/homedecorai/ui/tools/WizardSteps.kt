@@ -906,22 +906,27 @@ fun ChoiceStep(
     visualBuildingCards: Boolean = false,
 ) {
     val stepValidation = rememberStepValidation(state)
+    val hasSelection = selected.isNotEmpty()
+    val canProceed = hasSelection || stepValidation.canProceed
+    val validationMessage = if (hasSelection) null else stepValidation.validationMessage
     StepScaffold(
         eyebrow = eyebrow,
         title = stringResource(copy.titleRes),
         body = stringResource(copy.bodyRes),
         buttonLabel = stringResource(R.string.continue_action),
         buttonIcon = Icons.Rounded.Check,
-        canProceed = stepValidation.canProceed,
-        validationMessage = stepValidation.validationMessage,
+        canProceed = canProceed,
+        validationMessage = validationMessage,
         onButton = onContinue,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         if (visualStyleCards || visualBuildingCards) {
-            val gridRows = (copy.options.size + 2) / 3
+            val rows = if (visualBuildingCards) (copy.options.size + 1) / 2 else (copy.options.size + 2) / 3
+            val cardHeight = if (visualBuildingCards) 148 else 140
+            val gridHeight = rows * cardHeight + (rows - 1) * 8 + 32
             LazyVerticalGrid(
                 columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3),
-                modifier = Modifier.fillMaxWidth().height(((if (visualBuildingCards) (copy.options.size + 1) / 2 else gridRows) * if (visualBuildingCards) 160 else 152).dp),
+                modifier = Modifier.fillMaxWidth().height(gridHeight.dp),
                 contentPadding = PaddingValues(bottom = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),

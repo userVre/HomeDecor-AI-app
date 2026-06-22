@@ -146,7 +146,7 @@ fun ToolCard(
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp)
+            .height(110.dp)
             .clip(cardShape)
             .semantics {
                 contentDescription = toolCardDescription
@@ -166,13 +166,13 @@ fun ToolCard(
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            0.0f to Color.Transparent,
-                            0.05f to Color.Transparent,
-                            0.25f to Color.Black.copy(alpha = 0.55f),
-                            0.45f to Color.Black.copy(alpha = 0.80f),
-                            0.65f to Color.Black.copy(alpha = 0.92f),
-                            0.82f to Color.Black.copy(alpha = 0.97f),
-                            1.0f to Color.Black.copy(alpha = 0.99f),
+                            0.0f to Color.Black.copy(alpha = 0.10f),
+                            0.10f to Color.Black.copy(alpha = 0.35f),
+                            0.25f to Color.Black.copy(alpha = 0.70f),
+                            0.45f to Color.Black.copy(alpha = 0.88f),
+                            0.65f to Color.Black.copy(alpha = 0.95f),
+                            0.82f to Color.Black.copy(alpha = 0.98f),
+                            1.0f to Color.Black,
                         ),
                     ),
             )
@@ -181,7 +181,7 @@ fun ToolCard(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
             ) {
                 Text(
                     title,
