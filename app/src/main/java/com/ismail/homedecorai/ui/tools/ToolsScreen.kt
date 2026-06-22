@@ -70,7 +70,7 @@ fun ToolsScreen(
             contentPadding = PaddingValues(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
-                top = HomeDecorSpacing.Base,
+                top = HomeDecorSpacing.Lg,
                 bottom = navBarBottomPadding(),
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
@@ -146,7 +146,7 @@ fun ToolCard(
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .height(260.dp)
+            .height(220.dp)
             .clip(cardShape)
             .semantics {
                 contentDescription = toolCardDescription
@@ -167,10 +167,11 @@ fun ToolCard(
                     .background(
                         Brush.verticalGradient(
                             0.0f to Color.Transparent,
-                            0.50f to Color.Transparent,
-                            0.70f to Color.Black.copy(alpha = 0.25f),
-                            0.85f to Color.Black.copy(alpha = 0.50f),
-                            1.0f to Color.Black.copy(alpha = 0.70f),
+                            0.35f to Color.Transparent,
+                            0.60f to Color.Black.copy(alpha = 0.30f),
+                            0.75f to Color.Black.copy(alpha = 0.60f),
+                            0.90f to Color.Black.copy(alpha = 0.80f),
+                            1.0f to Color.Black.copy(alpha = 0.90f),
                         ),
                     ),
             )
