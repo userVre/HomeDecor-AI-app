@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -72,6 +73,7 @@ import com.ismail.homedecorai.ui.store.DiamondStoreSheet
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.tools.CreateScreen
 import com.ismail.homedecorai.ui.tools.ToolsScreen
+import com.ismail.homedecorai.ui.upgrade.UpgradeScreen
 import com.ismail.homedecorai.ui.utility.openAuth
 import com.ismail.homedecorai.ui.utility.openGooglePlayReview
 import com.ismail.homedecorai.ui.utility.tabLabelRes
@@ -181,13 +183,7 @@ private fun AppScaffold(
             if (state.selectedTab != MainTab.Create && !modalVisible) {
                 HomeDecorNavigationBar(
                     selectedTab = state.selectedTab,
-                    onSelectTab = { tab ->
-                        if (tab == MainTab.Upgrade) {
-                            viewModel.openPaywall()
-                        } else {
-                            viewModel.selectTab(tab)
-                        }
-                    },
+                    onSelectTab = viewModel::selectTab,
                 )
             }
         },
@@ -198,7 +194,10 @@ private fun AppScaffold(
                     MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
-                    MainTab.Upgrade -> ToolsScreen(state = state, viewModel = viewModel)
+                    MainTab.Upgrade -> UpgradeScreen(
+                        state = state,
+                        onOpenPaywall = viewModel::openPaywall,
+                    )
                     MainTab.MyBoard -> MyBoardScreen(state = state, viewModel = viewModel)
                     MainTab.Profile -> ProfileScreen(
                         state = state,
@@ -340,11 +339,12 @@ private fun RowScope.NavItem(
     NavigationBarItem(
         selected = selected,
         onClick = { onSelect(tab) },
+        modifier = Modifier.heightIn(min = 48.dp),
         icon = {
             Icon(
                 icon,
                 contentDescription = label,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(24.dp),
             )
         },
         label = {
@@ -353,7 +353,7 @@ private fun RowScope.NavItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             )
         },
         colors = NavigationBarItemDefaults.colors(

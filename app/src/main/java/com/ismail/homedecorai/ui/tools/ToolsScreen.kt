@@ -146,7 +146,7 @@ fun ToolCard(
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(156.dp)
             .clip(cardShape)
             .semantics {
                 contentDescription = toolCardDescription
@@ -167,11 +167,12 @@ fun ToolCard(
                     .background(
                         Brush.verticalGradient(
                             0.0f to Color.Transparent,
-                            0.25f to Color.Transparent,
-                            0.50f to Color.Black.copy(alpha = 0.40f),
-                            0.65f to Color.Black.copy(alpha = 0.65f),
-                            0.80f to Color.Black.copy(alpha = 0.85f),
-                            1.0f to Color.Black.copy(alpha = 0.95f),
+                            0.15f to Color.Transparent,
+                            0.40f to Color.Black.copy(alpha = 0.45f),
+                            0.55f to Color.Black.copy(alpha = 0.70f),
+                            0.72f to Color.Black.copy(alpha = 0.88f),
+                            0.88f to Color.Black.copy(alpha = 0.95f),
+                            1.0f to Color.Black.copy(alpha = 0.97f),
                         ),
                     ),
             )
@@ -180,7 +181,7 @@ fun ToolCard(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
             ) {
                 Text(
                     title,
@@ -202,7 +203,7 @@ fun ToolCard(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.height(48.dp),
+                    modifier = Modifier.height(40.dp),
                 ) {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
