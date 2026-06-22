@@ -31,6 +31,7 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Stars
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -282,48 +283,54 @@ private fun HomeDecorNavigationBar(
     selectedTab: MainTab,
     onSelectTab: (MainTab) -> Unit,
 ) {
-    NavigationBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars),
-        tonalElevation = 0.dp,
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        NavItem(
-            tab = MainTab.Tools,
-            selectedTab = selectedTab,
-            icon = Icons.Rounded.Home,
-            label = stringResource(tabLabelRes(MainTab.Tools)),
-            onSelect = onSelectTab,
+    Column {
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
         )
-        NavItem(
-            tab = MainTab.Discover,
-            selectedTab = selectedTab,
-            icon = Icons.Rounded.Explore,
-            label = stringResource(tabLabelRes(MainTab.Discover)),
-            onSelect = onSelectTab,
-        )
-        NavItem(
-            tab = MainTab.Upgrade,
-            selectedTab = selectedTab,
-            icon = Icons.Rounded.Stars,
-            label = stringResource(tabLabelRes(MainTab.Upgrade)),
-            onSelect = onSelectTab,
-        )
-        NavItem(
-            tab = MainTab.Profile,
-            selectedTab = selectedTab,
-            icon = Icons.Rounded.Person,
-            label = stringResource(tabLabelRes(MainTab.Profile)),
-            onSelect = onSelectTab,
-        )
-        NavItem(
-            tab = MainTab.MyBoard,
-            selectedTab = selectedTab,
-            icon = Icons.Rounded.GridView,
-            label = stringResource(tabLabelRes(MainTab.MyBoard)),
-            onSelect = onSelectTab,
-        )
+        NavigationBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars),
+            tonalElevation = 0.dp,
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            NavItem(
+                tab = MainTab.Tools,
+                selectedTab = selectedTab,
+                icon = Icons.Rounded.Home,
+                label = stringResource(tabLabelRes(MainTab.Tools)),
+                onSelect = onSelectTab,
+            )
+            NavItem(
+                tab = MainTab.Discover,
+                selectedTab = selectedTab,
+                icon = Icons.Rounded.Explore,
+                label = stringResource(tabLabelRes(MainTab.Discover)),
+                onSelect = onSelectTab,
+            )
+            NavItem(
+                tab = MainTab.Upgrade,
+                selectedTab = selectedTab,
+                icon = Icons.Rounded.Stars,
+                label = stringResource(tabLabelRes(MainTab.Upgrade)),
+                onSelect = onSelectTab,
+            )
+            NavItem(
+                tab = MainTab.Profile,
+                selectedTab = selectedTab,
+                icon = Icons.Rounded.Person,
+                label = stringResource(tabLabelRes(MainTab.Profile)),
+                onSelect = onSelectTab,
+            )
+            NavItem(
+                tab = MainTab.MyBoard,
+                selectedTab = selectedTab,
+                icon = Icons.Rounded.GridView,
+                label = stringResource(tabLabelRes(MainTab.MyBoard)),
+                onSelect = onSelectTab,
+            )
+        }
     }
 }
 
@@ -351,17 +358,18 @@ private fun RowScope.NavItem(
             Text(
                 label,
                 maxLines = 1,
+                softWrap = false,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             )
         },
         colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = MaterialTheme.colorScheme.primary,
-            selectedTextColor = MaterialTheme.colorScheme.primary,
+            selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
         ),
     )
 }
