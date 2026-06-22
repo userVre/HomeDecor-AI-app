@@ -405,6 +405,10 @@ fun StepScaffold(
         if (canProceed) showValidationBanner = false
     }
 
+    LaunchedEffect(validationMessage) {
+        if (validationMessage.isNullOrBlank()) showValidationBanner = false
+    }
+
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -469,7 +473,7 @@ fun StepScaffold(
                             contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                         )
                     },
-                    modifier = buttonModifier.disabledSemantics(canProceed),
+                    modifier = buttonModifier.disabledSemantics(!canProceed),
                 ) {
                     Icon(buttonIcon, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -918,7 +922,7 @@ fun ChoiceStep(
             LazyVerticalGrid(
                 columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3),
                 modifier = Modifier.fillMaxWidth().height(((if (visualBuildingCards) (copy.options.size + 1) / 2 else gridRows) * if (visualBuildingCards) 160 else 152).dp),
-                contentPadding = PaddingValues(bottom = 16.dp),
+                contentPadding = PaddingValues(bottom = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 userScrollEnabled = false,
