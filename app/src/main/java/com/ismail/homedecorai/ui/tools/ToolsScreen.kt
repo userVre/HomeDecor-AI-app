@@ -146,7 +146,7 @@ fun ToolCard(
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .height(156.dp)
+            .height(140.dp)
             .clip(cardShape)
             .semantics {
                 contentDescription = toolCardDescription
@@ -167,12 +167,12 @@ fun ToolCard(
                     .background(
                         Brush.verticalGradient(
                             0.0f to Color.Transparent,
-                            0.15f to Color.Transparent,
-                            0.40f to Color.Black.copy(alpha = 0.45f),
-                            0.55f to Color.Black.copy(alpha = 0.70f),
-                            0.72f to Color.Black.copy(alpha = 0.88f),
-                            0.88f to Color.Black.copy(alpha = 0.95f),
-                            1.0f to Color.Black.copy(alpha = 0.97f),
+                            0.08f to Color.Transparent,
+                            0.30f to Color.Black.copy(alpha = 0.50f),
+                            0.50f to Color.Black.copy(alpha = 0.75f),
+                            0.70f to Color.Black.copy(alpha = 0.90f),
+                            0.85f to Color.Black.copy(alpha = 0.96f),
+                            1.0f to Color.Black.copy(alpha = 0.98f),
                         ),
                     ),
             )
@@ -181,7 +181,7 @@ fun ToolCard(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
             ) {
                 Text(
                     title,
@@ -194,7 +194,7 @@ fun ToolCard(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     description,
-                    color = Color.White.copy(alpha = 0.80f),
+                    color = Color.White.copy(alpha = 0.85f),
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -207,7 +207,7 @@ fun ToolCard(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color.White.copy(alpha = 0.18f),
+                        color = Color.White.copy(alpha = 0.20f),
                     ) {
                         Row(
                             Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -232,7 +232,7 @@ fun ToolCard(
                         Icons.Rounded.ChevronRight,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = Color.White.copy(alpha = 0.60f),
+                        tint = Color.White.copy(alpha = 0.70f),
                     )
                 }
             }
