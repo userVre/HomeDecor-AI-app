@@ -24,8 +24,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Stars
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -64,6 +66,7 @@ import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
 import com.ismail.homedecorai.ui.dialogs.FirstLaunchDisclosure
 import com.ismail.homedecorai.ui.discover.DiscoverScreen
 import com.ismail.homedecorai.ui.paywall.PaywallSheet
+import com.ismail.homedecorai.ui.profile.ProfileScreen
 import com.ismail.homedecorai.ui.settings.SettingsSheet
 import com.ismail.homedecorai.ui.store.DiamondStoreSheet
 import com.ismail.homedecorai.ui.theme.*
@@ -158,11 +161,11 @@ private fun AppScaffold(
         !state.disclosureAccepted
     BackHandler(enabled = state.storeVisible) {
         viewModel.closeDiamondStore()
-        viewModel.selectTab(MainTab.Home)
+        viewModel.selectTab(MainTab.Tools)
     }
     BackHandler(enabled = state.paywallVisible) {
         viewModel.closePaywall()
-        viewModel.selectTab(MainTab.Home)
+        viewModel.selectTab(MainTab.Tools)
     }
     BackHandler(enabled = state.authVisible) {
         viewModel.closeAuth()
@@ -175,12 +178,17 @@ private fun AppScaffold(
     }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (state.selectedTab != MainTab.Create && !modalVisible) {
                 HomeDecorNavigationBar(
                     selectedTab = state.selectedTab,
-                    onSelectTab = viewModel::selectTab,
+                    onSelectTab = { tab ->
+                        if (tab == MainTab.Upgrade) {
+                            viewModel.openPaywall()
+                        } else {
+                            viewModel.selectTab(tab)
+                        }
+                    },
                 )
             }
         },
@@ -188,10 +196,17 @@ private fun AppScaffold(
         Box(Modifier.fillMaxSize().padding(padding)) {
             AnimatedContent(targetState = state.selectedTab, label = "tab") { tab ->
                 when (tab) {
-                    MainTab.Home -> ToolsScreen(state = state, viewModel = viewModel)
+                    MainTab.Tools -> ToolsScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
                     MainTab.Discover -> DiscoverScreen(state = state, viewModel = viewModel)
-                    MainTab.Profile -> MyBoardScreen(state = state, viewModel = viewModel)
+                    MainTab.Upgrade -> ToolsScreen(state = state, viewModel = viewModel)
+                    MainTab.MyBoard -> MyBoardScreen(state = state, viewModel = viewModel)
+                    MainTab.Profile -> ProfileScreen(
+                        state = state,
+                        viewModel = viewModel,
+                        currentLanguageTag = currentLanguageTag,
+                        onLanguageSelected = onLanguageSelected,
+                    )
                 }
             }
 
@@ -201,7 +216,7 @@ private fun AppScaffold(
                         state = state,
                         onClose = {
                             viewModel.closeDiamondStore()
-                            viewModel.selectTab(MainTab.Home)
+                            viewModel.selectTab(MainTab.Tools)
                         },
                         onFulfill = viewModel::fulfillDiamondPurchase,
                         onRetrySync = viewModel::retryPurchaseSync,
@@ -213,7 +228,7 @@ private fun AppScaffold(
                         state = state,
                         onClose = {
                             viewModel.closePaywall()
-                            viewModel.selectTab(MainTab.Home)
+                            viewModel.selectTab(MainTab.Tools)
                         },
                         onSubscription = viewModel::syncSubscriptionFromRevenueCat,
                         onRetrySync = viewModel::retryPurchaseSync,
@@ -278,10 +293,10 @@ private fun HomeDecorNavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         NavItem(
-            tab = MainTab.Home,
+            tab = MainTab.Tools,
             selectedTab = selectedTab,
             icon = Icons.Rounded.Home,
-            label = stringResource(tabLabelRes(MainTab.Home)),
+            label = stringResource(tabLabelRes(MainTab.Tools)),
             onSelect = onSelectTab,
         )
         NavItem(
@@ -289,6 +304,20 @@ private fun HomeDecorNavigationBar(
             selectedTab = selectedTab,
             icon = Icons.Rounded.Explore,
             label = stringResource(tabLabelRes(MainTab.Discover)),
+            onSelect = onSelectTab,
+        )
+        NavItem(
+            tab = MainTab.Upgrade,
+            selectedTab = selectedTab,
+            icon = Icons.Rounded.Stars,
+            label = stringResource(tabLabelRes(MainTab.Upgrade)),
+            onSelect = onSelectTab,
+        )
+        NavItem(
+            tab = MainTab.MyBoard,
+            selectedTab = selectedTab,
+            icon = Icons.Rounded.GridView,
+            label = stringResource(tabLabelRes(MainTab.MyBoard)),
             onSelect = onSelectTab,
         )
         NavItem(

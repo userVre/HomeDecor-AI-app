@@ -45,7 +45,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -215,27 +214,6 @@ fun StyleChoiceCard(
                         contentDescription = displayLabel,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f)),
-                                    startY = 0f,
-                                ),
-                            ),
-                    )
-                    Text(
-                        displayLabel,
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(horizontal = 6.dp, vertical = 4.dp),
                     )
                 }
                 if (selected) {
@@ -572,7 +550,7 @@ fun DailyRewardCard(
                 shape = CircleShape,
                 colors = if (dark) studioProButtonColors() else studioPrimaryButtonColors(),
                 contentPadding = PaddingValues(horizontal = 13.dp),
-                modifier = Modifier.height(44.dp),
+                modifier = Modifier.height(48.dp),
             ) {
                 Icon(if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Add, contentDescription = null, Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
@@ -846,7 +824,7 @@ fun PurchaseSyncNotice(
                     enabled = !busy,
                     shape = CircleShape,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    modifier = Modifier.height(38.dp),
+                    modifier = Modifier.height(48.dp),
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))

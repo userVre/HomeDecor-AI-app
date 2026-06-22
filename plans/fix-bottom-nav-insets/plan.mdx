@@ -1,0 +1,139 @@
+# Fix: Content Cut Off Behind Bottom Navigation
+
+## Problem
+
+Content on Tools, Discover, and Profile/My Board screens is cut off or hidden behind the bottom navigation bar. The last tool card on Tools isn't fully tappable, section titles and "See all" buttons on Discover are clipped, and empty states/lists on Profile lack safe bottom spacing.
+
+## Root Cause
+
+`HomeDecorApp.kt:178` sets `contentWindowInsets = WindowInsets(0)` on the Scaffold, disabling all automatic inset handling. The Scaffold's `padding` only includes the bottomBar (NavigationBar) height, not the system navigation bar insets underneath it. Screens must manually account for the system nav bar, but none do — they only handle `statusBars` at the top.
+
+## Approach
+
+Two complementary fixes:
+
+1. **Scaffold fix** (`HomeDecorApp.kt`): Remove `contentWindowInsets = WindowInsets(0)` so the Scaffold properly accounts for system insets via `innerPadding`. This ensures the content Box always sits above both the app's NavigationBar and the system navigation bar.
+
+2. **Screen cleanup** (3 files): Remove the now-redundant `windowInsetsPadding(WindowInsets.statusBars)` from each screen's header/root, since the Scaffold's `padding` already includes status bar height. For MyBoardScreen, also remove the compensating `Spacer(Modifier.height(48.dp))` and add bottom padding to scrollable content.
+
+## Files to Change
+
+### 1. `app/src/main/java/com/ismail/homedecorai/ui/HomeDecorApp.kt`
+
+**Line 178** — Remove `contentWindowInsets = WindowInsets(0)`:
+
+```kotlin
+// Before
+Scaffold(
+    containerColor = MaterialTheme.colorScheme.surface,
+    contentWindowInsets = WindowInsets(0),
+    bottomBar = { ... }
+) { padding ->
+
+// After
+Scaffold(
+    containerColor = MaterialTheme.colorScheme.surface,
+    bottomBar = { ... }
+) { padding ->
+```
+
+This lets Material 3 Scaffold automatically apply `WindowInsets.systemBars` to the content area. The `padding` parameter will now include status bar + navigation bar insets plus the bottomBar height.
+
+### 2. `app/src/main/java/com/ismail/homedecorai/ui/tools/ToolsScreen.kt`
+
+**Lines 94-98** — Remove status bar inset from `ToolsHeader`:
+
+```kotlin
+// Before
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .windowInsetsPadding(WindowInsets.statusBars)
+        .padding(horizontal = 16.dp, vertical = 12.dp),
+
+// After
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 12.dp),
+```
+
+No other changes needed — the `LazyColumn`'s `bottom = 96.dp` already provides adequate clearance above the nav bar.
+
+### 3. `app/src/main/java/com/ismail/homedecorai/ui/discover/DiscoverScreen.kt`
+
+**Lines 176-179** — Remove status bar inset from `ScreenHeaderPills`:
+
+```kotlin
+// Before
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .windowInsetsPadding(WindowInsets.statusBars)
+        .padding(horizontal = 20.dp, vertical = 8.dp)
+
+// After
+Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 20.dp, vertical = 8.dp)
+```
+
+No other changes needed — the `LazyColumn`'s `bottom = 24.dp` plus the Scaffold padding provides adequate clearance.
+
+### 4. `app/src/main/java/com/ismail/homedecorai/ui/board/MyBoardScreen.kt`
+
+**Lines 83-89** — Remove status bar inset and compensating spacer from root Column:
+
+```kotlin
+// Before
+Column(
+    Modifier
+        .fillMaxSize()
+        .background(StudioCanvas)
+        .windowInsetsPadding(WindowInsets.statusBars),
+) {
+    Spacer(Modifier.height(48.dp))
+
+// After
+Column(
+    Modifier
+        .fillMaxSize()
+        .background(StudioCanvas),
+) {
+```
+
+**Lines 418-424** — Add bottom padding to `FavoritesBoardSection`'s `LazyVerticalGrid`:
+
+```kotlin
+// Before
+LazyVerticalGrid(
+    columns = GridCells.Fixed(2),
+    contentPadding = PaddingValues(horizontal = 20.dp),
+    horizontalArrangement = Arrangement.spacedBy(10.dp),
+    verticalArrangement = Arrangement.spacedBy(10.dp),
+    modifier = Modifier.heightIn(max = 600.dp),
+
+// After
+LazyVerticalGrid(
+    columns = GridCells.Fixed(2),
+    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 16.dp),
+    horizontalArrangement = Arrangement.spacedBy(10.dp),
+    verticalArrangement = Arrangement.spacedBy(10.dp),
+    modifier = Modifier.heightIn(max = 600.dp),
+```
+
+## What This Does NOT Change
+
+- **`WizardSteps.kt` / `StepScaffold`**: The Create tab hides the bottom nav bar (`if (selectedTab != MainTab.Create)`), so `StepScaffold`'s own `windowInsetsPadding(WindowInsets.navigationBars)` on its bottom bar (line 427) continues to work correctly. No changes needed.
+- **Modal sheets** (`PaywallSheet`, `DiamondStoreSheet`, `AuthSheet`, `SettingsSheet`, `DesignViewerSheet`): These handle their own insets independently. Not affected by this change.
+- **`ProfileScreen.kt`**: Unused file (not in navigation). Not changed.
+
+## Verification
+
+1. Build the project: `./gradlew assembleDebug`
+2. Test on emulator — scroll Tools to bottom, verify last card is fully visible and tappable
+3. Test Discover — scroll to bottom, verify section titles and "See all" buttons are visible
+4. Test Profile/My Board — verify empty states and list content have safe bottom spacing
+5. Test Create tab — verify StepScaffold bottom bar still works correctly
+6. Test modal sheets (Settings, Paywall, Diamond Store) — verify no regressions

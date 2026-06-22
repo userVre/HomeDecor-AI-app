@@ -282,10 +282,10 @@ object HomeDecorCatalog {
     )
 
     val diamondPacks = listOf(
-        DiamondPack("starter", "Découverte", 10, "19,80 MAD", description = "Pour tester plusieurs idées sans engagement."),
-        DiamondPack("designer", "Designer", 30, "49,65 MAD", "POPULAIRE", "Le meilleur équilibre pour explorer une pièce complète."),
-        DiamondPack("architect", "Architecte", 100, "129,25 MAD", description = "Pensé pour les séries de concepts et variantes."),
-        DiamondPack("estate", "Studio", 300, "249,00 MAD", "MEILLEURE OFFRE", "Crédits profonds pour gros projets et portfolios."),
+        DiamondPack("starter", "Starter", 50, "$1.99", description = "Enough for multiple room explorations."),
+        DiamondPack("designer", "Creator", 150, "$4.99", "POPULAR", "The best balance for a full creative session."),
+        DiamondPack("architect", "Professional", 400, "$9.99", "BEST VALUE", "Built for concept series, variants, and portfolios."),
+        DiamondPack("estate", "Ultimate", 1000, "$19.99", description = "Deep credits for large projects and heavy usage."),
     )
 
     val gallery = tools.mapIndexed { index, tool ->

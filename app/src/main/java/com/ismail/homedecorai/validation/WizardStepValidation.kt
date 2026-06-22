@@ -72,7 +72,7 @@ private fun validatePhotoStep(state: HomeDecorUiState, toolId: String): WizardSt
     val hasPhoto = state.selectedPhotos.isNotEmpty() || state.selectedPhotoUri != null
     return WizardStepValidation(
         canProceed = hasPhoto,
-        validationMessage = if (!hasPhoto) "Add a photo to continue." else null,
+        validationMessage = if (!hasPhoto) "Upload a photo from Gallery or Camera to continue." else null,
         isStepValid = hasPhoto,
         completedRequiredFields = if (hasPhoto) 1 else 0,
         totalRequiredFields = 1,

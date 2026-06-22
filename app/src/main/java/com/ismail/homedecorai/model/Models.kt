@@ -9,7 +9,7 @@ import android.net.Uri
 import com.ismail.homedecorai.CreativeWorkspaceState
 import com.ismail.homedecorai.ViewerSummary
 
-enum class MainTab { Home, Create, Discover, Profile }
+enum class MainTab { Tools, Discover, Upgrade, MyBoard, Profile, Create }
 enum class WizardStage { Photo, Space, Style, Refine, Processing, Result }
 enum class ElitePassSyncState { Loading, Synced, Syncing, LocalOnly, Error }
 
@@ -150,7 +150,7 @@ sealed class PendingPurchaseSync {
 
 data class HomeDecorUiState(
     val isAppReady: Boolean = false,
-    val selectedTab: MainTab = MainTab.Home,
+    val selectedTab: MainTab = MainTab.Tools,
     val selectedTool: DecorTool = DecorTool("", "", "", 0, ""),
     val wizardStage: WizardStage = WizardStage.Photo,
     val selectedPhotoUri: Uri? = null,

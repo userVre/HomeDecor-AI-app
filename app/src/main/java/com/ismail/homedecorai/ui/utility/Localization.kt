@@ -57,8 +57,10 @@ data class StepCopy(
 
 @StringRes
 fun tabLabelRes(tab: MainTab): Int = when (tab) {
-    MainTab.Home -> R.string.nav_home
+    MainTab.Tools -> R.string.nav_tools
     MainTab.Discover -> R.string.nav_discover
+    MainTab.Upgrade -> R.string.nav_upgrade_pro
+    MainTab.MyBoard -> R.string.nav_my_board
     MainTab.Profile -> R.string.nav_profile
     MainTab.Create -> R.string.workflow_interior
 }
@@ -462,7 +464,7 @@ fun diamondPackTitleRes(pack: DiamondPack): Int = when (pack.id) {
 @StringRes
 fun diamondPackBadgeRes(pack: DiamondPack): Int? = when (pack.id) {
     "designer" -> R.string.pack_badge_popular
-    "estate" -> R.string.pack_badge_best_offer
+    "architect" -> R.string.pack_badge_best_value
     else -> null
 }
 
@@ -476,17 +478,17 @@ fun diamondPackDescriptionRes(pack: DiamondPack): Int = when (pack.id) {
 }
 
 private val DiamondRevenueCatProductIds = mapOf(
-    "starter" to setOf("starter", "diamond_starter", "diamonds_starter", "diamond_pack_starter", "starter_diamonds", "diamonds_10", "diamond_10", "10_diamonds"),
-    "designer" to setOf("designer", "diamond_designer", "diamonds_designer", "diamond_pack_designer", "designer_diamonds", "diamonds_30", "diamond_30", "30_diamonds"),
-    "architect" to setOf("architect", "diamond_architect", "diamonds_architect", "diamond_pack_architect", "architect_diamonds", "diamonds_100", "diamond_100", "100_diamonds"),
-    "estate" to setOf("estate", "studio", "diamond_estate", "diamonds_estate", "diamond_pack_estate", "estate_diamonds", "diamond_studio", "diamonds_studio", "studio_diamonds", "diamonds_300", "diamond_300", "300_diamonds"),
+    "starter" to setOf("starter", "diamond_starter", "diamonds_starter", "diamond_pack_starter", "starter_diamonds", "diamonds_50", "diamond_50", "50_diamonds", "diamonds_10", "diamond_10", "10_diamonds"),
+    "designer" to setOf("designer", "diamond_designer", "diamonds_designer", "diamond_pack_designer", "designer_diamonds", "creator", "diamond_creator", "diamonds_creator", "diamond_pack_creator", "creator_diamonds", "diamonds_150", "diamond_150", "150_diamonds", "diamonds_30", "diamond_30", "30_diamonds"),
+    "architect" to setOf("architect", "diamond_architect", "diamonds_architect", "diamond_pack_architect", "architect_diamonds", "professional", "diamond_professional", "diamonds_professional", "diamond_pack_professional", "professional_diamonds", "diamonds_400", "diamond_400", "400_diamonds", "diamonds_100", "diamond_100", "100_diamonds"),
+    "estate" to setOf("estate", "studio", "diamond_estate", "diamonds_estate", "diamond_pack_estate", "estate_diamonds", "diamond_studio", "diamonds_studio", "studio_diamonds", "ultimate", "diamond_ultimate", "diamonds_ultimate", "diamond_pack_ultimate", "ultimate_diamonds", "diamonds_1000", "diamond_1000", "1000_diamonds", "diamonds_300", "diamond_300", "300_diamonds"),
 )
 
 private val DiamondRevenueCatPackageIds = mapOf(
     "starter" to setOf("starter", "diamond_starter", "diamonds_starter"),
-    "designer" to setOf("designer", "diamond_designer", "diamonds_designer"),
-    "architect" to setOf("architect", "diamond_architect", "diamonds_architect"),
-    "estate" to setOf("estate", "studio", "diamond_estate", "diamonds_estate", "diamond_studio", "diamonds_studio"),
+    "designer" to setOf("designer", "diamond_designer", "diamonds_designer", "creator", "diamond_creator", "diamonds_creator"),
+    "architect" to setOf("architect", "diamond_architect", "diamonds_architect", "professional", "diamond_professional", "diamonds_professional"),
+    "estate" to setOf("estate", "studio", "diamond_estate", "diamonds_estate", "diamond_studio", "diamonds_studio", "ultimate", "diamond_ultimate", "diamonds_ultimate"),
 )
 
 fun Package.matchesDiamondPack(pack: DiamondPack): Boolean {
