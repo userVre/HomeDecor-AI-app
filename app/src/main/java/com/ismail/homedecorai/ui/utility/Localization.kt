@@ -143,7 +143,7 @@ fun optionLabelRes(label: String): Int? = when (label) {
     "Jardin avant" -> R.string.option_outdoor_front_garden
     "Noël" -> R.string.option_garden_christmas
     "Zen" -> R.string.option_garden_zen
-    "Anglais" -> R.string.option_garden_english
+    "Jardin anglais" -> R.string.option_garden_english
     "Paysage" -> R.string.option_garden_landscape
     "Moderne" -> R.string.option_style_modern
     "Luxe" -> R.string.option_style_luxury
@@ -1091,7 +1091,7 @@ fun choiceImageRes(label: String): Int {
         "Luxe" -> R.drawable.assets_media_styles_styleluxury
         "Japandi" -> R.drawable.assets_media_styles_stylejapandi
         "Zen" -> R.drawable.assets_media_styles_styleminimalist
-        "Anglais" -> R.drawable.assets_media_styles_stylefrenchcountry
+        "Jardin anglais" -> R.drawable.assets_media_styles_stylefrenchcountry
         "Paysage" -> R.drawable.assets_media_discover_generated_garden_garden5
         "Cyberpunk" -> R.drawable.assets_media_styles_stylecyberpunk
         "Tropicale" -> R.drawable.assets_media_styles_styletropical

@@ -108,7 +108,7 @@ object HomeDecorCatalog {
         "Japandi",
         "Rustique",
         "Zen",
-        "Anglais",
+        "Jardin anglais",
         "Paysage",
         "Bohème",
         "Scandinave",

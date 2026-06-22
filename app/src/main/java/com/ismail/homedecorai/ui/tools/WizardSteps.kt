@@ -918,6 +918,7 @@ fun ChoiceStep(
             LazyVerticalGrid(
                 columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3),
                 modifier = Modifier.fillMaxWidth().height(((if (visualBuildingCards) (copy.options.size + 1) / 2 else gridRows) * if (visualBuildingCards) 160 else 152).dp),
+                contentPadding = PaddingValues(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 userScrollEnabled = false,
