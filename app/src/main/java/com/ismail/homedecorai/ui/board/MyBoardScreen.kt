@@ -434,7 +434,7 @@ private fun FavoritesBoardSection(
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = HomeDecorSpacing.BottomContentPadding),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = navBarBottomPadding()),
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {

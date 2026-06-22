@@ -140,7 +140,7 @@ fun DiscoverScreen(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Xs,
-                bottom = HomeDecorSpacing.BottomContentPadding,
+                bottom = navBarBottomPadding(),
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
@@ -392,7 +392,7 @@ fun DiscoverDetailScreen(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Base,
-                bottom = HomeDecorSpacing.BottomContentPadding,
+                bottom = navBarBottomPadding(),
             ),
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),

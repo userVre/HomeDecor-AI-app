@@ -11,13 +11,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -93,7 +96,8 @@ fun DesignViewerSheet(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars),
         ) {
             Spacer(Modifier.height(48.dp))
 
@@ -378,7 +382,7 @@ fun DesignViewerSheet(
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (feedbackState == "liked") StudioPrimaryContainer else Color.Transparent,
                         ),
-                        modifier = Modifier.height(44.dp),
+                        modifier = Modifier.height(48.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         Icon(
@@ -399,7 +403,7 @@ fun DesignViewerSheet(
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (feedbackState == "disliked") StudioErrorContainer else Color.Transparent,
                         ),
-                        modifier = Modifier.height(44.dp),
+                        modifier = Modifier.height(48.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         Icon(

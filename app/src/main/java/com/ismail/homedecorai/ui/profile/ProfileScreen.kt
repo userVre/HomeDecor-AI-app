@@ -101,7 +101,7 @@ fun ProfileScreen(
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, top = HomeDecorSpacing.Sm, bottom = HomeDecorSpacing.BottomContentPadding),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, top = HomeDecorSpacing.Sm, bottom = navBarBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
         ) {
             item("profile-title") {

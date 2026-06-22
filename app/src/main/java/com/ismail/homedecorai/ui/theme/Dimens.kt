@@ -32,10 +32,10 @@ object HomeDecorSpacing {
     val IconGap = 8.dp
     val ButtonHeight = 56.dp
     val TouchTarget = 48.dp
-    val CtaBarHeight = 88.dp
-    val NavBarReservation = 96.dp
-    val BottomContentPadding = 96.dp
-    val WizardBottomContentPadding = 120.dp
+    val CtaBarHeight = 80.dp
+    val NavBarReservation = 80.dp
+    val BottomContentPadding = 80.dp
+    val WizardBottomContentPadding = 104.dp
 }
 
 @Composable

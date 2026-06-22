@@ -71,7 +71,7 @@ fun ToolsScreen(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Base,
-                bottom = HomeDecorSpacing.BottomContentPadding,
+                bottom = navBarBottomPadding(),
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
         ) {
