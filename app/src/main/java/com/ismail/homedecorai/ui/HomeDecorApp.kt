@@ -165,7 +165,6 @@ private fun AppScaffold(
     }
     BackHandler(enabled = state.paywallVisible) {
         viewModel.closePaywall()
-        viewModel.selectTab(MainTab.Tools)
     }
     BackHandler(enabled = state.authVisible) {
         viewModel.closeAuth()
@@ -228,7 +227,6 @@ private fun AppScaffold(
                         state = state,
                         onClose = {
                             viewModel.closePaywall()
-                            viewModel.selectTab(MainTab.Tools)
                         },
                         onSubscription = viewModel::syncSubscriptionFromRevenueCat,
                         onRetrySync = viewModel::retryPurchaseSync,
