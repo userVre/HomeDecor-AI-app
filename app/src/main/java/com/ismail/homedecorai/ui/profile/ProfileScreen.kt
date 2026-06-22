@@ -29,7 +29,11 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Policy
+import androidx.compose.material.icons.rounded.RateReview
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
@@ -45,6 +49,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,22 +68,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ismail.homedecorai.AppLocale
 import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.model.MainTab
 import com.ismail.homedecorai.R
-import com.ismail.homedecorai.ui.auth.AuthSheet
+import com.ismail.homedecorai.ui.dialogs.FeedbackDialog
+import com.ismail.homedecorai.ui.dialogs.LanguagePickerDialog
 import com.ismail.homedecorai.ui.theme.*
+import com.ismail.homedecorai.ui.utility.appUrl
 import com.ismail.homedecorai.ui.utility.openAuth
+import com.ismail.homedecorai.ui.utility.openUrlSafely
+import com.revenuecat.purchases.Purchases
 
 @Composable
 fun ProfileScreen(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
+    currentLanguageTag: String,
+    onLanguageSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val signedIn = !state.viewer.isGuest || state.signedInName != null
     val openRealAuth = { openAuth(context) }
+    var languagePickerVisible by remember { mutableStateOf(false) }
+    var feedbackDialogVisible by remember { mutableStateOf(false) }
 
     Column(
         Modifier
@@ -84,8 +101,8 @@ fun ProfileScreen(
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, top = HomeDecorSpacing.Sm, bottom = HomeDecorSpacing.BottomContentPadding),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
         ) {
             item("profile-title") {
                 Text(
@@ -105,11 +122,6 @@ fun ProfileScreen(
                 item("profile-hero") {
                     SignedInProfileHero(
                         state = state,
-                    )
-                }
-                item("upgrade-banner") {
-                    UpgradeBanner(
-                        onUpgrade = viewModel::openPaywall,
                     )
                 }
                 item("account-section") {
@@ -148,78 +160,60 @@ fun ProfileScreen(
             item("settings-section") {
                 ProfileSectionLabel(stringResource(R.string.settings_section))
                 SettingsCard {
-                    if (!signedIn) {
-                        ProfileRow(
-                            icon = Icons.Rounded.Settings,
-                            iconBg = StudioProContainer,
-                            iconTint = StudioGold,
-                            title = stringResource(R.string.preferences),
-                            subtitle = stringResource(R.string.preferences_body),
-                            onClick = viewModel::openSettings,
-                        )
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.Rounded.Notifications,
-                            iconBg = StudioPrimaryContainer,
-                            iconTint = StudioBlue,
-                            title = stringResource(R.string.notifications),
-                            subtitle = stringResource(R.string.notifications_body),
-                            onClick = viewModel::openSettings,
-                        )
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.AutoMirrored.Rounded.Help,
-                            iconBg = StudioPrimaryContainer,
-                            iconTint = StudioBlue,
-                            title = stringResource(R.string.help_faq),
-                            subtitle = stringResource(R.string.help_faq_body),
-                            onClick = viewModel::openSettings,
-                        )
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.Rounded.Email,
-                            iconBg = StudioSuccessContainer,
-                            iconTint = StudioGreen,
-                            title = stringResource(R.string.contact_support),
-                            subtitle = stringResource(R.string.contact_support_body),
-                            onClick = viewModel::openSettings,
-                        )
-                    } else {
-                        ProfileRow(
-                            icon = Icons.Rounded.Notifications,
-                            iconBg = StudioPrimaryContainer,
-                            iconTint = StudioBlue,
-                            title = stringResource(R.string.notifications),
-                            subtitle = stringResource(R.string.notifications_body),
-                            onClick = viewModel::openSettings,
-                        )
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.Rounded.Settings,
-                            iconBg = StudioProContainer,
-                            iconTint = StudioGold,
-                            title = stringResource(R.string.preferences),
-                            subtitle = stringResource(R.string.preferences_body),
-                            onClick = viewModel::openSettings,
-                        )
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.AutoMirrored.Rounded.Help,
-                            iconBg = StudioPrimaryContainer,
-                            iconTint = StudioBlue,
-                            title = stringResource(R.string.help_faq),
-                            subtitle = stringResource(R.string.help_faq_body),
-                            onClick = viewModel::openSettings,
-                        )
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.Rounded.Email,
-                            iconBg = StudioSuccessContainer,
-                            iconTint = StudioGreen,
-                            title = stringResource(R.string.contact_support),
-                            subtitle = stringResource(R.string.contact_support_body),
-                            onClick = viewModel::openSettings,
-                        )
+                    ProfileRow(
+                        icon = Icons.Rounded.Language,
+                        iconBg = StudioPrimaryContainer,
+                        iconTint = StudioBlue,
+                        title = stringResource(R.string.language),
+                        subtitle = AppLocale.labelFor(context, currentLanguageTag),
+                        onClick = { languagePickerVisible = true },
+                    )
+                    ProfileDivider()
+                    ProfileRow(
+                        icon = Icons.Rounded.Refresh,
+                        iconBg = StudioSuccessContainer,
+                        iconTint = StudioGreen,
+                        title = stringResource(R.string.restore_purchases),
+                        subtitle = stringResource(R.string.restore_purchases_subtitle),
+                        onClick = { viewModel.openPaywall() },
+                    )
+                    ProfileDivider()
+                    ProfileRow(
+                        icon = Icons.Rounded.Policy,
+                        iconBg = StudioPrimaryContainer,
+                        iconTint = StudioBlue,
+                        title = stringResource(R.string.terms),
+                        subtitle = stringResource(R.string.terms_subtitle),
+                        onClick = { openUrlSafely(context, appUrl("/terms")) },
+                    )
+                    ProfileDivider()
+                    ProfileRow(
+                        icon = Icons.Rounded.Policy,
+                        iconBg = StudioPrimaryContainer,
+                        iconTint = StudioBlue,
+                        title = stringResource(R.string.privacy_policy),
+                        subtitle = stringResource(R.string.privacy_subtitle),
+                        onClick = { openUrlSafely(context, appUrl("/privacy")) },
+                    )
+                    ProfileDivider()
+                    ProfileRow(
+                        icon = Icons.Rounded.RateReview,
+                        iconBg = StudioSuccessContainer,
+                        iconTint = StudioGreen,
+                        title = stringResource(R.string.feedback),
+                        subtitle = stringResource(R.string.feedback_subtitle),
+                        onClick = { feedbackDialogVisible = true },
+                    )
+                    ProfileDivider()
+                    ProfileRow(
+                        icon = Icons.AutoMirrored.Rounded.Help,
+                        iconBg = StudioPrimaryContainer,
+                        iconTint = StudioBlue,
+                        title = stringResource(R.string.help_faq),
+                        subtitle = stringResource(R.string.help_faq_body),
+                        onClick = { openUrlSafely(context, appUrl("/faq")) },
+                    )
+                    if (signedIn) {
                         ProfileDivider()
                         ProfileRow(
                             icon = Icons.AutoMirrored.Rounded.Logout,
@@ -233,6 +227,28 @@ fun ProfileScreen(
                 }
             }
         }
+    }
+
+    if (languagePickerVisible) {
+        LanguagePickerDialog(
+            currentLanguageTag = currentLanguageTag,
+            onLanguageSelected = {
+                onLanguageSelected(it)
+                languagePickerVisible = false
+            },
+            onDismiss = { languagePickerVisible = false },
+        )
+    }
+
+    if (feedbackDialogVisible) {
+        FeedbackDialog(
+            busy = false,
+            onSubmit = { message ->
+                viewModel.submitSettingsFeedback(message)
+                feedbackDialogVisible = false
+            },
+            onDismiss = { feedbackDialogVisible = false },
+        )
     }
 }
 

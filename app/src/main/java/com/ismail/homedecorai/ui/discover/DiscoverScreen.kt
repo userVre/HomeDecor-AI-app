@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -135,8 +136,13 @@ fun DiscoverScreen(
     Column(Modifier.fillMaxSize().background(StudioCanvas)) {
         ScreenHeaderPills(title = stringResource(R.string.discover_styles_title), trailing = null)
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(
+                start = HomeDecorSpacing.ScreenHorizontal,
+                end = HomeDecorSpacing.ScreenHorizontal,
+                top = HomeDecorSpacing.Xs,
+                bottom = HomeDecorSpacing.BottomContentPadding,
+            ),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
             item { DiscoverClusterTabs(clusters = clusters, selected = selectedCluster, onSelect = { selectedCluster = it }) }
             items(sections, key = { it.id }) { section ->
@@ -175,8 +181,7 @@ fun ScreenHeaderPills(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Sm)
             .height(48.dp)
             .semantics {
                 contentDescription = title
@@ -248,7 +253,7 @@ fun DiscoverClusterTabs(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp, vertical = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
     ) {
         clusters.forEach { cluster ->
             val clusterLabel = localizedDiscoverCluster(cluster)
@@ -321,9 +326,11 @@ fun DiscoverSectionRow(
             TextButton(
                 onClick = onSeeAll,
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                modifier = Modifier.semantics {
-                    contentDescription = seeAllDescription
-                },
+                modifier = Modifier
+                    .minimumTouchTarget()
+                    .semantics {
+                        contentDescription = seeAllDescription
+                    },
             ) {
                 Text(
                     stringResource(R.string.see_all),
@@ -358,11 +365,11 @@ fun DiscoverDetailScreen(
     onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
-    Column(Modifier.fillMaxSize().background(StudioCanvas)) {
+        Column(Modifier.fillMaxSize().background(StudioCanvas)) {
         Row(
             modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
@@ -381,9 +388,14 @@ fun DiscoverDetailScreen(
         }
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(
+                start = HomeDecorSpacing.ScreenHorizontal,
+                end = HomeDecorSpacing.ScreenHorizontal,
+                top = HomeDecorSpacing.Base,
+                bottom = HomeDecorSpacing.BottomContentPadding,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             items(section.items, key = { it.id }) { item ->
                 GalleryCard(

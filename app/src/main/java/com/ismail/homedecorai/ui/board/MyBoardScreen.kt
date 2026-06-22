@@ -10,16 +10,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -28,6 +30,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.ButtonDefaults
@@ -81,10 +84,8 @@ fun MyBoardScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .background(StudioCanvas)
-            .windowInsetsPadding(WindowInsets.statusBars),
+            .background(StudioCanvas),
     ) {
-        Spacer(Modifier.height(48.dp))
 
         if (!signedIn) {
             SignInCard(
@@ -92,7 +93,13 @@ fun MyBoardScreen(
             )
         }
 
-        Spacer(Modifier.height(if (signedIn) 24.dp else 16.dp))
+        if (!state.isPro) {
+            ProUpgradeCard(
+                onUpgrade = { viewModel.openPaywall() },
+            )
+        }
+
+        Spacer(Modifier.height(if (signedIn) HomeDecorSpacing.Xl else HomeDecorSpacing.Base))
 
         PrimaryTabRow(
             selectedTabIndex = selectedTab.ordinal,
@@ -137,7 +144,7 @@ fun MyBoardScreen(
             )
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(HomeDecorSpacing.Xl))
 
         when (selectedTab) {
             BoardTab.Generated -> GeneratedSection(
@@ -159,7 +166,7 @@ private fun SignInCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = HomeDecorSpacing.Lg),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = StudioPaper,
@@ -208,6 +215,83 @@ private fun SignInCard(
 }
 
 @Composable
+private fun ProUpgradeCard(
+    onUpgrade: () -> Unit,
+) {
+    val upgradeDescription = stringResource(R.string.nav_upgrade_pro)
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = Color.Transparent,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = HomeDecorSpacing.Lg),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            ProGradientStart,
+                            ProGradientEnd,
+                        ),
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                )
+                .minimumTouchTarget()
+                .semantics {
+                    contentDescription = upgradeDescription
+                    role = Role.Button
+                }
+                .clickable(onClick = onUpgrade),
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White.copy(alpha = 0.2f),
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.nav_upgrade_pro),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                        ),
+                        color = Color.White,
+                    )
+                    Text(
+                        stringResource(R.string.go_premium_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.8f),
+                    )
+                }
+                Icon(
+                    Icons.Rounded.Star,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun GeneratedSection(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
@@ -222,7 +306,7 @@ private fun GeneratedSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -236,17 +320,23 @@ private fun GeneratedSection(
                 color = StudioBrownBtn,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { },
+                modifier = Modifier
+                    .minimumTouchTarget()
+                    .semantics {
+                        contentDescription = "See all"
+                        role = Role.Button
+                    }
+                    .clickable { },
             )
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(HomeDecorSpacing.Sm + HomeDecorSpacing.Xs))
 
         if (generatedItems.isEmpty()) {
             EmptyBoardState()
         } else {
             LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Lg),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 items(generatedItems, key = { it.id }) { result ->
                     val boardItem = result.toBoardItem()
@@ -317,7 +407,7 @@ private fun FavoritesBoardSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -331,17 +421,22 @@ private fun FavoritesBoardSection(
                 color = StudioBrownBtn,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { },
+                modifier = Modifier
+                    .minimumTouchTarget()
+                    .semantics {
+                        contentDescription = "See all"
+                        role = Role.Button
+                    }
+                    .clickable { },
             )
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(HomeDecorSpacing.Sm + HomeDecorSpacing.Xs))
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.heightIn(max = 600.dp),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = HomeDecorSpacing.BottomContentPadding),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             items(favorites, key = { it.id }) { favorite ->
                 val boardItem = favorite.toBoardItem()
@@ -435,11 +530,18 @@ private fun FavoriteBoardCard(
 
 @Composable
 private fun AddFavoriteCard() {
+    val addFavoriteDescription = stringResource(R.string.add_favorite)
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = Color.Transparent,
         border = BorderStroke(1.5f.dp, StudioLine),
-        modifier = Modifier.clickable { },
+        modifier = Modifier
+            .minimumTouchTarget()
+            .semantics {
+                contentDescription = addFavoriteDescription
+                role = Role.Button
+            }
+            .clickable { },
     ) {
         Column(
             Modifier

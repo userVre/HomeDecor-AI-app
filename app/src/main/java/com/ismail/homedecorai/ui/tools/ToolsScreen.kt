@@ -2,21 +2,19 @@ package com.ismail.homedecorai.ui.tools
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,7 +42,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ismail.homedecorai.model.DecorTool
 import com.ismail.homedecorai.HomeDecorCatalog
 import com.ismail.homedecorai.model.HomeDecorUiState
@@ -52,6 +49,11 @@ import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.*
+
+private val requestedToolIds = setOf(
+    "interior", "facade", "garden", "paint", "floor", "layout",
+    "replace", "reference"
+)
 
 @Composable
 fun ToolsScreen(
@@ -64,10 +66,19 @@ fun ToolsScreen(
             onCredits = viewModel::openDiamondStore,
         )
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(
+                start = HomeDecorSpacing.ScreenHorizontal,
+                end = HomeDecorSpacing.ScreenHorizontal,
+                top = HomeDecorSpacing.Base,
+                bottom = HomeDecorSpacing.BottomContentPadding,
+            ),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
         ) {
-            items(HomeDecorCatalog.tools, key = { it.id }) { tool ->
+            items(
+                HomeDecorCatalog.tools.filter { it.id in requestedToolIds },
+                key = { it.id },
+            ) { tool ->
                 ToolCard(tool = tool, onClick = { viewModel.startTool(tool) })
             }
         }
@@ -83,8 +94,7 @@ fun ToolsHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -92,18 +102,23 @@ fun ToolsHeader(
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.weight(1f),
             )
-            val creditsDescription = stringResource(R.string.a11y_diamond_credits)
+            val creditsDescription = stringResource(R.string.a11y_open_diamond_store)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.semantics {
-                    contentDescription = creditsDescription
-                },
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+                modifier = Modifier
+                    .height(48.dp)
+                    .clickable(onClick = onCredits)
+                    .padding(horizontal = 8.dp)
+                    .semantics {
+                        contentDescription = creditsDescription
+                        role = Role.Button
+                    },
             ) {
                 Icon(
                     Icons.Rounded.Diamond,
-                    contentDescription = stringResource(R.string.a11y_diamond_credits),
-                    modifier = Modifier.size(14.dp),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
                     tint = StudioBlue,
                 )
                 Text(
@@ -122,96 +137,100 @@ fun ToolCard(
 ) {
     val title = localizedToolTitle(tool)
     val description = localizedToolDescription(tool)
-    val cardShape = RoundedCornerShape(14.dp)
+    val cardShape = RoundedCornerShape(16.dp)
     val toolCardDescription = stringResource(R.string.a11y_tool_card_format, title, description)
 
     Surface(
         onClick = onClick,
         shape = cardShape,
-        color = StudioPaper,
+        color = Color.Transparent,
         modifier = Modifier
-            .minimumTouchTarget()
+            .fillMaxWidth()
+            .height(260.dp)
             .clip(cardShape)
             .semantics {
                 contentDescription = toolCardDescription
                 role = Role.Button
             },
     ) {
-        Box(Modifier.fillMaxWidth().height(120.dp)) {
+        Box {
             Image(
                 painter = painterResource(tool.imageRes),
-                contentDescription = title,
+                contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
+
             Box(
                 Modifier
-                    .matchParentSize()
+                    .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            0f to Color.Black.copy(alpha = 0.0f),
-                            0.4f to Color.Black.copy(alpha = 0.15f),
-                            0.7f to Color.Black.copy(alpha = 0.50f),
-                            1f to Color.Black.copy(alpha = 0.75f),
+                            0.0f to Color.Transparent,
+                            0.50f to Color.Transparent,
+                            0.70f to Color.Black.copy(alpha = 0.25f),
+                            0.85f to Color.Black.copy(alpha = 0.50f),
+                            1.0f to Color.Black.copy(alpha = 0.70f),
                         ),
                     ),
             )
+
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .padding(horizontal = 18.dp, vertical = 16.dp),
             ) {
                 Text(
                     title,
                     color = Color.White,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(4.dp))
                 Text(
                     description,
-                    color = Color.White.copy(alpha = 0.75f),
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 1,
+                    color = Color.White.copy(alpha = 0.80f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(12.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.height(48.dp),
                 ) {
                     Surface(
-                        onClick = onClick,
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color.White.copy(alpha = 0.15f),
-                        modifier = Modifier.height(28.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color.White.copy(alpha = 0.18f),
                     ) {
                         Row(
-                            Modifier.padding(horizontal = 10.dp),
+                            Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 Icons.Rounded.AutoAwesome,
-                                null,
-                                Modifier.size(12.dp),
+                                contentDescription = null,
+                                Modifier.size(14.dp),
                                 tint = Color.White,
                             )
-                            Spacer(Modifier.width(5.dp))
+                            Spacer(Modifier.width(6.dp))
                             Text(
                                 stringResource(R.string.try_this),
                                 color = Color.White,
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
                     Icon(
                         Icons.Rounded.ChevronRight,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White.copy(alpha = 0.55f),
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.White.copy(alpha = 0.60f),
                     )
                 }
             }

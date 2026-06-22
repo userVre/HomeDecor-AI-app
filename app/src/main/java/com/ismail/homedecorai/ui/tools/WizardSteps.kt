@@ -232,7 +232,7 @@ fun CreateScreen(
 ) {
     BackHandler(enabled = true) {
         if (state.wizardStage == WizardStage.Photo) {
-            viewModel.selectTab(MainTab.Home)
+            viewModel.selectTab(MainTab.Tools)
         } else {
             viewModel.previousStage()
         }
@@ -241,7 +241,7 @@ fun CreateScreen(
         DesignStepHeader(
             state = state,
             onBack = viewModel::previousStage,
-            onClose = { viewModel.selectTab(MainTab.Home) },
+            onClose = { viewModel.selectTab(MainTab.Tools) },
             onCredits = viewModel::openDiamondStore,
         )
         AnimatedContent(targetState = state.wizardStage, label = "wizard", modifier = Modifier.weight(1f)) { stage ->
@@ -408,7 +408,7 @@ fun StepScaffold(
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = contentBottomPadding + 88.dp),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.Xl, end = HomeDecorSpacing.Xl, top = HomeDecorSpacing.Sm, bottom = contentBottomPadding + HomeDecorSpacing.CtaBarHeight),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             item {
@@ -424,11 +424,7 @@ fun StepScaffold(
             }
             item { content() }
         }
-        val bottomBarModifier = if (protectBottomInsets) {
-            Modifier.windowInsetsPadding(WindowInsets.navigationBars)
-        } else {
-            Modifier
-        }
+        val bottomBarModifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
         Surface(
             color = StudioPaper,
             tonalElevation = 1.dp,
@@ -996,17 +992,11 @@ fun PhotoStep(
                     },
                 )
             } else {
-                Card(shape = RoundedCornerShape(24.dp)) {
-                    Box(Modifier.fillMaxWidth().aspectRatio(1.18f)) {
-                        val firstPhoto = state.selectedPhotos.first()
-                        UriOrResourceImage(
-                            uri = firstPhoto.uri,
-                            imageRes = selectedPhotoImageRes(state, firstPhoto),
-                            contentDescription = stringResource(R.string.photo_added),
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                }
+                PhotoPreviewCard(
+                    state = state,
+                    onReplace = { showUploadSheet = true },
+                    onRemove = { viewModel.removePhoto(0) },
+                )
                 SelectedPhotoStrip(
                     state = state,
                     onAdd = { showUploadSheet = true },
@@ -1096,17 +1086,112 @@ fun PhotoStep(
 }
 
 @Composable
+private fun PhotoPreviewCard(
+    state: HomeDecorUiState,
+    onReplace: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    val replaceDescription = stringResource(R.string.a11y_replace_image)
+    val removeDescription = stringResource(R.string.a11y_remove_selected_image)
+    val previewDescription = stringResource(R.string.a11y_selected_image_preview)
+    Surface(
+        shape = HomeDecorShape.ExtraLarge,
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = previewDescription }
+            .border(1.dp, StudioBlue.copy(alpha = 0.28f), HomeDecorShape.ExtraLarge),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1.18f)
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+            ) {
+                val firstPhoto = state.selectedPhotos.first()
+                UriOrResourceImage(
+                    uri = firstPhoto.uri,
+                    imageRes = selectedPhotoImageRes(state, firstPhoto),
+                    contentDescription = stringResource(R.string.photo_added),
+                    modifier = Modifier.fillMaxSize(),
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = StudioBlue,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .size(40.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onReplace,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .semantics { contentDescription = replaceDescription },
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) {
+                    Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.upload_photo_replace), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
+                }
+                OutlinedButton(
+                    onClick = onRemove,
+                    shape = CircleShape,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = StudioRose,
+                    ),
+                    modifier = Modifier
+                        .height(48.dp)
+                        .semantics { contentDescription = removeDescription },
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) {
+                    Icon(Icons.Rounded.Delete, contentDescription = null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.upload_photo_remove), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun MoziUploadCard(
     onGallery: () -> Unit,
     onCamera: () -> Unit,
     onExample: () -> Unit,
 ) {
+    val uploadAreaDescription = stringResource(R.string.a11y_upload_photo_area)
+    val galleryDescription = stringResource(R.string.a11y_open_gallery)
+    val cameraDescription = stringResource(R.string.a11y_take_photo)
+    val exampleDescription = stringResource(R.string.a11y_try_example)
     Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
+        shape = HomeDecorShape.ExtraLarge,
+        color = StudioPaper,
+        tonalElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.5.dp, StudioLine.copy(alpha = 0.7f), RoundedCornerShape(24.dp)),
+            .semantics { contentDescription = uploadAreaDescription }
+            .border(1.dp, StudioLine, HomeDecorShape.ExtraLarge),
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -1116,9 +1201,9 @@ private fun MoziUploadCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(StudioMist.copy(alpha = 0.5f)),
+                    .aspectRatio(1.4f)
+                    .clip(HomeDecorShape.Large)
+                    .background(StudioMist.copy(alpha = 0.4f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(
@@ -1128,34 +1213,37 @@ private fun MoziUploadCard(
                     Surface(
                         shape = CircleShape,
                         color = StudioPrimaryContainer,
-                        modifier = Modifier.size(64.dp),
+                        modifier = Modifier.size(56.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Rounded.PhotoCamera,
                                 contentDescription = null,
                                 tint = StudioBlue,
-                                modifier = Modifier.size(30.dp),
+                                modifier = Modifier.size(26.dp),
                             )
                         }
                     }
                     Text(
                         stringResource(R.string.upload_photo_hint),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                     onClick = onGallery,
                     shape = CircleShape,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .semantics { contentDescription = galleryDescription },
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                 ) {
                     Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         stringResource(R.string.gallery),
                         maxLines = 1,
@@ -1165,11 +1253,14 @@ private fun MoziUploadCard(
                 OutlinedButton(
                     onClick = onCamera,
                     shape = CircleShape,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .semantics { contentDescription = cameraDescription },
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                 ) {
                     Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         stringResource(R.string.camera),
                         maxLines = 1,
@@ -1180,7 +1271,10 @@ private fun MoziUploadCard(
             OutlinedButton(
                 onClick = onExample,
                 shape = CircleShape,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .semantics { contentDescription = exampleDescription },
             ) {
                 Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -2276,7 +2370,7 @@ fun LayoutPlanningStep(
             .fillMaxSize()
             .imePadding()
             .windowInsetsPadding(WindowInsets.navigationBars),
-        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 120.dp),
+        contentPadding = PaddingValues(start = HomeDecorSpacing.Xl, end = HomeDecorSpacing.Xl, top = HomeDecorSpacing.Sm, bottom = HomeDecorSpacing.WizardBottomContentPadding),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         if (!state.generationError.isNullOrBlank()) {
@@ -2578,7 +2672,7 @@ fun CompactFilterChip(
         } else {
             null
         },
-        modifier = modifier.heightIn(min = 44.dp),
+        modifier = modifier.heightIn(min = 48.dp),
     )
 }
 
@@ -3076,7 +3170,7 @@ fun ResultStep(
         body = if (isReplaceResult) stringResource(R.string.result_replace_body) else stringResource(R.string.result_saved_workspace),
         buttonLabel = stringResource(R.string.your_design),
         buttonIcon = Icons.Rounded.Visibility,
-        onButton = { viewModel.selectTab(MainTab.Profile) },
+        onButton = { viewModel.selectTab(MainTab.MyBoard) },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (result == null) {
