@@ -306,7 +306,7 @@ fun DesignStepHeader(
     val progress = step.toFloat() / totalSteps.toFloat()
     Surface(color = StudioPaper, tonalElevation = 2.dp) {
         Column(
-            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 0.dp),
+            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, top = HomeDecorSpacing.Sm, bottom = 0.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Box(
@@ -334,7 +334,7 @@ fun DesignStepHeader(
                                     role = Role.Button
                                 }
                                 .clickable(onClick = onCredits)
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                                .padding(horizontal = 8.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
@@ -413,7 +413,7 @@ fun StepScaffold(
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(start = HomeDecorSpacing.Xl, end = HomeDecorSpacing.Xl, top = HomeDecorSpacing.Sm, bottom = contentBottomPadding + HomeDecorSpacing.CtaBarHeight),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -428,7 +428,7 @@ fun StepScaffold(
             }
             item { content() }
         }
-        val bottomBarModifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+        val bottomBarModifier = Modifier
         Surface(
             color = StudioPaper,
             tonalElevation = 1.dp,
@@ -441,7 +441,7 @@ fun StepScaffold(
                 Modifier.fillMaxWidth().height(56.dp)
             }
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().padding(PaddingValues(start = HomeDecorSpacing.Base, top = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.Md)),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (showValidationBanner && !validationMessage.isNullOrBlank()) {
@@ -469,8 +469,8 @@ fun StepScaffold(
                         studioPrimaryButtonColors()
                     } else {
                         ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.30f),
                         )
                     },
                     modifier = buttonModifier.disabledSemantics(!canProceed),
@@ -587,19 +587,19 @@ fun ReferenceDualImagePicker(
 ) {
     val dashedBorderStroke = BorderStroke(1.5.dp, StudioLine.copy(alpha = 0.6f))
     Surface(
-        shape = RoundedCornerShape(26.dp),
+        shape = RoundedCornerShape(24.dp),
         color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
             .then(
                 if (!selected) {
-                    Modifier.border(dashedBorderStroke, RoundedCornerShape(26.dp))
+                    Modifier.border(dashedBorderStroke, RoundedCornerShape(24.dp))
                 } else {
-                    Modifier.border(1.5.dp, StudioBlue.copy(alpha = 0.36f), RoundedCornerShape(26.dp))
+                    Modifier.border(1.5.dp, StudioBlue.copy(alpha = 0.36f), RoundedCornerShape(24.dp))
                 }
             ),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Surface(shape = CircleShape, color = if (selected) StudioBlue else StudioMist) {
                     Icon(
@@ -609,7 +609,7 @@ fun ReferenceDualImagePicker(
                         tint = if (selected) Color.White else StudioBlue,
                     )
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         if (selected) selectedText else stringResource(R.string.upload_style_reference_helper),
@@ -622,7 +622,7 @@ fun ReferenceDualImagePicker(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(172.dp)
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(24.dp))
                     .background(if (selected) Color.Transparent else StudioMist),
             ) {
                 if (selected) {
@@ -634,7 +634,7 @@ fun ReferenceDualImagePicker(
                     )
                 } else {
                     Column(
-                        Modifier.fillMaxSize().padding(18.dp),
+                        Modifier.fillMaxSize().padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
@@ -644,7 +644,7 @@ fun ReferenceDualImagePicker(
                             modifier = Modifier.size(36.dp),
                             tint = StudioBlue.copy(alpha = 0.6f),
                         )
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(8.dp))
                         Text(
                             missingHint,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -655,7 +655,7 @@ fun ReferenceDualImagePicker(
                 }
             }
             if (!selected) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(
                         onClick = onGallery,
                         shape = CircleShape,
@@ -663,7 +663,7 @@ fun ReferenceDualImagePicker(
                         contentPadding = PaddingValues(horizontal = 12.dp),
                     ) {
                         Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.gallery), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     OutlinedButton(
@@ -673,7 +673,7 @@ fun ReferenceDualImagePicker(
                         contentPadding = PaddingValues(horizontal = 12.dp),
                     ) {
                         Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.camera), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -690,16 +690,16 @@ fun ReferenceDualImagePicker(
 @Composable
 fun ReferenceContinueHint(message: String) {
     Surface(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         color = StudioErrorContainer,
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, StudioRose.copy(alpha = 0.28f), RoundedCornerShape(18.dp)),
+            .border(1.dp, StudioRose.copy(alpha = 0.28f), RoundedCornerShape(16.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
             Text(message, color = StudioRose, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
@@ -711,17 +711,17 @@ fun ReferenceContinueHint(message: String) {
 fun SourcePreviewCard(state: HomeDecorUiState) {
     val firstPhoto = state.selectedPhotos.firstOrNull()
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(24.dp),
         color = StudioPaper,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
         Row(
             Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Box(Modifier.size(76.dp).clip(RoundedCornerShape(18.dp)).background(StudioMist)) {
+            Box(Modifier.size(76.dp).clip(RoundedCornerShape(16.dp)).background(StudioMist)) {
                 UriOrResourceImage(
                     uri = firstPhoto?.uri,
                     imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
@@ -745,12 +745,12 @@ fun MaskPreviewCard(
     body: String,
 ) {
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(24.dp),
         color = StudioPaper,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioBlue)
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -767,7 +767,7 @@ fun MaskPreviewBox(state: HomeDecorUiState) {
         Modifier
             .fillMaxWidth()
             .aspectRatio(1.18f)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(StudioMist),
     ) {
         val firstPhoto = state.selectedPhotos.firstOrNull()
@@ -805,12 +805,12 @@ fun ReferenceStylePreview(state: HomeDecorUiState) {
         ?.imageRes
         ?: R.drawable.tool_reference
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(24.dp),
         color = StudioPaper,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.reference_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 PreviewTile(
@@ -837,7 +837,7 @@ fun SelectedPhotoStrip(
     onRemove: (Int) -> Unit,
 ) {
     val removePhotoDescription = stringResource(R.string.remove_photo)
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         items(state.selectedPhotos.size, key = { "selected-photo-$it" }) { index ->
             val slot = state.selectedPhotos[index]
             val removePhotoDescription = stringResource(R.string.remove_photo)
@@ -907,7 +907,7 @@ fun ChoiceStep(
 ) {
     val stepValidation = rememberStepValidation(state)
     val hasSelection = selected.isNotEmpty()
-    val canProceed = hasSelection || stepValidation.canProceed
+    val canProceed = hasSelection
     val validationMessage = if (hasSelection) null else stepValidation.validationMessage
     StepScaffold(
         eyebrow = eyebrow,
@@ -921,13 +921,13 @@ fun ChoiceStep(
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         if (visualStyleCards || visualBuildingCards) {
+            val columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3)
             val rows = if (visualBuildingCards) (copy.options.size + 1) / 2 else (copy.options.size + 2) / 3
-            val cardHeight = if (visualBuildingCards) 148 else 140
-            val gridHeight = rows * cardHeight + (rows - 1) * 8 + 32
+            val gridHeight = rows * 140 + (rows - 1) * 8 + 32
             LazyVerticalGrid(
-                columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3),
+                columns = columns,
                 modifier = Modifier.fillMaxWidth().height(gridHeight.dp),
-                contentPadding = PaddingValues(bottom = 32.dp),
+                contentPadding = PaddingValues(bottom = 80.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 userScrollEnabled = false,
@@ -937,14 +937,13 @@ fun ChoiceStep(
                         label = option,
                         selected = option in selected,
                         onClick = { onSelect(option) },
-                        large = visualBuildingCards,
                     )
                 }
             }
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 copy.options.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         row.forEach { option ->
                             ExpressiveChoiceChip(
                                 label = option,
@@ -991,7 +990,7 @@ fun PhotoStep(
         validationMessage = stepValidation.validationMessage,
         onButton = viewModel::nextStage,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             if (!hasMainPhoto) {
                 MoziUploadCard(
                     onGallery = { imageInputActions.openGallery() },
@@ -1019,7 +1018,7 @@ fun PhotoStep(
     if (showUploadSheet) {
         ModalBottomSheet(
             onDismissRequest = { showUploadSheet = false },
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             containerColor = StudioPaper,
         ) {
             Column(
@@ -1117,8 +1116,8 @@ private fun PhotoPreviewCard(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.18f)
-                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+                    .aspectRatio(1.33f)
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
             ) {
                 val firstPhoto = state.selectedPhotos.first()
                 UriOrResourceImage(
@@ -1161,7 +1160,7 @@ private fun PhotoPreviewCard(
                     contentPadding = PaddingValues(horizontal = 12.dp),
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.upload_photo_replace), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
                 }
                 OutlinedButton(
@@ -1176,7 +1175,7 @@ private fun PhotoPreviewCard(
                     contentPadding = PaddingValues(horizontal = 12.dp),
                 ) {
                     Icon(Icons.Rounded.Delete, contentDescription = null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.upload_photo_remove), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -1204,21 +1203,21 @@ private fun MoziUploadCard(
             .border(1.dp, StudioLine, HomeDecorShape.ExtraLarge),
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.4f)
+                    .aspectRatio(1.8f)
                     .clip(HomeDecorShape.Large)
                     .background(StudioMist.copy(alpha = 0.4f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Surface(
                         shape = CircleShape,
@@ -1308,7 +1307,7 @@ fun MaterialLibrarySection(
             )
         }
         options.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { option ->
                     MaterialSwatchCard(
                         label = option,
@@ -1329,10 +1328,10 @@ fun SelectedMaterialPreview(
 ) {
     val displayLabel = localizedOption(label)
     Surface(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         color = StudioMist,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioBlue.copy(alpha = 0.26f), RoundedCornerShape(18.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioBlue.copy(alpha = 0.26f), RoundedCornerShape(16.dp)),
     ) {
         Row(
             Modifier.padding(12.dp),
@@ -1356,7 +1355,7 @@ fun MaterialSwatchCard(
     modifier: Modifier = Modifier,
 ) {
     val displayLabel = localizedOption(label)
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(16.dp)
     Surface(
         onClick = onClick,
         shape = shape,
@@ -1371,7 +1370,7 @@ fun MaterialSwatchCard(
             .border(if (selected) 2.dp else 1.dp, studioStateBorder(selected), shape),
     ) {
         Column(
-            Modifier.padding(10.dp),
+            Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             MaterialSwatchThumb(label = label, selected = selected, modifier = Modifier.fillMaxWidth().height(48.dp))
@@ -1396,9 +1395,9 @@ fun MaterialSwatchThumb(
     val spec = materialSwatchSpec(label)
     Box(
         modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(Brush.linearGradient(listOf(spec.base, spec.base.copy(alpha = 0.82f), spec.accent.copy(alpha = 0.5f))))
-            .border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(14.dp)),
+            .border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
@@ -1469,7 +1468,7 @@ fun SpecializedGenerateStep(
         buttonLabel = stringResource(R.string.generate),
         canProceed = stepValidation.canProceed,
         validationMessage = stepValidation.validationMessage,
-        contentBottomPadding = if (isPaintOrFloor) 32.dp else 18.dp,
+        contentBottomPadding = if (isPaintOrFloor) 32.dp else 16.dp,
         protectBottomInsets = isPaintOrFloor,
         buttonAllowsTwoLines = isPaintOrFloor,
         onButton = viewModel::generate,
@@ -1490,7 +1489,7 @@ fun SpecializedGenerateStep(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(16.dp),
                     isError = state.customPrompt.isNotBlank() && !hasReplacementPrompt,
                     supportingText = {
                         Text(
@@ -1502,10 +1501,10 @@ fun SpecializedGenerateStep(
                         )
                     },
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.replacement_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     stepCopy.options.chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             row.forEach { option ->
                                 val optionPrompt = localizedOption(option)
                                 val templatePrompt = HomeDecorCatalog.replacementTemplatePrompts[option].orEmpty()
@@ -1539,7 +1538,7 @@ fun SpecializedGenerateStep(
                 if (state.selectedTool.id != "reference") {
                     SourcePreviewCard(state = state)
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (state.selectedTool.id in setOf("paint", "floor")) {
                         MaterialLibrarySection(
                             options = stepCopy.options,
@@ -1548,7 +1547,7 @@ fun SpecializedGenerateStep(
                         )
                     } else if (state.selectedTool.id == "reference") {
                         stepCopy.options.chunked(2).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 row.forEach { option ->
                                     IntensityChip(
                                         label = option,
@@ -1564,7 +1563,7 @@ fun SpecializedGenerateStep(
                         }
                     } else {
                         stepCopy.options.chunked(2).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 row.forEach { option ->
                                     ExpressiveChoiceChip(
                                         label = option,
@@ -1583,7 +1582,7 @@ fun SpecializedGenerateStep(
                 if (state.selectedTool.id == "reference") {
                     Text(stringResource(R.string.transfer_options), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     HomeDecorCatalog.referenceOptions.chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             row.forEach { option ->
                                 IntensityChip(
                                     label = option,
@@ -1610,7 +1609,7 @@ fun SpecializedGenerateStep(
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 1,
                         maxLines = 4,
-                        shape = RoundedCornerShape(18.dp),
+                        shape = RoundedCornerShape(16.dp),
                     )
                 } else {
                     OutlinedTextField(
@@ -1624,7 +1623,7 @@ fun SpecializedGenerateStep(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
-                        shape = RoundedCornerShape(18.dp),
+                        shape = RoundedCornerShape(16.dp),
                     )
                 }
             }
@@ -1652,12 +1651,12 @@ fun AdvancedControls(
     var expanded by remember(state.selectedTool.id) { mutableStateOf(false) }
     val advancedControlsDescription = stringResource(R.string.a11y_advance_controls)
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         color = StudioPaper,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(20.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1812,7 +1811,7 @@ fun ReferencePhotoStep(
         validationMessage = if (hasReference) null else stringResource(R.string.reference_missing_error),
         onButton = viewModel::nextStage,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ReferenceImagePicker(
                 selectedUri = state.selectedReferenceUri,
                 selectedExample = state.selectedReferenceExampleLabel,
@@ -1828,7 +1827,7 @@ fun ReferencePhotoStep(
                     contentPadding = PaddingValues(horizontal = 12.dp),
                 ) {
                     Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.gallery), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 OutlinedButton(
@@ -1838,7 +1837,7 @@ fun ReferencePhotoStep(
                     contentPadding = PaddingValues(horizontal = 12.dp),
                 ) {
                     Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.camera), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -1959,12 +1958,12 @@ fun MaskEditorStep(
         buttonLabel = stringResource(R.string.continue_action),
         canProceed = buttonCanProceed,
         validationMessage = objectStepValidation?.validationMessage ?: disabledLabel,
-        contentBottomPadding = if (isSurfaceMask) 32.dp else 18.dp,
+        contentBottomPadding = if (isSurfaceMask) 32.dp else 16.dp,
         protectBottomInsets = isSurfaceMask,
         buttonAllowsTwoLines = isSurfaceMask,
         onButton = viewModel::nextStage,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             if (isObjectMask && !hasMask && emptyStateTitle != null) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -1991,7 +1990,7 @@ fun MaskEditorStep(
                 onStroke = viewModel::addMaskStroke,
             )
             if (polishedControls && isSurfaceMask) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     SurfaceMaskStatus(
                         hasMask = hasMask,
                         readyText = stringResource(R.string.mask_ready, surfaceLabel),
@@ -2000,7 +1999,7 @@ fun MaskEditorStep(
                     BoxWithConstraints(Modifier.fillMaxWidth()) {
                         val compactControls = maxWidth < 360.dp
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 ToolToggle(
                                     label = stringResource(R.string.mask_mark),
                                     contentDescription = stringResource(R.string.a11y_mask_brush_add),
@@ -2049,8 +2048,8 @@ fun MaskEditorStep(
                     }
                 }
             } else if (polishedControls) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         ToolToggle(
                             label = stringResource(R.string.mask_brush),
                             contentDescription = stringResource(R.string.a11y_mask_brush_add),
@@ -2115,7 +2114,7 @@ fun MaskEditorStep(
                     showRangeLabels = true,
                 )
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -2158,7 +2157,7 @@ fun SurfaceMaskStatus(
         modifier = Modifier.fillMaxWidth().border(1.dp, if (hasMask) StudioBlue.copy(alpha = 0.32f) else StudioLine, RoundedCornerShape(16.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -2182,12 +2181,12 @@ fun BrushSizeControl(
     showRangeLabels: Boolean,
 ) {
     Surface(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         color = StudioPaper,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(18.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(16.dp)),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -2197,7 +2196,7 @@ fun BrushSizeControl(
                 Surface(shape = CircleShape, color = StudioPrimaryContainer) {
                     Text(
                         "${brushSize.toInt()} px",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = StudioBlue,
                         fontWeight = FontWeight.SemiBold,
@@ -2252,9 +2251,9 @@ fun MaskCanvas(
         Modifier
             .fillMaxWidth()
             .aspectRatio(1.18f)
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(StudioLine)
-            .border(2.dp, if (hasMask) StudioBlue else StudioLine, RoundedCornerShape(22.dp))
+            .border(2.dp, if (hasMask) StudioBlue else StudioLine, RoundedCornerShape(24.dp))
             .onSizeChanged { canvasSize = it }
             .pointerInput(state.brushSize, state.eraserSelected) {
                 detectDragGestures(
@@ -2308,7 +2307,7 @@ fun MaskCanvas(
                 Row(
                     Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                     Text(readyLabel, color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -2329,10 +2328,10 @@ fun SurfacePanel(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(24.dp),
         color = studioStateContainer(selected),
         tonalElevation = studioStateElevation(selected),
-        modifier = modifier.height(146.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(22.dp)),
+        modifier = modifier.height(146.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(24.dp)),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2349,7 +2348,7 @@ fun SurfacePanel(
                         containerColor = if (selected) StudioBlue else StudioPaper,
                         contentColor = if (selected) Color.White else StudioInk,
                     ),
-                    contentPadding = PaddingValues(horizontal = 14.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                     modifier = Modifier.height(48.dp).weight(1f),
                 ) {
                     Text(primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -2378,10 +2377,9 @@ fun LayoutPlanningStep(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
-            .windowInsetsPadding(WindowInsets.navigationBars),
+            .imePadding(),
         contentPadding = PaddingValues(start = HomeDecorSpacing.Xl, end = HomeDecorSpacing.Xl, top = HomeDecorSpacing.Sm, bottom = HomeDecorSpacing.WizardBottomContentPadding),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         if (!state.generationError.isNullOrBlank()) {
             item {
@@ -2393,10 +2391,10 @@ fun LayoutPlanningStep(
             }
         }
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 HomeDecorCatalog.layoutGoals.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         row.forEach { option ->
                             LayoutGoalChip(
                                 label = option,
@@ -2419,12 +2417,12 @@ fun LayoutPlanningStep(
                     placeholder = { Text(stringResource(R.string.layout_optional_constraints_placeholder)) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
                     minLines = 3,
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(16.dp),
                 )
             }
         }
         item {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (showValidationBanner && !stepValidation.validationMessage.isNullOrBlank()) {
                     ValidationAlertBanner(message = stepValidation.validationMessage)
                 }
@@ -2442,14 +2440,14 @@ fun LayoutPlanningStep(
                         studioPrimaryButtonColors()
                     } else {
                         ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.30f),
                         )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(58.dp)
-                        .disabledSemantics(canGenerate),
+                        .height(56.dp)
+                        .disabledSemantics(!canGenerate),
                 ) {
                     Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
                     Spacer(Modifier.width(8.dp))
@@ -2486,7 +2484,7 @@ fun LayoutGoalChip(
     )
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         color = StudioPaper,
         modifier = modifier
             .height(64.dp)
@@ -2495,12 +2493,12 @@ fun LayoutGoalChip(
                 this.selected = selected
                 contentDescription = displayLabel
             }
-            .border(borderWidth, borderColor, RoundedCornerShape(18.dp)),
+            .border(borderWidth, borderColor, RoundedCornerShape(16.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp),
+            Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Box(
                 modifier = Modifier
@@ -2549,8 +2547,8 @@ fun RefineStep(
             validationMessage = stepValidation.validationMessage,
             onButton = viewModel::generate,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                OutlinedTextField(value = state.roomType, onValueChange = viewModel::setRoomTypeText, label = { Text(stringResource(R.string.room_type)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), singleLine = true)
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(value = state.roomType, onValueChange = viewModel::setRoomTypeText, label = { Text(stringResource(R.string.room_type)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), singleLine = true)
                 OutlinedTextField(
                     value = state.customPrompt,
                     onValueChange = viewModel::setCustomPrompt,
@@ -2558,7 +2556,7 @@ fun RefineStep(
                     placeholder = { Text(stringResource(R.string.layout_optional_constraints_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4,
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(16.dp),
                 )
                 AdvancedControls(state = state, viewModel = viewModel)
             }
@@ -2576,7 +2574,7 @@ fun RefineStep(
         validationMessage = stepValidation.validationMessage,
         onButton = viewModel::generate,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             // Unified error display replaces inline GenerationErrorNotice
             UnifiedWizardError(
                 message = state.generationError.orEmpty(),
@@ -2610,8 +2608,8 @@ fun RefineStep(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.fillMaxWidth().height(548.dp),
-                    horizontalArrangement = Arrangement.spacedBy(34.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     userScrollEnabled = false,
                 ) {
                     items(listOf("Suggestion IA") + HomeDecorCatalog.palettes, key = { it }) { palette ->
@@ -2630,7 +2628,7 @@ fun RefineStep(
                 placeholder = { Text(stringResource(R.string.describe_vision_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 4,
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(16.dp),
             )
             AdvancedControls(state = state, viewModel = viewModel)
             val briefSpace = if (state.selectedTool.id == "garden") {
@@ -2639,8 +2637,8 @@ fun RefineStep(
                 state.roomType.takeIf { it.isNotBlank() }?.let { localizedOption(it) } ?: stringResource(R.string.space_to_choose)
             }
             val briefStyle = state.style.takeIf { it.isNotBlank() }?.let { localizedOption(it) } ?: stringResource(R.string.style_to_choose)
-            Surface(shape = RoundedCornerShape(22.dp), color = StudioBlack) {
-                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Surface(shape = RoundedCornerShape(24.dp), color = StudioBlack) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.design_brief), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(
@@ -2694,15 +2692,15 @@ fun ReplacementReadinessSummary(
 ) {
     val allReady = hasMask && hasReplacementPrompt
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(24.dp),
         color = if (allReady) StudioPrimaryContainer else StudioMist.copy(alpha = 0.72f),
         modifier = Modifier.fillMaxWidth().border(
             1.dp,
             if (allReady) StudioBlue.copy(alpha = 0.36f) else StudioLine,
-            RoundedCornerShape(22.dp),
+            RoundedCornerShape(24.dp),
         ),
     ) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             ReplacementSummaryLine(
                 checked = hasMask,
                 text = if (hasMask) {
@@ -2751,10 +2749,10 @@ fun PaletteChoiceCard(
     val displayLabel = localizedOption(label)
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
         modifier = modifier
-            .width(96.dp)
+            .fillMaxWidth()
             .height(142.dp)
             .semantics {
                 this.selected = selected
@@ -2763,7 +2761,7 @@ fun PaletteChoiceCard(
             .border(
                 if (selected) 2.dp else 1.dp,
                 if (selected) StudioBlue else StudioLine,
-                RoundedCornerShape(18.dp),
+                RoundedCornerShape(16.dp),
             ),
     ) {
         Box {
@@ -2773,7 +2771,7 @@ fun PaletteChoiceCard(
                         Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = StudioBlue)
                     }
                 } else {
-                    Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))) {
+                    Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))) {
                         paletteColors(label).forEach { color ->
                             Box(Modifier.weight(1f).fillMaxSize().background(color))
                         }
@@ -2781,7 +2779,7 @@ fun PaletteChoiceCard(
                 }
                 Text(
                     displayLabel,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                     maxLines = 2,
@@ -2853,18 +2851,18 @@ fun ProcessingStep(
         verticalArrangement = Arrangement.Center,
     ) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(32.dp),
             color = StudioPaper,
             tonalElevation = 4.dp,
             border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine.copy(alpha = 0.5f)),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 Box(
                     Modifier
                         .fillMaxWidth()
                         .height(180.dp)
-                        .clip(RoundedCornerShape(22.dp))
+                        .clip(RoundedCornerShape(24.dp))
                         .background(StudioMist),
                 ) {
                     Image(
@@ -2877,7 +2875,7 @@ fun ProcessingStep(
                     Surface(
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.92f),
-                        modifier = Modifier.align(Alignment.TopStart).padding(14.dp),
+                        modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
                     ) {
                         Row(
                             Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -2928,9 +2926,9 @@ fun ProcessingStep(
                 }
                 Surface(shape = RoundedCornerShape(16.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Icon(
                             Icons.Rounded.AutoAwesome,
@@ -2972,7 +2970,7 @@ fun GenerationStepDot(
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.width(72.dp),
     ) {
         Surface(
@@ -3010,7 +3008,7 @@ fun LayoutResultSummary(state: HomeDecorUiState) {
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 2.dp,
     ) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.layout_changes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
             Text(
                 layoutChangeSummary(state),
@@ -3075,7 +3073,7 @@ fun ReplacementResultSummary(
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 2.dp,
     ) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 stringResource(R.string.replacement_result_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -3108,7 +3106,7 @@ fun ReplacementResultRow(
     label: String,
     value: String,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
         Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelLarge, color = StudioBlue, fontWeight = FontWeight.SemiBold)
@@ -3230,8 +3228,8 @@ fun ResultStep(
                     resultReady = true,
                 )
             }
-            Surface(shape = RoundedCornerShape(22.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(22.dp))) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Surface(shape = RoundedCornerShape(24.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp))) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(if (isReplaceResult) R.string.replacement_summary else R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.metadata_service, localizedWorkflowTitle(state.selectedTool)))
                     if (isReplaceResult) {
@@ -3246,7 +3244,7 @@ fun ResultStep(
                 }
             }
             if (resultReady) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = {
                             val saved = viewModel.saveResultToPortfolio(result)
@@ -3257,7 +3255,7 @@ fun ResultStep(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp),
                     ) {
                         Icon(Icons.Rounded.Save, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.save), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                     Button(
@@ -3272,7 +3270,7 @@ fun ResultStep(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp),
                     ) {
                         Icon(Icons.Rounded.Download, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.download), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                     Button(
@@ -3289,7 +3287,7 @@ fun ResultStep(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp),
                     ) {
                         Icon(Icons.Rounded.Share, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.share), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -3332,7 +3330,7 @@ fun ResultStep(
                                 modifier = Modifier.size(18.dp),
                                 tint = if (feedbackState == "liked") StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            Spacer(Modifier.width(6.dp))
+                            Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.like), fontWeight = FontWeight.SemiBold)
                         }
                         OutlinedButton(
@@ -3350,7 +3348,7 @@ fun ResultStep(
                                 modifier = Modifier.size(18.dp),
                                 tint = if (feedbackState == "disliked") StudioRose else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            Spacer(Modifier.width(6.dp))
+                            Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.dislike), fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -3366,13 +3364,13 @@ fun BeforeAfterResultSlider(
     result: BoardItem,
 ) {
     var comparePosition by remember(result.id) { mutableStateOf(0.5f) }
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.before_after_slider), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(28.dp))
+                .clip(RoundedCornerShape(32.dp))
                 .background(StudioMist),
         ) {
             WorkspaceImage(
@@ -3461,7 +3459,7 @@ fun TryAnotherStyleRow(
     onStyle: (String) -> Unit,
 ) {
     val styles = remember { listOf("Japandi", "Luxe", "Moderne", "Minimaliste", "Marocain", "Scandinave") }
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.try_another_style), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(styles) { style ->
@@ -3498,7 +3496,7 @@ fun ResultProjectWorkspaceActions(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Surface(shape = CircleShape, color = StudioPaper) {
-                    Icon(Icons.Rounded.Layers, null, Modifier.padding(10.dp).size(20.dp), tint = StudioBlue)
+                    Icon(Icons.Rounded.Layers, null, Modifier.padding(8.dp).size(20.dp), tint = StudioBlue)
                 }
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.result_workspace_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioInk)
@@ -3512,7 +3510,7 @@ fun ResultProjectWorkspaceActions(
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
                     onClick = onProject,
                     shape = CircleShape,
@@ -3571,7 +3569,7 @@ fun ResultContentsSummary(
         else -> stringResource(R.string.result_contains_default, space, finish)
     }
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(24.dp),
         color = StudioPrimaryContainer,
         border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.35f)),
         modifier = Modifier.fillMaxWidth(),
@@ -3600,7 +3598,7 @@ fun ResultStateNotice(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
-            Modifier.padding(22.dp),
+            Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -3621,7 +3619,7 @@ fun ResultImageCard(
 ) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-        Card(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
+        Card(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
             image()
         }
     }

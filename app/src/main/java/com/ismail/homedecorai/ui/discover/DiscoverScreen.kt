@@ -57,6 +57,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -181,7 +182,7 @@ fun ScreenHeaderPills(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Sm)
+            .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Sm)
             .height(48.dp)
             .semantics {
                 contentDescription = title
@@ -189,7 +190,7 @@ fun ScreenHeaderPills(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Spacer(Modifier.width(40.dp))
+        Spacer(Modifier.width(HomeDecorSpacing.Xxl))
         Text(
             title,
             style = MaterialTheme.typography.headlineMedium,
@@ -224,13 +225,13 @@ fun DiscoverHero(
             )
             Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)))))
             Column(
-                modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.align(Alignment.BottomStart).padding(HomeDecorSpacing.Base),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 Surface(shape = RoundedCornerShape(8.dp), color = StudioPrimaryContainer) {
                     Text(
                         sectionCluster,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         color = StudioInk,
                         style = MaterialTheme.typography.labelMedium,
                     )
@@ -252,7 +253,7 @@ fun DiscoverClusterTabs(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp),
+            .padding(horizontal = HomeDecorSpacing.Xs, vertical = HomeDecorSpacing.Xxs),
         horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
     ) {
         clusters.forEach { cluster ->
@@ -304,13 +305,20 @@ fun DiscoverSectionRow(
     val sectionTitle = localizedDiscoverSection(section)
     val sectionSubtitle = localizedDiscoverSectionSubtitle(section)
     val seeAllDescription = stringResource(R.string.a11y_see_all_format, sectionTitle)
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val availableWidth = screenWidth - HomeDecorSpacing.ScreenHorizontal * 2
+    val cardWidth = ((availableWidth - HomeDecorSpacing.Sm - 32.dp) / 2).coerceAtLeast(120.dp)
+
+    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            ) {
                 Text(
                     sectionTitle,
                     style = MaterialTheme.typography.titleMedium,
@@ -325,7 +333,7 @@ fun DiscoverSectionRow(
             }
             TextButton(
                 onClick = onSeeAll,
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
                 modifier = Modifier
                     .minimumTouchTarget()
                     .semantics {
@@ -340,13 +348,13 @@ fun DiscoverSectionRow(
             }
         }
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(horizontal = 1.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             items(section.items, key = { it.id }) { item ->
                 GalleryCard(
                     item = item,
                     isFavorite = discoverSource(item) in favoriteSources,
+                    modifier = Modifier.width(cardWidth),
                     onClick = { onUseStyle(item) },
                 )
             }
@@ -367,7 +375,7 @@ fun DiscoverDetailScreen(
     val sectionTitle = localizedDiscoverSection(section)
         Column(Modifier.fillMaxSize().background(StudioCanvas)) {
         Row(
-            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
@@ -380,7 +388,7 @@ fun DiscoverDetailScreen(
             Surface(shape = RoundedCornerShape(10.dp), color = StudioPrimaryContainer, tonalElevation = 2.dp) {
                 Text(
                     stringResource(R.string.ideas_count, section.items.size),
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
                     color = StudioBlue,
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -432,16 +440,16 @@ fun DiscoverPreviewDialog(
                 shape = RoundedCornerShape(14.dp),
                 colors = studioPrimaryButtonColors(),
             ) {
-                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(16.dp))
-                Spacer(Modifier.width(6.dp))
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(HomeDecorSpacing.Base))
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(stringResource(R.string.create_with_style), style = MaterialTheme.typography.labelLarge)
             }
         },
         dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = onFavorite, shape = RoundedCornerShape(14.dp), modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Rounded.Star, null, Modifier.size(15.dp), tint = if (isFavorite) StudioGold else Color.Unspecified)
-                    Spacer(Modifier.width(4.dp))
+                    Icon(Icons.Rounded.Star, null, Modifier.size(HomeDecorSpacing.Base), tint = if (isFavorite) StudioGold else Color.Unspecified)
+                    Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(
                         stringResource(if (isFavorite) R.string.favorited else R.string.favorite),
                         maxLines = 1,
@@ -450,8 +458,8 @@ fun DiscoverPreviewDialog(
                     )
                 }
                 OutlinedButton(onClick = onMoodboard, shape = RoundedCornerShape(14.dp), modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Rounded.Save, null, Modifier.size(15.dp))
-                    Spacer(Modifier.width(4.dp))
+                    Icon(Icons.Rounded.Save, null, Modifier.size(HomeDecorSpacing.Base))
+                    Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(
                         stringResource(R.string.add_to_moodboard),
                         maxLines = 1,
@@ -463,7 +471,7 @@ fun DiscoverPreviewDialog(
         },
         title = { Text(itemCategory, style = MaterialTheme.typography.titleMedium) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 Image(
                     painter = painterResource(item.imageRes),
                     contentDescription = itemTitle,
@@ -514,7 +522,7 @@ fun GalleryCard(
                                 listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
                             )
                         )
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                        .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
                 ) {
                     Text(
                         itemTitle,
@@ -527,7 +535,7 @@ fun GalleryCard(
             }
             Text(
                 itemCategory,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

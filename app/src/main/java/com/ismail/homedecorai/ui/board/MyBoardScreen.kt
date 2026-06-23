@@ -64,13 +64,14 @@ import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.FavoriteItem
 import com.ismail.homedecorai.GeneratedResult
+import com.ismail.homedecorai.Project
 import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.components.WorkspaceImage
 import com.ismail.homedecorai.ui.theme.*
 
-enum class BoardTab { Generated, Favorites }
+enum class BoardTab { Generated, Favorites, Projects }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -99,7 +100,7 @@ fun MyBoardScreen(
             )
         }
 
-        Spacer(Modifier.height(if (signedIn) HomeDecorSpacing.Xl else HomeDecorSpacing.Base))
+        Spacer(Modifier.height(HomeDecorSpacing.SectionGap))
 
         PrimaryTabRow(
             selectedTabIndex = selectedTab.ordinal,
@@ -118,7 +119,7 @@ fun MyBoardScreen(
                     height = 1.dp,
                 )
             },
-            modifier = Modifier.padding(horizontal = 20.dp),
+            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg),
         ) {
             Tab(
                 selected = selectedTab == BoardTab.Generated,
@@ -142,9 +143,20 @@ fun MyBoardScreen(
                     )
                 },
             )
+            Tab(
+                selected = selectedTab == BoardTab.Projects,
+                onClick = { selectedTab = BoardTab.Projects },
+                text = {
+                    Text(
+                        stringResource(R.string.projects_tab),
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                },
+            )
         }
 
-        Spacer(Modifier.height(HomeDecorSpacing.Xl))
+        Spacer(Modifier.height(HomeDecorSpacing.SectionGap))
 
         when (selectedTab) {
             BoardTab.Generated -> GeneratedSection(
@@ -152,6 +164,10 @@ fun MyBoardScreen(
                 viewModel = viewModel,
             )
             BoardTab.Favorites -> FavoritesBoardSection(
+                state = state,
+                viewModel = viewModel,
+            )
+            BoardTab.Projects -> ProjectsSection(
                 state = state,
                 viewModel = viewModel,
             )
@@ -175,9 +191,9 @@ private fun SignInCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(HomeDecorSpacing.CardInternal),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
         ) {
             Text(
                 stringResource(R.string.sign_in_to_view_board),
@@ -248,9 +264,9 @@ private fun ProUpgradeCard(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                    .padding(horizontal = HomeDecorSpacing.CardInternal, vertical = HomeDecorSpacing.Base),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
             ) {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
@@ -329,10 +345,49 @@ private fun GeneratedSection(
                     .clickable { },
             )
         }
-        Spacer(Modifier.height(HomeDecorSpacing.Sm + HomeDecorSpacing.Xs))
+        Spacer(Modifier.height(HomeDecorSpacing.Base))
 
         if (generatedItems.isEmpty()) {
-            EmptyBoardState()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = HomeDecorSpacing.Xl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = StudioMist,
+                        modifier = Modifier.size(64.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Diamond,
+                            contentDescription = null,
+                            modifier = Modifier.padding(16.dp).size(32.dp),
+                            tint = StudioLine,
+                        )
+                    }
+                    Spacer(Modifier.height(HomeDecorSpacing.Base))
+                    Text(
+                        stringResource(R.string.board_empty_generated),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(HomeDecorSpacing.Sm))
+                    Text(
+                        stringResource(R.string.board_empty_generated_body),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         } else {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Lg),
@@ -383,7 +438,7 @@ private fun GeneratedCard(
             }
             Text(
                 result.roomType.ifBlank { result.style },
-                modifier = Modifier.padding(10.dp),
+                modifier = Modifier.padding(HomeDecorSpacing.Sm),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -430,33 +485,76 @@ private fun FavoritesBoardSection(
                     .clickable { },
             )
         }
-        Spacer(Modifier.height(HomeDecorSpacing.Sm + HomeDecorSpacing.Xs))
+        Spacer(Modifier.height(HomeDecorSpacing.Base))
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = navBarBottomPadding()),
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-        ) {
-            items(favorites, key = { it.id }) { favorite ->
-                val boardItem = favorite.toBoardItem()
-                FavoriteBoardCard(
-                    favorite = favorite,
-                    onClick = {
-                        viewModel.openDesignViewer(boardItem)
-                    },
-                    onDelete = {
-                        viewModel.removeFavorite(favorite.id)
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.toast_favorite_removed),
-                            Toast.LENGTH_SHORT,
-                        ).show()
-                    },
-                )
+        if (favorites.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = HomeDecorSpacing.Xl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = StudioMist,
+                        modifier = Modifier.size(64.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Star,
+                            contentDescription = null,
+                            modifier = Modifier.padding(16.dp).size(32.dp),
+                            tint = StudioLine,
+                        )
+                    }
+                    Spacer(Modifier.height(HomeDecorSpacing.Base))
+                    Text(
+                        stringResource(R.string.board_empty_favorites),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(HomeDecorSpacing.Sm))
+                    Text(
+                        stringResource(R.string.board_empty_favorites_body),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
-            item {
-                AddFavoriteCard()
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = navBarBottomPadding()),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            ) {
+                items(favorites, key = { it.id }) { favorite ->
+                    val boardItem = favorite.toBoardItem()
+                    FavoriteBoardCard(
+                        favorite = favorite,
+                        onClick = {
+                            viewModel.openDesignViewer(boardItem)
+                        },
+                        onDelete = {
+                            viewModel.removeFavorite(favorite.id)
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.toast_favorite_removed),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        },
+                    )
+                }
+                item {
+                    AddFavoriteCard()
+                }
             }
         }
     }
@@ -495,7 +593,7 @@ private fun FavoriteBoardCard(
                     color = Color.White.copy(alpha = 0.85f),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(6.dp)
+                        .padding(HomeDecorSpacing.Sm)
                         .size(26.dp),
                 ) {
                     Icon(
@@ -506,7 +604,7 @@ private fun FavoriteBoardCard(
                     )
                 }
             }
-            Column(Modifier.padding(10.dp)) {
+            Column(Modifier.padding(HomeDecorSpacing.Sm)) {
                 Text(
                     favorite.title.ifBlank { stringResource(R.string.favorite) },
                     style = MaterialTheme.typography.labelLarge,
@@ -556,7 +654,7 @@ private fun AddFavoriteCard() {
                 modifier = Modifier.size(28.dp),
                 tint = StudioLine,
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
             Text(
                 stringResource(R.string.add_favorite),
                 style = MaterialTheme.typography.labelMedium,
@@ -569,38 +667,45 @@ private fun AddFavoriteCard() {
 
 @Composable
 private fun EmptyBoardState() {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(vertical = HomeDecorSpacing.Xl),
+        contentAlignment = Alignment.Center,
     ) {
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = StudioMist,
-            modifier = Modifier.size(64.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = HomeDecorSpacing.Xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(
-                Icons.Rounded.Diamond,
-                contentDescription = null,
-                modifier = Modifier.padding(16.dp).size(32.dp),
-                tint = StudioLine,
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = StudioMist,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    Icons.Rounded.Diamond,
+                    contentDescription = null,
+                    modifier = Modifier.padding(16.dp).size(32.dp),
+                    tint = StudioLine,
+                )
+            }
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
+            Text(
+                stringResource(R.string.no_designs_yet),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            Text(
+                stringResource(R.string.no_designs_body),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
             )
         }
-        Spacer(Modifier.height(14.dp))
-        Text(
-            stringResource(R.string.no_designs_yet),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            stringResource(R.string.no_designs_body),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodySmall,
-        )
     }
 }
 
@@ -637,3 +742,145 @@ private fun FavoriteItem.toBoardItem(): BoardItem = BoardItem(
     budgetLabel = "",
     createdAt = createdAt.toDouble(),
 )
+
+@Composable
+private fun ProjectsSection(
+    state: HomeDecorUiState,
+    viewModel: HomeDecorViewModel,
+) {
+    val projects = remember(state.workspace.projects) {
+        state.workspace.projects.sortedByDescending { it.updatedAt }
+    }
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = HomeDecorSpacing.Lg),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.saved_projects),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+        Spacer(Modifier.height(HomeDecorSpacing.Base))
+
+        if (projects.isEmpty()) {
+            EmptyProjectsState()
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = navBarBottomPadding()),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            ) {
+                items(projects, key = { it.id }) { project ->
+                    ProjectCard(project = project)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProjectCard(
+    project: Project,
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = StudioPaper,
+        tonalElevation = 1.dp,
+        border = BorderStroke(1.dp, StudioLine),
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .background(StudioMist),
+            ) {
+                if (project.coverImageUri != null || project.coverImageUrl != null) {
+                    WorkspaceImage(
+                        imageUrl = project.coverImageUrl,
+                        imageUri = project.coverImageUri,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                } else {
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.padding(24.dp).size(24.dp),
+                        tint = StudioLine,
+                    )
+                }
+            }
+            Column(Modifier.padding(HomeDecorSpacing.Sm)) {
+                Text(
+                    project.name,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (project.roomType.isNotBlank()) {
+                    Text(
+                        project.roomType,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyProjectsState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = HomeDecorSpacing.Xl),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = HomeDecorSpacing.Xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = StudioMist,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    Icons.Rounded.AutoAwesome,
+                    contentDescription = null,
+                    modifier = Modifier.padding(16.dp).size(32.dp),
+                    tint = StudioLine,
+                )
+            }
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
+            Text(
+                stringResource(R.string.no_projects_yet),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            Text(
+                stringResource(R.string.no_projects_body),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}

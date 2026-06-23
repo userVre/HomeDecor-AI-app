@@ -322,7 +322,7 @@
   <string name="generation_step_finalizing">Финализация</string>
   <string name="layout_changes">Изменения планировки</string>
   <string name="layout_suggestions">Предложения по планировке</string>
-  <string name="layout_summary_format">Сгенерированное изображение重组房间围绕 %1$s。它保留 %2$s，移除 %3$s，重新定位 %4$s，考虑 %5$s，尊重 %6$s，同时不改变整体房间风格。</string>
+  <string name="layout_summary_format">Сгенерированное изображение перестроило комнату вокруг %1$s. Оно сохранило %2$s, удалило %3$s, переместило %4$s, учло %5$s и уважает %6$s, не изменяя общий стиль комнаты.</string>
   <string name="layout_default_goals">цели циркуляции и использования</string>
   <string name="layout_default_keep">фиксированные элементы и важная мебель</string>
   <string name="layout_default_remove">ненужный беспорядок или мешающие предметы</string>

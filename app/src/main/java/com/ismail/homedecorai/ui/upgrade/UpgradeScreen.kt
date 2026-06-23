@@ -39,17 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.model.HomeDecorUiState
-import com.ismail.homedecorai.ui.theme.ProAccent
-import com.ismail.homedecorai.ui.theme.ProBadgeBg
-import com.ismail.homedecorai.ui.theme.ProBadgeText
-import com.ismail.homedecorai.ui.theme.ProCardSurface
-import com.ismail.homedecorai.ui.theme.ProCheckGreen
-import com.ismail.homedecorai.ui.theme.ProDarkEnd
-import com.ismail.homedecorai.ui.theme.ProDarkMid
-import com.ismail.homedecorai.ui.theme.ProDarkStart
-import com.ismail.homedecorai.ui.theme.ProTextMuted
-import com.ismail.homedecorai.ui.theme.ProTextPrimary
-import com.ismail.homedecorai.ui.theme.ProTextSecondary
+import com.ismail.homedecorai.ui.theme.*
 
 private data class ProBenefit(
     val titleRes: Int,
@@ -88,8 +78,8 @@ private fun ProActiveScreen() {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Xl),
         ) {
             Surface(
                 shape = CircleShape,
@@ -129,7 +119,7 @@ private fun ProLandingScreen(onOpenPaywall: () -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
             .windowInsetsPadding(WindowInsets.statusBars),
-        contentPadding = PaddingValues(bottom = 32.dp),
+        contentPadding = PaddingValues(bottom = navBarBottomPadding()),
     ) {
         item { ProHeroHeader() }
         item { ProBenefitsList() }
@@ -147,21 +137,21 @@ private fun ProHeroHeader() {
                     colors = listOf(ProDarkStart, ProDarkMid, ProDarkEnd),
                 ),
             )
-            .padding(horizontal = 24.dp, vertical = 40.dp),
+            .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Xxl),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = ProBadgeBg,
             ) {
                 Row(
-                    Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
                     Icon(
                         Icons.Rounded.AutoAwesome,
@@ -179,7 +169,7 @@ private fun ProHeroHeader() {
                     )
                 }
             }
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Xs))
             Text(
                 text = stringResource(R.string.pro_intro_headline),
                 style = MaterialTheme.typography.headlineMedium,
@@ -202,8 +192,8 @@ private fun ProHeroHeader() {
 @Composable
 private fun ProBenefitsList() {
     Column(
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Lg),
+        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
     ) {
         proBenefits.forEach { benefit ->
             ProBenefitRow(
@@ -222,9 +212,9 @@ private fun ProBenefitRow(title: String, subtitle: String) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Base),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
         ) {
             Surface(
                 shape = CircleShape,
@@ -247,7 +237,7 @@ private fun ProBenefitRow(title: String, subtitle: String) {
                     fontWeight = FontWeight.SemiBold,
                     color = ProTextPrimary,
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Xxs))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
@@ -262,9 +252,9 @@ private fun ProBenefitRow(title: String, subtitle: String) {
 @Composable
 private fun ProCtaSection(onOpenPaywall: () -> Unit) {
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Base),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
     ) {
         Button(
             onClick = onOpenPaywall,
@@ -276,7 +266,7 @@ private fun ProCtaSection(onOpenPaywall: () -> Unit) {
             contentPadding = PaddingValues(),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(HomeDecorSpacing.ButtonHeight),
         ) {
             Text(
                 text = stringResource(R.string.pro_cta_start_trial),

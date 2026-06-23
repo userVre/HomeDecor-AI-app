@@ -145,7 +145,7 @@ fun MaskActionButton(
             .disabledSemantics(enabled),
     ) {
         Row(
-            Modifier.padding(horizontal = 10.dp),
+            Modifier.padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -170,7 +170,6 @@ fun StyleChoiceCard(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
-    large: Boolean = false,
 ) {
     val displayLabel = localizedOption(label)
     val cardShape = RoundedCornerShape(16.dp)
@@ -185,7 +184,7 @@ fun StyleChoiceCard(
         color = if (selected) StudioPrimaryContainer.copy(alpha = 0.18f) else Color.White,
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (large) 148.dp else 140.dp)
+            .height(140.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .semantics {
                 this.selected = selected
@@ -201,12 +200,12 @@ fun StyleChoiceCard(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(if (large) 88.dp else 80.dp),
+                    .height(80.dp),
                 contentAlignment = Alignment.BottomCenter,
             ) {
                 if (label == "Suggestion IA") {
                     Surface(shape = RoundedCornerShape(14.dp), color = StudioMist, tonalElevation = 1.dp) {
-                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(14.dp).size(28.dp), tint = StudioBlue)
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(16.dp).size(28.dp), tint = StudioBlue)
                     }
                 } else {
                     Image(
@@ -218,7 +217,7 @@ fun StyleChoiceCard(
                 }
                 if (selected) {
                     Surface(
-                        modifier = Modifier.align(Alignment.TopEnd).padding(5.dp),
+                        modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
                         shape = CircleShape,
                         color = StudioBlue,
                     ) {
@@ -231,15 +230,17 @@ fun StyleChoiceCard(
                     }
                 }
             }
-            Box(Modifier.fillMaxWidth().height(if (large) 60.dp else 60.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    displayLabel,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            if (label == "Suggestion IA") {
+                Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        displayLabel,
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
@@ -273,7 +274,7 @@ fun ExpressiveChoiceChip(
             .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 10.dp),
+            Modifier.padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -328,7 +329,7 @@ fun IntensityChip(
             .border(borderWidth, borderColor, RoundedCornerShape(18.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 10.dp),
+            Modifier.padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -389,7 +390,7 @@ fun ReplaceSuggestionChip(
         Row(
             Modifier.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 if (selected) Icons.Rounded.Check else replacementIcon(label),
@@ -444,7 +445,7 @@ fun ModeCard(
                     Icon(
                         if (title.contains("Renovation")) Icons.Rounded.AutoAwesome else Icons.Rounded.Brush,
                         contentDescription = null,
-                        modifier = Modifier.padding(10.dp).size(22.dp),
+                        modifier = Modifier.padding(8.dp).size(22.dp),
                         tint = if (selected) Color.White else StudioBlue,
                     )
                 }
@@ -466,7 +467,7 @@ fun ModeCard(
                     Icon(
                         Icons.Rounded.Check,
                         contentDescription = null,
-                        modifier = Modifier.padding(5.dp).size(14.dp),
+                        modifier = Modifier.padding(4.dp).size(14.dp),
                         tint = Color.White,
                     )
                 }
@@ -501,7 +502,7 @@ fun DailyRewardCard(
         modifier = modifier.fillMaxWidth().border(1.dp, borderColor, cardShape),
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -509,11 +510,11 @@ fun DailyRewardCard(
                 Icon(
                     Icons.Rounded.Diamond,
                     contentDescription = null,
-                    modifier = Modifier.padding(10.dp).size(19.dp),
+                    modifier = Modifier.padding(8.dp).size(19.dp),
                     tint = if (dark) PaywallPremiumGold else StudioGold,
                 )
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     stringResource(R.string.daily_reward_title),
                     color = titleColor,
@@ -549,7 +550,7 @@ fun DailyRewardCard(
                 enabled = !claimedToday,
                 shape = CircleShape,
                 colors = if (dark) studioProButtonColors() else studioPrimaryButtonColors(),
-                contentPadding = PaddingValues(horizontal = 13.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp),
                 modifier = Modifier.height(48.dp),
             ) {
                 Icon(if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Add, contentDescription = null, Modifier.size(16.dp))
@@ -575,7 +576,7 @@ fun DailyRewardQuietPill(
     ) {
         Text(
             label,
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             color = if (dark) Color.White.copy(alpha = 0.78f) else HomeDecorColors.InkSoft,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
@@ -608,9 +609,9 @@ fun CreditPill(
             .semantics { contentDescription = pillDescription },
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = if (compact) 10.dp else 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = if (compact) 8.dp else 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(Icons.Rounded.Diamond, contentDescription = null, Modifier.size(17.dp), tint = if (state.isPro) StudioGold else StudioBlue)
             Text(if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}", fontWeight = FontWeight.SemiBold)
@@ -626,8 +627,8 @@ fun ReferenceImagePicker(
     onImport: () -> Unit,
     onExample: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(8.dp).size(18.dp), tint = StudioBlue)
             }
@@ -643,7 +644,7 @@ fun ReferenceImagePicker(
             modifier = Modifier.fillMaxWidth().border(1.dp, studioStateBorder(selectedUri != null || selectedExample != null), RoundedCornerShape(22.dp)),
         ) {
             Row(
-                Modifier.padding(14.dp),
+                Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -694,7 +695,7 @@ fun ProjectHeaderPreview(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(14.dp),
+            Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -742,7 +743,7 @@ fun ProjectMetricChip(
         color = StudioMist,
     ) {
         Row(
-            Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -806,9 +807,9 @@ fun PurchaseSyncNotice(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(Icons.Rounded.Error, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
             Text(

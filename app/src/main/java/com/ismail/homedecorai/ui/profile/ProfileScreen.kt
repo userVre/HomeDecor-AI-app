@@ -102,7 +102,7 @@ fun ProfileScreen(
     ) {
         LazyColumn(
             contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, top = HomeDecorSpacing.Sm, bottom = navBarBottomPadding()),
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
             item("profile-title") {
                 Text(
@@ -152,6 +152,19 @@ fun ProfileScreen(
                             title = stringResource(R.string.my_diamonds),
                             subtitle = stringResource(R.string.my_diamonds_body, state.diamonds),
                             onClick = viewModel::openDiamondStore,
+                        )
+                    }
+                }
+                item("subscription-section") {
+                    ProfileSectionLabel(stringResource(R.string.subscription_status))
+                    SettingsCard {
+                        ProfileRow(
+                            icon = Icons.Rounded.Star,
+                            iconBg = if (state.isPro) StudioSuccessContainer else StudioProContainer,
+                            iconTint = if (state.isPro) StudioGreen else StudioGold,
+                            title = stringResource(R.string.current_plan),
+                            subtitle = if (state.isPro) stringResource(R.string.current_plan_body_pro) else stringResource(R.string.current_plan_body_free),
+                            onClick = viewModel::openPaywall,
                         )
                     }
                 }
@@ -265,31 +278,31 @@ private fun SignInHeroCard(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
-            Modifier.padding(28.dp),
+            Modifier.padding(HomeDecorSpacing.CardInternal),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                stringResource(R.string.sign_in_to_account_body),
+                stringResource(R.string.profile_sign_in_body),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyMedium,
                 lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
             Button(
                 onClick = onSignIn,
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = StudioBrownBtn),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
             ) {
                 Text(stringResource(R.string.sign_in))
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
             OutlinedButton(
                 onClick = onGoogle,
                 shape = RoundedCornerShape(24.dp),
                 border = BorderStroke(1.5f.dp, StudioLine),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
             ) {
                 Text(stringResource(R.string.continue_with_google))
             }
@@ -309,9 +322,9 @@ private fun SignedInProfileHero(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(20.dp),
+            Modifier.padding(HomeDecorSpacing.CardInternal),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
         ) {
             Box {
                 Surface(
@@ -329,7 +342,7 @@ private fun SignedInProfileHero(
                     )
                 }
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = StudioGold,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -337,7 +350,7 @@ private fun SignedInProfileHero(
                 ) {
                     Text(
                         stringResource(R.string.free_badge),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White,
                     )
@@ -357,13 +370,13 @@ private fun SignedInProfileHero(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Xs))
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = StudioProContainer,
                 ) {
                     Row(
-                        Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
@@ -390,12 +403,12 @@ private fun UpgradeBanner(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(18.dp),
+            Modifier.padding(HomeDecorSpacing.CardInternal),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                     Icon(Icons.Rounded.Star, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color(0xFFF0D98A))
                     Text(
                         stringResource(R.string.go_premium),
@@ -403,7 +416,7 @@ private fun UpgradeBanner(
                         color = Color.White,
                     )
                 }
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Xs))
                 Text(
                     stringResource(R.string.go_premium_body),
                     style = MaterialTheme.typography.bodySmall,
@@ -451,7 +464,7 @@ private fun SettingsCard(
         border = BorderStroke(1.dp, StudioLine),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(vertical = 4.dp)) {
+        Column(Modifier.padding(vertical = HomeDecorSpacing.CardInternal)) {
             content()
         }
     }
@@ -481,7 +494,7 @@ private fun ProfileRow(
             }
         } else null,
         leadingContent = {
-            Surface(shape = RoundedCornerShape(10.dp), color = iconBg) {
+            Surface(        shape = RoundedCornerShape(8.dp), color = iconBg) {
                 Icon(
                     icon,
                     contentDescription = null,
@@ -495,7 +508,7 @@ private fun ProfileRow(
                 Icons.AutoMirrored.Rounded.ArrowForward,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(16.dp),
             )
         },
         colors = ListItemDefaults.colors(
@@ -514,7 +527,7 @@ private fun ProfileDivider() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = HomeDecorSpacing.Base)
             .height(1.dp)
             .background(StudioMist),
     )

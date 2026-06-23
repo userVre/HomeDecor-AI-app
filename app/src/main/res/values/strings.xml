@@ -1082,7 +1082,7 @@
   <string name="sign_out">Sign Out</string>
 
   <!-- My Board -->
-  <string name="my_board_title">Profile</string>
+  <string name="my_board_title">My Board</string>
   <string name="generated_tab">Generated</string>
   <string name="favorites_tab">Favorites</string>
   <string name="sign_in_to_view_board">Sign in to view your board</string>
@@ -1281,4 +1281,20 @@
   <string name="upload_add_photo_body">Choose a clear, well-lit photo for the best AI results.</string>
   <string name="upload_selected_body">Your photo is ready. Continue or replace it.</string>
   <string name="a11y_selected_image_preview">Selected image preview</string>
+  <string name="current_plan">Current plan</string>
+  <string name="current_plan_body_free">Free Plan</string>
+  <string name="current_plan_body_pro">Pro (active)</string>
+  <string name="subscription_status">Subscription</string>
+  <string name="subscription_status_body_free">No active subscription</string>
+  <string name="subscription_status_body_pro">Active until %1$s</string>
+  <string name="projects_tab">Projects</string>
+  <string name="saved_projects">Saved projects</string>
+  <string name="saved_projects_body">Your project workspaces appear here.</string>
+  <string name="no_projects_body">Start a design and save it to a project to see it here.</string>
+  <string name="board_empty_generated">No generated images yet</string>
+  <string name="board_empty_generated_body">Use a design tool to create your first image.</string>
+  <string name="board_empty_favorites">No favorites yet</string>
+  <string name="board_empty_favorites_body">Tap the star on any design to save it here.</string>
+  <string name="profile_sign_in_title">Sign in to your account</string>
+  <string name="profile_sign_in_body">Save your settings, sync preferences across devices, and manage your subscription.</string>
 </resources>

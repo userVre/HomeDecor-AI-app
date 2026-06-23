@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -71,7 +70,7 @@ fun ToolsScreen(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Lg,
-                bottom = navBarBottomPadding(),
+                bottom = navBarBottomPadding(additionalContentPadding = 40.dp),
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
         ) {
@@ -107,9 +106,9 @@ fun ToolsHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                 modifier = Modifier
-                    .height(48.dp)
+                    .height(HomeDecorSpacing.TouchTarget)
                     .clickable(onClick = onCredits)
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = HomeDecorSpacing.Sm)
                     .semantics {
                         contentDescription = creditsDescription
                         role = Role.Button
@@ -137,7 +136,7 @@ fun ToolCard(
 ) {
     val title = localizedToolTitle(tool)
     val description = localizedToolDescription(tool)
-    val cardShape = RoundedCornerShape(16.dp)
+    val cardShape = RoundedCornerShape(20.dp)
     val toolCardDescription = stringResource(R.string.a11y_tool_card_format, title, description)
 
     Surface(
@@ -146,7 +145,7 @@ fun ToolCard(
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
+            .height(170.dp)
             .clip(cardShape)
             .semantics {
                 contentDescription = toolCardDescription
@@ -166,13 +165,12 @@ fun ToolCard(
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            0.0f to Color.Black.copy(alpha = 0.10f),
-                            0.10f to Color.Black.copy(alpha = 0.35f),
-                            0.25f to Color.Black.copy(alpha = 0.70f),
-                            0.45f to Color.Black.copy(alpha = 0.88f),
-                            0.65f to Color.Black.copy(alpha = 0.95f),
-                            0.82f to Color.Black.copy(alpha = 0.98f),
-                            1.0f to Color.Black,
+                            0.0f to Color.Transparent,
+                            0.25f to Color.Black.copy(alpha = 0.10f),
+                            0.45f to Color.Black.copy(alpha = 0.35f),
+                            0.65f to Color.Black.copy(alpha = 0.55f),
+                            0.82f to Color.Black.copy(alpha = 0.70f),
+                            1.0f to Color.Black.copy(alpha = 0.80f),
                         ),
                     ),
             )
@@ -181,7 +179,7 @@ fun ToolCard(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Base),
             ) {
                 Text(
                     title,
@@ -191,7 +189,7 @@ fun ToolCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Xs))
                 Text(
                     description,
                     color = Color.White.copy(alpha = 0.85f),
@@ -199,41 +197,29 @@ fun ToolCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.height(40.dp),
+                Spacer(Modifier.height(HomeDecorSpacing.Md))
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White.copy(alpha = 0.20f),
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = Color.White.copy(alpha = 0.20f),
+                    Row(
+                        Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                Icons.Rounded.AutoAwesome,
-                                contentDescription = null,
-                                Modifier.size(14.dp),
-                                tint = Color.White,
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                stringResource(R.string.try_this),
-                                color = Color.White,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Medium,
-                            )
-                        }
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            Modifier.size(14.dp),
+                            tint = Color.White,
+                        )
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                        Text(
+                            stringResource(R.string.try_this),
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium,
+                        )
                     }
-                    Icon(
-                        Icons.Rounded.ChevronRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = Color.White.copy(alpha = 0.70f),
-                    )
                 }
             }
         }

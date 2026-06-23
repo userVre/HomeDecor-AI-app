@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -80,9 +81,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -294,9 +298,9 @@ private fun ProBadge() {
         color = ProBadgeBg,
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             Icon(
                 Icons.Rounded.AutoAwesome,
@@ -322,12 +326,12 @@ private fun ProScreenHeader(
     onClose: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(top = 8.dp),
+        Modifier.fillMaxWidth().padding(top = HomeDecorSpacing.Sm),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (onBack != null) {
-            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
+            IconButton(onClick = onBack, modifier = Modifier.size(HomeDecorSpacing.TouchTarget)) {
                 Icon(
                     Icons.AutoMirrored.Rounded.ArrowBack,
                     contentDescription = stringResource(R.string.back),
@@ -336,10 +340,10 @@ private fun ProScreenHeader(
                 )
             }
         } else {
-            Spacer(Modifier.size(48.dp))
+            Spacer(Modifier.size(HomeDecorSpacing.TouchTarget))
         }
         ProBadge()
-        IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
+        IconButton(onClick = onClose, modifier = Modifier.size(HomeDecorSpacing.TouchTarget)) {
             Icon(
                 Icons.Rounded.Close,
                 contentDescription = stringResource(R.string.pro_a11y_close),
@@ -385,7 +389,7 @@ private fun ProCtaButton(
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(HomeDecorSpacing.ButtonHeight)
             .scale(scale),
     ) {
         Row(
@@ -399,7 +403,7 @@ private fun ProCtaButton(
                     color = Color.White,
                     strokeWidth = 2.dp,
                 )
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(label, style = MaterialTheme.typography.titleSmall)
             } else if (success) {
                 Icon(
@@ -408,7 +412,7 @@ private fun ProCtaButton(
                     modifier = Modifier.size(20.dp),
                     tint = Color.White,
                 )
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(label, style = MaterialTheme.typography.titleSmall)
             } else {
                 Text(label, style = MaterialTheme.typography.titleSmall)
@@ -420,7 +424,7 @@ private fun ProCtaButton(
 @Composable
 private fun ProPageIndicator(pageCount: Int, currentPage: Int) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(pageCount) { index ->
@@ -443,14 +447,14 @@ private fun ProBottomLinks(onRestore: () -> Unit) {
     val privacyDescription = stringResource(R.string.a11y_privacy_link)
     Row(
         Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs, Alignment.CenterHorizontally),
     ) {
         Box(
             modifier = Modifier
                 .minimumTouchTarget()
                 .semantics { contentDescription = restoreDescription; role = Role.Button }
                 .clickable { onRestore() }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -463,14 +467,14 @@ private fun ProBottomLinks(onRestore: () -> Unit) {
             "\u00B7",
             color = ProTextMuted.copy(alpha = 0.4f),
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(vertical = 12.dp),
+            modifier = Modifier.padding(vertical = HomeDecorSpacing.Md),
         )
         Box(
             modifier = Modifier
                 .minimumTouchTarget()
                 .semantics { contentDescription = termsDescription; role = Role.Button }
                 .clickable { }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -483,14 +487,14 @@ private fun ProBottomLinks(onRestore: () -> Unit) {
             "\u00B7",
             color = ProTextMuted.copy(alpha = 0.4f),
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(vertical = 12.dp),
+            modifier = Modifier.padding(vertical = HomeDecorSpacing.Md),
         )
         Box(
             modifier = Modifier
                 .minimumTouchTarget()
                 .semantics { contentDescription = privacyDescription; role = Role.Button }
                 .clickable { }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -532,112 +536,305 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            // Stylized living room silhouette with premium feel
+            // Detailed interior room scene — cozy living room
             androidx.compose.foundation.Canvas(
                 Modifier
-                    .fillMaxWidth(0.85f)
-                    .height(160.dp),
+                    .fillMaxWidth(0.92f)
+                    .height(180.dp),
             ) {
                 val w = size.width
                 val h = size.height
 
-                // Floor line
+                // ── Back wall ──
+                drawRoundRect(
+                    color = ProAccent.copy(alpha = 0.07f),
+                    topLeft = Offset.Zero,
+                    size = Size(w, h * 0.78f),
+                    cornerRadius = CornerRadius(10.dp.toPx()),
+                )
+
+                // Wall wood-panel texture (subtle vertical lines)
+                for (i in 1..6) {
+                    val x = w * (0.12f + i * 0.12f)
+                    drawLine(
+                        color = ProTextMuted.copy(alpha = 0.06f),
+                        start = Offset(x, h * 0.04f),
+                        end = Offset(x, h * 0.34f),
+                        strokeWidth = 1.dp.toPx(),
+                    )
+                }
+
+                // ── Window with warm glow ──
+                val winX = w * 0.30f
+                val winY = h * 0.06f
+                val winW = w * 0.38f
+                val winH = h * 0.44f
+
+                // Glow behind window
+                drawRoundRect(
+                    color = ProGold.copy(alpha = glowAlpha * 0.12f),
+                    topLeft = Offset(winX - 10.dp.toPx(), winY - 6.dp.toPx()),
+                    size = Size(winW + 20.dp.toPx(), winH + 12.dp.toPx()),
+                    cornerRadius = CornerRadius(14.dp.toPx()),
+                )
+                // Window glass
+                drawRoundRect(
+                    color = ProGold.copy(alpha = glowAlpha * 0.10f),
+                    topLeft = Offset(winX, winY),
+                    size = Size(winW, winH),
+                    cornerRadius = CornerRadius(6.dp.toPx()),
+                )
+                // Window cross-bars
                 drawLine(
-                    color = ProAccent.copy(alpha = 0.4f),
-                    start = Offset(w * 0.05f, h * 0.78f),
-                    end = Offset(w * 0.95f, h * 0.78f),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
+                    color = ProTextMuted.copy(alpha = 0.18f),
+                    start = Offset(winX + winW / 2, winY),
+                    end = Offset(winX + winW / 2, winY + winH),
+                    strokeWidth = 1.5.dp.toPx(),
                 )
-
-                // Sofa — rounded rectangle body
-                drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.5f),
-                    topLeft = Offset(w * 0.1f, h * 0.5f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.55f, h * 0.28f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
-                )
-                // Sofa back
-                drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.35f),
-                    topLeft = Offset(w * 0.12f, h * 0.38f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.51f, h * 0.15f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(10.dp.toPx()),
-                )
-                // Sofa cushions
-                drawRoundRect(
-                    color = ProAccentLight.copy(alpha = 0.3f),
-                    topLeft = Offset(w * 0.15f, h * 0.53f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.22f, h * 0.12f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx()),
-                )
-                drawRoundRect(
-                    color = ProAccentLight.copy(alpha = 0.3f),
-                    topLeft = Offset(w * 0.4f, h * 0.53f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.22f, h * 0.12f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx()),
-                )
-
-                // Side table
-                drawRoundRect(
-                    color = ProGold.copy(alpha = 0.4f),
-                    topLeft = Offset(w * 0.72f, h * 0.58f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.12f, h * 0.2f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),
-                )
-                // Lamp on table
                 drawLine(
-                    color = ProGold.copy(alpha = 0.5f),
-                    start = Offset(w * 0.78f, h * 0.58f),
-                    end = Offset(w * 0.78f, h * 0.42f),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
+                    color = ProTextMuted.copy(alpha = 0.18f),
+                    start = Offset(winX, winY + winH * 0.45f),
+                    end = Offset(winX + winW, winY + winH * 0.45f),
+                    strokeWidth = 1.5.dp.toPx(),
                 )
-                // Lamp shade
-                drawPath(
-                    path = androidx.compose.ui.graphics.Path().apply {
-                        moveTo(w * 0.73f, h * 0.42f)
-                        lineTo(w * 0.83f, h * 0.42f)
-                        lineTo(w * 0.8f, h * 0.34f)
-                        lineTo(w * 0.76f, h * 0.34f)
-                        close()
-                    },
-                    color = ProGold.copy(alpha = glowAlpha * 0.5f),
+                // Left curtain
+                drawRoundRect(
+                    color = ProTextMuted.copy(alpha = 0.12f),
+                    topLeft = Offset(winX - 14.dp.toPx(), winY - 6.dp.toPx()),
+                    size = Size(12.dp.toPx(), winH + 20.dp.toPx()),
+                    cornerRadius = CornerRadius(5.dp.toPx()),
+                )
+                // Right curtain
+                drawRoundRect(
+                    color = ProTextMuted.copy(alpha = 0.12f),
+                    topLeft = Offset(winX + winW + 2.dp.toPx(), winY - 6.dp.toPx()),
+                    size = Size(12.dp.toPx(), winH + 20.dp.toPx()),
+                    cornerRadius = CornerRadius(5.dp.toPx()),
                 )
 
-                // Wall art frame
+                // ── Wall art (above sofa) ──
                 drawRoundRect(
-                    color = ProTextMuted.copy(alpha = 0.25f),
-                    topLeft = Offset(w * 0.25f, h * 0.1f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.35f, h * 0.22f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),
+                    color = ProTextMuted.copy(alpha = 0.20f),
+                    topLeft = Offset(w * 0.10f, h * 0.08f),
+                    size = Size(w * 0.16f, h * 0.22f),
+                    cornerRadius = CornerRadius(3.dp.toPx()),
                     style = Stroke(width = 1.5.dp.toPx()),
                 )
-                // Art inner
+                // Art inner landscape
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = glowAlpha * 0.2f),
-                    topLeft = Offset(w * 0.28f, h * 0.13f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.29f, h * 0.16f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx()),
+                    color = ProAccent.copy(alpha = glowAlpha * 0.12f),
+                    topLeft = Offset(w * 0.115f, h * 0.10f),
+                    size = Size(w * 0.13f, h * 0.18f),
+                    cornerRadius = CornerRadius(2.dp.toPx()),
+                )
+                drawPath(
+                    path = Path().apply {
+                        moveTo(w * 0.115f, h * 0.24f)
+                        lineTo(w * 0.16f, h * 0.14f)
+                        lineTo(w * 0.21f, h * 0.20f)
+                        lineTo(w * 0.245f, h * 0.16f)
+                        lineTo(w * 0.245f, h * 0.28f)
+                        lineTo(w * 0.115f, h * 0.28f)
+                        close()
+                    },
+                    color = ProAccent.copy(alpha = glowAlpha * 0.10f),
                 )
 
-                // Plant
-                drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.35f),
-                    radius = w * 0.04f,
-                    center = Offset(w * 0.88f, h * 0.52f),
-                )
-                drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.25f),
-                    radius = w * 0.03f,
-                    center = Offset(w * 0.85f, h * 0.48f),
-                )
+                // ── Floor line ──
                 drawLine(
-                    color = ProCheckGreen.copy(alpha = 0.3f),
-                    start = Offset(w * 0.88f, h * 0.56f),
-                    end = Offset(w * 0.88f, h * 0.65f),
+                    color = ProAccent.copy(alpha = 0.30f),
+                    start = Offset(w * 0.02f, h * 0.78f),
+                    end = Offset(w * 0.98f, h * 0.78f),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+
+                // ── Rug (oval, under furniture) ──
+                drawOval(
+                    color = ProAccent.copy(alpha = 0.08f),
+                    topLeft = Offset(w * 0.06f, h * 0.72f),
+                    size = Size(w * 0.68f, h * 0.14f),
+                )
+                drawOval(
+                    color = ProGold.copy(alpha = 0.06f),
+                    topLeft = Offset(w * 0.10f, h * 0.74f),
+                    size = Size(w * 0.60f, h * 0.08f),
+                )
+
+                // ── Sofa ──
+                // Legs
+                drawLine(
+                    color = ProTextMuted.copy(alpha = 0.25f),
+                    start = Offset(w * 0.16f, h * 0.78f),
+                    end = Offset(w * 0.16f, h * 0.82f),
                     strokeWidth = 2.dp.toPx(),
                     cap = StrokeCap.Round,
+                )
+                drawLine(
+                    color = ProTextMuted.copy(alpha = 0.25f),
+                    start = Offset(w * 0.60f, h * 0.78f),
+                    end = Offset(w * 0.60f, h * 0.82f),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                // Sofa body
+                drawRoundRect(
+                    color = ProAccent.copy(alpha = 0.45f),
+                    topLeft = Offset(w * 0.08f, h * 0.50f),
+                    size = Size(w * 0.58f, h * 0.28f),
+                    cornerRadius = CornerRadius(14.dp.toPx()),
+                )
+                // Sofa backrest
+                drawRoundRect(
+                    color = ProAccent.copy(alpha = 0.30f),
+                    topLeft = Offset(w * 0.10f, h * 0.38f),
+                    size = Size(w * 0.54f, h * 0.14f),
+                    cornerRadius = CornerRadius(12.dp.toPx()),
+                )
+                // Left armrest
+                drawRoundRect(
+                    color = ProAccent.copy(alpha = 0.38f),
+                    topLeft = Offset(w * 0.06f, h * 0.42f),
+                    size = Size(w * 0.08f, h * 0.30f),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                )
+                // Right armrest
+                drawRoundRect(
+                    color = ProAccent.copy(alpha = 0.38f),
+                    topLeft = Offset(w * 0.60f, h * 0.42f),
+                    size = Size(w * 0.08f, h * 0.30f),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                )
+                // Left cushion
+                drawRoundRect(
+                    color = ProAccentLight.copy(alpha = 0.22f),
+                    topLeft = Offset(w * 0.14f, h * 0.53f),
+                    size = Size(w * 0.22f, h * 0.12f),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                )
+                // Right cushion
+                drawRoundRect(
+                    color = ProAccentLight.copy(alpha = 0.22f),
+                    topLeft = Offset(w * 0.40f, h * 0.53f),
+                    size = Size(w * 0.22f, h * 0.12f),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                )
+                // Throw pillow
+                drawRoundRect(
+                    color = ProGold.copy(alpha = 0.18f),
+                    topLeft = Offset(w * 0.14f, h * 0.41f),
+                    size = Size(w * 0.10f, h * 0.10f),
+                    cornerRadius = CornerRadius(6.dp.toPx()),
+                )
+
+                // ── Coffee table ──
+                // Table top
+                drawRoundRect(
+                    color = ProGold.copy(alpha = 0.22f),
+                    topLeft = Offset(w * 0.24f, h * 0.72f),
+                    size = Size(w * 0.30f, h * 0.05f),
+                    cornerRadius = CornerRadius(4.dp.toPx()),
+                )
+                // Table legs
+                drawLine(
+                    color = ProGold.copy(alpha = 0.18f),
+                    start = Offset(w * 0.27f, h * 0.77f),
+                    end = Offset(w * 0.27f, h * 0.82f),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                drawLine(
+                    color = ProGold.copy(alpha = 0.18f),
+                    start = Offset(w * 0.51f, h * 0.77f),
+                    end = Offset(w * 0.51f, h * 0.82f),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                // Vase on table
+                drawRoundRect(
+                    color = ProGold.copy(alpha = 0.30f),
+                    topLeft = Offset(w * 0.35f, h * 0.64f),
+                    size = Size(w * 0.07f, h * 0.08f),
+                    cornerRadius = CornerRadius(3.dp.toPx()),
+                )
+                // Stem
+                drawLine(
+                    color = ProCheckGreen.copy(alpha = 0.30f),
+                    start = Offset(w * 0.385f, h * 0.64f),
+                    end = Offset(w * 0.385f, h * 0.58f),
+                    strokeWidth = 1.5.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                // Leaf
+                drawCircle(
+                    color = ProCheckGreen.copy(alpha = 0.28f),
+                    radius = w * 0.022f,
+                    center = Offset(w * 0.395f, h * 0.56f),
+                )
+
+                // ── Floor lamp (right side) ──
+                // Base
+                drawOval(
+                    color = ProGold.copy(alpha = 0.25f),
+                    topLeft = Offset(w * 0.76f, h * 0.78f),
+                    size = Size(w * 0.10f, h * 0.03f),
+                )
+                // Pole
+                drawLine(
+                    color = ProGold.copy(alpha = 0.35f),
+                    start = Offset(w * 0.81f, h * 0.78f),
+                    end = Offset(w * 0.81f, h * 0.28f),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                // Shade (trapezoid)
+                drawPath(
+                    path = Path().apply {
+                        moveTo(w * 0.75f, h * 0.28f)
+                        lineTo(w * 0.87f, h * 0.28f)
+                        lineTo(w * 0.84f, h * 0.20f)
+                        lineTo(w * 0.78f, h * 0.20f)
+                        close()
+                    },
+                    color = ProGold.copy(alpha = glowAlpha * 0.45f),
+                )
+                // Lamp glow
+                drawCircle(
+                    color = ProGold.copy(alpha = glowAlpha * 0.06f),
+                    radius = w * 0.09f,
+                    center = Offset(w * 0.81f, h * 0.24f),
+                )
+
+                // ── Potted plant (far left) ──
+                // Pot
+                drawRoundRect(
+                    color = ProGold.copy(alpha = 0.25f),
+                    topLeft = Offset(w * 0.00f, h * 0.64f),
+                    size = Size(w * 0.07f, h * 0.14f),
+                    cornerRadius = CornerRadius(4.dp.toPx()),
+                )
+                // Stems + leaves
+                drawLine(
+                    color = ProCheckGreen.copy(alpha = 0.25f),
+                    start = Offset(w * 0.035f, h * 0.64f),
+                    end = Offset(w * 0.035f, h * 0.56f),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+                drawCircle(
+                    color = ProCheckGreen.copy(alpha = 0.32f),
+                    radius = w * 0.045f,
+                    center = Offset(w * 0.035f, h * 0.52f),
+                )
+                drawCircle(
+                    color = ProCheckGreen.copy(alpha = 0.22f),
+                    radius = w * 0.032f,
+                    center = Offset(w * 0.01f, h * 0.49f),
+                )
+                drawCircle(
+                    color = ProCheckGreen.copy(alpha = 0.28f),
+                    radius = w * 0.028f,
+                    center = Offset(w * 0.06f, h * 0.50f),
                 )
             }
         }
@@ -726,12 +923,12 @@ private fun ProIntroScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = null, onClose = onClose)
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             // Celebration text
             Text(
@@ -744,19 +941,19 @@ private fun ProIntroScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
 
             // Hero illustration with sparkle particles
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(220.dp),
             ) {
                 ProHeroIllustration(Modifier.fillMaxSize())
                 CelebrationParticles(Modifier.fillMaxSize())
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             // Headline
             Text(
@@ -770,7 +967,7 @@ private fun ProIntroScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             // Subtitle
             Text(
@@ -780,27 +977,17 @@ private fun ProIntroScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             // PRO badge below subtitle
             ProBadge()
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
-            // CTA
-            ProCtaButton(
-                label = stringResource(R.string.pro_intro_cta),
-                processing = false,
-                success = false,
-                onClick = onContinue,
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // Benefit preview chips
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            // Benefit preview chips (wrapped to prevent clipping)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 listOf(
                     stringResource(R.string.pro_benefit_unlimited_title),
@@ -813,9 +1000,9 @@ private fun ProIntroScreen(
                         border = BorderStroke(1.dp, ProAccent.copy(alpha = 0.2f)),
                     ) {
                         Row(
-                            Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                         ) {
                             Icon(
                                 Icons.Rounded.Check,
@@ -827,13 +1014,24 @@ private fun ProIntroScreen(
                                 label,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = ProTextSecondary,
+                                maxLines = 1,
                             )
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.weight(1f))
+
+            // CTA
+            ProCtaButton(
+                label = stringResource(R.string.pro_intro_cta),
+                processing = false,
+                success = false,
+                onClick = onContinue,
+            )
+
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             Text(
                 stringResource(R.string.pro_google_play_checkout),
@@ -842,7 +1040,7 @@ private fun ProIntroScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
 
             Spacer(Modifier.windowInsetsPadding(WindowInsets.navigationBars))
         }
@@ -884,12 +1082,12 @@ private fun ProBenefitCarousel(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = onBack, onClose = onClose)
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             // Step progress
             Text(
@@ -902,7 +1100,7 @@ private fun ProBenefitCarousel(
                 color = ProTextMuted,
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             HorizontalPager(
                 state = pagerState,
@@ -912,7 +1110,7 @@ private fun ProBenefitCarousel(
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = HomeDecorSpacing.Base),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
@@ -933,7 +1131,7 @@ private fun ProBenefitCarousel(
                         }
                     }
 
-                    Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(HomeDecorSpacing.Xl))
 
                     Text(
                         stringResource(benefit.titleRes),
@@ -945,7 +1143,7 @@ private fun ProBenefitCarousel(
                         textAlign = TextAlign.Center,
                     )
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(HomeDecorSpacing.Md))
 
                     Text(
                         stringResource(benefit.subRes),
@@ -961,19 +1159,19 @@ private fun ProBenefitCarousel(
                 currentPage = pagerState.currentPage,
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             // Bottom buttons
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
             ) {
                 // Skip button
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp)
+                        .height(HomeDecorSpacing.ButtonHeight)
                         .clip(RoundedCornerShape(16.dp))
                         .border(1.dp, ProTextMuted.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                         .clickable { onSkip() },
@@ -1002,7 +1200,7 @@ private fun ProBenefitCarousel(
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             Spacer(Modifier.windowInsetsPadding(WindowInsets.navigationBars))
         }
@@ -1043,12 +1241,12 @@ private fun ProReminderScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = onBack, onClose = onClose)
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Xl))
 
             // Notification bell icon
             Surface(
@@ -1067,7 +1265,7 @@ private fun ProReminderScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             Text(
                 stringResource(R.string.pro_reminder_title),
@@ -1079,7 +1277,7 @@ private fun ProReminderScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             Text(
                 stringResource(R.string.pro_reminder_subtitle),
@@ -1088,7 +1286,7 @@ private fun ProReminderScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             ReminderOption(
                 label = stringResource(R.string.pro_reminder_2days),
@@ -1097,7 +1295,7 @@ private fun ProReminderScreen(
                 contentDescription = reminder2Description,
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             ReminderOption(
                 label = stringResource(R.string.pro_reminder_3days),
@@ -1106,11 +1304,11 @@ private fun ProReminderScreen(
                 contentDescription = reminder3Description,
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 Icon(
                     Icons.Rounded.Check,
@@ -1135,7 +1333,7 @@ private fun ProReminderScreen(
                 onClick = onContinue,
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             Spacer(Modifier.windowInsetsPadding(WindowInsets.navigationBars))
         }
@@ -1174,9 +1372,9 @@ private fun ReminderOption(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Base),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
         ) {
             Box(
                 modifier = Modifier
@@ -1246,12 +1444,12 @@ private fun ProPlanScreen(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = onBack, onClose = onClose)
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             Text(
                 stringResource(R.string.pro_plan_title),
@@ -1262,7 +1460,7 @@ private fun ProPlanScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             // Yearly plan card
             ProPlanCard(
@@ -1275,7 +1473,7 @@ private fun ProPlanScreen(
                 onClick = { onPlanSelected("yearly") },
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             // Weekly plan card
             ProPlanCard(
@@ -1288,12 +1486,12 @@ private fun ProPlanScreen(
                 onClick = { onPlanSelected("weekly") },
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             // Trial note
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 Icon(
                     Icons.Rounded.Check,
@@ -1308,7 +1506,7 @@ private fun ProPlanScreen(
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             // CTA
             ProCtaButton(
@@ -1318,7 +1516,7 @@ private fun ProPlanScreen(
                 onClick = onContinue,
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             // Cancel note
             Row(
@@ -1332,7 +1530,7 @@ private fun ProPlanScreen(
                     tint = ProCheckGreen,
                     modifier = Modifier.size(14.dp),
                 )
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(
                     stringResource(R.string.pro_cancel_anytime),
                     color = ProTextMuted,
@@ -1340,7 +1538,7 @@ private fun ProPlanScreen(
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
 
             // Terms
             Text(
@@ -1350,11 +1548,11 @@ private fun ProPlanScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
 
             ProBottomLinks(onRestore = onRestore)
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
             Spacer(Modifier.windowInsetsPadding(WindowInsets.navigationBars))
         }
@@ -1408,7 +1606,7 @@ private fun ProPlanCard(
                     color = if (selected) ProAccentSurface else ProCardSurface,
                     shape = RoundedCornerShape(14.dp),
                 )
-                .padding(16.dp),
+                .padding(HomeDecorSpacing.Base),
         ) {
             Row(
                 Modifier.fillMaxWidth(),
@@ -1416,7 +1614,7 @@ private fun ProPlanCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -1433,7 +1631,7 @@ private fun ProPlanCard(
                         ) {
                             Text(
                                 stringResource(R.string.pro_plan_best_value),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = 3.dp),
                                 color = ProGold,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             )
@@ -1461,7 +1659,7 @@ private fun ProPlanCard(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
@@ -1469,16 +1667,16 @@ private fun ProPlanCard(
                     style = MaterialTheme.typography.displaySmall.copy(letterSpacing = (-1).sp),
                     color = ProTextPrimary,
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(HomeDecorSpacing.Xs))
                 Text(
                     priceSuffix,
                     style = MaterialTheme.typography.bodyMedium,
                     color = ProTextMuted,
-                    modifier = Modifier.padding(bottom = 4.dp),
+                    modifier = Modifier.padding(bottom = HomeDecorSpacing.Xs),
                 )
             }
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             Text(
                 detail,
@@ -1527,7 +1725,7 @@ private fun ProCheckoutScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = HomeDecorSpacing.Lg),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -1537,7 +1735,7 @@ private fun ProCheckoutScreen(
                     color = ProAccent,
                     strokeWidth = 4.dp,
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Lg))
                 Text(
                     stringResource(R.string.pro_checkout_setting_up),
                     style = MaterialTheme.typography.titleMedium,
@@ -1564,7 +1762,7 @@ private fun ProCheckoutScreen(
                     }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
                 Text(
                     stringResource(R.string.pro_cta_welcome),
@@ -1575,7 +1773,7 @@ private fun ProCheckoutScreen(
                     textAlign = TextAlign.Center,
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
                 Text(
                     stringResource(R.string.pro_hero_subtitle),

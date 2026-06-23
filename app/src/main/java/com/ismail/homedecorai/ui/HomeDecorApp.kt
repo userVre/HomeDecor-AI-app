@@ -317,17 +317,17 @@ private fun HomeDecorNavigationBar(
                 onSelect = onSelectTab,
             )
             NavItem(
-                tab = MainTab.Profile,
-                selectedTab = selectedTab,
-                icon = Icons.Rounded.Person,
-                label = stringResource(tabLabelRes(MainTab.Profile)),
-                onSelect = onSelectTab,
-            )
-            NavItem(
                 tab = MainTab.MyBoard,
                 selectedTab = selectedTab,
                 icon = Icons.Rounded.GridView,
                 label = stringResource(tabLabelRes(MainTab.MyBoard)),
+                onSelect = onSelectTab,
+            )
+            NavItem(
+                tab = MainTab.Profile,
+                selectedTab = selectedTab,
+                icon = Icons.Rounded.Person,
+                label = stringResource(tabLabelRes(MainTab.Profile)),
                 onSelect = onSelectTab,
             )
         }

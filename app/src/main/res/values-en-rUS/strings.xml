@@ -3,9 +3,9 @@
   <string name="app_name">HomeDecor AI</string>
   <string name="nav_tools">Tools</string>
   <string name="nav_discover">Discover</string>
-  <string name="nav_my_board">Profile</string>
+  <string name="nav_my_board">My Board</string>
   <string name="nav_upgrade_pro">Upgrade PRO</string>
-  <string name="nav_profile">My Board</string>
+  <string name="nav_profile">Profile</string>
   <string name="pro">Pro</string>
   <string name="pro_upper">Pro</string>
   <string name="upgrade_to_pro">Upgrade PRO</string>
