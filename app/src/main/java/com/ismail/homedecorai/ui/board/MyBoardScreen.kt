@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,6 +61,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardItem
+import com.ismail.homedecorai.model.MainTab
 import com.ismail.homedecorai.FavoriteItem
 import com.ismail.homedecorai.GeneratedResult
 import com.ismail.homedecorai.Project
@@ -100,7 +100,7 @@ fun MyBoardScreen(
             )
         }
 
-        Spacer(Modifier.height(HomeDecorSpacing.SectionGap))
+        Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
         PrimaryTabRow(
             selectedTabIndex = selectedTab.ordinal,
@@ -119,7 +119,9 @@ fun MyBoardScreen(
                     height = 1.dp,
                 )
             },
-            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg),
+            modifier = Modifier
+                .height(44.dp)
+                .padding(horizontal = HomeDecorSpacing.Lg),
         ) {
             Tab(
                 selected = selectedTab == BoardTab.Generated,
@@ -128,7 +130,7 @@ fun MyBoardScreen(
                     Text(
                         stringResource(R.string.generated_tab),
                         fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 },
             )
@@ -139,7 +141,7 @@ fun MyBoardScreen(
                     Text(
                         stringResource(R.string.favorites_tab),
                         fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 },
             )
@@ -150,26 +152,31 @@ fun MyBoardScreen(
                     Text(
                         stringResource(R.string.projects_tab),
                         fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                     )
                 },
             )
         }
 
-        Spacer(Modifier.height(HomeDecorSpacing.SectionGap))
+        Spacer(Modifier.height(HomeDecorSpacing.Sm))
+
+        val navigateToTools: () -> Unit = { viewModel.selectTab(MainTab.Tools) }
 
         when (selectedTab) {
             BoardTab.Generated -> GeneratedSection(
                 state = state,
                 viewModel = viewModel,
+                onNavigateToTools = navigateToTools,
             )
             BoardTab.Favorites -> FavoritesBoardSection(
                 state = state,
                 viewModel = viewModel,
+                onNavigateToTools = navigateToTools,
             )
             BoardTab.Projects -> ProjectsSection(
                 state = state,
                 viewModel = viewModel,
+                onNavigateToTools = navigateToTools,
             )
         }
     }
@@ -182,7 +189,7 @@ private fun SignInCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = HomeDecorSpacing.Lg),
+            .padding(horizontal = HomeDecorSpacing.Base),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = StudioPaper,
@@ -239,8 +246,8 @@ private fun ProUpgradeCard(
         shape = RoundedCornerShape(20.dp),
         color = Color.Transparent,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = HomeDecorSpacing.Lg),
+        .fillMaxWidth()
+        .padding(horizontal = HomeDecorSpacing.Base),
     ) {
         Box(
             modifier = Modifier
@@ -311,6 +318,7 @@ private fun ProUpgradeCard(
 private fun GeneratedSection(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
+    onNavigateToTools: () -> Unit,
 ) {
     val generatedItems = remember(state.workspace.generatedResults) {
         state.workspace.generatedResults
@@ -322,7 +330,7 @@ private fun GeneratedSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -368,7 +376,7 @@ private fun GeneratedSection(
                         Icon(
                             Icons.Rounded.Diamond,
                             contentDescription = null,
-                            modifier = Modifier.padding(16.dp).size(32.dp),
+                            modifier = Modifier.padding(HomeDecorSpacing.Base).size(32.dp),
                             tint = StudioLine,
                         )
                     }
@@ -386,11 +394,33 @@ private fun GeneratedSection(
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodySmall,
                     )
+                    Spacer(Modifier.height(HomeDecorSpacing.Lg))
+                    OutlinedButton(
+                        onClick = onNavigateToTools,
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = StudioBrownBtn,
+                        ),
+                        border = BorderStroke(1.dp, StudioBrownBtn),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(HomeDecorSpacing.Xs))
+                        Text(
+                            stringResource(R.string.start_a_design),
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
             }
         } else {
             LazyRow(
-                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Lg),
+                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 items(generatedItems, key = { it.id }) { result ->
@@ -452,6 +482,7 @@ private fun GeneratedCard(
 private fun FavoritesBoardSection(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
+    onNavigateToTools: () -> Unit,
 ) {
     val context = LocalContext.current
     val favorites = remember(state.workspace.favorites) {
@@ -462,7 +493,7 @@ private fun FavoritesBoardSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -508,7 +539,7 @@ private fun FavoritesBoardSection(
                         Icon(
                             Icons.Rounded.Star,
                             contentDescription = null,
-                            modifier = Modifier.padding(16.dp).size(32.dp),
+                            modifier = Modifier.padding(HomeDecorSpacing.Base).size(32.dp),
                             tint = StudioLine,
                         )
                     }
@@ -526,12 +557,34 @@ private fun FavoritesBoardSection(
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodySmall,
                     )
+                    Spacer(Modifier.height(HomeDecorSpacing.Lg))
+                    OutlinedButton(
+                        onClick = onNavigateToTools,
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = StudioBrownBtn,
+                        ),
+                        border = BorderStroke(1.dp, StudioBrownBtn),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(HomeDecorSpacing.Xs))
+                        Text(
+                            stringResource(R.string.start_a_design),
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
             }
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = navBarBottomPadding()),
+                contentPadding = PaddingValues(start = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, bottom = navBarBottomPadding()),
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
@@ -665,50 +718,6 @@ private fun AddFavoriteCard() {
     }
 }
 
-@Composable
-private fun EmptyBoardState() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = HomeDecorSpacing.Xl),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Xl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = StudioMist,
-                modifier = Modifier.size(64.dp),
-            ) {
-                Icon(
-                    Icons.Rounded.Diamond,
-                    contentDescription = null,
-                    modifier = Modifier.padding(16.dp).size(32.dp),
-                    tint = StudioLine,
-                )
-            }
-            Spacer(Modifier.height(HomeDecorSpacing.Base))
-            Text(
-                stringResource(R.string.no_designs_yet),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-            Text(
-                stringResource(R.string.no_designs_body),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-}
-
 private fun GeneratedResult.toBoardItem(): BoardItem = BoardItem(
     id = id,
     toolTitle = toolTitle,
@@ -747,6 +756,7 @@ private fun FavoriteItem.toBoardItem(): BoardItem = BoardItem(
 private fun ProjectsSection(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
+    onNavigateToTools: () -> Unit,
 ) {
     val projects = remember(state.workspace.projects) {
         state.workspace.projects.sortedByDescending { it.updatedAt }
@@ -756,7 +766,7 @@ private fun ProjectsSection(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -769,11 +779,11 @@ private fun ProjectsSection(
         Spacer(Modifier.height(HomeDecorSpacing.Base))
 
         if (projects.isEmpty()) {
-            EmptyProjectsState()
+            EmptyProjectsState(onNavigateToTools = onNavigateToTools)
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, bottom = navBarBottomPadding()),
+                contentPadding = PaddingValues(start = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, bottom = navBarBottomPadding()),
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
@@ -814,7 +824,7 @@ private fun ProjectCard(
                     Icon(
                         Icons.Rounded.AutoAwesome,
                         contentDescription = null,
-                        modifier = Modifier.padding(24.dp).size(24.dp),
+                        modifier = Modifier.padding(HomeDecorSpacing.Lg).size(24.dp),
                         tint = StudioLine,
                     )
                 }
@@ -842,7 +852,7 @@ private fun ProjectCard(
 }
 
 @Composable
-private fun EmptyProjectsState() {
+private fun EmptyProjectsState(onNavigateToTools: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -863,7 +873,7 @@ private fun EmptyProjectsState() {
                 Icon(
                     Icons.Rounded.AutoAwesome,
                     contentDescription = null,
-                    modifier = Modifier.padding(16.dp).size(32.dp),
+                    modifier = Modifier.padding(HomeDecorSpacing.Base).size(32.dp),
                     tint = StudioLine,
                 )
             }
@@ -881,6 +891,28 @@ private fun EmptyProjectsState() {
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,
             )
+            Spacer(Modifier.height(HomeDecorSpacing.Lg))
+            OutlinedButton(
+                onClick = onNavigateToTools,
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = StudioBrownBtn,
+                ),
+                border = BorderStroke(1.dp, StudioBrownBtn),
+            ) {
+                Icon(
+                    Icons.Rounded.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(HomeDecorSpacing.Xs))
+                Text(
+                    stringResource(R.string.start_a_design),
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
         }
     }
 }

@@ -27,6 +27,7 @@
   <string name="continue_action">Continue</string>
   <string name="generate">Generate</string>
   <string name="generate_my_design">Generate my design</string>
+  <string name="generate_with_diamond">Generate (%1$s ♦)</string>
   <string name="back">Back</string>
   <string name="forward">Forward</string>
   <string name="close">Close</string>
@@ -240,6 +241,7 @@
   <string name="layout_plan_title">Plan the layout</string>
   <string name="layout_plan_body">Optimize positions, circulation, and usage zones without transforming the room style.</string>
   <string name="layout_generate">Generate layout</string>
+  <string name="layout_generate_with_diamond">Generate layout (%1$s ♦)</string>
   <string name="layout_select_goal_to_generate">Select a goal</string>
   <string name="room_photo">Room photo</string>
   <string name="room_photo_layout_body">Base used for the smart layout.</string>
@@ -746,7 +748,7 @@
   <string name="restore_purchases_toast">Purchases confirmed by Google Play are synchronized automatically.</string>
   <string name="diamond_store">Diamond store</string>
   <string name="diamond_store_title">Diamond Store</string>
-  <string name="diamond_store_subtitle">Buy generation credits</string>
+  <string name="diamond_store_subtitle">Power up your creativity</string>
   <string name="terms">Terms and Conditions</string>
   <string name="terms_subtitle">Use rules and AI disclaimer</string>
   <string name="privacy_policy">Privacy policy</string>
@@ -786,7 +788,7 @@
   <string name="purchase_offline_retry">You are offline. Reconnect before trying the purchase again.</string>
   <string name="purchase_timeout_retry">The purchase took too long to respond. Try again in a moment.</string>
   <string name="current_balance">Current balance</string>
-  <string name="get_more_credits">Get more credits</string>
+  <string name="get_more_credits">Choose your pack</string>
   <string name="loading_packs">Loading packs...</string>
   <string name="pack_title">Pack %1$s</string>
   <string name="purchase_confirmed">Purchase confirmed</string>
@@ -929,12 +931,13 @@
   <string name="option_design_preserve_description">Keep walls, openings, and volumes in place while improving the style.</string>
   <string name="option_design_free">Renovate freely</string>
   <string name="option_design_free_description">Allow AI to propose a more ambitious and creative transformation.</string>
-  <string name="pack_starter">Starter Pack</string>
-  <string name="pack_designer">Creator Pack</string>
-  <string name="pack_architect">Professional Pack</string>
-  <string name="pack_estate">Ultimate Pack</string>
+  <string name="pack_starter">Starter</string>
+  <string name="pack_designer">Creator</string>
+  <string name="pack_architect">Pro</string>
+  <string name="pack_estate">Ultimate</string>
   <string name="pack_badge_popular">POPULAR</string>
   <string name="pack_badge_best_value">BEST VALUE</string>
+  <string name="pack_badge_premium">PREMIUM</string>
   <string name="pack_starter_description">Enough for multiple room explorations.</string>
   <string name="pack_designer_description">The best balance for a full creative session.</string>
   <string name="pack_architect_description">Built for concept series, variants, and portfolios.</string>
@@ -1059,6 +1062,7 @@
 
   <!-- My Profile -->
   <string name="my_profile_title">Profile</string>
+  <string name="profile_subtitle">Manage your account and settings</string>
   <string name="sign_in_to_account">Sign in to your account</string>
   <string name="sign_in_to_account_body">Sign in to save your designs, access your board\nacross devices, and keep track of your favorite styles.</string>
   <string name="go_premium">Go Premium</string>
@@ -1295,6 +1299,7 @@
   <string name="board_empty_generated_body">Use a design tool to create your first image.</string>
   <string name="board_empty_favorites">No favorites yet</string>
   <string name="board_empty_favorites_body">Tap the star on any design to save it here.</string>
+  <string name="start_a_design">Start a design</string>
   <string name="profile_sign_in_title">Sign in to your account</string>
   <string name="profile_sign_in_body">Save your settings, sync preferences across devices, and manage your subscription.</string>
 </resources>

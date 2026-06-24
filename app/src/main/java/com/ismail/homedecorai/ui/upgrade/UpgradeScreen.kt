@@ -192,7 +192,7 @@ private fun ProHeroHeader() {
 @Composable
 private fun ProBenefitsList() {
     Column(
-        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Lg),
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Lg),
         verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
     ) {
         proBenefits.forEach { benefit ->
@@ -212,7 +212,7 @@ private fun ProBenefitRow(title: String, subtitle: String) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Base),
+            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Base),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
         ) {
@@ -252,7 +252,7 @@ private fun ProBenefitRow(title: String, subtitle: String) {
 @Composable
 private fun ProCtaSection(onOpenPaywall: () -> Unit) {
     Column(
-        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Base),
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Base),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
     ) {

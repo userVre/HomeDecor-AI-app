@@ -284,7 +284,7 @@ object HomeDecorCatalog {
     val diamondPacks = listOf(
         DiamondPack("starter", "Starter", 50, "$1.99", description = "Enough for multiple room explorations."),
         DiamondPack("designer", "Creator", 150, "$4.99", "POPULAR", "The best balance for a full creative session."),
-        DiamondPack("architect", "Professional", 400, "$9.99", "BEST VALUE", "Built for concept series, variants, and portfolios."),
+        DiamondPack("architect", "Pro", 400, "$9.99", "BEST VALUE", "Built for concept series, variants, and portfolios."),
         DiamondPack("estate", "Ultimate", 1000, "$19.99", description = "Deep credits for large projects and heavy usage."),
     )
 

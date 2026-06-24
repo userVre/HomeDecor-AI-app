@@ -2,6 +2,12 @@ package com.ismail.homedecorai.ui.store
 
 import android.app.Activity
 import android.content.ContextWrapper
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -197,7 +203,7 @@ fun DiamondStoreSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.6f))
+            .background(Color.Black.copy(alpha = 0.7f))
             .clickable(
                 interactionSource = scrimTapBlocker,
                 indication = null,
@@ -206,9 +212,8 @@ fun DiamondStoreSheet(
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            color = HomeDecorColors.DarkSurface,
-            tonalElevation = 8.dp,
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            color = StoreDarkBg,
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.92f)
@@ -232,32 +237,63 @@ fun DiamondStoreSheet(
                                 .width(40.dp)
                                 .height(4.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
+                                .background(Color.White.copy(alpha = 0.15f)),
                         )
                     }
                 }
 
                 item {
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Base),
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Md),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
                                 stringResource(R.string.diamond_store_title),
                                 color = Color.White,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp,
                             )
+                            Spacer(Modifier.height(HomeDecorSpacing.Xxs))
                             Text(
                                 stringResource(R.string.diamond_store_subtitle),
                                 color = Color.White.copy(alpha = 0.5f),
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
+
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = StoreCardElevated,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DiamondTeal.copy(alpha = 0.3f)),
+                        ) {
+                            Row(
+                                Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Diamond,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = DiamondTeal,
+                                )
+                                Text(
+                                    "${state.diamonds}",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+
                         IconButton(
                             onClick = onClose,
                             modifier = Modifier
+                                .padding(start = HomeDecorSpacing.Sm)
                                 .minimumTouchTarget()
                                 .semantics {
                                     contentDescription = closeDescription
@@ -267,46 +303,8 @@ fun DiamondStoreSheet(
                             Icon(
                                 Icons.Rounded.Close,
                                 contentDescription = stringResource(R.string.close),
-                                tint = Color.White.copy(alpha = 0.7f),
+                                tint = Color.White.copy(alpha = 0.5f),
                             )
-                        }
-                    }
-                }
-
-                item {
-                    ElevatedCard(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = HomeDecorColors.DarkOverlay,
-                        ),
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Lg),
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(HomeDecorSpacing.Base),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
-                        ) {
-                            Surface(shape = CircleShape, color = StudioAccent.copy(alpha = 0.2f)) {
-                                Icon(
-                                    Icons.Rounded.Diamond,
-                                    null,
-                                    Modifier.padding(HomeDecorSpacing.Sm).size(22.dp),
-                                    tint = DiamondTeal,
-                                )
-                            }
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    stringResource(R.string.current_balance),
-                                    color = Color.White.copy(alpha = 0.6f),
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                                Text(
-                                    stringResource(R.string.diamonds_amount, state.diamonds),
-                                    color = Color.White,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
                         }
                     }
                 }
@@ -322,10 +320,11 @@ fun DiamondStoreSheet(
                 item {
                     Text(
                         stringResource(R.string.get_more_credits),
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = Color.White.copy(alpha = 0.45f),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Md),
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(start = HomeDecorSpacing.Lg, top = HomeDecorSpacing.Lg, bottom = HomeDecorSpacing.Sm),
                     )
                 }
 
@@ -352,16 +351,16 @@ fun DiamondStoreSheet(
                 if (loadError != null) {
                     item {
                         ElevatedCard(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.elevatedCardColors(
-                                containerColor = HomeDecorColors.DarkOverlay,
+                                containerColor = StoreCardBg,
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = HomeDecorSpacing.Lg),
                         ) {
                             Column(
-                                modifier = Modifier.padding(HomeDecorSpacing.Lg),
+                                modifier = Modifier.padding(HomeDecorSpacing.Base),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
                             ) {
@@ -380,7 +379,7 @@ fun DiamondStoreSheet(
                                 OutlinedButton(
                                     onClick = { loadAttempt += 1 },
                                     enabled = !storeLoading && loadingPack == null && !state.purchaseBusy,
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(14.dp),
                                     colors = ButtonDefaults.outlinedButtonColors(
                                         contentColor = DiamondTeal,
                                     ),
@@ -420,8 +419,9 @@ fun DiamondStoreSheet(
                 if (loadError == null) {
                     item {
                         LazyRow(
-                            contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Lg),
-                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
+                            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg),
+                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                            modifier = Modifier.padding(top = HomeDecorSpacing.Xs),
                         ) {
                             items(
                                 count = HomeDecorCatalog.diamondPacks.size,
@@ -463,144 +463,240 @@ private fun DiamondOfferCard(
     val displayBadge = when (pack.id) {
         "architect" -> stringResource(R.string.pack_badge_best_value)
         "designer" -> stringResource(R.string.pack_badge_popular)
+        "estate" -> stringResource(R.string.pack_badge_premium)
         else -> null
     }
     val packTitleRes = diamondPackTitleRes(pack)
 
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = HomeDecorColors.DarkOverlay,
-        border = androidx.compose.foundation.BorderStroke(
-            1.5.dp,
-            if (displayBadge != null && !unavailable) DiamondTeal.copy(alpha = 0.3f)
-            else Color.White.copy(alpha = 0.08f),
+    val infiniteTransition = rememberInfiniteTransition(label = "card_glow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.12f,
+        targetValue = 0.4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
         ),
+        label = "glow",
+    )
+
+    val cardGradient = when (packIndex) {
+        0 -> listOf(
+            Color(0xFF0D2233),
+            StoreCardBg,
+        )
+        1 -> listOf(
+            Color(0xFF1D1540),
+            StoreCardBg,
+        )
+        2 -> listOf(
+            Color(0xFF0D2A1A),
+            StoreCardBg,
+        )
+        else -> listOf(
+            Color(0xFF2A1D0A),
+            StoreCardBg,
+        )
+    }
+
+    val accentColor = when (packIndex) {
+        0 -> DiamondTeal
+        1 -> PurpleGlow
+        2 -> GreenGlow
+        else -> GoldGlow
+    }
+
+    val borderColor = if (unavailable) {
+        Color.White.copy(alpha = 0.06f)
+    } else if (displayBadge != null) {
+        accentColor.copy(alpha = 0.55f)
+    } else {
+        Color.White.copy(alpha = 0.08f)
+    }
+
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = Color.Transparent,
         modifier = Modifier
-            .width(160.dp)
-            .height(240.dp),
+            .width(186.dp)
+            .height(270.dp),
     ) {
-        Column(
-            Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        Box {
             Box(
                 Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
+                    .fillMaxSize()
                     .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                StudioAccent.copy(alpha = 0.12f),
-                                HomeDecorColors.DarkOverlay,
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                DiamondPackVisual(
-                    packIndex = packIndex,
-                    modifier = Modifier.fillMaxSize(),
-                )
-                if (loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(28.dp),
-                        color = DiamondTeal,
-                        strokeWidth = 2.5.dp,
+                        Brush.verticalGradient(cardGradient),
+                        RoundedCornerShape(22.dp),
                     )
-                }
+                    .border(
+                        width = 1.5.dp,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                borderColor,
+                                borderColor.copy(alpha = borderColor.alpha * 0.3f),
+                            )
+                        ),
+                        shape = RoundedCornerShape(22.dp),
+                    ),
+            )
+
+            if (!unavailable && displayBadge != null) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(1.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    accentColor.copy(alpha = glowAlpha * 0.3f),
+                                    Color.Transparent,
+                                ),
+                                radius = 200f,
+                            ),
+                        ),
+                )
             }
 
             Column(
-                Modifier
-                    .weight(1f)
-                    .padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    stringResource(packTitleRes),
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(HomeDecorSpacing.Xs))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(130.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Rounded.Diamond,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = DiamondTeal,
-                    )
-                    Spacer(Modifier.width(HomeDecorSpacing.Xs))
-                    Text(
-                        stringResource(R.string.diamonds_amount, pack.diamonds),
-                        color = DiamondTeal,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                if (displayBadge != null && !unavailable) {
-                    Spacer(Modifier.height(HomeDecorSpacing.Sm))
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = if (pack.id == "architect")
-                            DiamondTeal.copy(alpha = 0.18f)
-                        else
-                            HomeDecorColors.PremiumGold.copy(alpha = 0.18f),
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        accentColor.copy(alpha = 0.12f),
+                                        Color.Transparent,
+                                    )
+                                ),
+                            ),
+                        contentAlignment = Alignment.Center,
                     ) {
+                        DiamondPackVisual(
+                            packIndex = packIndex,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    if (displayBadge != null && !unavailable) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = accentColor.copy(alpha = 0.25f),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(10.dp),
+                        ) {
+                            Text(
+                                displayBadge,
+                                modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xxs),
+                                color = accentColor,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 0.8.sp,
+                            )
+                        }
+                    }
+
+                    if (loading) {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(28.dp),
+                                color = DiamondTeal,
+                                strokeWidth = 2.5.dp,
+                            )
+                        }
+                    }
+                }
+
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .padding(horizontal = HomeDecorSpacing.Base, vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        stringResource(packTitleRes),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(HomeDecorSpacing.Xs))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Icon(
+                            Icons.Rounded.Diamond,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = accentColor,
+                        )
+                        Spacer(Modifier.width(HomeDecorSpacing.Xs))
                         Text(
-                            displayBadge,
-                            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
-                            color = if (pack.id == "architect") DiamondTeal else Color(0xFFD4A843),
-                            style = MaterialTheme.typography.labelSmall,
+                            stringResource(R.string.diamonds_amount, pack.diamonds),
+                            color = accentColor,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                         )
                     }
                 }
-            }
 
-            if (unavailable) {
-                Text(
-                    stringResource(R.string.pack_unavailable_google),
-                    modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Md).height(HomeDecorSpacing.TouchTarget),
-                    color = Color.White.copy(alpha = 0.3f),
-                    style = MaterialTheme.typography.labelMedium,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            } else {
-                Button(
-                    onClick = onClick,
-                    enabled = enabled,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (pack.id == "architect") DiamondTeal else StudioAccent,
-                        contentColor = Color.White,
-                        disabledContainerColor = Color.White.copy(alpha = 0.08f),
-                        disabledContentColor = Color.White.copy(alpha = 0.3f),
-                    ),
-                    modifier = Modifier
-                        .padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Md)
-                        .fillMaxWidth()
-                        .height(HomeDecorSpacing.TouchTarget),
-                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Sm),
-                ) {
+                if (unavailable) {
                     Text(
-                        when {
-                            loading -> stringResource(R.string.ellipsis)
-                            else -> pack.price
-                        },
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        fontSize = 14.sp,
+                        stringResource(R.string.unavailable),
+                        modifier = Modifier
+                            .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md)
+                            .height(HomeDecorSpacing.TouchTarget)
+                            .fillMaxWidth(),
+                        color = Color.White.copy(alpha = 0.25f),
+                        style = MaterialTheme.typography.labelMedium,
+                        textAlign = TextAlign.Center,
                     )
+                } else {
+                    Button(
+                        onClick = onClick,
+                        enabled = enabled,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = accentColor,
+                            contentColor = if (packIndex == 3) Color(0xFF1A1000) else Color.White,
+                            disabledContainerColor = Color.White.copy(alpha = 0.06f),
+                            disabledContentColor = Color.White.copy(alpha = 0.2f),
+                        ),
+                        modifier = Modifier
+                            .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md)
+                            .fillMaxWidth()
+                            .height(HomeDecorSpacing.TouchTarget),
+                        contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
+                    ) {
+                        Text(
+                            when {
+                                loading -> stringResource(R.string.ellipsis)
+                                else -> pack.price
+                            },
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = 14.sp,
+                        )
+                    }
                 }
             }
         }
@@ -608,6 +704,12 @@ private fun DiamondOfferCard(
 }
 
 private val DiamondTeal = Color(0xFF4DD9E0)
+private val StoreDarkBg = Color(0xFF0B0E14)
+private val StoreCardBg = Color(0xFF141921)
+private val StoreCardElevated = Color(0xFF1C2233)
+private val PurpleGlow = Color(0xFF9B6EFF)
+private val GreenGlow = Color(0xFF34D399)
+private val GoldGlow = Color(0xFFFFD166)
 
 @Composable
 private fun DiamondPackVisual(
@@ -616,21 +718,35 @@ private fun DiamondPackVisual(
 ) {
     val teal = DiamondTeal
     val tealLight = Color(0xFF7AEAEA)
-    val boxBrown = Color(0xFF7A5C30)
-    val boxDark = Color(0xFF5C4020)
-    val goldMetal = HomeDecorColors.PremiumGold
+    val purple = PurpleGlow
+    val purpleLight = Color(0xFFBBA8FF)
+    val green = GreenGlow
+    val greenLight = Color(0xFF6EE7B7)
+    val gold = GoldGlow
+    val goldLight = Color(0xFFFFE680)
+    val boxBrown = Color(0xFF6B4226)
+    val boxDark = Color(0xFF4A2E18)
+    val goldMetal = Color(0xFFD4A843)
 
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
         val cx = w / 2f
-        val cy = h * 0.52f
+        val cy = h * 0.55f
 
-        val glowAlpha = 0.08f + packIndex * 0.06f
-        val glowRadius = w * (0.28f + packIndex * 0.06f)
+        val glowAlpha = 0.1f + packIndex * 0.08f
+        val glowRadius = w * (0.3f + packIndex * 0.08f)
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(teal.copy(alpha = glowAlpha), Color.Transparent),
+                colors = listOf(
+                    when (packIndex) {
+                        1 -> purple.copy(alpha = glowAlpha)
+                        2 -> green.copy(alpha = glowAlpha)
+                        3 -> gold.copy(alpha = glowAlpha)
+                        else -> teal.copy(alpha = glowAlpha)
+                    },
+                    Color.Transparent,
+                ),
                 center = Offset(cx, cy),
                 radius = glowRadius,
             ),
@@ -640,9 +756,9 @@ private fun DiamondPackVisual(
 
         when (packIndex) {
             0 -> drawSmallBox(cx, cy, boxBrown, boxDark, goldMetal, teal, tealLight)
-            1 -> drawMediumChest(cx, cy, boxBrown, boxDark, goldMetal, teal, tealLight)
-            2 -> drawLargeChest(cx, cy, boxBrown, boxDark, goldMetal, teal, tealLight)
-            else -> drawMiningCart(cx, cy, boxBrown, boxDark, goldMetal, teal, tealLight)
+            1 -> drawMediumChest(cx, cy, boxBrown, boxDark, goldMetal, purple, purpleLight)
+            2 -> drawLargeChest(cx, cy, boxBrown, boxDark, goldMetal, green, greenLight)
+            else -> drawGrandCart(cx, cy, boxBrown, boxDark, goldMetal, gold, goldLight)
         }
     }
 }
@@ -652,87 +768,163 @@ private fun DrawScope.drawSmallBox(
     boxBrown: Color, boxDark: Color, goldMetal: Color,
     teal: Color, tealLight: Color,
 ) {
-    drawRoundRect(boxBrown, Offset(cx - 22f, cy - 2f), Size(44f, 30f), CornerRadius(4f))
-    drawRoundRect(boxDark, Offset(cx - 24f, cy - 12f), Size(48f, 12f), CornerRadius(3f))
-    drawPath(diamondPath(cx - 6f, cy, 9f), teal)
-    drawPath(diamondPath(cx + 9f, cy - 2f, 7f), tealLight)
+    drawRoundRect(
+        boxBrown,
+        Offset(cx - 22f, cy + 2f),
+        Size(44f, 24f),
+        CornerRadius(5f),
+    )
+    drawRoundRect(
+        boxDark,
+        Offset(cx - 24f, cy - 6f),
+        Size(48f, 10f),
+        CornerRadius(4f),
+    )
+    drawRect(goldMetal, Offset(cx - 22f, cy + 8f), Size(44f, 2f))
+    drawPath(diamondPath(cx - 6f, cy + 4f, 7f), teal)
+    drawPath(diamondPath(cx + 8f, cy + 2f, 5f), tealLight)
+    drawPath(diamondPath(cx + 1f, cy + 12f, 4f), teal.copy(alpha = 0.7f))
+    drawCircle(Color.White.copy(alpha = 0.8f), 1.5f, Offset(cx - 10f, cy - 2f))
+    drawCircle(Color.White.copy(alpha = 0.5f), 1f, Offset(cx + 12f, cy - 4f))
 }
 
 private fun DrawScope.drawMediumChest(
     cx: Float, cy: Float,
     boxBrown: Color, boxDark: Color, goldMetal: Color,
-    teal: Color, tealLight: Color,
+    purple: Color, purpleLight: Color,
 ) {
-    drawRoundRect(boxBrown, Offset(cx - 30f, cy - 4f), Size(60f, 38f), CornerRadius(5f))
+    drawRoundRect(
+        boxBrown,
+        Offset(cx - 30f, cy),
+        Size(60f, 34f),
+        CornerRadius(6f),
+    )
     val lid = Path().apply {
-        moveTo(cx - 32f, cy - 4f)
-        lineTo(cx - 26f, cy - 20f)
-        lineTo(cx + 26f, cy - 20f)
-        lineTo(cx + 32f, cy - 4f)
+        moveTo(cx - 32f, cy)
+        quadraticBezierTo(cx, cy - 24f, cx + 32f, cy)
         close()
     }
     drawPath(lid, boxDark)
-    drawRect(goldMetal, Offset(cx - 30f, cy + 8f), Size(60f, 3f))
-    drawPath(diamondPath(cx - 12f, cy + 1f, 10f), teal)
-    drawPath(diamondPath(cx + 3f, cy - 2f, 11f), teal)
-    drawPath(diamondPath(cx + 16f, cy + 3f, 8f), tealLight)
-    drawPath(diamondPath(cx + 5f, cy + 12f, 7f), teal.copy(alpha = 0.8f))
+    drawRect(goldMetal, Offset(cx - 30f, cy + 10f), Size(60f, 2.5f))
+    drawCircle(goldMetal, 4f, Offset(cx, cy + 10f))
+    drawPath(diamondPath(cx - 12f, cy + 4f, 10f), purple)
+    drawPath(diamondPath(cx + 4f, cy + 2f, 11f), purple)
+    drawPath(diamondPath(cx + 18f, cy + 6f, 8f), purpleLight)
+    drawPath(diamondPath(cx - 4f, cy + 16f, 7f), purple.copy(alpha = 0.75f))
+    drawPath(diamondPath(cx + 12f, cy + 18f, 6f), purpleLight.copy(alpha = 0.6f))
+    drawCircle(Color.White.copy(alpha = 0.85f), 2f, Offset(cx - 16f, cy - 2f))
+    drawCircle(Color.White.copy(alpha = 0.6f), 1.5f, Offset(cx + 20f, cy - 6f))
+    drawCircle(Color.White.copy(alpha = 0.4f), 1f, Offset(cx + 8f, cy - 12f))
 }
 
 private fun DrawScope.drawLargeChest(
     cx: Float, cy: Float,
     boxBrown: Color, boxDark: Color, goldMetal: Color,
-    teal: Color, tealLight: Color,
+    green: Color, greenLight: Color,
 ) {
-    drawRoundRect(boxBrown, Offset(cx - 36f, cy), Size(72f, 42f), CornerRadius(5f))
+    drawRoundRect(
+        boxBrown,
+        Offset(cx - 36f, cy + 2f),
+        Size(72f, 38f),
+        CornerRadius(6f),
+    )
     val lid = Path().apply {
-        moveTo(cx - 38f, cy)
-        lineTo(cx - 30f, cy - 24f)
-        lineTo(cx + 30f, cy - 24f)
-        lineTo(cx + 38f, cy)
+        moveTo(cx - 38f, cy + 2f)
+        quadraticBezierTo(cx, cy - 24f, cx + 38f, cy + 2f)
         close()
     }
     drawPath(lid, boxDark)
-    drawRect(goldMetal, Offset(cx - 36f, cy + 10f), Size(72f, 3f))
-    drawRect(goldMetal, Offset(cx - 36f, cy + 28f), Size(72f, 3f))
-    drawPath(diamondPath(cx - 16f, cy + 4f, 11f), teal)
-    drawPath(diamondPath(cx, cy + 1f, 12f), teal)
-    drawPath(diamondPath(cx + 16f, cy + 5f, 10f), tealLight)
-    drawPath(diamondPath(cx + 6f, cy + 15f, 8f), teal)
-    drawPath(diamondPath(cx - 26f, cy + 7f, 7f), teal.copy(alpha = 0.65f))
-    drawPath(diamondPath(cx + 28f, cy + 9f, 6f), tealLight.copy(alpha = 0.55f))
-    drawPath(diamondPath(cx - 20f, cy + 18f, 5f), teal.copy(alpha = 0.45f))
-    drawPath(diamondPath(cx + 22f, cy + 20f, 5f), teal.copy(alpha = 0.45f))
+    drawRect(goldMetal, Offset(cx - 36f, cy + 12f), Size(72f, 2.5f))
+    drawRect(goldMetal, Offset(cx - 36f, cy + 30f), Size(72f, 2.5f))
+    drawCircle(goldMetal, 5f, Offset(cx, cy + 12f))
+    drawPath(diamondPath(cx - 16f, cy + 4f, 11f), green)
+    drawPath(diamondPath(cx + 2f, cy + 2f, 12f), green)
+    drawPath(diamondPath(cx + 18f, cy + 5f, 10f), greenLight)
+    drawPath(diamondPath(cx - 8f, cy + 16f, 8f), green)
+    drawPath(diamondPath(cx + 10f, cy + 18f, 7f), greenLight.copy(alpha = 0.7f))
+    drawPath(diamondPath(cx - 26f, cy + 8f, 7f), green.copy(alpha = 0.55f))
+    drawPath(diamondPath(cx + 26f, cy + 10f, 6f), greenLight.copy(alpha = 0.5f))
+    drawPath(diamondPath(cx - 18f, cy + 22f, 5f), green.copy(alpha = 0.4f))
+    drawPath(diamondPath(cx + 20f, cy + 24f, 5f), green.copy(alpha = 0.4f))
+    drawPath(diamondPath(cx, cy - 8f, 9f), greenLight.copy(alpha = 0.85f))
+    drawPath(diamondPath(cx - 14f, cy - 6f, 7f), green.copy(alpha = 0.65f))
+    drawCircle(Color.White.copy(alpha = 0.85f), 2f, Offset(cx - 22f, cy - 4f))
+    drawCircle(Color.White.copy(alpha = 0.6f), 1.5f, Offset(cx + 24f, cy - 8f))
+    drawCircle(Color.White.copy(alpha = 0.5f), 1.5f, Offset(cx + 6f, cy - 16f))
+    drawCircle(Color.White.copy(alpha = 0.35f), 1f, Offset(cx - 10f, cy - 14f))
 }
 
-private fun DrawScope.drawMiningCart(
+private fun DrawScope.drawGrandCart(
     cx: Float, cy: Float,
     boxBrown: Color, boxDark: Color, goldMetal: Color,
-    teal: Color, tealLight: Color,
+    gold: Color, goldLight: Color,
 ) {
     val cart = Path().apply {
-        moveTo(cx - 30f, cy - 6f)
-        lineTo(cx - 36f, cy + 20f)
-        lineTo(cx + 36f, cy + 20f)
-        lineTo(cx + 30f, cy - 6f)
+        moveTo(cx - 32f, cy - 2f)
+        lineTo(cx - 38f, cy + 22f)
+        lineTo(cx + 38f, cy + 22f)
+        lineTo(cx + 32f, cy - 2f)
         close()
     }
     drawPath(cart, boxBrown)
-    drawRect(goldMetal, Offset(cx - 36f, cy - 8f), Size(72f, 4f))
-    drawCircle(boxDark, 6f, Offset(cx - 20f, cy + 28f))
-    drawCircle(boxDark, 6f, Offset(cx + 20f, cy + 28f))
-    drawCircle(goldMetal, 3f, Offset(cx - 20f, cy + 28f))
-    drawCircle(goldMetal, 3f, Offset(cx + 20f, cy + 28f))
-    drawPath(diamondPath(cx - 14f, cy - 4f, 11f), teal)
-    drawPath(diamondPath(cx, cy - 10f, 13f), teal)
-    drawPath(diamondPath(cx + 14f, cy - 4f, 10f), tealLight)
-    drawPath(diamondPath(cx - 7f, cy - 16f, 9f), teal)
-    drawPath(diamondPath(cx + 7f, cy - 16f, 9f), tealLight)
-    drawPath(diamondPath(cx, cy - 24f, 8f), teal.copy(alpha = 0.85f))
-    drawCircle(Color.White, 2f, Offset(cx - 20f, cy - 20f))
-    drawCircle(Color.White, 1.5f, Offset(cx + 16f, cy - 26f))
-    drawCircle(Color.White, 1.5f, Offset(cx + 24f, cy - 12f))
-    drawCircle(Color.White.copy(alpha = 0.6f), 1f, Offset(cx - 26f, cy - 12f))
+    drawRect(goldMetal, Offset(cx - 38f, cy - 4f), Size(76f, 4f))
+    drawCircle(boxDark, 7f, Offset(cx - 20f, cy + 30f))
+    drawCircle(boxDark, 7f, Offset(cx + 20f, cy + 30f))
+    drawCircle(goldMetal, 3.5f, Offset(cx - 20f, cy + 30f))
+    drawCircle(goldMetal, 3.5f, Offset(cx + 20f, cy + 30f))
+
+    drawPath(diamondPath(cx - 14f, cy - 0f, 11f), gold)
+    drawPath(diamondPath(cx + 2f, cy - 6f, 13f), gold)
+    drawPath(diamondPath(cx + 16f, cy - 0f, 10f), goldLight)
+    drawPath(diamondPath(cx - 6f, cy - 12f, 9f), gold)
+    drawPath(diamondPath(cx + 10f, cy - 12f, 9f), goldLight)
+    drawPath(diamondPath(cx + 2f, cy - 20f, 8f), gold.copy(alpha = 0.9f))
+
+    drawPath(diamondPath(cx - 26f, cy + 4f, 7f), gold.copy(alpha = 0.6f))
+    drawPath(diamondPath(cx + 26f, cy + 6f, 6f), goldLight.copy(alpha = 0.55f))
+    drawPath(diamondPath(cx - 10f, cy + 12f, 5f), gold.copy(alpha = 0.5f))
+    drawPath(diamondPath(cx + 12f, cy + 14f, 5f), gold.copy(alpha = 0.5f))
+    drawPath(diamondPath(cx - 20f, cy - 10f, 6f), goldLight.copy(alpha = 0.45f))
+    drawPath(diamondPath(cx + 20f, cy - 10f, 6f), gold.copy(alpha = 0.45f))
+
+    drawPath(diamondPath(cx - 30f, cy + 8f, 5f), goldLight.copy(alpha = 0.35f))
+    drawPath(diamondPath(cx + 30f, cy + 10f, 5f), gold.copy(alpha = 0.35f))
+    drawPath(diamondPath(cx - 8f, cy + 18f, 4f), goldLight.copy(alpha = 0.3f))
+    drawPath(diamondPath(cx + 14f, cy + 20f, 4f), gold.copy(alpha = 0.3f))
+
+    drawCircle(Color.White.copy(alpha = 0.9f), 2.5f, Offset(cx - 22f, cy - 18f))
+    drawCircle(Color.White.copy(alpha = 0.7f), 2f, Offset(cx + 18f, cy - 24f))
+    drawCircle(Color.White.copy(alpha = 0.6f), 1.5f, Offset(cx + 26f, cy - 8f))
+    drawCircle(Color.White.copy(alpha = 0.5f), 1.5f, Offset(cx - 28f, cy - 6f))
+    drawCircle(Color.White.copy(alpha = 0.4f), 1f, Offset(cx - 16f, cy - 26f))
+    drawCircle(Color.White.copy(alpha = 0.3f), 1f, Offset(cx + 14f, cy - 28f))
+    drawCircle(Color.White.copy(alpha = 0.25f), 1f, Offset(cx, cy - 32f))
+
+    val spark = Path().apply {
+        moveTo(cx + 28f, cy - 16f)
+        lineTo(cx + 30f, cy - 20f)
+        lineTo(cx + 32f, cy - 16f)
+        lineTo(cx + 36f, cy - 14f)
+        lineTo(cx + 32f, cy - 12f)
+        lineTo(cx + 30f, cy - 8f)
+        lineTo(cx + 28f, cy - 12f)
+        lineTo(cx + 24f, cy - 14f)
+        close()
+    }
+    drawPath(spark, goldLight.copy(alpha = 0.5f))
+
+    val spark2 = Path().apply {
+        moveTo(cx - 26f, cy - 20f)
+        lineTo(cx - 24f, cy - 24f)
+        lineTo(cx - 22f, cy - 20f)
+        lineTo(cx - 18f, cy - 18f)
+        lineTo(cx - 22f, cy - 16f)
+        lineTo(cx - 24f, cy - 12f)
+        lineTo(cx - 26f, cy - 16f)
+        lineTo(cx - 30f, cy - 18f)
+        close()
+    }
+    drawPath(spark2, goldLight.copy(alpha = 0.35f))
 }
 
 private fun diamondPath(cx: Float, cy: Float, size: Float): Path = Path().apply {

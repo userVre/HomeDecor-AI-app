@@ -13,6 +13,7 @@
   <string name="continue_action">Continue</string>
   <string name="generate">Generate</string>
   <string name="generate_my_design">Generate My Design</string>
+  <string name="generate_with_diamond">Generate (%1$s ♦)</string>
   <string name="back">Go back</string>
   <string name="close">Close</string>
   <string name="return_back">Go back</string>
@@ -176,6 +177,7 @@
   <string name="layout_plan_title">Plan the layout</string>
   <string name="layout_plan_body">Optimize positions, circulation, and usage zones without transforming the room style.</string>
   <string name="layout_generate">Generate layout</string>
+  <string name="layout_generate_with_diamond">Generate layout (%1$s ♦)</string>
   <string name="layout_select_goal_to_generate">Select a goal</string>
   <string name="room_photo">Room photo</string>
   <string name="room_photo_layout_body">Base used for the smart layout.</string>
@@ -726,7 +728,7 @@
   <string name="option_design_free_description">Allow AI to propose a more ambitious and creative transformation.</string>
   <string name="pack_starter">Starter</string>
   <string name="pack_designer">Creator</string>
-  <string name="pack_architect">Professional</string>
+  <string name="pack_architect">Pro</string>
   <string name="pack_estate">Ultimate</string>
   <string name="pack_badge_popular">POPULAR</string>
   <string name="pack_badge_best_value">Best Value</string>

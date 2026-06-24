@@ -465,6 +465,7 @@ fun diamondPackTitleRes(pack: DiamondPack): Int = when (pack.id) {
 fun diamondPackBadgeRes(pack: DiamondPack): Int? = when (pack.id) {
     "designer" -> R.string.pack_badge_popular
     "architect" -> R.string.pack_badge_best_value
+    "estate" -> R.string.pack_badge_premium
     else -> null
 }
 

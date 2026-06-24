@@ -1,0 +1,248 @@
+---
+slug: homedecor-paywall-duolingo
+title: "HomeDecor PRO Paywall Flow — Duolingo-Style Premium Overhaul"
+status: draft
+---
+
+# HomeDecor PRO Paywall Flow — Duolingo-Style Premium Overhaul
+
+## Objective
+
+Transform the existing 5-step HomeDecor PRO paywall flow into a polished, Duolingo-inspired premium experience adapted for interior design. Each screen must feel intentional, visually premium, and conversion-optimized — with real pricing, strong per-step illustrations, fixed CTA positioning, and clean typography.
+
+**Done means:** Every paywall screen passes the "would Duolingo ship this?" quality bar while feeling native to an interior design app. No faint illustrations, no empty "— / year" placeholders, no encoding artifacts, no oversized blank spaces.
+
+## Current State
+
+The paywall flow (`PaywallSheet.kt`, 1787 lines) has 5 steps:
+1. **ProIntroScreen** — Hero illustration with sparkle particles, headline, subtitle, benefit chips
+2. **ProBenefitCarousel** — 6-page horizontal pager with icon circles
+3. **ProReminderScreen** — Notification bell + 2 reminder options
+4. **ProPlanScreen** — Yearly/Weekly plan cards with RevenueCat pricing
+5. **ProCheckoutScreen** — Processing spinner → success checkmark
+
+**Key problems identified:**
+- Hero illustration uses extremely low alpha values (0.07–0.12) making it nearly invisible
+- Benefit carousel uses generic icon circles instead of interior-design-relevant illustrations
+- Reminder screen has excessive top/bottom spacing (Spacer.Xl + Spacer.weight(1f))
+- Plan screen shows "— / year" when prices haven't loaded from RevenueCat
+- "MOST POPULAR" badge is hardcoded to yearly without comparing actual value
+- CTA positioning is inconsistent across screens (some use weight(1f), some don't)
+- Final checkout screen lacks plan confirmation details (selected plan, price, trial info)
+
+## Scope
+
+### In scope
+1. Boost hero illustration contrast and visual impact across all screens
+2. Replace icon circles with interior-design-relevant illustrations per benefit
+3. Fix spacing: remove empty gaps, pin CTAs consistently near bottom
+4. Add loading skeleton state for plan pricing
+5. Make "BEST VALUE" badge dynamic based on actual price-per-day comparison
+6. Clarify final plan confirmation screen with full subscription details
+7. Verify all encoding in string resources
+
+### Out of scope
+- RevenueCat SDK integration changes (product catalog, entitlements)
+- Navigation architecture refactor (stays state-based)
+- New subscription tiers or pricing changes
+- A/B testing infrastructure
+- Analytics event additions
+
+## Approach
+
+### 1. Boost Hero Illustration Contrast
+
+**File:** `PaywallSheet.kt` — `ProHeroIllustration` composable (lines 512–842)
+
+Current alphas are too faint:
+- Back wall: `0.07f` → `0.20f`
+- Window glass: `0.10f` → `0.35f`
+- Sofa body: `0.45f` → `0.70f`
+- Sofa backrest: `0.30f` → `0.55f`
+- Armrests: `0.38f` → `0.60f`
+- Cushions: `0.22f` → `0.40f`
+- Coffee table: `0.22f` → `0.45f`
+- Floor lamp pole: `0.35f` → `0.55f`
+- Lamp shade: `0.45f` → `0.65f`
+- Potted plant pot: `0.25f` → `0.45f`
+- Leaves: `0.28f`–`0.32f` → `0.50f`–`0.60f`
+- Rug: `0.08f` → `0.20f`
+- Wall art frame: `0.20f` → `0.40f`
+
+Also increase the glow animation range from `0.4f–0.8f` to `0.5f–1.0f` for more visible pulsing.
+
+### 2. Replace Icon Circles with Interior-Design Illustrations
+
+**File:** `PaywallSheet.kt` — `ProBenefitCarousel` composable (lines 1053–1208)
+
+Replace the generic `Surface(CircleShape) + Icon` pattern with benefit-specific Canvas illustrations:
+
+| Benefit | Current | Replacement |
+|---------|---------|-------------|
+| Unlimited AI Designs | ∞ icon in circle | Canvas: room transformation — before/after split view with furniture |
+| Crystal Clear 4K | HQ icon | Canvas: photo frame with zoom detail showing crisp pixels |
+| No Watermark | Water drop icon | Canvas: clean export with subtle watermark ghost crossed out |
+| Lightning Fast | Speed icon | Canvas: lightning bolt with room elements rushing in |
+| Premium Styles | Palette icon | Canvas: color swatches with interior fabric textures |
+| Saved Design History | History icon | Canvas: timeline with room thumbnails |
+
+Each illustration should be 120dp × 120dp, using the benefit's accent color with alpha 0.3–0.6 for visibility.
+
+### 3. Fix Spacing & Pin CTAs
+
+**Pattern:** Every screen follows this structure:
+
+```
+Column(fillMaxSize) {
+    ProScreenHeader(back, close)     // sticky top
+    Spacer(12dp)                     // fixed gap
+    ScrollableContent()              // flexible
+    Spacer(weight(1f))               // pushes CTA down
+    ProCtaButton()                   // fixed bottom
+    LegalText()                      // below CTA
+    Spacer(navigationBars)           // safe area
+}
+```
+
+**Specific fixes:**
+- `ProIntroScreen`: Remove `Spacer(weight(1f))` before CTA — content should fill naturally
+- `ProBenefitCarousel`: Keep `Spacer(weight(1f))` to push CTA to bottom after pager
+- `ProReminderScreen`: Remove `Spacer.Xl` at top (line 1249), change `Spacer(weight(1f))` to fixed `Spacer(24dp)`
+- `ProPlanScreen`: Already uses `verticalScroll` — add fixed bottom section outside scroll
+- `ProCheckoutScreen`: Already centered — no change needed
+
+### 4. Add Loading Skeleton for Plan Pricing
+
+**File:** `PaywallSheet.kt` — `ProPlanScreen` composable (lines 1414–1560)
+
+When `offeringsLoading == true` or prices are null, show skeleton placeholders:
+
+```kotlin
+// Inside ProPlanCard, replace:
+//   price ?: "\u2014"
+// With:
+if (price == null && offeringsLoading) {
+    Box(
+        Modifier
+            .width(80.dp)
+            .height(32.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(ProTextMuted.copy(alpha = 0.1f))
+    )
+} else {
+    Text(price ?: "\u2014", ...)
+}
+```
+
+Also disable the CTA button when `offeringsLoading == true`:
+```kotlin
+ProCtaButton(
+    label = stringResource(R.string.pro_plan_trial_cta),
+    processing = false,
+    success = false,
+    enabled = !offeringsLoading && selectedPackage != null,
+    onClick = onContinue,
+)
+```
+
+### 5. Dynamic "BEST VALUE" Badge
+
+**File:** `PaywallSheet.kt` — `ProPlanScreen` (lines 1426–1431)
+
+Replace hardcoded `recommendedPlan = "yearly"` with actual price-per-day comparison:
+
+```kotlin
+val recommendedPlan = remember(yearlyPackage, weeklyPackage) {
+    val yearly = yearlyPackage?.product?.price?.amount
+    val weekly = weeklyPackage?.product?.price?.amount
+    if (yearly != null && weekly != null) {
+        val yearlyPerDay = yearly / 365.0
+        val weeklyPerDay = weekly / 7.0
+        if (yearlyPerDay < weeklyPerDay) "yearly" else "weekly"
+    } else {
+        "yearly" // default when prices unknown
+    }
+}
+```
+
+Also calculate and display savings percentage:
+```kotlin
+val savingsPercent = remember(yearlyPackage, weeklyPackage) {
+    val yearly = yearlyPackage?.product?.price?.amount
+    val weekly = weeklyPackage?.product?.price?.amount
+    if (yearly != null && weekly != null) {
+        val yearlyPerWeek = yearly / 52.0
+        val pct = ((1 - yearlyPerWeek / weekly) * 100).toInt()
+        if (pct > 0) pct else null
+    } else null
+}
+```
+
+### 6. Clarify Final Plan Confirmation Screen
+
+**File:** `PaywallSheet.kt` — `ProCheckoutScreen` (lines 1692–1787)
+
+Transform the success state from generic "Welcome to PRO" to a detailed confirmation:
+
+```
+Success state shows:
+┌─────────────────────────────┐
+│        ✓ (animated)         │
+│                             │
+│    Welcome to PRO!          │
+│                             │
+│  ┌───────────────────────┐  │
+│  │ Yearly Plan           │  │
+│  │ $29.99 / year         │  │
+│  │ Billed annually       │  │
+│  │                       │  │
+│  │ 3-day free trial      │  │
+│  │ Then $29.99/year      │  │
+│  │                       │  │
+│  │ ✓ Cancel anytime      │  │
+│  └───────────────────────┘  │
+│                             │
+│  Your creative toolkit is   │
+│  now unlocked.              │
+└─────────────────────────────┘
+```
+
+This requires passing `selectedPlan`, `selectedPackage`, and trial info to `ProCheckoutScreen`.
+
+### 7. Encoding Verification
+
+**Files:** All `strings.xml` variants (values/, values-fr/, etc.)
+
+Current encoding uses:
+- `\u00B7` for middle dot (·) — correct
+- `\u2014` for em dash (—) — correct
+- `\u2026` for ellipsis (…) — correct
+
+Verify no mojibake or double-encoding in localized strings. The existing encoding is correct; no changes needed.
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `app/src/main/java/com/ismail/homedecorai/ui/paywall/PaywallSheet.kt` | All 7 changes above |
+| `app/src/main/java/com/ismail/homedecorai/ui/theme/Color.kt` | Add `ProSkeleton` color for loading state |
+| `app/src/main/res/values/strings.xml` | Verify encoding (no changes expected) |
+| `app/src/main/res/values-fr/strings.xml` | Verify encoding (no changes expected) |
+
+## Risks
+
+1. **RevenueCat product availability** — If products aren't configured in the RevenueCat dashboard, prices will always be null. The loading skeleton handles this gracefully, but real testing requires configured products.
+
+2. **Illustration complexity** — Canvas-drawn illustrations add code complexity. Each benefit illustration should be kept simple (geometric shapes, not photorealistic) to maintain readability and performance.
+
+3. **Price-per-day comparison edge cases** — If only one plan is available (e.g., yearly only), the badge logic must handle null gracefully. Current fallback to "yearly" is safe.
+
+## Verification
+
+1. **Visual check:** Launch paywall, verify each screen's illustration is clearly visible against the dark gradient background
+2. **Loading state:** Kill RevenueCat SDK (or use test config), verify plan screen shows skeletons, not "—"
+3. **Dynamic badge:** Configure RevenueCat with different price points, verify "BEST VALUE" appears on the cheaper-per-day plan
+4. **CTA positioning:** On each screen, verify CTA sits near the bottom with consistent spacing
+5. **Encoding:** Switch to French locale, verify all paywall strings render correctly (no `???` or `Ã©`)
+6. **Success screen:** Complete purchase (sandbox), verify confirmation shows correct plan details
+7. **Build:** Run `./gradlew assembleDebug` — zero errors

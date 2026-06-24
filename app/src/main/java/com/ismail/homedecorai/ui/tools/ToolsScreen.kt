@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -54,6 +55,9 @@ private val requestedToolIds = setOf(
     "replace", "reference"
 )
 
+private val ToolCardShape = RoundedCornerShape(20.dp)
+private val CtaPillShape = RoundedCornerShape(14.dp)
+
 @Composable
 fun ToolsScreen(
     state: HomeDecorUiState,
@@ -70,7 +74,7 @@ fun ToolsScreen(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Lg,
-                bottom = navBarBottomPadding(additionalContentPadding = 40.dp),
+                bottom = navBarBottomPadding(additionalContentPadding = 140.dp),
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
         ) {
@@ -102,28 +106,37 @@ fun ToolsHeader(
                 modifier = Modifier.weight(1f),
             )
             val creditsDescription = stringResource(R.string.a11y_open_diamond_store)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+            Surface(
+                onClick = onCredits,
+                shape = RoundedCornerShape(14.dp),
+                color = StudioPaper,
+                tonalElevation = 2.dp,
+                border = androidx.compose.foundation.BorderStroke(1.dp, DiamondTeal.copy(alpha = 0.2f)),
                 modifier = Modifier
-                    .height(HomeDecorSpacing.TouchTarget)
-                    .clickable(onClick = onCredits)
-                    .padding(horizontal = HomeDecorSpacing.Sm)
                     .semantics {
                         contentDescription = creditsDescription
                         role = Role.Button
                     },
             ) {
-                Icon(
-                    Icons.Rounded.Diamond,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = StudioBlue,
-                )
-                Text(
-                    if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
-                    style = MaterialTheme.typography.titleSmall,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+                    modifier = Modifier
+                        .height(HomeDecorSpacing.TouchTarget)
+                        .padding(horizontal = HomeDecorSpacing.Md),
+                ) {
+                    Icon(
+                        Icons.Rounded.Diamond,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = DiamondTeal,
+                    )
+                    Text(
+                        if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
     }
@@ -136,17 +149,16 @@ fun ToolCard(
 ) {
     val title = localizedToolTitle(tool)
     val description = localizedToolDescription(tool)
-    val cardShape = RoundedCornerShape(20.dp)
     val toolCardDescription = stringResource(R.string.a11y_tool_card_format, title, description)
 
     Surface(
         onClick = onClick,
-        shape = cardShape,
+        shape = ToolCardShape,
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .height(170.dp)
-            .clip(cardShape)
+            .height(180.dp)
+            .clip(ToolCardShape)
             .semantics {
                 contentDescription = toolCardDescription
                 role = Role.Button
@@ -166,11 +178,11 @@ fun ToolCard(
                     .background(
                         Brush.verticalGradient(
                             0.0f to Color.Transparent,
-                            0.25f to Color.Black.copy(alpha = 0.10f),
-                            0.45f to Color.Black.copy(alpha = 0.35f),
-                            0.65f to Color.Black.copy(alpha = 0.55f),
-                            0.82f to Color.Black.copy(alpha = 0.70f),
-                            1.0f to Color.Black.copy(alpha = 0.80f),
+                            0.40f to Color.Transparent,
+                            0.60f to Color.Black.copy(alpha = 0.08f),
+                            0.75f to Color.Black.copy(alpha = 0.18f),
+                            0.88f to Color.Black.copy(alpha = 0.35f),
+                            1.0f to Color.Black.copy(alpha = 0.50f),
                         ),
                     ),
             )
@@ -184,7 +196,7 @@ fun ToolCard(
                 Text(
                     title,
                     color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -192,32 +204,33 @@ fun ToolCard(
                 Spacer(Modifier.height(HomeDecorSpacing.Xs))
                 Text(
                     description,
-                    color = Color.White.copy(alpha = 0.85f),
+                    color = Color.White.copy(alpha = 0.90f),
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(HomeDecorSpacing.Md))
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.White.copy(alpha = 0.20f),
+                    shape = CtaPillShape,
+                    color = Color.White,
+                    modifier = Modifier.widthIn(min = 120.dp),
                 ) {
                     Row(
-                        Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                        Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Sm),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             Icons.Rounded.AutoAwesome,
                             contentDescription = null,
-                            Modifier.size(14.dp),
-                            tint = Color.White,
+                            modifier = Modifier.size(HomeDecorSpacing.Base),
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(Modifier.width(HomeDecorSpacing.Sm))
                         Text(
                             stringResource(R.string.try_this),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }

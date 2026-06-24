@@ -137,6 +137,7 @@ val ProCardHighlight = Color(0xFF1A237E)
 val ProCheckGreen = Color(0xFF4CAF50)
 val ProPlanRecommended = Color(0xFFFF6D00)
 val ProPlanRecommendedBg = Color(0xFFFFF3E0)
+val ProSkeleton = Color(0xFF1E2A4A)
 
 // Diamond store accent
 val DiamondTeal = Color(0xFF4DD9E0)

@@ -334,9 +334,9 @@ fun DesignStepHeader(
                                     role = Role.Button
                                 }
                                 .clickable(onClick = onCredits)
-                                .padding(horizontal = 8.dp, vertical = 8.dp),
+                                .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                         ) {
                             Icon(
                                 Icons.Rounded.Diamond,
@@ -363,6 +363,7 @@ fun DesignStepHeader(
                     }
                 }
             }
+            Spacer(Modifier.height(HomeDecorSpacing.Xs))
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
@@ -372,13 +373,14 @@ fun DesignStepHeader(
                 color = StudioBlue,
                 trackColor = StudioMist,
             )
+            Spacer(Modifier.height(HomeDecorSpacing.Xs))
             Text(
                 stringResource(R.string.step_count_format, step, totalSteps),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                modifier = Modifier.padding(bottom = HomeDecorSpacing.Xxs),
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Xxs))
         }
     }
 }
@@ -393,7 +395,7 @@ fun StepScaffold(
     canProceed: Boolean = true,
     validationMessage: String? = null,
     onValidationFailed: (() -> Unit)? = null,
-    contentBottomPadding: Dp = 24.dp,
+    contentBottomPadding: Dp = HomeDecorSpacing.Lg,
     protectBottomInsets: Boolean = false,
     buttonAllowsTwoLines: Boolean = false,
     onButton: () -> Unit,
@@ -412,11 +414,16 @@ fun StepScaffold(
     Column(Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(start = HomeDecorSpacing.Xl, end = HomeDecorSpacing.Xl, top = HomeDecorSpacing.Sm, bottom = contentBottomPadding + HomeDecorSpacing.CtaBarHeight),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(
+                start = HomeDecorSpacing.Base,
+                end = HomeDecorSpacing.Base,
+                top = HomeDecorSpacing.Sm,
+                bottom = contentBottomPadding + HomeDecorSpacing.CtaBarHeight + HomeDecorSpacing.Md,
+            ),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs)) {
                     Text(
                         title,
                         style = MaterialTheme.typography.headlineSmall,
@@ -428,12 +435,10 @@ fun StepScaffold(
             }
             item { content() }
         }
-        val bottomBarModifier = Modifier
         Surface(
             color = StudioPaper,
             tonalElevation = 1.dp,
             shadowElevation = 4.dp,
-            modifier = bottomBarModifier,
         ) {
             val buttonModifier = if (buttonAllowsTwoLines) {
                 Modifier.fillMaxWidth().heightIn(min = 56.dp)
@@ -442,7 +447,7 @@ fun StepScaffold(
             }
             Column(
                 Modifier.fillMaxWidth().padding(PaddingValues(start = HomeDecorSpacing.Base, top = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.Md)),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 if (showValidationBanner && !validationMessage.isNullOrBlank()) {
                     ValidationAlertBanner(message = validationMessage)
@@ -476,7 +481,7 @@ fun StepScaffold(
                     modifier = buttonModifier.disabledSemantics(!canProceed),
                 ) {
                     Icon(buttonIcon, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(
                         buttonLabel,
                         style = MaterialTheme.typography.titleMedium,
@@ -529,7 +534,7 @@ fun ReferenceImagesStep(
         validationMessage = missingHint,
         onButton = viewModel::nextStage,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             ReferenceDualImagePicker(
                 title = stringResource(R.string.your_room),
                 body = stringResource(R.string.your_room_body),
@@ -563,7 +568,7 @@ fun ReferenceImagesStep(
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                 ) {
                     Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.try_with_example))
                 }
             }
@@ -599,8 +604,8 @@ fun ReferenceDualImagePicker(
                 }
             ),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 Surface(shape = CircleShape, color = if (selected) StudioBlue else StudioMist) {
                     Icon(
                         if (selected) Icons.Rounded.Check else Icons.Rounded.PhotoLibrary,
@@ -609,7 +614,7 @@ fun ReferenceDualImagePicker(
                         tint = if (selected) Color.White else StudioBlue,
                     )
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs)) {
                     Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         if (selected) selectedText else stringResource(R.string.upload_style_reference_helper),
@@ -644,7 +649,7 @@ fun ReferenceDualImagePicker(
                             modifier = Modifier.size(36.dp),
                             tint = StudioBlue.copy(alpha = 0.6f),
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(HomeDecorSpacing.Sm))
                         Text(
                             missingHint,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -655,31 +660,31 @@ fun ReferenceDualImagePicker(
                 }
             }
             if (!selected) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                     OutlinedButton(
                         onClick = onGallery,
                         shape = CircleShape,
                         modifier = Modifier.weight(1f).height(48.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                     ) {
                         Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
                         Text(stringResource(R.string.gallery), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     OutlinedButton(
                         onClick = onCamera,
                         shape = CircleShape,
                         modifier = Modifier.weight(1f).height(48.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                     ) {
                         Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
                         Text(stringResource(R.string.camera), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                     Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.example))
                 }
             }
@@ -697,9 +702,9 @@ fun ReferenceContinueHint(message: String) {
             .border(1.dp, StudioRose.copy(alpha = 0.28f), RoundedCornerShape(16.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
             Text(message, color = StudioRose, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
@@ -717,9 +722,9 @@ fun SourcePreviewCard(state: HomeDecorUiState) {
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
         Row(
-            Modifier.padding(12.dp),
+            Modifier.padding(HomeDecorSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             Box(Modifier.size(76.dp).clip(RoundedCornerShape(16.dp)).background(StudioMist)) {
                 UriOrResourceImage(
@@ -729,7 +734,7 @@ fun SourcePreviewCard(state: HomeDecorUiState) {
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs)) {
                 Text(stringResource(R.string.source_photo_preview), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(stringResource(R.string.source_photo_preview_body), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             }
@@ -750,8 +755,8 @@ fun MaskPreviewCard(
         tonalElevation = 1.dp,
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioBlue)
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             }
@@ -810,9 +815,9 @@ fun ReferenceStylePreview(state: HomeDecorUiState) {
         tonalElevation = 1.dp,
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             Text(stringResource(R.string.reference_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 PreviewTile(
                     title = stringResource(R.string.your_room),
                     uri = roomPhoto?.uri,
@@ -837,7 +842,7 @@ fun SelectedPhotoStrip(
     onRemove: (Int) -> Unit,
 ) {
     val removePhotoDescription = stringResource(R.string.remove_photo)
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
         items(state.selectedPhotos.size, key = { "selected-photo-$it" }) { index ->
             val slot = state.selectedPhotos[index]
             val removePhotoDescription = stringResource(R.string.remove_photo)
@@ -919,7 +924,7 @@ fun ChoiceStep(
         validationMessage = validationMessage,
         onButton = onContinue,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
         if (visualStyleCards || visualBuildingCards) {
             val columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3)
             val rows = if (visualBuildingCards) (copy.options.size + 1) / 2 else (copy.options.size + 2) / 3
@@ -927,9 +932,9 @@ fun ChoiceStep(
             LazyVerticalGrid(
                 columns = columns,
                 modifier = Modifier.fillMaxWidth().height(gridHeight.dp),
-                contentPadding = PaddingValues(bottom = 80.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = HomeDecorSpacing.BottomContentPadding + HomeDecorSpacing.Lg),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 userScrollEnabled = false,
             ) {
                 items(copy.options, key = { it }) { option ->
@@ -941,9 +946,9 @@ fun ChoiceStep(
                 }
             }
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 copy.options.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                         row.forEach { option ->
                             ExpressiveChoiceChip(
                                 label = option,
@@ -1022,8 +1027,8 @@ fun PhotoStep(
             containerColor = StudioPaper,
         ) {
             Column(
-                Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Sm),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
             ) {
                 Text(
                     stringResource(R.string.add_photo),
@@ -1041,9 +1046,9 @@ fun PhotoStep(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
-                        Modifier.padding(vertical = 16.dp),
+                        Modifier.padding(vertical = HomeDecorSpacing.Base),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                     ) {
                         Icon(Icons.Rounded.PhotoCamera, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
                         Text(stringResource(R.string.camera), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
@@ -1060,9 +1065,9 @@ fun PhotoStep(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
-                        Modifier.padding(vertical = 16.dp),
+                        Modifier.padding(vertical = HomeDecorSpacing.Base),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                     ) {
                         Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
                         Text(stringResource(R.string.photos), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
@@ -1080,15 +1085,15 @@ fun PhotoStep(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
-                        Modifier.padding(vertical = 16.dp),
+                        Modifier.padding(vertical = HomeDecorSpacing.Base),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                     ) {
                         Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
                         Text(stringResource(R.string.try_with_example), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Lg))
             }
         }
     }
@@ -1147,8 +1152,8 @@ private fun PhotoPreviewCard(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 OutlinedButton(
                     onClick = onReplace,
@@ -1157,10 +1162,10 @@ private fun PhotoPreviewCard(
                         .weight(1f)
                         .height(48.dp)
                         .semantics { contentDescription = replaceDescription },
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.upload_photo_replace), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
                 }
                 OutlinedButton(
@@ -1172,10 +1177,10 @@ private fun PhotoPreviewCard(
                     modifier = Modifier
                         .height(48.dp)
                         .semantics { contentDescription = removeDescription },
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
                     Icon(Icons.Rounded.Delete, contentDescription = null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.upload_photo_remove), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -1203,8 +1208,8 @@ private fun MoziUploadCard(
             .border(1.dp, StudioLine, HomeDecorShape.ExtraLarge),
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(HomeDecorSpacing.Lg),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
@@ -1217,7 +1222,7 @@ private fun MoziUploadCard(
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
                 ) {
                     Surface(
                         shape = CircleShape,
@@ -1241,20 +1246,22 @@ private fun MoziUploadCard(
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 OutlinedButton(
                     onClick = onGallery,
                     shape = CircleShape,
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(52.dp)
                         .semantics { contentDescription = galleryDescription },
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
                 ) {
-                    Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(
                         stringResource(R.string.gallery),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -1264,14 +1271,16 @@ private fun MoziUploadCard(
                     shape = CircleShape,
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(52.dp)
                         .semantics { contentDescription = cameraDescription },
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
                 ) {
-                    Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(
                         stringResource(R.string.camera),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -1282,12 +1291,16 @@ private fun MoziUploadCard(
                 shape = CircleShape,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(52.dp)
                     .semantics { contentDescription = exampleDescription },
             ) {
-                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.try_with_example))
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(20.dp))
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                Text(
+                    stringResource(R.string.try_with_example),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
     }
@@ -1300,14 +1313,14 @@ fun MaterialLibrarySection(
     onSelect: (String) -> Unit,
 ) {
     val selectedMaterial = selected.firstOrNull()
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
         selectedMaterial?.let {
             SelectedMaterialPreview(
                 label = it,
             )
         }
         options.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 row.forEach { option ->
                     MaterialSwatchCard(
                         label = option,
@@ -1334,9 +1347,9 @@ fun SelectedMaterialPreview(
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioBlue.copy(alpha = 0.26f), RoundedCornerShape(16.dp)),
     ) {
         Row(
-            Modifier.padding(12.dp),
+            Modifier.padding(HomeDecorSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             MaterialSwatchThumb(label = label, selected = true, modifier = Modifier.size(52.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -1371,7 +1384,7 @@ fun MaterialSwatchCard(
     ) {
         Column(
             Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             MaterialSwatchThumb(label = label, selected = selected, modifier = Modifier.fillMaxWidth().height(48.dp))
             Text(
@@ -1460,21 +1473,23 @@ fun SpecializedGenerateStep(
     // Unified validation replaces all inline canGenerate/disabledReason logic
     val stepValidation = rememberStepValidation(state)
     val isPaintOrFloor = state.selectedTool.id in setOf("paint", "floor")
+    val isPro = state.isPro
+    val diamondCost = if (isPro) stringResource(R.string.pro_upper) else "1"
     
     StepScaffold(
         eyebrow = "",
         title = stepTitle,
         body = stepBody,
-        buttonLabel = stringResource(R.string.generate),
+        buttonLabel = if (isPro) stringResource(R.string.generate) else stringResource(R.string.generate_with_diamond, diamondCost),
         canProceed = stepValidation.canProceed,
         validationMessage = stepValidation.validationMessage,
-        contentBottomPadding = if (isPaintOrFloor) 32.dp else 16.dp,
+        contentBottomPadding = if (isPaintOrFloor) HomeDecorSpacing.Xl else HomeDecorSpacing.Base,
         protectBottomInsets = isPaintOrFloor,
         buttonAllowsTwoLines = isPaintOrFloor,
         onButton = viewModel::generate,
     ) {
         if (state.selectedTool.id == "replace") {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
                 UnifiedWizardError(
                     message = state.generationError.orEmpty(),
                     onRetry = viewModel::generate,
@@ -1501,10 +1516,10 @@ fun SpecializedGenerateStep(
                         )
                     },
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                     Text(stringResource(R.string.replacement_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     stepCopy.options.chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                             row.forEach { option ->
                                 val optionPrompt = localizedOption(option)
                                 val templatePrompt = HomeDecorCatalog.replacementTemplatePrompts[option].orEmpty()
@@ -1529,7 +1544,7 @@ fun SpecializedGenerateStep(
                 AdvancedControls(state = state, viewModel = viewModel)
             }
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
                 UnifiedWizardError(
                     message = state.generationError.orEmpty(),
                     onRetry = viewModel::generate,
@@ -1538,7 +1553,7 @@ fun SpecializedGenerateStep(
                 if (state.selectedTool.id != "reference") {
                     SourcePreviewCard(state = state)
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                     if (state.selectedTool.id in setOf("paint", "floor")) {
                         MaterialLibrarySection(
                             options = stepCopy.options,
@@ -1547,7 +1562,7 @@ fun SpecializedGenerateStep(
                         )
                     } else if (state.selectedTool.id == "reference") {
                         stepCopy.options.chunked(2).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                                 row.forEach { option ->
                                     IntensityChip(
                                         label = option,
@@ -1563,7 +1578,7 @@ fun SpecializedGenerateStep(
                         }
                     } else {
                         stepCopy.options.chunked(2).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                                 row.forEach { option ->
                                     ExpressiveChoiceChip(
                                         label = option,
@@ -1582,7 +1597,7 @@ fun SpecializedGenerateStep(
                 if (state.selectedTool.id == "reference") {
                     Text(stringResource(R.string.transfer_options), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     HomeDecorCatalog.referenceOptions.chunked(2).forEach { row ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                             row.forEach { option ->
                                 IntensityChip(
                                     label = option,
@@ -1656,7 +1671,7 @@ fun AdvancedControls(
         tonalElevation = 1.dp,
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1666,7 +1681,7 @@ fun AdvancedControls(
                     }
                     .clickable { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
             ) {
                 Icon(Icons.Rounded.Settings, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -1703,9 +1718,9 @@ fun AdvancedControls(
                     )
                 }
                 if (!protectionOnly) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                         Text(stringResource(R.string.budget_mode), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                             HomeDecorCatalog.budgetModes.forEach { mode ->
                                     CompactFilterChip(
                                         label = localizedAdvancedOption(mode),
@@ -1716,10 +1731,10 @@ fun AdvancedControls(
                             }
                         }
                     }
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                         Text(stringResource(R.string.avoid_these), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         HomeDecorCatalog.avoidOptions.chunked(2).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                                 row.forEach { option ->
                                     CompactFilterChip(
                                         label = localizedAdvancedOption(option),
@@ -1733,9 +1748,9 @@ fun AdvancedControls(
                         }
                     }
                     if (recentStyles.isNotEmpty()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                             Text(stringResource(R.string.recent_styles), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                                 items(recentStyles, key = { "recent-style-$it" }) { style ->
                                     CompactFilterChip(
                                         label = localizedOption(style),
@@ -1758,7 +1773,7 @@ fun AdvancedControls(
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                     ) {
                         Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
                         Text(stringResource(R.string.try_with_example), fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -1774,10 +1789,10 @@ fun AdvancedOptionGroup(
     selectedOptions: List<String>,
     onToggle: (String) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
         Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
         options.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 row.forEach { option ->
                     CompactFilterChip(
                         label = localizedAdvancedOption(option),
@@ -1811,7 +1826,7 @@ fun ReferencePhotoStep(
         validationMessage = if (hasReference) null else stringResource(R.string.reference_missing_error),
         onButton = viewModel::nextStage,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             ReferenceImagePicker(
                 selectedUri = state.selectedReferenceUri,
                 selectedExample = state.selectedReferenceExampleLabel,
@@ -1819,25 +1834,25 @@ fun ReferencePhotoStep(
                 onImport = referenceImageInputActions.openGallery,
                 onExample = { viewModel.selectReferenceExample(editorialReference) },
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 OutlinedButton(
                     onClick = referenceImageInputActions.openGallery,
                     shape = CircleShape,
                     modifier = Modifier.weight(1f).height(48.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
                     Icon(Icons.Rounded.Add, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.gallery), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 OutlinedButton(
                     onClick = referenceImageInputActions.openCamera,
                     shape = CircleShape,
                     modifier = Modifier.weight(1f).height(48.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
                     Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.camera), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -1847,7 +1862,7 @@ fun ReferencePhotoStep(
                 modifier = Modifier.fillMaxWidth().height(48.dp),
             ) {
                 Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(stringResource(R.string.try_with_example))
             }
         }
@@ -1963,9 +1978,9 @@ fun MaskEditorStep(
         buttonAllowsTwoLines = isSurfaceMask,
         onButton = viewModel::nextStage,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             if (isObjectMask && !hasMask && emptyStateTitle != null) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs)) {
                     Text(
                         emptyStateTitle,
                         style = MaterialTheme.typography.titleMedium,
@@ -1990,7 +2005,7 @@ fun MaskEditorStep(
                 onStroke = viewModel::addMaskStroke,
             )
             if (polishedControls && isSurfaceMask) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                     SurfaceMaskStatus(
                         hasMask = hasMask,
                         readyText = stringResource(R.string.mask_ready, surfaceLabel),
@@ -1998,8 +2013,8 @@ fun MaskEditorStep(
                     )
                     BoxWithConstraints(Modifier.fillMaxWidth()) {
                         val compactControls = maxWidth < 360.dp
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                                 ToolToggle(
                                     label = stringResource(R.string.mask_mark),
                                     contentDescription = stringResource(R.string.a11y_mask_brush_add),
@@ -2015,7 +2030,7 @@ fun MaskEditorStep(
                                     modifier = Modifier.weight(1f),
                                 ) { viewModel.setMaskEraser(true) }
                             }
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                                 MaskActionButton(
                                     label = stringResource(R.string.undo),
                                     contentDescription = stringResource(R.string.a11y_undo_mask_stroke),
@@ -2048,8 +2063,8 @@ fun MaskEditorStep(
                     }
                 }
             } else if (polishedControls) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                         ToolToggle(
                             label = stringResource(R.string.mask_brush),
                             contentDescription = stringResource(R.string.a11y_mask_brush_add),
@@ -2065,7 +2080,7 @@ fun MaskEditorStep(
                             modifier = Modifier.weight(1f),
                         ) { viewModel.setMaskEraser(true) }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                         MaskActionButton(
                             label = stringResource(R.string.undo),
                             contentDescription = stringResource(R.string.a11y_undo_mask_stroke),
@@ -2093,7 +2108,7 @@ fun MaskEditorStep(
                     }
                 }
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                     ToolToggle(stringResource(R.string.mask_brush), Icons.Rounded.Brush, !state.eraserSelected, contentDescription = stringResource(R.string.a11y_mask_brush_add)) { viewModel.setMaskEraser(false) }
                     ToolToggle(stringResource(R.string.mask_eraser), Icons.Rounded.Delete, state.eraserSelected, contentDescription = stringResource(R.string.a11y_mask_eraser_remove)) { viewModel.setMaskEraser(true) }
                     FilledIconButton(onClick = viewModel::undoMaskStroke, enabled = state.maskStrokes.isNotEmpty()) {
@@ -2114,7 +2129,7 @@ fun MaskEditorStep(
                     showRangeLabels = true,
                 )
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -2134,7 +2149,7 @@ fun MaskEditorStep(
             if (allowAutoDetect) {
                 OutlinedButton(onClick = { viewModel.markMaskWithAutoDetect(target) }, shape = CircleShape, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                     Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(if (target == "floor") stringResource(R.string.auto_detect_floor) else stringResource(R.string.auto_detect_wall))
                 }
             }
@@ -2157,9 +2172,9 @@ fun SurfaceMaskStatus(
         modifier = Modifier.fillMaxWidth().border(1.dp, if (hasMask) StudioBlue.copy(alpha = 0.32f) else StudioLine, RoundedCornerShape(16.dp)),
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = contentColor)
             Text(
@@ -2186,7 +2201,7 @@ fun BrushSizeControl(
         tonalElevation = 1.dp,
         modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(16.dp)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -2196,14 +2211,14 @@ fun BrushSizeControl(
                 Surface(shape = CircleShape, color = StudioPrimaryContainer) {
                     Text(
                         "${brushSize.toInt()} px",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
                         style = MaterialTheme.typography.labelMedium,
                         color = StudioBlue,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
                     Box(
                         Modifier
@@ -2305,9 +2320,9 @@ fun MaskCanvas(
                 modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
             ) {
                 Row(
-                    Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
                     Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                     Text(readyLabel, color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -2333,14 +2348,14 @@ fun SurfacePanel(
         tonalElevation = studioStateElevation(selected),
         modifier = modifier.height(146.dp).border(1.dp, studioStateBorder(selected), RoundedCornerShape(24.dp)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 Surface(shape = CircleShape, color = StudioPaper) {
                     Icon(icon, contentDescription = null, Modifier.padding(8.dp).size(18.dp), tint = StudioInk)
                 }
                 Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) StudioBlue else StudioInk)
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = onPrimary,
                     shape = CircleShape,
@@ -2348,7 +2363,7 @@ fun SurfacePanel(
                         containerColor = if (selected) StudioBlue else StudioPaper,
                         contentColor = if (selected) Color.White else StudioInk,
                     ),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
                     modifier = Modifier.height(48.dp).weight(1f),
                 ) {
                     Text(primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -2369,6 +2384,8 @@ fun LayoutPlanningStep(
     val stepValidation = rememberStepValidation(state)
     val canGenerate = stepValidation.canProceed
     var showValidationBanner by remember { mutableStateOf(false) }
+    val isPro = state.isPro
+    val diamondCost = if (isPro) stringResource(R.string.pro_upper) else "1"
 
     LaunchedEffect(canGenerate) {
         if (canGenerate) showValidationBanner = false
@@ -2378,7 +2395,7 @@ fun LayoutPlanningStep(
         modifier = Modifier
             .fillMaxSize()
             .imePadding(),
-        contentPadding = PaddingValues(start = HomeDecorSpacing.Xl, end = HomeDecorSpacing.Xl, top = HomeDecorSpacing.Sm, bottom = HomeDecorSpacing.WizardBottomContentPadding),
+        contentPadding = PaddingValues(start = HomeDecorSpacing.Xl, end = HomeDecorSpacing.Xl, top = HomeDecorSpacing.Sm, bottom = HomeDecorSpacing.WizardBottomContentPadding + HomeDecorSpacing.Lg),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         if (!state.generationError.isNullOrBlank()) {
@@ -2391,10 +2408,10 @@ fun LayoutPlanningStep(
             }
         }
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 Text(stringResource(R.string.planning_goals), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 HomeDecorCatalog.layoutGoals.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                         row.forEach { option ->
                             LayoutGoalChip(
                                 label = option,
@@ -2409,7 +2426,7 @@ fun LayoutPlanningStep(
             }
         }
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 OutlinedTextField(
                     value = state.layoutConstraints,
                     onValueChange = viewModel::setLayoutConstraints,
@@ -2422,7 +2439,7 @@ fun LayoutPlanningStep(
             }
         }
         item {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 if (showValidationBanner && !stepValidation.validationMessage.isNullOrBlank()) {
                     ValidationAlertBanner(message = stepValidation.validationMessage)
                 }
@@ -2450,9 +2467,9 @@ fun LayoutPlanningStep(
                         .disabledSemantics(!canGenerate),
                 ) {
                     Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(
-                        stringResource(R.string.layout_generate),
+                        if (isPro) stringResource(R.string.layout_generate) else stringResource(R.string.layout_generate_with_diamond, diamondCost),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -2498,7 +2515,7 @@ fun LayoutGoalChip(
         Row(
             Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             Box(
                 modifier = Modifier
@@ -2537,17 +2554,20 @@ fun RefineStep(
     viewModel: HomeDecorViewModel,
 ) {
     val stepValidation = rememberStepValidation(state)
+    val isPro = state.isPro
+    val diamondCost = if (isPro) stringResource(R.string.pro_upper) else "1"
+    
     if (state.selectedTool.id == "layout") {
         StepScaffold(
             eyebrow = "",
             title = stringResource(R.string.add_details_title),
             body = stringResource(R.string.add_details_body),
-            buttonLabel = stringResource(R.string.generate),
+            buttonLabel = if (isPro) stringResource(R.string.generate) else stringResource(R.string.generate_with_diamond, diamondCost),
             canProceed = stepValidation.canProceed,
             validationMessage = stepValidation.validationMessage,
             onButton = viewModel::generate,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
                 OutlinedTextField(value = state.roomType, onValueChange = viewModel::setRoomTypeText, label = { Text(stringResource(R.string.room_type)) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), singleLine = true)
                 OutlinedTextField(
                     value = state.customPrompt,
@@ -2568,7 +2588,7 @@ fun RefineStep(
         eyebrow = "",
         title = stringResource(copy.titleRes),
         body = stringResource(copy.bodyRes),
-        buttonLabel = stringResource(R.string.generate_my_design),
+        buttonLabel = if (isPro) stringResource(R.string.generate_my_design) else stringResource(R.string.generate_with_diamond, diamondCost),
         buttonIcon = Icons.Rounded.AutoAwesome,
         canProceed = stepValidation.canProceed,
         validationMessage = stepValidation.validationMessage,
@@ -2582,12 +2602,12 @@ fun RefineStep(
                 onDismiss = viewModel::clearGenerationError,
             )
             if (state.selectedTool.id !in listOf("facade", "garden", "paint")) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(stringResource(R.string.step_design_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text(stringResource(R.string.choose_a_mode), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                         HomeDecorCatalog.designModes.forEach { (mode, description) ->
                             ModeCard(
                                 title = localizedOption(mode),
@@ -2600,7 +2620,7 @@ fun RefineStep(
                     }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(stringResource(R.string.step_color_harmony_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.choose_color), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -2608,8 +2628,9 @@ fun RefineStep(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.fillMaxWidth().height(548.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = HomeDecorSpacing.BottomContentPadding),
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
                     userScrollEnabled = false,
                 ) {
                     items(listOf("Suggestion IA") + HomeDecorCatalog.palettes, key = { it }) { palette ->
@@ -2638,7 +2659,7 @@ fun RefineStep(
             }
             val briefStyle = state.style.takeIf { it.isNotBlank() }?.let { localizedOption(it) } ?: stringResource(R.string.style_to_choose)
             Surface(shape = RoundedCornerShape(24.dp), color = StudioBlack) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                     Text(stringResource(R.string.design_brief), color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(
@@ -2700,7 +2721,7 @@ fun ReplacementReadinessSummary(
             RoundedCornerShape(24.dp),
         ),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             ReplacementSummaryLine(
                 checked = hasMask,
                 text = if (hasMask) {
@@ -2726,7 +2747,7 @@ fun ReplacementSummaryLine(
     checked: Boolean,
     text: String,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), verticalAlignment = Alignment.Top) {
         Surface(shape = CircleShape, color = if (checked) StudioBlue else StudioPaper, modifier = Modifier.padding(top = 1.dp)) {
             Icon(
                 if (checked) Icons.Rounded.Check else Icons.Rounded.Lock,
@@ -2779,7 +2800,7 @@ fun PaletteChoiceCard(
                 }
                 Text(
                     displayLabel,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                     maxLines = 2,
@@ -2878,7 +2899,7 @@ fun ProcessingStep(
                         modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
                     ) {
                         Row(
-                            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(7.dp),
                         ) {
@@ -2888,7 +2909,7 @@ fun ProcessingStep(
                     }
                     Column(
                         modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                     ) {
                         Text(
                             stringResource(R.string.generation_progress_title),
@@ -2903,7 +2924,7 @@ fun ProcessingStep(
                         )
                     }
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier
@@ -2926,9 +2947,9 @@ fun ProcessingStep(
                 }
                 Surface(shape = RoundedCornerShape(16.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
                     ) {
                         Icon(
                             Icons.Rounded.AutoAwesome,
@@ -2970,7 +2991,7 @@ fun GenerationStepDot(
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         modifier = Modifier.width(72.dp),
     ) {
         Surface(
@@ -3008,17 +3029,17 @@ fun LayoutResultSummary(state: HomeDecorUiState) {
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 2.dp,
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             Text(stringResource(R.string.layout_changes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
             Text(
                 layoutChangeSummary(state),
                 style = MaterialTheme.typography.bodyLarge,
                 color = StudioInk,
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Xxs))
             Text(stringResource(R.string.layout_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
             layoutSuggestions(state).forEach { suggestion ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+                Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), verticalAlignment = Alignment.Top) {
                     Icon(Icons.Rounded.Check, null, Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
                     Text(suggestion, style = MaterialTheme.typography.bodyMedium, color = StudioInk)
                 }
@@ -3073,7 +3094,7 @@ fun ReplacementResultSummary(
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 2.dp,
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             Text(
                 stringResource(R.string.replacement_result_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -3106,7 +3127,7 @@ fun ReplacementResultRow(
     label: String,
     value: String,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md), verticalAlignment = Alignment.Top) {
         Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelLarge, color = StudioBlue, fontWeight = FontWeight.SemiBold)
@@ -3180,7 +3201,7 @@ fun ResultStep(
         buttonIcon = Icons.Rounded.Visibility,
         onButton = { viewModel.selectTab(MainTab.MyBoard) },
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             if (result == null) {
                 ResultStateNotice(
                     title = stringResource(R.string.result_empty_title),
@@ -3229,7 +3250,7 @@ fun ResultStep(
                 )
             }
             Surface(shape = RoundedCornerShape(24.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp))) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                     Text(stringResource(if (isReplaceResult) R.string.replacement_summary else R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.metadata_service, localizedWorkflowTitle(state.selectedTool)))
                     if (isReplaceResult) {
@@ -3244,7 +3265,7 @@ fun ResultStep(
                 }
             }
             if (resultReady) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                     Button(
                         onClick = {
                             val saved = viewModel.saveResultToPortfolio(result)
@@ -3255,7 +3276,7 @@ fun ResultStep(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp),
                     ) {
                         Icon(Icons.Rounded.Save, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
                         Text(stringResource(R.string.save), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                     Button(
@@ -3270,7 +3291,7 @@ fun ResultStep(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp),
                     ) {
                         Icon(Icons.Rounded.Download, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
                         Text(stringResource(R.string.download), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                     Button(
@@ -3287,7 +3308,7 @@ fun ResultStep(
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp),
                     ) {
                         Icon(Icons.Rounded.Share, contentDescription = null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
                         Text(stringResource(R.string.share), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -3297,21 +3318,21 @@ fun ResultStep(
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.regenerate), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                 }
                 var feedbackState by remember { mutableStateOf<String?>(null) }
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
                     Text(
                         stringResource(R.string.rate_this_result),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                         OutlinedButton(
                             onClick = {
                                 feedbackState = "liked"
@@ -3330,7 +3351,7 @@ fun ResultStep(
                                 modifier = Modifier.size(18.dp),
                                 tint = if (feedbackState == "liked") StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(HomeDecorSpacing.Sm))
                             Text(stringResource(R.string.like), fontWeight = FontWeight.SemiBold)
                         }
                         OutlinedButton(
@@ -3348,7 +3369,7 @@ fun ResultStep(
                                 modifier = Modifier.size(18.dp),
                                 tint = if (feedbackState == "disliked") StudioRose else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(HomeDecorSpacing.Sm))
                             Text(stringResource(R.string.dislike), fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -3364,7 +3385,7 @@ fun BeforeAfterResultSlider(
     result: BoardItem,
 ) {
     var comparePosition by remember(result.id) { mutableStateOf(0.5f) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md), modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.before_after_slider), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         BoxWithConstraints(
             modifier = Modifier
@@ -3459,9 +3480,9 @@ fun TryAnotherStyleRow(
     onStyle: (String) -> Unit,
 ) {
     val styles = remember { listOf("Japandi", "Luxe", "Moderne", "Minimaliste", "Marocain", "Scandinave") }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md), modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.try_another_style), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
             items(styles) { style ->
                 val selected = selectedStyle.split(" + ").any { it.trim() == style }
                 FilterChip(
@@ -3493,8 +3514,8 @@ fun ResultProjectWorkspaceActions(
         border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.28f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 Surface(shape = CircleShape, color = StudioPaper) {
                     Icon(Icons.Rounded.Layers, null, Modifier.padding(8.dp).size(20.dp), tint = StudioBlue)
                 }
@@ -3510,7 +3531,7 @@ fun ResultProjectWorkspaceActions(
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
                 Button(
                     onClick = onProject,
                     shape = CircleShape,
@@ -3518,7 +3539,7 @@ fun ResultProjectWorkspaceActions(
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Rounded.Save, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(R.string.save_to_project), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 OutlinedButton(
@@ -3527,7 +3548,7 @@ fun ResultProjectWorkspaceActions(
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Rounded.Star, null, Modifier.size(18.dp), tint = if (isFavorite) StudioGold else Color.Unspecified)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
                     Text(stringResource(if (isFavorite) R.string.favorited else R.string.favorite), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -3537,7 +3558,7 @@ fun ResultProjectWorkspaceActions(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
             ) {
                 Icon(Icons.AutoMirrored.Rounded.ViewQuilt, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(stringResource(R.string.add_to_moodboard), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -3574,7 +3595,7 @@ fun ResultContentsSummary(
         border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.35f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
             Text(stringResource(R.string.result_contains_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
             Text(description, color = StudioInk, style = MaterialTheme.typography.bodyMedium)
             if (resultReady) {
@@ -3600,10 +3621,10 @@ fun ResultStateNotice(
         Column(
             Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             Surface(shape = CircleShape, color = StudioPrimaryContainer) {
-                Icon(icon, contentDescription = null, modifier = Modifier.padding(16.dp).size(28.dp), tint = StudioBlue)
+                Icon(icon, contentDescription = null, modifier = Modifier.padding(HomeDecorSpacing.Base).size(28.dp), tint = StudioBlue)
             }
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
@@ -3617,7 +3638,7 @@ fun ResultImageCard(
     modifier: Modifier = Modifier,
     image: @Composable () -> Unit,
 ) {
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
         Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
         Card(shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
             image()

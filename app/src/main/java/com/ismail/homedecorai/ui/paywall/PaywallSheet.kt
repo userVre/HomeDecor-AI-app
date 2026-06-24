@@ -20,6 +20,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -64,6 +65,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -263,6 +265,8 @@ fun PaywallSheet(
                     selectedPlan = selectedPlan,
                     weeklyPrice = weeklyPrice,
                     yearlyPackage = yearlyPackage,
+                    weeklyPackage = weeklyPackage,
+                    offeringsLoading = offeringsLoading,
                     onPlanSelected = { selectedPlan = it },
                     onClose = onClose,
                     onBack = { currentStep = 2 },
@@ -282,6 +286,8 @@ fun PaywallSheet(
                 4 -> ProCheckoutScreen(
                     processing = purchaseBusy,
                     success = purchaseSuccess,
+                    selectedPlan = selectedPlan,
+                    selectedPackage = selectedPackage,
                     onClose = onClose,
                 )
             }
@@ -512,8 +518,8 @@ private fun ProBottomLinks(onRestore: () -> Unit) {
 private fun ProHeroIllustration(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "hero_glow")
     val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 0.8f,
+        initialValue = 0.5f,
+        targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
             animation = tween(2000, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse,
@@ -547,7 +553,7 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
 
                 // ── Back wall ──
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.07f),
+                    color = ProAccent.copy(alpha = 0.20f),
                     topLeft = Offset.Zero,
                     size = Size(w, h * 0.78f),
                     cornerRadius = CornerRadius(10.dp.toPx()),
@@ -557,7 +563,7 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 for (i in 1..6) {
                     val x = w * (0.12f + i * 0.12f)
                     drawLine(
-                        color = ProTextMuted.copy(alpha = 0.06f),
+                        color = ProTextMuted.copy(alpha = 0.15f),
                         start = Offset(x, h * 0.04f),
                         end = Offset(x, h * 0.34f),
                         strokeWidth = 1.dp.toPx(),
@@ -572,41 +578,41 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
 
                 // Glow behind window
                 drawRoundRect(
-                    color = ProGold.copy(alpha = glowAlpha * 0.12f),
+                    color = ProGold.copy(alpha = glowAlpha * 0.25f),
                     topLeft = Offset(winX - 10.dp.toPx(), winY - 6.dp.toPx()),
                     size = Size(winW + 20.dp.toPx(), winH + 12.dp.toPx()),
                     cornerRadius = CornerRadius(14.dp.toPx()),
                 )
                 // Window glass
                 drawRoundRect(
-                    color = ProGold.copy(alpha = glowAlpha * 0.10f),
+                    color = ProGold.copy(alpha = glowAlpha * 0.35f),
                     topLeft = Offset(winX, winY),
                     size = Size(winW, winH),
                     cornerRadius = CornerRadius(6.dp.toPx()),
                 )
                 // Window cross-bars
                 drawLine(
-                    color = ProTextMuted.copy(alpha = 0.18f),
+                    color = ProTextMuted.copy(alpha = 0.40f),
                     start = Offset(winX + winW / 2, winY),
                     end = Offset(winX + winW / 2, winY + winH),
                     strokeWidth = 1.5.dp.toPx(),
                 )
                 drawLine(
-                    color = ProTextMuted.copy(alpha = 0.18f),
+                    color = ProTextMuted.copy(alpha = 0.40f),
                     start = Offset(winX, winY + winH * 0.45f),
                     end = Offset(winX + winW, winY + winH * 0.45f),
                     strokeWidth = 1.5.dp.toPx(),
                 )
                 // Left curtain
                 drawRoundRect(
-                    color = ProTextMuted.copy(alpha = 0.12f),
+                    color = ProTextMuted.copy(alpha = 0.28f),
                     topLeft = Offset(winX - 14.dp.toPx(), winY - 6.dp.toPx()),
                     size = Size(12.dp.toPx(), winH + 20.dp.toPx()),
                     cornerRadius = CornerRadius(5.dp.toPx()),
                 )
                 // Right curtain
                 drawRoundRect(
-                    color = ProTextMuted.copy(alpha = 0.12f),
+                    color = ProTextMuted.copy(alpha = 0.28f),
                     topLeft = Offset(winX + winW + 2.dp.toPx(), winY - 6.dp.toPx()),
                     size = Size(12.dp.toPx(), winH + 20.dp.toPx()),
                     cornerRadius = CornerRadius(5.dp.toPx()),
@@ -614,7 +620,7 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
 
                 // ── Wall art (above sofa) ──
                 drawRoundRect(
-                    color = ProTextMuted.copy(alpha = 0.20f),
+                    color = ProTextMuted.copy(alpha = 0.40f),
                     topLeft = Offset(w * 0.10f, h * 0.08f),
                     size = Size(w * 0.16f, h * 0.22f),
                     cornerRadius = CornerRadius(3.dp.toPx()),
@@ -622,7 +628,7 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 )
                 // Art inner landscape
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = glowAlpha * 0.12f),
+                    color = ProAccent.copy(alpha = glowAlpha * 0.28f),
                     topLeft = Offset(w * 0.115f, h * 0.10f),
                     size = Size(w * 0.13f, h * 0.18f),
                     cornerRadius = CornerRadius(2.dp.toPx()),
@@ -637,7 +643,7 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                         lineTo(w * 0.115f, h * 0.28f)
                         close()
                     },
-                    color = ProAccent.copy(alpha = glowAlpha * 0.10f),
+                    color = ProAccent.copy(alpha = glowAlpha * 0.22f),
                 )
 
                 // ── Floor line ──
@@ -651,12 +657,12 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
 
                 // ── Rug (oval, under furniture) ──
                 drawOval(
-                    color = ProAccent.copy(alpha = 0.08f),
+                    color = ProAccent.copy(alpha = 0.18f),
                     topLeft = Offset(w * 0.06f, h * 0.72f),
                     size = Size(w * 0.68f, h * 0.14f),
                 )
                 drawOval(
-                    color = ProGold.copy(alpha = 0.06f),
+                    color = ProGold.copy(alpha = 0.14f),
                     topLeft = Offset(w * 0.10f, h * 0.74f),
                     size = Size(w * 0.60f, h * 0.08f),
                 )
@@ -664,14 +670,14 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 // ── Sofa ──
                 // Legs
                 drawLine(
-                    color = ProTextMuted.copy(alpha = 0.25f),
+                    color = ProTextMuted.copy(alpha = 0.45f),
                     start = Offset(w * 0.16f, h * 0.78f),
                     end = Offset(w * 0.16f, h * 0.82f),
                     strokeWidth = 2.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
                 drawLine(
-                    color = ProTextMuted.copy(alpha = 0.25f),
+                    color = ProTextMuted.copy(alpha = 0.45f),
                     start = Offset(w * 0.60f, h * 0.78f),
                     end = Offset(w * 0.60f, h * 0.82f),
                     strokeWidth = 2.dp.toPx(),
@@ -679,49 +685,49 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 )
                 // Sofa body
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.45f),
+                    color = ProAccent.copy(alpha = 0.70f),
                     topLeft = Offset(w * 0.08f, h * 0.50f),
                     size = Size(w * 0.58f, h * 0.28f),
                     cornerRadius = CornerRadius(14.dp.toPx()),
                 )
                 // Sofa backrest
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.30f),
+                    color = ProAccent.copy(alpha = 0.55f),
                     topLeft = Offset(w * 0.10f, h * 0.38f),
                     size = Size(w * 0.54f, h * 0.14f),
                     cornerRadius = CornerRadius(12.dp.toPx()),
                 )
                 // Left armrest
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.38f),
+                    color = ProAccent.copy(alpha = 0.60f),
                     topLeft = Offset(w * 0.06f, h * 0.42f),
                     size = Size(w * 0.08f, h * 0.30f),
                     cornerRadius = CornerRadius(8.dp.toPx()),
                 )
                 // Right armrest
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.38f),
+                    color = ProAccent.copy(alpha = 0.60f),
                     topLeft = Offset(w * 0.60f, h * 0.42f),
                     size = Size(w * 0.08f, h * 0.30f),
                     cornerRadius = CornerRadius(8.dp.toPx()),
                 )
                 // Left cushion
                 drawRoundRect(
-                    color = ProAccentLight.copy(alpha = 0.22f),
+                    color = ProAccentLight.copy(alpha = 0.40f),
                     topLeft = Offset(w * 0.14f, h * 0.53f),
                     size = Size(w * 0.22f, h * 0.12f),
                     cornerRadius = CornerRadius(8.dp.toPx()),
                 )
                 // Right cushion
                 drawRoundRect(
-                    color = ProAccentLight.copy(alpha = 0.22f),
+                    color = ProAccentLight.copy(alpha = 0.40f),
                     topLeft = Offset(w * 0.40f, h * 0.53f),
                     size = Size(w * 0.22f, h * 0.12f),
                     cornerRadius = CornerRadius(8.dp.toPx()),
                 )
                 // Throw pillow
                 drawRoundRect(
-                    color = ProGold.copy(alpha = 0.18f),
+                    color = ProGold.copy(alpha = 0.35f),
                     topLeft = Offset(w * 0.14f, h * 0.41f),
                     size = Size(w * 0.10f, h * 0.10f),
                     cornerRadius = CornerRadius(6.dp.toPx()),
@@ -730,21 +736,21 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 // ── Coffee table ──
                 // Table top
                 drawRoundRect(
-                    color = ProGold.copy(alpha = 0.22f),
+                    color = ProGold.copy(alpha = 0.42f),
                     topLeft = Offset(w * 0.24f, h * 0.72f),
                     size = Size(w * 0.30f, h * 0.05f),
                     cornerRadius = CornerRadius(4.dp.toPx()),
                 )
                 // Table legs
                 drawLine(
-                    color = ProGold.copy(alpha = 0.18f),
+                    color = ProGold.copy(alpha = 0.35f),
                     start = Offset(w * 0.27f, h * 0.77f),
                     end = Offset(w * 0.27f, h * 0.82f),
                     strokeWidth = 1.5.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
                 drawLine(
-                    color = ProGold.copy(alpha = 0.18f),
+                    color = ProGold.copy(alpha = 0.35f),
                     start = Offset(w * 0.51f, h * 0.77f),
                     end = Offset(w * 0.51f, h * 0.82f),
                     strokeWidth = 1.5.dp.toPx(),
@@ -752,14 +758,14 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 )
                 // Vase on table
                 drawRoundRect(
-                    color = ProGold.copy(alpha = 0.30f),
+                    color = ProGold.copy(alpha = 0.50f),
                     topLeft = Offset(w * 0.35f, h * 0.64f),
                     size = Size(w * 0.07f, h * 0.08f),
                     cornerRadius = CornerRadius(3.dp.toPx()),
                 )
                 // Stem
                 drawLine(
-                    color = ProCheckGreen.copy(alpha = 0.30f),
+                    color = ProCheckGreen.copy(alpha = 0.50f),
                     start = Offset(w * 0.385f, h * 0.64f),
                     end = Offset(w * 0.385f, h * 0.58f),
                     strokeWidth = 1.5.dp.toPx(),
@@ -767,7 +773,7 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 )
                 // Leaf
                 drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.28f),
+                    color = ProCheckGreen.copy(alpha = 0.48f),
                     radius = w * 0.022f,
                     center = Offset(w * 0.395f, h * 0.56f),
                 )
@@ -775,13 +781,13 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 // ── Floor lamp (right side) ──
                 // Base
                 drawOval(
-                    color = ProGold.copy(alpha = 0.25f),
+                    color = ProGold.copy(alpha = 0.45f),
                     topLeft = Offset(w * 0.76f, h * 0.78f),
                     size = Size(w * 0.10f, h * 0.03f),
                 )
                 // Pole
                 drawLine(
-                    color = ProGold.copy(alpha = 0.35f),
+                    color = ProGold.copy(alpha = 0.55f),
                     start = Offset(w * 0.81f, h * 0.78f),
                     end = Offset(w * 0.81f, h * 0.28f),
                     strokeWidth = 2.dp.toPx(),
@@ -796,11 +802,11 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                         lineTo(w * 0.78f, h * 0.20f)
                         close()
                     },
-                    color = ProGold.copy(alpha = glowAlpha * 0.45f),
+                    color = ProGold.copy(alpha = glowAlpha * 0.65f),
                 )
                 // Lamp glow
                 drawCircle(
-                    color = ProGold.copy(alpha = glowAlpha * 0.06f),
+                    color = ProGold.copy(alpha = glowAlpha * 0.14f),
                     radius = w * 0.09f,
                     center = Offset(w * 0.81f, h * 0.24f),
                 )
@@ -808,31 +814,31 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 // ── Potted plant (far left) ──
                 // Pot
                 drawRoundRect(
-                    color = ProGold.copy(alpha = 0.25f),
+                    color = ProGold.copy(alpha = 0.45f),
                     topLeft = Offset(w * 0.00f, h * 0.64f),
                     size = Size(w * 0.07f, h * 0.14f),
                     cornerRadius = CornerRadius(4.dp.toPx()),
                 )
                 // Stems + leaves
                 drawLine(
-                    color = ProCheckGreen.copy(alpha = 0.25f),
+                    color = ProCheckGreen.copy(alpha = 0.45f),
                     start = Offset(w * 0.035f, h * 0.64f),
                     end = Offset(w * 0.035f, h * 0.56f),
                     strokeWidth = 2.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
                 drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.32f),
+                    color = ProCheckGreen.copy(alpha = 0.52f),
                     radius = w * 0.045f,
                     center = Offset(w * 0.035f, h * 0.52f),
                 )
                 drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.22f),
+                    color = ProCheckGreen.copy(alpha = 0.40f),
                     radius = w * 0.032f,
                     center = Offset(w * 0.01f, h * 0.49f),
                 )
                 drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.28f),
+                    color = ProCheckGreen.copy(alpha = 0.48f),
                     radius = w * 0.028f,
                     center = Offset(w * 0.06f, h * 0.50f),
                 )
@@ -903,6 +909,270 @@ private fun CelebrationParticles(modifier: Modifier = Modifier) {
     }
 }
 
+// ── Benefit Illustrations ────────────────────────────────────────────────────
+
+@Composable
+private fun UnlimitedIllustration(accentColor: Color) {
+    Box(Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            // Room outline
+            drawRoundRect(
+                color = accentColor.copy(alpha = 0.25f),
+                topLeft = Offset(w * 0.1f, h * 0.15f),
+                size = Size(w * 0.8f, h * 0.7f),
+                cornerRadius = CornerRadius(12.dp.toPx()),
+            )
+            // Left room (before)
+            drawRoundRect(
+                color = ProTextMuted.copy(alpha = 0.20f),
+                topLeft = Offset(w * 0.12f, h * 0.20f),
+                size = Size(w * 0.35f, h * 0.55f),
+                cornerRadius = CornerRadius(8.dp.toPx()),
+            )
+            // Sofa shape
+            drawRoundRect(
+                color = ProTextMuted.copy(alpha = 0.30f),
+                topLeft = Offset(w * 0.15f, h * 0.50f),
+                size = Size(w * 0.28f, h * 0.15f),
+                cornerRadius = CornerRadius(6.dp.toPx()),
+            )
+            // Right room (after)
+            drawRoundRect(
+                color = accentColor.copy(alpha = 0.35f),
+                topLeft = Offset(w * 0.53f, h * 0.20f),
+                size = Size(w * 0.35f, h * 0.55f),
+                cornerRadius = CornerRadius(8.dp.toPx()),
+            )
+            // Sofa shape (styled)
+            drawRoundRect(
+                color = accentColor.copy(alpha = 0.55f),
+                topLeft = Offset(w * 0.56f, h * 0.50f),
+                size = Size(w * 0.28f, h * 0.15f),
+                cornerRadius = CornerRadius(6.dp.toPx()),
+            )
+            // Arrow between
+            drawLine(
+                color = accentColor.copy(alpha = 0.60f),
+                start = Offset(w * 0.48f, h * 0.48f),
+                end = Offset(w * 0.52f, h * 0.48f),
+                strokeWidth = 2.5.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FourKIllustration(accentColor: Color) {
+    Box(Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            // Photo frame
+            drawRoundRect(
+                color = accentColor.copy(alpha = 0.30f),
+                topLeft = Offset(w * 0.15f, h * 0.10f),
+                size = Size(w * 0.70f, h * 0.65f),
+                cornerRadius = CornerRadius(8.dp.toPx()),
+                style = Stroke(width = 3.dp.toPx()),
+            )
+            // Inner image
+            drawRoundRect(
+                color = accentColor.copy(alpha = 0.15f),
+                topLeft = Offset(w * 0.20f, h * 0.15f),
+                size = Size(w * 0.60f, h * 0.55f),
+                cornerRadius = CornerRadius(4.dp.toPx()),
+            )
+            // Mountain landscape
+            drawPath(
+                path = Path().apply {
+                    moveTo(w * 0.20f, h * 0.70f)
+                    lineTo(w * 0.38f, h * 0.35f)
+                    lineTo(w * 0.50f, h * 0.50f)
+                    lineTo(w * 0.62f, h * 0.30f)
+                    lineTo(w * 0.80f, h * 0.70f)
+                    close()
+                },
+                color = accentColor.copy(alpha = 0.35f),
+            )
+            // 4K badge
+            drawRoundRect(
+                color = accentColor.copy(alpha = 0.60f),
+                topLeft = Offset(w * 0.60f, h * 0.72f),
+                size = Size(w * 0.25f, h * 0.16f),
+                cornerRadius = CornerRadius(4.dp.toPx()),
+            )
+        }
+        Text(
+            "4K",
+            color = Color.White,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.offset(y = 38.dp),
+        )
+    }
+}
+
+@Composable
+private fun NoWatermarkIllustration(accentColor: Color) {
+    Box(Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            // Clean card
+            drawRoundRect(
+                color = accentColor.copy(alpha = 0.20f),
+                topLeft = Offset(w * 0.10f, h * 0.10f),
+                size = Size(w * 0.80f, h * 0.70f),
+                cornerRadius = CornerRadius(10.dp.toPx()),
+            )
+            // Watermark ghost (crossed out)
+            drawLine(
+                color = ProTextMuted.copy(alpha = 0.25f),
+                start = Offset(w * 0.20f, h * 0.55f),
+                end = Offset(w * 0.80f, h * 0.35f),
+                strokeWidth = 2.5.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            drawLine(
+                color = ProTextMuted.copy(alpha = 0.25f),
+                start = Offset(w * 0.20f, h * 0.35f),
+                end = Offset(w * 0.80f, h * 0.55f),
+                strokeWidth = 2.5.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+            // Checkmark
+            drawPath(
+                path = Path().apply {
+                    moveTo(w * 0.35f, h * 0.48f)
+                    lineTo(w * 0.45f, h * 0.58f)
+                    lineTo(w * 0.65f, h * 0.38f)
+                },
+                color = accentColor.copy(alpha = 0.70f),
+                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
+            )
+        }
+    }
+}
+
+@Composable
+private fun FastIllustration(accentColor: Color) {
+    Box(Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            // Lightning bolt
+            drawPath(
+                path = Path().apply {
+                    moveTo(w * 0.55f, h * 0.08f)
+                    lineTo(w * 0.30f, h * 0.48f)
+                    lineTo(w * 0.48f, h * 0.48f)
+                    lineTo(w * 0.42f, h * 0.92f)
+                    lineTo(w * 0.72f, h * 0.42f)
+                    lineTo(w * 0.54f, h * 0.42f)
+                    close()
+                },
+                color = accentColor.copy(alpha = 0.65f),
+            )
+            // Speed lines
+            for (i in 0..2) {
+                val y = h * (0.25f + i * 0.20f)
+                drawLine(
+                    color = accentColor.copy(alpha = 0.25f - i * 0.05f),
+                    start = Offset(w * 0.05f, y),
+                    end = Offset(w * 0.22f, y),
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StylesIllustration(accentColor: Color) {
+    Box(Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            // Color swatches
+            val swatchColors = listOf(
+                ProAccent.copy(alpha = 0.50f),
+                ProGold.copy(alpha = 0.50f),
+                ProCheckGreen.copy(alpha = 0.50f),
+                ProCelebration.copy(alpha = 0.50f),
+            )
+            swatchColors.forEachIndexed { index, color ->
+                val x = w * (0.15f + index * 0.18f)
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(x, h * 0.15f),
+                    size = Size(w * 0.14f, h * 0.35f),
+                    cornerRadius = CornerRadius(6.dp.toPx()),
+                )
+            }
+            // Fabric texture lines
+            for (i in 0..3) {
+                val x = w * (0.15f + i * 0.18f)
+                drawLine(
+                    color = Color.White.copy(alpha = 0.15f),
+                    start = Offset(x + w * 0.02f, h * 0.25f),
+                    end = Offset(x + w * 0.12f, h * 0.25f),
+                    strokeWidth = 1.dp.toPx(),
+                )
+                drawLine(
+                    color = Color.White.copy(alpha = 0.10f),
+                    start = Offset(x + w * 0.02f, h * 0.35f),
+                    end = Offset(x + w * 0.12f, h * 0.35f),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryIllustration(accentColor: Color) {
+    Box(Modifier.size(130.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            // Timeline line
+            drawLine(
+                color = accentColor.copy(alpha = 0.35f),
+                start = Offset(w * 0.50f, h * 0.10f),
+                end = Offset(w * 0.50f, h * 0.90f),
+                strokeWidth = 2.dp.toPx(),
+            )
+            // Timeline nodes with room thumbnails
+            for (i in 0..2) {
+                val y = h * (0.20f + i * 0.30f)
+                // Node dot
+                drawCircle(
+                    color = accentColor.copy(alpha = 0.50f),
+                    radius = 5.dp.toPx(),
+                    center = Offset(w * 0.50f, y),
+                )
+                // Thumbnail (right side)
+                drawRoundRect(
+                    color = accentColor.copy(alpha = 0.20f + i * 0.10f),
+                    topLeft = Offset(w * 0.58f, y - h * 0.08f),
+                    size = Size(w * 0.30f, h * 0.18f),
+                    cornerRadius = CornerRadius(4.dp.toPx()),
+                )
+                // Mini furniture
+                drawRoundRect(
+                    color = accentColor.copy(alpha = 0.30f + i * 0.10f),
+                    topLeft = Offset(w * 0.62f, y + h * 0.02f),
+                    size = Size(w * 0.10f, h * 0.05f),
+                    cornerRadius = CornerRadius(2.dp.toPx()),
+                )
+            }
+        }
+    }
+}
+
 // ── Screen 0: ProIntroScreen ───────────────────────────────────────────────────
 
 @Composable
@@ -923,7 +1193,7 @@ private fun ProIntroScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = null, onClose = onClose)
@@ -1082,7 +1352,7 @@ private fun ProBenefitCarousel(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = onBack, onClose = onClose)
@@ -1114,20 +1384,18 @@ private fun ProBenefitCarousel(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    // Large icon container with benefit-specific accent color
-                    Surface(
-                        shape = CircleShape,
-                        color = benefit.accentColor.copy(alpha = 0.15f),
-                        border = BorderStroke(1.5.dp, benefit.accentColor.copy(alpha = 0.3f)),
-                        modifier = Modifier.size(110.dp),
+                    // Benefit-specific illustration
+                    Box(
+                        modifier = Modifier.size(130.dp),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                benefit.icon,
-                                contentDescription = null,
-                                tint = benefit.accentColor,
-                                modifier = Modifier.size(50.dp),
-                            )
+                        when (page) {
+                            0 -> UnlimitedIllustration(benefit.accentColor)
+                            1 -> FourKIllustration(benefit.accentColor)
+                            2 -> NoWatermarkIllustration(benefit.accentColor)
+                            3 -> FastIllustration(benefit.accentColor)
+                            4 -> StylesIllustration(benefit.accentColor)
+                            5 -> HistoryIllustration(benefit.accentColor)
                         }
                     }
 
@@ -1241,12 +1509,12 @@ private fun ProReminderScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = onBack, onClose = onClose)
 
-            Spacer(Modifier.height(HomeDecorSpacing.Xl))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             // Notification bell icon
             Surface(
@@ -1277,7 +1545,7 @@ private fun ProReminderScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
 
             Text(
                 stringResource(R.string.pro_reminder_subtitle),
@@ -1286,7 +1554,7 @@ private fun ProReminderScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(Modifier.height(HomeDecorSpacing.Lg))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             ReminderOption(
                 label = stringResource(R.string.pro_reminder_2days),
@@ -1295,7 +1563,7 @@ private fun ProReminderScreen(
                 contentDescription = reminder2Description,
             )
 
-            Spacer(Modifier.height(HomeDecorSpacing.Md))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             ReminderOption(
                 label = stringResource(R.string.pro_reminder_3days),
@@ -1304,7 +1572,7 @@ private fun ProReminderScreen(
                 contentDescription = reminder3Description,
             )
 
-            Spacer(Modifier.height(HomeDecorSpacing.Lg))
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -1372,7 +1640,7 @@ private fun ReminderOption(
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Base),
+                .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Base),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
         ) {
@@ -1415,19 +1683,25 @@ private fun ProPlanScreen(
     selectedPlan: String,
     weeklyPrice: String,
     yearlyPackage: Package?,
+    weeklyPackage: Package?,
+    offeringsLoading: Boolean,
     onPlanSelected: (String) -> Unit,
     onClose: () -> Unit,
     onBack: () -> Unit,
     onContinue: () -> Unit,
     onRestore: () -> Unit,
 ) {
-    // Determine which plan gets the "MOST POPULAR" badge.
-    // Currently yearly, but this can be changed based on best value/savings logic.
-    val recommendedPlan = remember {
-        // Logic: use the plan with the best per-period value.
-        // For now, yearly is always recommended.
-        // To make this dynamic, compare yearly vs weekly price-per-day here.
-        "yearly"
+    // Dynamic "BEST VALUE" badge based on actual price-per-day comparison
+    val recommendedPlan = remember(yearlyPackage, weeklyPackage) {
+        val yearly = yearlyPackage?.product?.price?.amountMicros?.let { it / 1_000_000.0 }
+        val weekly = weeklyPackage?.product?.price?.amountMicros?.let { it / 1_000_000.0 }
+        if (yearly != null && weekly != null) {
+            val yearlyPerDay = yearly / 365.0
+            val weeklyPerDay = weekly / 7.0
+            if (yearlyPerDay < weeklyPerDay) "yearly" else "weekly"
+        } else {
+            "yearly" // default when prices unknown
+        }
     }
 
     Box(
@@ -1444,7 +1718,7 @@ private fun ProPlanScreen(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             ProScreenHeader(onBack = onBack, onClose = onClose)
@@ -1470,6 +1744,7 @@ private fun ProPlanScreen(
                 detail = stringResource(R.string.pro_plan_annual_detail),
                 selected = selectedPlan == "yearly",
                 isRecommended = recommendedPlan == "yearly",
+                offeringsLoading = offeringsLoading,
                 onClick = { onPlanSelected("yearly") },
             )
 
@@ -1483,6 +1758,7 @@ private fun ProPlanScreen(
                 detail = stringResource(R.string.pro_plan_weekly_detail),
                 selected = selectedPlan == "weekly",
                 isRecommended = recommendedPlan == "weekly",
+                offeringsLoading = offeringsLoading,
                 onClick = { onPlanSelected("weekly") },
             )
 
@@ -1513,6 +1789,7 @@ private fun ProPlanScreen(
                 label = stringResource(R.string.pro_plan_trial_cta),
                 processing = false,
                 success = false,
+                enabled = !offeringsLoading && (yearlyPackage != null || weeklyPackage != null),
                 onClick = onContinue,
             )
 
@@ -1567,6 +1844,7 @@ private fun ProPlanCard(
     detail: String,
     selected: Boolean,
     isRecommended: Boolean,
+    offeringsLoading: Boolean = false,
     onClick: () -> Unit,
 ) {
     val borderColor by animateColorAsState(
@@ -1662,11 +1940,22 @@ private fun ProPlanCard(
             Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    price ?: "\u2014",
-                    style = MaterialTheme.typography.displaySmall.copy(letterSpacing = (-1).sp),
-                    color = ProTextPrimary,
-                )
+                if (price == null && offeringsLoading) {
+                    // Loading skeleton for price
+                    Box(
+                        Modifier
+                            .width(80.dp)
+                            .height(32.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(ProTextMuted.copy(alpha = 0.1f)),
+                    )
+                } else {
+                    Text(
+                        price ?: "\u2014",
+                        style = MaterialTheme.typography.displaySmall.copy(letterSpacing = (-1).sp),
+                        color = ProTextPrimary,
+                    )
+                }
                 Spacer(Modifier.width(HomeDecorSpacing.Xs))
                 Text(
                     priceSuffix,
@@ -1693,6 +1982,8 @@ private fun ProPlanCard(
 private fun ProCheckoutScreen(
     processing: Boolean,
     success: Boolean,
+    selectedPlan: String,
+    selectedPackage: Package?,
     onClose: () -> Unit,
 ) {
     // Auto-close on success after brief celebration
@@ -1725,7 +2016,7 @@ private fun ProCheckoutScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = HomeDecorSpacing.Lg),
+                .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -1773,7 +2064,64 @@ private fun ProCheckoutScreen(
                     textAlign = TextAlign.Center,
                 )
 
-                Spacer(Modifier.height(HomeDecorSpacing.Sm))
+                Spacer(Modifier.height(HomeDecorSpacing.Md))
+
+                // Plan confirmation card
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = ProCardSurface,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        Modifier.padding(HomeDecorSpacing.Base),
+                        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                    ) {
+                        // Plan name
+                        Text(
+                            stringResource(
+                                if (selectedPlan == "yearly") R.string.pro_plan_annual
+                                else R.string.pro_plan_weekly
+                            ),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                            ),
+                            color = ProTextPrimary,
+                        )
+                        // Price
+                        Text(
+                            selectedPackage?.product?.price?.formatted ?: "",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                            ),
+                            color = ProAccentLight,
+                        )
+                        // Billing period
+                        Text(
+                            stringResource(
+                                if (selectedPlan == "yearly") R.string.pro_plan_annual_detail
+                                else R.string.pro_plan_weekly_detail
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ProTextMuted,
+                        )
+                        // Divider
+                        HorizontalDivider(color = ProTextMuted.copy(alpha = 0.15f))
+                        // Trial info
+                        Text(
+                            stringResource(R.string.pro_trial_note),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ProTextSecondary,
+                        )
+                        // Cancel note
+                        Text(
+                            stringResource(R.string.pro_cancel_anytime),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ProCheckGreen,
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(HomeDecorSpacing.Md))
 
                 Text(
                     stringResource(R.string.pro_hero_subtitle),

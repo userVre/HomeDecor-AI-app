@@ -28,9 +28,7 @@ import androidx.compose.material.icons.automirrored.rounded.Help
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Diamond
-import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.RateReview
 import androidx.compose.material.icons.rounded.Refresh
@@ -41,7 +39,6 @@ import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -71,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.AppLocale
 import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
-import com.ismail.homedecorai.model.MainTab
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.dialogs.FeedbackDialog
 import com.ismail.homedecorai.ui.dialogs.LanguagePickerDialog
@@ -79,7 +75,6 @@ import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.utility.appUrl
 import com.ismail.homedecorai.ui.utility.openAuth
 import com.ismail.homedecorai.ui.utility.openUrlSafely
-import com.revenuecat.purchases.Purchases
 
 @Composable
 fun ProfileScreen(
@@ -101,14 +96,22 @@ fun ProfileScreen(
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg, top = HomeDecorSpacing.Sm, bottom = navBarBottomPadding()),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, top = HomeDecorSpacing.Sm, bottom = navBarBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
             item("profile-title") {
-                Text(
-                    stringResource(R.string.my_profile_title),
-                    style = MaterialTheme.typography.headlineMedium,
-                )
+                Column {
+                    Text(
+                        stringResource(R.string.my_profile_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                    )
+                    Spacer(Modifier.height(HomeDecorSpacing.Xs))
+                    Text(
+                        stringResource(R.string.profile_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
 
             if (!signedIn) {
@@ -376,9 +379,9 @@ private fun SignedInProfileHero(
                     color = StudioProContainer,
                 ) {
                     Row(
-                        Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Xs),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                     ) {
                         Icon(Icons.Rounded.Star, contentDescription = null, modifier = Modifier.size(12.dp), tint = StudioGold)
                         Text(
@@ -394,60 +397,10 @@ private fun SignedInProfileHero(
 }
 
 @Composable
-private fun UpgradeBanner(
-    onUpgrade: () -> Unit,
-) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = StudioBrownBtn,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            Modifier.padding(HomeDecorSpacing.CardInternal),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
-                    Icon(Icons.Rounded.Star, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color(0xFFF0D98A))
-                    Text(
-                        stringResource(R.string.go_premium),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = Color.White,
-                    )
-                }
-                Spacer(Modifier.height(HomeDecorSpacing.Xs))
-                Text(
-                    stringResource(R.string.go_premium_body),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.7f),
-                )
-            }
-            Surface(
-                onClick = onUpgrade,
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFF0D98A),
-                modifier = Modifier.semantics {
-                    contentDescription = "Upgrade to PRO"
-                    role = Role.Button
-                },
-            ) {
-                Text(
-                    stringResource(R.string.upgrade),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = StudioBrownDark,
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun ProfileSectionLabel(label: String) {
     Text(
         label,
-        modifier = Modifier.padding(horizontal = 4.dp),
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Xs),
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -494,13 +447,19 @@ private fun ProfileRow(
             }
         } else null,
         leadingContent = {
-            Surface(        shape = RoundedCornerShape(8.dp), color = iconBg) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.padding(8.dp).size(20.dp),
-                )
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = iconBg,
+                modifier = Modifier.size(40.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
         },
         trailingContent = {

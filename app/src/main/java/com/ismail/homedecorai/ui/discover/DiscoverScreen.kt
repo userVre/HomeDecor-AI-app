@@ -134,16 +134,16 @@ fun DiscoverScreen(
         }
         return
     }
-    Column(Modifier.fillMaxSize().background(StudioCanvas)) {
+    Column(Modifier.fillMaxSize().background(StudioMist)) {
         ScreenHeaderPills(title = stringResource(R.string.discover_styles_title), trailing = null)
         LazyColumn(
             contentPadding = PaddingValues(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Xs,
-                bottom = navBarBottomPadding(),
+                bottom = navBarBottomPadding(24.dp),
             ),
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
         ) {
             item { DiscoverClusterTabs(clusters = clusters, selected = selectedCluster, onSelect = { selectedCluster = it }) }
             items(sections, key = { it.id }) { section ->
@@ -215,6 +215,7 @@ fun DiscoverHero(
         onClick = { onPreview(first) },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
     ) {
         Box(Modifier.fillMaxWidth().height(240.dp)) {
             Image(
@@ -223,7 +224,7 @@ fun DiscoverHero(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
-            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)))))
+            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f)))))
             Column(
                 modifier = Modifier.align(Alignment.BottomStart).padding(HomeDecorSpacing.Base),
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
@@ -231,7 +232,7 @@ fun DiscoverHero(
                 Surface(shape = RoundedCornerShape(8.dp), color = StudioPrimaryContainer) {
                     Text(
                         sectionCluster,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
                         color = StudioInk,
                         style = MaterialTheme.typography.labelMedium,
                     )
@@ -307,7 +308,7 @@ fun DiscoverSectionRow(
     val seeAllDescription = stringResource(R.string.a11y_see_all_format, sectionTitle)
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val availableWidth = screenWidth - HomeDecorSpacing.ScreenHorizontal * 2
-    val cardWidth = ((availableWidth - HomeDecorSpacing.Sm - 32.dp) / 2).coerceAtLeast(120.dp)
+    val cardWidth = ((availableWidth - HomeDecorSpacing.Sm) / 2.15f).coerceAtMost(160.dp).coerceAtLeast(120.dp)
 
     Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
         Row(
@@ -373,9 +374,9 @@ fun DiscoverDetailScreen(
     onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
-        Column(Modifier.fillMaxSize().background(StudioCanvas)) {
+    Column(Modifier.fillMaxSize().background(StudioMist)) {
         Row(
-            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
@@ -400,7 +401,7 @@ fun DiscoverDetailScreen(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Base,
-                bottom = navBarBottomPadding(),
+                bottom = navBarBottomPadding(24.dp),
             ),
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
@@ -499,14 +500,14 @@ fun GalleryCard(
         onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp, pressedElevation = 3.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp, pressedElevation = 4.dp),
         modifier = modifier.semantics {
             contentDescription = galleryDescription
             role = Role.Button
         },
     ) {
         Column {
-            Box(Modifier.fillMaxWidth().aspectRatio(0.82f)) {
+            Box(Modifier.fillMaxWidth().aspectRatio(0.75f)) {
                 Image(
                     painter = painterResource(item.imageRes),
                     contentDescription = itemTitle,
@@ -519,7 +520,7 @@ fun GalleryCard(
                         .fillMaxWidth()
                         .background(
                             Brush.verticalGradient(
-                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))
                             )
                         )
                         .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
@@ -528,7 +529,7 @@ fun GalleryCard(
                         itemTitle,
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }

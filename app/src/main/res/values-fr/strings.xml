@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="app_name">HomeDecor AI</string>
   <string name="nav_tools">Outils</string>
@@ -13,6 +13,7 @@
   <string name="continue_action">Continuer</string>
   <string name="generate">Générer</string>
   <string name="generate_my_design">Générer ma conception</string>
+  <string name="generate_with_diamond">Générer (%1$s &#9670;)</string>
   <string name="back">Retourner</string>
   <string name="close">Fermer</string>
   <string name="return_back">Retourner</string>
