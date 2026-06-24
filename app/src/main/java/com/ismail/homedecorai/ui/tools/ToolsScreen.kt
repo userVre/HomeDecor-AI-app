@@ -2,7 +2,6 @@ package com.ismail.homedecorai.ui.tools
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,15 +54,19 @@ private val requestedToolIds = setOf(
     "replace", "reference"
 )
 
-private val ToolCardShape = RoundedCornerShape(20.dp)
-private val CtaPillShape = RoundedCornerShape(14.dp)
+private val ToolCardShape = HomeDecorShape.CardLarge
+private val CtaPillShape = HomeDecorShape.Badge
 
 @Composable
 fun ToolsScreen(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
 ) {
-    Column(Modifier.fillMaxSize().background(StudioCanvas)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         ToolsHeader(
             state = state,
             onCredits = viewModel::openDiamondStore,
@@ -73,10 +76,10 @@ fun ToolsScreen(
             contentPadding = PaddingValues(
                 start = HomeDecorSpacing.ScreenHorizontal,
                 end = HomeDecorSpacing.ScreenHorizontal,
-                top = HomeDecorSpacing.Lg,
+                top = HomeDecorSpacing.Sm,
                 bottom = navBarBottomPadding(additionalContentPadding = 140.dp),
             ),
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.ListItemGap),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(
                 HomeDecorCatalog.tools.filter { it.id in requestedToolIds },
@@ -93,7 +96,10 @@ fun ToolsHeader(
     state: HomeDecorUiState,
     onCredits: () -> Unit,
 ) {
-    Surface(color = StudioCanvas, tonalElevation = 0.dp) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp,
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -103,15 +109,15 @@ fun ToolsHeader(
             Text(
                 stringResource(R.string.nav_tools),
                 style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
             val creditsDescription = stringResource(R.string.a11y_open_diamond_store)
             Surface(
                 onClick = onCredits,
-                shape = RoundedCornerShape(14.dp),
-                color = StudioPaper,
+                shape = CtaPillShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = 2.dp,
-                border = androidx.compose.foundation.BorderStroke(1.dp, DiamondTeal.copy(alpha = 0.2f)),
                 modifier = Modifier
                     .semantics {
                         contentDescription = creditsDescription
@@ -129,11 +135,12 @@ fun ToolsHeader(
                         Icons.Rounded.Diamond,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = DiamondTeal,
+                        tint = HomeDecorExtra.diamondAccent,
                     )
                     Text(
                         if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
                         style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                     )
                 }
@@ -151,13 +158,22 @@ fun ToolCard(
     val description = localizedToolDescription(tool)
     val toolCardDescription = stringResource(R.string.a11y_tool_card_format, title, description)
 
+    val gradientOverlay = Brush.verticalGradient(
+        0.0f to Color.Transparent,
+        0.35f to Color.Transparent,
+        0.55f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.06f),
+        0.72f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.14f),
+        0.88f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.28f),
+        1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.42f),
+    )
+
     Surface(
         onClick = onClick,
         shape = ToolCardShape,
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(220.dp)
             .clip(ToolCardShape)
             .semantics {
                 contentDescription = toolCardDescription
@@ -175,23 +191,14 @@ fun ToolCard(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            0.0f to Color.Transparent,
-                            0.40f to Color.Transparent,
-                            0.60f to Color.Black.copy(alpha = 0.08f),
-                            0.75f to Color.Black.copy(alpha = 0.18f),
-                            0.88f to Color.Black.copy(alpha = 0.35f),
-                            1.0f to Color.Black.copy(alpha = 0.50f),
-                        ),
-                    ),
+                    .background(gradientOverlay),
             )
 
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Base),
+                    .padding(horizontal = 18.dp, vertical = 16.dp),
             ) {
                 Text(
                     title,
@@ -201,31 +208,31 @@ fun ToolCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(HomeDecorSpacing.Xs))
+                Spacer(Modifier.height(4.dp))
                 Text(
                     description,
-                    color = Color.White.copy(alpha = 0.90f),
+                    color = Color.White.copy(alpha = 0.88f),
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(HomeDecorSpacing.Md))
+                Spacer(Modifier.height(12.dp))
                 Surface(
                     shape = CtaPillShape,
                     color = Color.White,
                     modifier = Modifier.widthIn(min = 120.dp),
                 ) {
                     Row(
-                        Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Sm),
+                        Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             Icons.Rounded.AutoAwesome,
                             contentDescription = null,
-                            modifier = Modifier.size(HomeDecorSpacing.Base),
+                            modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.primary,
                         )
-                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                        Spacer(Modifier.width(6.dp))
                         Text(
                             stringResource(R.string.try_this),
                             color = MaterialTheme.colorScheme.primary,

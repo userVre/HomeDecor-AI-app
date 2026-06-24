@@ -1,6 +1,5 @@
 package com.ismail.homedecorai.ui.profile
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,31 +13,25 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Help
-import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Diamond
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Policy
-import androidx.compose.material.icons.rounded.RateReview
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -46,13 +39,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -61,38 +49,28 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ismail.homedecorai.AppLocale
 import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
-import com.ismail.homedecorai.ui.dialogs.FeedbackDialog
-import com.ismail.homedecorai.ui.dialogs.LanguagePickerDialog
 import com.ismail.homedecorai.ui.theme.*
-import com.ismail.homedecorai.ui.utility.appUrl
 import com.ismail.homedecorai.ui.utility.openAuth
-import com.ismail.homedecorai.ui.utility.openUrlSafely
 
 @Composable
 fun ProfileScreen(
     state: HomeDecorUiState,
     viewModel: HomeDecorViewModel,
-    currentLanguageTag: String,
-    onLanguageSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val signedIn = !state.viewer.isGuest || state.signedInName != null
     val openRealAuth = { openAuth(context) }
-    var languagePickerVisible by remember { mutableStateOf(false) }
-    var feedbackDialogVisible by remember { mutableStateOf(false) }
 
     Column(
         Modifier
             .fillMaxSize()
-            .background(StudioCanvas)
+            .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         LazyColumn(
@@ -100,17 +78,33 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
             item("profile-title") {
-                Column {
-                    Text(
-                        stringResource(R.string.my_profile_title),
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
-                    Spacer(Modifier.height(HomeDecorSpacing.Xs))
-                    Text(
-                        stringResource(R.string.profile_subtitle),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.my_profile_title),
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                        Spacer(Modifier.height(HomeDecorSpacing.Xs))
+                        Text(
+                            stringResource(R.string.profile_subtitle),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(
+                        onClick = viewModel::openSettings,
+                        modifier = Modifier.size(48.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Settings,
+                            contentDescription = stringResource(R.string.settings),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
 
@@ -132,8 +126,8 @@ fun ProfileScreen(
                     SettingsCard {
                         ProfileRow(
                             icon = Icons.Rounded.Person,
-                            iconBg = StudioProContainer,
-                            iconTint = StudioGold,
+                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.secondary,
                             title = stringResource(R.string.edit_profile),
                             subtitle = stringResource(R.string.edit_profile_body),
                             onClick = viewModel::openSettings,
@@ -141,8 +135,8 @@ fun ProfileScreen(
                         ProfileDivider()
                         ProfileRow(
                             icon = Icons.Rounded.Shield,
-                            iconBg = StudioErrorContainer,
-                            iconTint = StudioRose,
+                            iconBg = MaterialTheme.colorScheme.errorContainer,
+                            iconTint = MaterialTheme.colorScheme.error,
                             title = stringResource(R.string.privacy_security),
                             subtitle = stringResource(R.string.privacy_security_body),
                             onClick = viewModel::openSettings,
@@ -150,8 +144,8 @@ fun ProfileScreen(
                         ProfileDivider()
                         ProfileRow(
                             icon = Icons.Rounded.Diamond,
-                            iconBg = StudioPrimaryContainer,
-                            iconTint = StudioBlue,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.primary,
                             title = stringResource(R.string.my_diamonds),
                             subtitle = stringResource(R.string.my_diamonds_body, state.diamonds),
                             onClick = viewModel::openDiamondStore,
@@ -163,8 +157,8 @@ fun ProfileScreen(
                     SettingsCard {
                         ProfileRow(
                             icon = Icons.Rounded.Star,
-                            iconBg = if (state.isPro) StudioSuccessContainer else StudioProContainer,
-                            iconTint = if (state.isPro) StudioGreen else StudioGold,
+                            iconBg = if (state.isPro) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = if (state.isPro) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary,
                             title = stringResource(R.string.current_plan),
                             subtitle = if (state.isPro) stringResource(R.string.current_plan_body_pro) else stringResource(R.string.current_plan_body_free),
                             onClick = viewModel::openPaywall,
@@ -173,98 +167,7 @@ fun ProfileScreen(
                 }
             }
 
-            item("settings-section") {
-                ProfileSectionLabel(stringResource(R.string.settings_section))
-                SettingsCard {
-                    ProfileRow(
-                        icon = Icons.Rounded.Language,
-                        iconBg = StudioPrimaryContainer,
-                        iconTint = StudioBlue,
-                        title = stringResource(R.string.language),
-                        subtitle = AppLocale.labelFor(context, currentLanguageTag),
-                        onClick = { languagePickerVisible = true },
-                    )
-                    ProfileDivider()
-                    ProfileRow(
-                        icon = Icons.Rounded.Refresh,
-                        iconBg = StudioSuccessContainer,
-                        iconTint = StudioGreen,
-                        title = stringResource(R.string.restore_purchases),
-                        subtitle = stringResource(R.string.restore_purchases_subtitle),
-                        onClick = { viewModel.openPaywall() },
-                    )
-                    ProfileDivider()
-                    ProfileRow(
-                        icon = Icons.Rounded.Policy,
-                        iconBg = StudioPrimaryContainer,
-                        iconTint = StudioBlue,
-                        title = stringResource(R.string.terms),
-                        subtitle = stringResource(R.string.terms_subtitle),
-                        onClick = { openUrlSafely(context, appUrl("/terms")) },
-                    )
-                    ProfileDivider()
-                    ProfileRow(
-                        icon = Icons.Rounded.Policy,
-                        iconBg = StudioPrimaryContainer,
-                        iconTint = StudioBlue,
-                        title = stringResource(R.string.privacy_policy),
-                        subtitle = stringResource(R.string.privacy_subtitle),
-                        onClick = { openUrlSafely(context, appUrl("/privacy")) },
-                    )
-                    ProfileDivider()
-                    ProfileRow(
-                        icon = Icons.Rounded.RateReview,
-                        iconBg = StudioSuccessContainer,
-                        iconTint = StudioGreen,
-                        title = stringResource(R.string.feedback),
-                        subtitle = stringResource(R.string.feedback_subtitle),
-                        onClick = { feedbackDialogVisible = true },
-                    )
-                    ProfileDivider()
-                    ProfileRow(
-                        icon = Icons.AutoMirrored.Rounded.Help,
-                        iconBg = StudioPrimaryContainer,
-                        iconTint = StudioBlue,
-                        title = stringResource(R.string.help_faq),
-                        subtitle = stringResource(R.string.help_faq_body),
-                        onClick = { openUrlSafely(context, appUrl("/faq")) },
-                    )
-                    if (signedIn) {
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.AutoMirrored.Rounded.Logout,
-                            iconBg = StudioErrorContainer,
-                            iconTint = StudioRose,
-                            title = stringResource(R.string.sign_out),
-                            subtitle = "",
-                            onClick = viewModel::logOut,
-                        )
-                    }
-                }
-            }
         }
-    }
-
-    if (languagePickerVisible) {
-        LanguagePickerDialog(
-            currentLanguageTag = currentLanguageTag,
-            onLanguageSelected = {
-                onLanguageSelected(it)
-                languagePickerVisible = false
-            },
-            onDismiss = { languagePickerVisible = false },
-        )
-    }
-
-    if (feedbackDialogVisible) {
-        FeedbackDialog(
-            busy = false,
-            onSubmit = { message ->
-                viewModel.submitSettingsFeedback(message)
-                feedbackDialogVisible = false
-            },
-            onDismiss = { feedbackDialogVisible = false },
-        )
     }
 }
 
@@ -274,10 +177,10 @@ private fun SignInHeroCard(
     onGoogle: () -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
+        shape = HomeDecorShape.ExtraExtraLarge,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        border = BorderStroke(1.5f.dp, StudioLine),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
@@ -294,8 +197,8 @@ private fun SignInHeroCard(
             Spacer(Modifier.height(HomeDecorSpacing.Lg))
             Button(
                 onClick = onSignIn,
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = StudioBrownBtn),
+                shape = HomeDecorShape.Button,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
             ) {
                 Text(stringResource(R.string.sign_in))
@@ -303,8 +206,8 @@ private fun SignInHeroCard(
             Spacer(Modifier.height(HomeDecorSpacing.Md))
             OutlinedButton(
                 onClick = onGoogle,
-                shape = RoundedCornerShape(24.dp),
-                border = BorderStroke(1.5f.dp, StudioLine),
+                shape = HomeDecorShape.Button,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
             ) {
                 Text(stringResource(R.string.continue_with_google))
@@ -318,10 +221,10 @@ private fun SignedInProfileHero(
     state: HomeDecorUiState,
 ) {
     Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
+        shape = HomeDecorShape.ExtraExtraLarge,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        border = BorderStroke(1.5f.dp, StudioLine),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -332,7 +235,7 @@ private fun SignedInProfileHero(
             Box {
                 Surface(
                     shape = CircleShape,
-                    color = StudioPrimaryContainer,
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier.size(72.dp),
                 ) {
                     val initials = (state.signedInName ?: stringResource(R.string.initials_fallback)).take(2).uppercase()
@@ -340,13 +243,13 @@ private fun SignedInProfileHero(
                         initials,
                         modifier = Modifier.fillMaxSize().padding(1.dp),
                         style = MaterialTheme.typography.headlineSmall,
-                        color = StudioBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center,
                     )
                 }
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = StudioGold,
+                    shape = HomeDecorShape.Badge,
+                    color = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 2.dp, bottom = 2.dp),
@@ -355,7 +258,7 @@ private fun SignedInProfileHero(
                         stringResource(R.string.free_badge),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onTertiary,
                     )
                 }
             }
@@ -375,19 +278,19 @@ private fun SignedInProfileHero(
                 )
                 Spacer(Modifier.height(HomeDecorSpacing.Xs))
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = StudioProContainer,
+                    shape = HomeDecorShape.Badge,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                 ) {
                     Row(
                         Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Xs),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                     ) {
-                        Icon(Icons.Rounded.Star, contentDescription = null, modifier = Modifier.size(12.dp), tint = StudioGold)
+                        Icon(Icons.Rounded.Star, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.tertiary)
                         Text(
                             stringResource(R.string.free_plan),
                             style = MaterialTheme.typography.labelSmall,
-                            color = StudioGold,
+                            color = MaterialTheme.colorScheme.tertiary,
                         )
                     }
                 }
@@ -411,10 +314,10 @@ private fun SettingsCard(
     content: @Composable () -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = StudioPaper,
+        shape = HomeDecorShape.CardLarge,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        border = BorderStroke(1.dp, StudioLine),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(vertical = HomeDecorSpacing.CardInternal)) {
@@ -448,7 +351,7 @@ private fun ProfileRow(
         } else null,
         leadingContent = {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = HomeDecorShape.Badge,
                 color = iconBg,
                 modifier = Modifier.size(40.dp),
             ) {
@@ -483,11 +386,8 @@ private fun ProfileRow(
 
 @Composable
 private fun ProfileDivider() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = HomeDecorSpacing.Base)
-            .height(1.dp)
-            .background(StudioMist),
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
     )
 }

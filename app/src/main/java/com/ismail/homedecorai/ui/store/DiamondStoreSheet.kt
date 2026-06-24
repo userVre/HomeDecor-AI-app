@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -107,6 +108,7 @@ fun DiamondStoreSheet(
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
+    val isDark = isSystemInDarkTheme()
     val scrimTapBlocker = remember { MutableInteractionSource() }
     val sheetTapBlocker = remember { MutableInteractionSource() }
     var packages by remember { mutableStateOf<List<Package>>(emptyList()) }
@@ -200,10 +202,40 @@ fun DiamondStoreSheet(
     }
     val closeDescription = stringResource(R.string.close)
 
+    val sheetContainerColor = if (isDark) {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
+    val handleColor = if (isDark) {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+    }
+
+    val titleColor = if (isDark) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    val subtitleColor = if (isDark) {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    val sectionLabelColor = if (isDark) {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    }
+
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.7f))
+            .background(Color.Black.copy(alpha = if (isDark) 0.6f else 0.35f))
             .clickable(
                 interactionSource = scrimTapBlocker,
                 indication = null,
@@ -212,8 +244,8 @@ fun DiamondStoreSheet(
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
-            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            color = StoreDarkBg,
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            color = sheetContainerColor,
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.92f)
@@ -237,7 +269,7 @@ fun DiamondStoreSheet(
                                 .width(40.dp)
                                 .height(4.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.15f)),
+                                .background(handleColor),
                         )
                     }
                 }
@@ -252,7 +284,7 @@ fun DiamondStoreSheet(
                         Column(Modifier.weight(1f)) {
                             Text(
                                 stringResource(R.string.diamond_store_title),
-                                color = Color.White,
+                                color = titleColor,
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = (-0.5).sp,
@@ -260,15 +292,18 @@ fun DiamondStoreSheet(
                             Spacer(Modifier.height(HomeDecorSpacing.Xxs))
                             Text(
                                 stringResource(R.string.diamond_store_subtitle),
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = subtitleColor,
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
 
                         Surface(
                             shape = RoundedCornerShape(14.dp),
-                            color = StoreCardElevated,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, DiamondTeal.copy(alpha = 0.3f)),
+                            color = if (isDark) {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                            },
                         ) {
                             Row(
                                 Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
@@ -279,11 +314,11 @@ fun DiamondStoreSheet(
                                     Icons.Rounded.Diamond,
                                     contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = DiamondTeal,
+                                    tint = HomeDecorExtra.diamondAccent,
                                 )
                                 Text(
                                     "${state.diamonds}",
-                                    color = Color.White,
+                                    color = titleColor,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                 )
@@ -303,7 +338,7 @@ fun DiamondStoreSheet(
                             Icon(
                                 Icons.Rounded.Close,
                                 contentDescription = stringResource(R.string.close),
-                                tint = Color.White.copy(alpha = 0.5f),
+                                tint = subtitleColor,
                             )
                         }
                     }
@@ -313,14 +348,13 @@ fun DiamondStoreSheet(
                     DailyRewardCard(
                         state = state,
                         onClaim = onDailyRewardClaim,
-                        dark = true,
                     )
                 }
 
                 item {
                     Text(
                         stringResource(R.string.get_more_credits),
-                        color = Color.White.copy(alpha = 0.45f),
+                        color = sectionLabelColor,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = 1.sp,
@@ -337,12 +371,12 @@ fun DiamondStoreSheet(
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                color = DiamondTeal,
+                                color = HomeDecorExtra.diamondAccent,
                                 strokeWidth = 2.dp,
                             )
                             Text(
                                 stringResource(R.string.loading_packs),
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = subtitleColor,
                             )
                         }
                     }
@@ -353,7 +387,11 @@ fun DiamondStoreSheet(
                         ElevatedCard(
                             shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.elevatedCardColors(
-                                containerColor = StoreCardBg,
+                                containerColor = if (isDark) {
+                                    MaterialTheme.colorScheme.surfaceContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerLow
+                                },
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -368,11 +406,11 @@ fun DiamondStoreSheet(
                                     Icons.Rounded.Diamond,
                                     contentDescription = null,
                                     modifier = Modifier.size(32.dp),
-                                    tint = DiamondTeal.copy(alpha = 0.4f),
+                                    tint = HomeDecorExtra.diamondAccent.copy(alpha = 0.5f),
                                 )
                                 Text(
                                     loadError.orEmpty(),
-                                    color = Color.White.copy(alpha = 0.6f),
+                                    color = subtitleColor,
                                     style = MaterialTheme.typography.bodyMedium,
                                     textAlign = TextAlign.Center,
                                 )
@@ -381,7 +419,7 @@ fun DiamondStoreSheet(
                                     enabled = !storeLoading && loadingPack == null && !state.purchaseBusy,
                                     shape = RoundedCornerShape(14.dp),
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = DiamondTeal,
+                                        contentColor = HomeDecorExtra.diamondAccent,
                                     ),
                                     modifier = Modifier.height(HomeDecorSpacing.Xxl),
                                 ) {
@@ -409,7 +447,7 @@ fun DiamondStoreSheet(
                         } else {
                             Text(
                                 notice.orEmpty(),
-                                color = Color.White.copy(alpha = 0.5f),
+                                color = subtitleColor,
                                 modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg),
                             )
                         }
@@ -439,6 +477,7 @@ fun DiamondStoreSheet(
                                     unavailable = !storeLoading && productPackage == null,
                                     loading = storeLoading || loadingPack == pack.id || syncingPack == pack.id,
                                     purchaseBlocked = purchaseBlocked,
+                                    isDark = isDark,
                                     onClick = { buy(pack) },
                                 )
                             }
@@ -457,6 +496,7 @@ private fun DiamondOfferCard(
     unavailable: Boolean = false,
     loading: Boolean = false,
     purchaseBlocked: Boolean = false,
+    isDark: Boolean,
     onClick: () -> Unit,
 ) {
     val enabled = !loading && !unavailable && !purchaseBlocked
@@ -479,25 +519,6 @@ private fun DiamondOfferCard(
         label = "glow",
     )
 
-    val cardGradient = when (packIndex) {
-        0 -> listOf(
-            Color(0xFF0D2233),
-            StoreCardBg,
-        )
-        1 -> listOf(
-            Color(0xFF1D1540),
-            StoreCardBg,
-        )
-        2 -> listOf(
-            Color(0xFF0D2A1A),
-            StoreCardBg,
-        )
-        else -> listOf(
-            Color(0xFF2A1D0A),
-            StoreCardBg,
-        )
-    }
-
     val accentColor = when (packIndex) {
         0 -> DiamondTeal
         1 -> PurpleGlow
@@ -505,54 +526,98 @@ private fun DiamondOfferCard(
         else -> GoldGlow
     }
 
-    val borderColor = if (unavailable) {
-        Color.White.copy(alpha = 0.06f)
-    } else if (displayBadge != null) {
-        accentColor.copy(alpha = 0.55f)
+    val cardContainerColor = when {
+        unavailable -> {
+            if (isDark) MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f)
+            else MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.5f)
+        }
+        isDark -> MaterialTheme.colorScheme.surfaceContainer
+        else -> MaterialTheme.colorScheme.surface
+    }
+
+    val cardBorderColor = when {
+        unavailable -> {
+            if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        }
+        displayBadge != null -> accentColor.copy(alpha = 0.35f)
+        else -> {
+            if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+        }
+    }
+
+    val cardTopColor = when {
+        unavailable -> {
+            if (isDark) MaterialTheme.colorScheme.surfaceContainerLow
+            else MaterialTheme.colorScheme.surfaceContainerLowest
+        }
+        packIndex == 0 -> if (isDark) Color(0xFF0D2233) else Color(0xFFE0F5F7)
+        packIndex == 1 -> if (isDark) Color(0xFF1D1540) else Color(0xFFEDE5FF)
+        packIndex == 2 -> if (isDark) Color(0xFF0D2A1A) else Color(0xFFE0F5E8)
+        else -> if (isDark) Color(0xFF2A1D0A) else Color(0xFFFFF5E0)
+    }
+
+    val cardBottomColor = if (isDark) {
+        MaterialTheme.colorScheme.surfaceContainer
     } else {
-        Color.White.copy(alpha = 0.08f)
+        MaterialTheme.colorScheme.surface
+    }
+
+    val titleTextColor = when {
+        unavailable -> {
+            if (isDark) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        }
+        isDark -> MaterialTheme.colorScheme.onSurface
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val diamondCountColor = when {
+        unavailable -> {
+            if (isDark) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+        }
+        isDark -> accentColor
+        else -> accentColor.copy(alpha = 0.9f)
+    }
+
+    val badgeTextColor = accentColor
+    val badgeBgColor = if (isDark) {
+        accentColor.copy(alpha = 0.15f)
+    } else {
+        accentColor.copy(alpha = 0.12f)
     }
 
     Surface(
-        shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent,
+        shape = RoundedCornerShape(20.dp),
+        color = cardContainerColor,
         modifier = Modifier
-            .width(186.dp)
-            .height(270.dp),
+            .width(172.dp)
+            .height(280.dp),
     ) {
-        Box {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(cardGradient),
-                        RoundedCornerShape(22.dp),
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                borderColor,
-                                borderColor.copy(alpha = borderColor.alpha * 0.3f),
-                            )
-                        ),
-                        shape = RoundedCornerShape(22.dp),
-                    ),
-            )
-
+        Box(
+            Modifier
+                .fillMaxSize()
+                .border(
+                    width = 1.dp,
+                    color = cardBorderColor,
+                    shape = RoundedCornerShape(20.dp),
+                ),
+        ) {
             if (!unavailable && displayBadge != null) {
                 Box(
                     Modifier
                         .fillMaxSize()
                         .padding(1.dp)
-                        .clip(RoundedCornerShape(22.dp))
+                        .clip(RoundedCornerShape(20.dp))
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(
-                                    accentColor.copy(alpha = glowAlpha * 0.3f),
+                                    accentColor.copy(alpha = glowAlpha * 0.2f),
                                     Color.Transparent,
                                 ),
-                                radius = 200f,
+                                radius = 180f,
                             ),
                         ),
                 )
@@ -565,32 +630,27 @@ private fun DiamondOfferCard(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(130.dp),
+                        .height(120.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    cardTopColor,
+                                    cardBottomColor,
+                                )
+                            )
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        accentColor.copy(alpha = 0.12f),
-                                        Color.Transparent,
-                                    )
-                                ),
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        DiamondPackVisual(
-                            packIndex = packIndex,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
+                    DiamondPackVisual(
+                        packIndex = packIndex,
+                        modifier = Modifier.fillMaxSize(),
+                        unavailable = unavailable,
+                    )
 
                     if (displayBadge != null && !unavailable) {
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = accentColor.copy(alpha = 0.25f),
+                            color = badgeBgColor,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .padding(10.dp),
@@ -598,7 +658,7 @@ private fun DiamondOfferCard(
                             Text(
                                 displayBadge,
                                 modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xxs),
-                                color = accentColor,
+                                color = badgeTextColor,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = 0.8.sp,
@@ -610,12 +670,16 @@ private fun DiamondOfferCard(
                         Box(
                             Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)),
+                                .background(
+                                    if (isDark) Color.Black.copy(alpha = 0.4f)
+                                    else Color.White.copy(alpha = 0.6f),
+                                    RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                                ),
                             contentAlignment = Alignment.Center,
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(28.dp),
-                                color = DiamondTeal,
+                                color = if (isDark) Color.White else HomeDecorExtra.diamondAccent,
                                 strokeWidth = 2.5.dp,
                             )
                         }
@@ -630,7 +694,7 @@ private fun DiamondOfferCard(
                 ) {
                     Text(
                         stringResource(packTitleRes),
-                        color = Color.White,
+                        color = titleTextColor,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -646,12 +710,12 @@ private fun DiamondOfferCard(
                             Icons.Rounded.Diamond,
                             contentDescription = null,
                             modifier = Modifier.size(15.dp),
-                            tint = accentColor,
+                            tint = diamondCountColor,
                         )
                         Spacer(Modifier.width(HomeDecorSpacing.Xs))
                         Text(
                             stringResource(R.string.diamonds_amount, pack.diamonds),
-                            color = accentColor,
+                            color = diamondCountColor,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -665,20 +729,41 @@ private fun DiamondOfferCard(
                             .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md)
                             .height(HomeDecorSpacing.TouchTarget)
                             .fillMaxWidth(),
-                        color = Color.White.copy(alpha = 0.25f),
+                        color = if (isDark) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                         style = MaterialTheme.typography.labelMedium,
                         textAlign = TextAlign.Center,
                     )
                 } else {
+                    val buttonContainerColor = when {
+                        isDark -> accentColor
+                        else -> accentColor
+                    }
+                    val buttonContentColor = when {
+                        packIndex == 3 && isDark -> Color(0xFF1A1000)
+                        packIndex == 3 && !isDark -> Color(0xFF1A1000)
+                        else -> Color.White
+                    }
+                    val disabledButtonContainer = if (isDark) {
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    }
+                    val disabledButtonContent = if (isDark) {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    }
+
                     Button(
                         onClick = onClick,
                         enabled = enabled,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = accentColor,
-                            contentColor = if (packIndex == 3) Color(0xFF1A1000) else Color.White,
-                            disabledContainerColor = Color.White.copy(alpha = 0.06f),
-                            disabledContentColor = Color.White.copy(alpha = 0.2f),
+                            containerColor = buttonContainerColor,
+                            contentColor = buttonContentColor,
+                            disabledContainerColor = disabledButtonContainer,
+                            disabledContentColor = disabledButtonContent,
                         ),
                         modifier = Modifier
                             .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md)
@@ -704,9 +789,6 @@ private fun DiamondOfferCard(
 }
 
 private val DiamondTeal = Color(0xFF4DD9E0)
-private val StoreDarkBg = Color(0xFF0B0E14)
-private val StoreCardBg = Color(0xFF141921)
-private val StoreCardElevated = Color(0xFF1C2233)
 private val PurpleGlow = Color(0xFF9B6EFF)
 private val GreenGlow = Color(0xFF34D399)
 private val GoldGlow = Color(0xFFFFD166)
@@ -715,6 +797,7 @@ private val GoldGlow = Color(0xFFFFD166)
 private fun DiamondPackVisual(
     packIndex: Int,
     modifier: Modifier = Modifier,
+    unavailable: Boolean = false,
 ) {
     val teal = DiamondTeal
     val tealLight = Color(0xFF7AEAEA)
@@ -728,6 +811,8 @@ private fun DiamondPackVisual(
     val boxDark = Color(0xFF4A2E18)
     val goldMetal = Color(0xFFD4A843)
 
+    val alphaMod = if (unavailable) 0.35f else 1f
+
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
@@ -740,10 +825,10 @@ private fun DiamondPackVisual(
             brush = Brush.radialGradient(
                 colors = listOf(
                     when (packIndex) {
-                        1 -> purple.copy(alpha = glowAlpha)
-                        2 -> green.copy(alpha = glowAlpha)
-                        3 -> gold.copy(alpha = glowAlpha)
-                        else -> teal.copy(alpha = glowAlpha)
+                        1 -> purple.copy(alpha = glowAlpha * alphaMod)
+                        2 -> green.copy(alpha = glowAlpha * alphaMod)
+                        3 -> gold.copy(alpha = glowAlpha * alphaMod)
+                        else -> teal.copy(alpha = glowAlpha * alphaMod)
                     },
                     Color.Transparent,
                 ),
@@ -755,10 +840,10 @@ private fun DiamondPackVisual(
         )
 
         when (packIndex) {
-            0 -> drawSmallBox(cx, cy, boxBrown, boxDark, goldMetal, teal, tealLight)
-            1 -> drawMediumChest(cx, cy, boxBrown, boxDark, goldMetal, purple, purpleLight)
-            2 -> drawLargeChest(cx, cy, boxBrown, boxDark, goldMetal, green, greenLight)
-            else -> drawGrandCart(cx, cy, boxBrown, boxDark, goldMetal, gold, goldLight)
+            0 -> drawSmallBox(cx, cy, boxBrown, boxDark, goldMetal, teal, tealLight, alphaMod)
+            1 -> drawMediumChest(cx, cy, boxBrown, boxDark, goldMetal, purple, purpleLight, alphaMod)
+            2 -> drawLargeChest(cx, cy, boxBrown, boxDark, goldMetal, green, greenLight, alphaMod)
+            else -> drawGrandCart(cx, cy, boxBrown, boxDark, goldMetal, gold, goldLight, alphaMod)
         }
     }
 }
@@ -767,34 +852,36 @@ private fun DrawScope.drawSmallBox(
     cx: Float, cy: Float,
     boxBrown: Color, boxDark: Color, goldMetal: Color,
     teal: Color, tealLight: Color,
+    alpha: Float = 1f,
 ) {
     drawRoundRect(
-        boxBrown,
+        boxBrown.copy(alpha = alpha),
         Offset(cx - 22f, cy + 2f),
         Size(44f, 24f),
         CornerRadius(5f),
     )
     drawRoundRect(
-        boxDark,
+        boxDark.copy(alpha = alpha),
         Offset(cx - 24f, cy - 6f),
         Size(48f, 10f),
         CornerRadius(4f),
     )
-    drawRect(goldMetal, Offset(cx - 22f, cy + 8f), Size(44f, 2f))
-    drawPath(diamondPath(cx - 6f, cy + 4f, 7f), teal)
-    drawPath(diamondPath(cx + 8f, cy + 2f, 5f), tealLight)
-    drawPath(diamondPath(cx + 1f, cy + 12f, 4f), teal.copy(alpha = 0.7f))
-    drawCircle(Color.White.copy(alpha = 0.8f), 1.5f, Offset(cx - 10f, cy - 2f))
-    drawCircle(Color.White.copy(alpha = 0.5f), 1f, Offset(cx + 12f, cy - 4f))
+    drawRect(goldMetal.copy(alpha = alpha), Offset(cx - 22f, cy + 8f), Size(44f, 2f))
+    drawPath(diamondPath(cx - 6f, cy + 4f, 7f), teal.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 8f, cy + 2f, 5f), tealLight.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 1f, cy + 12f, 4f), teal.copy(alpha = 0.7f * alpha))
+    drawCircle(Color.White.copy(alpha = 0.8f * alpha), 1.5f, Offset(cx - 10f, cy - 2f))
+    drawCircle(Color.White.copy(alpha = 0.5f * alpha), 1f, Offset(cx + 12f, cy - 4f))
 }
 
 private fun DrawScope.drawMediumChest(
     cx: Float, cy: Float,
     boxBrown: Color, boxDark: Color, goldMetal: Color,
     purple: Color, purpleLight: Color,
+    alpha: Float = 1f,
 ) {
     drawRoundRect(
-        boxBrown,
+        boxBrown.copy(alpha = alpha),
         Offset(cx - 30f, cy),
         Size(60f, 34f),
         CornerRadius(6f),
@@ -804,26 +891,27 @@ private fun DrawScope.drawMediumChest(
         quadraticBezierTo(cx, cy - 24f, cx + 32f, cy)
         close()
     }
-    drawPath(lid, boxDark)
-    drawRect(goldMetal, Offset(cx - 30f, cy + 10f), Size(60f, 2.5f))
-    drawCircle(goldMetal, 4f, Offset(cx, cy + 10f))
-    drawPath(diamondPath(cx - 12f, cy + 4f, 10f), purple)
-    drawPath(diamondPath(cx + 4f, cy + 2f, 11f), purple)
-    drawPath(diamondPath(cx + 18f, cy + 6f, 8f), purpleLight)
-    drawPath(diamondPath(cx - 4f, cy + 16f, 7f), purple.copy(alpha = 0.75f))
-    drawPath(diamondPath(cx + 12f, cy + 18f, 6f), purpleLight.copy(alpha = 0.6f))
-    drawCircle(Color.White.copy(alpha = 0.85f), 2f, Offset(cx - 16f, cy - 2f))
-    drawCircle(Color.White.copy(alpha = 0.6f), 1.5f, Offset(cx + 20f, cy - 6f))
-    drawCircle(Color.White.copy(alpha = 0.4f), 1f, Offset(cx + 8f, cy - 12f))
+    drawPath(lid, boxDark.copy(alpha = alpha))
+    drawRect(goldMetal.copy(alpha = alpha), Offset(cx - 30f, cy + 10f), Size(60f, 2.5f))
+    drawCircle(goldMetal.copy(alpha = alpha), 4f, Offset(cx, cy + 10f))
+    drawPath(diamondPath(cx - 12f, cy + 4f, 10f), purple.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 4f, cy + 2f, 11f), purple.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 18f, cy + 6f, 8f), purpleLight.copy(alpha = alpha))
+    drawPath(diamondPath(cx - 4f, cy + 16f, 7f), purple.copy(alpha = 0.75f * alpha))
+    drawPath(diamondPath(cx + 12f, cy + 18f, 6f), purpleLight.copy(alpha = 0.6f * alpha))
+    drawCircle(Color.White.copy(alpha = 0.85f * alpha), 2f, Offset(cx - 16f, cy - 2f))
+    drawCircle(Color.White.copy(alpha = 0.6f * alpha), 1.5f, Offset(cx + 20f, cy - 6f))
+    drawCircle(Color.White.copy(alpha = 0.4f * alpha), 1f, Offset(cx + 8f, cy - 12f))
 }
 
 private fun DrawScope.drawLargeChest(
     cx: Float, cy: Float,
     boxBrown: Color, boxDark: Color, goldMetal: Color,
     green: Color, greenLight: Color,
+    alpha: Float = 1f,
 ) {
     drawRoundRect(
-        boxBrown,
+        boxBrown.copy(alpha = alpha),
         Offset(cx - 36f, cy + 2f),
         Size(72f, 38f),
         CornerRadius(6f),
@@ -833,31 +921,32 @@ private fun DrawScope.drawLargeChest(
         quadraticBezierTo(cx, cy - 24f, cx + 38f, cy + 2f)
         close()
     }
-    drawPath(lid, boxDark)
-    drawRect(goldMetal, Offset(cx - 36f, cy + 12f), Size(72f, 2.5f))
-    drawRect(goldMetal, Offset(cx - 36f, cy + 30f), Size(72f, 2.5f))
-    drawCircle(goldMetal, 5f, Offset(cx, cy + 12f))
-    drawPath(diamondPath(cx - 16f, cy + 4f, 11f), green)
-    drawPath(diamondPath(cx + 2f, cy + 2f, 12f), green)
-    drawPath(diamondPath(cx + 18f, cy + 5f, 10f), greenLight)
-    drawPath(diamondPath(cx - 8f, cy + 16f, 8f), green)
-    drawPath(diamondPath(cx + 10f, cy + 18f, 7f), greenLight.copy(alpha = 0.7f))
-    drawPath(diamondPath(cx - 26f, cy + 8f, 7f), green.copy(alpha = 0.55f))
-    drawPath(diamondPath(cx + 26f, cy + 10f, 6f), greenLight.copy(alpha = 0.5f))
-    drawPath(diamondPath(cx - 18f, cy + 22f, 5f), green.copy(alpha = 0.4f))
-    drawPath(diamondPath(cx + 20f, cy + 24f, 5f), green.copy(alpha = 0.4f))
-    drawPath(diamondPath(cx, cy - 8f, 9f), greenLight.copy(alpha = 0.85f))
-    drawPath(diamondPath(cx - 14f, cy - 6f, 7f), green.copy(alpha = 0.65f))
-    drawCircle(Color.White.copy(alpha = 0.85f), 2f, Offset(cx - 22f, cy - 4f))
-    drawCircle(Color.White.copy(alpha = 0.6f), 1.5f, Offset(cx + 24f, cy - 8f))
-    drawCircle(Color.White.copy(alpha = 0.5f), 1.5f, Offset(cx + 6f, cy - 16f))
-    drawCircle(Color.White.copy(alpha = 0.35f), 1f, Offset(cx - 10f, cy - 14f))
+    drawPath(lid, boxDark.copy(alpha = alpha))
+    drawRect(goldMetal.copy(alpha = alpha), Offset(cx - 36f, cy + 12f), Size(72f, 2.5f))
+    drawRect(goldMetal.copy(alpha = alpha), Offset(cx - 36f, cy + 30f), Size(72f, 2.5f))
+    drawCircle(goldMetal.copy(alpha = alpha), 5f, Offset(cx, cy + 12f))
+    drawPath(diamondPath(cx - 16f, cy + 4f, 11f), green.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 2f, cy + 2f, 12f), green.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 18f, cy + 5f, 10f), greenLight.copy(alpha = alpha))
+    drawPath(diamondPath(cx - 8f, cy + 16f, 8f), green.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 10f, cy + 18f, 7f), greenLight.copy(alpha = 0.7f * alpha))
+    drawPath(diamondPath(cx - 26f, cy + 8f, 7f), green.copy(alpha = 0.55f * alpha))
+    drawPath(diamondPath(cx + 26f, cy + 10f, 6f), greenLight.copy(alpha = 0.5f * alpha))
+    drawPath(diamondPath(cx - 18f, cy + 22f, 5f), green.copy(alpha = 0.4f * alpha))
+    drawPath(diamondPath(cx + 20f, cy + 24f, 5f), green.copy(alpha = 0.4f * alpha))
+    drawPath(diamondPath(cx, cy - 8f, 9f), greenLight.copy(alpha = 0.85f * alpha))
+    drawPath(diamondPath(cx - 14f, cy - 6f, 7f), green.copy(alpha = 0.65f * alpha))
+    drawCircle(Color.White.copy(alpha = 0.85f * alpha), 2f, Offset(cx - 22f, cy - 4f))
+    drawCircle(Color.White.copy(alpha = 0.6f * alpha), 1.5f, Offset(cx + 24f, cy - 8f))
+    drawCircle(Color.White.copy(alpha = 0.5f * alpha), 1.5f, Offset(cx + 6f, cy - 16f))
+    drawCircle(Color.White.copy(alpha = 0.35f * alpha), 1f, Offset(cx - 10f, cy - 14f))
 }
 
 private fun DrawScope.drawGrandCart(
     cx: Float, cy: Float,
     boxBrown: Color, boxDark: Color, goldMetal: Color,
     gold: Color, goldLight: Color,
+    alpha: Float = 1f,
 ) {
     val cart = Path().apply {
         moveTo(cx - 32f, cy - 2f)
@@ -866,39 +955,39 @@ private fun DrawScope.drawGrandCart(
         lineTo(cx + 32f, cy - 2f)
         close()
     }
-    drawPath(cart, boxBrown)
-    drawRect(goldMetal, Offset(cx - 38f, cy - 4f), Size(76f, 4f))
-    drawCircle(boxDark, 7f, Offset(cx - 20f, cy + 30f))
-    drawCircle(boxDark, 7f, Offset(cx + 20f, cy + 30f))
-    drawCircle(goldMetal, 3.5f, Offset(cx - 20f, cy + 30f))
-    drawCircle(goldMetal, 3.5f, Offset(cx + 20f, cy + 30f))
+    drawPath(cart, boxBrown.copy(alpha = alpha))
+    drawRect(goldMetal.copy(alpha = alpha), Offset(cx - 38f, cy - 4f), Size(76f, 4f))
+    drawCircle(boxDark.copy(alpha = alpha), 7f, Offset(cx - 20f, cy + 30f))
+    drawCircle(boxDark.copy(alpha = alpha), 7f, Offset(cx + 20f, cy + 30f))
+    drawCircle(goldMetal.copy(alpha = alpha), 3.5f, Offset(cx - 20f, cy + 30f))
+    drawCircle(goldMetal.copy(alpha = alpha), 3.5f, Offset(cx + 20f, cy + 30f))
 
-    drawPath(diamondPath(cx - 14f, cy - 0f, 11f), gold)
-    drawPath(diamondPath(cx + 2f, cy - 6f, 13f), gold)
-    drawPath(diamondPath(cx + 16f, cy - 0f, 10f), goldLight)
-    drawPath(diamondPath(cx - 6f, cy - 12f, 9f), gold)
-    drawPath(diamondPath(cx + 10f, cy - 12f, 9f), goldLight)
-    drawPath(diamondPath(cx + 2f, cy - 20f, 8f), gold.copy(alpha = 0.9f))
+    drawPath(diamondPath(cx - 14f, cy - 0f, 11f), gold.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 2f, cy - 6f, 13f), gold.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 16f, cy - 0f, 10f), goldLight.copy(alpha = alpha))
+    drawPath(diamondPath(cx - 6f, cy - 12f, 9f), gold.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 10f, cy - 12f, 9f), goldLight.copy(alpha = alpha))
+    drawPath(diamondPath(cx + 2f, cy - 20f, 8f), gold.copy(alpha = 0.9f * alpha))
 
-    drawPath(diamondPath(cx - 26f, cy + 4f, 7f), gold.copy(alpha = 0.6f))
-    drawPath(diamondPath(cx + 26f, cy + 6f, 6f), goldLight.copy(alpha = 0.55f))
-    drawPath(diamondPath(cx - 10f, cy + 12f, 5f), gold.copy(alpha = 0.5f))
-    drawPath(diamondPath(cx + 12f, cy + 14f, 5f), gold.copy(alpha = 0.5f))
-    drawPath(diamondPath(cx - 20f, cy - 10f, 6f), goldLight.copy(alpha = 0.45f))
-    drawPath(diamondPath(cx + 20f, cy - 10f, 6f), gold.copy(alpha = 0.45f))
+    drawPath(diamondPath(cx - 26f, cy + 4f, 7f), gold.copy(alpha = 0.6f * alpha))
+    drawPath(diamondPath(cx + 26f, cy + 6f, 6f), goldLight.copy(alpha = 0.55f * alpha))
+    drawPath(diamondPath(cx - 10f, cy + 12f, 5f), gold.copy(alpha = 0.5f * alpha))
+    drawPath(diamondPath(cx + 12f, cy + 14f, 5f), gold.copy(alpha = 0.5f * alpha))
+    drawPath(diamondPath(cx - 20f, cy - 10f, 6f), goldLight.copy(alpha = 0.45f * alpha))
+    drawPath(diamondPath(cx + 20f, cy - 10f, 6f), gold.copy(alpha = 0.45f * alpha))
 
-    drawPath(diamondPath(cx - 30f, cy + 8f, 5f), goldLight.copy(alpha = 0.35f))
-    drawPath(diamondPath(cx + 30f, cy + 10f, 5f), gold.copy(alpha = 0.35f))
-    drawPath(diamondPath(cx - 8f, cy + 18f, 4f), goldLight.copy(alpha = 0.3f))
-    drawPath(diamondPath(cx + 14f, cy + 20f, 4f), gold.copy(alpha = 0.3f))
+    drawPath(diamondPath(cx - 30f, cy + 8f, 5f), goldLight.copy(alpha = 0.35f * alpha))
+    drawPath(diamondPath(cx + 30f, cy + 10f, 5f), gold.copy(alpha = 0.35f * alpha))
+    drawPath(diamondPath(cx - 8f, cy + 18f, 4f), goldLight.copy(alpha = 0.3f * alpha))
+    drawPath(diamondPath(cx + 14f, cy + 20f, 4f), gold.copy(alpha = 0.3f * alpha))
 
-    drawCircle(Color.White.copy(alpha = 0.9f), 2.5f, Offset(cx - 22f, cy - 18f))
-    drawCircle(Color.White.copy(alpha = 0.7f), 2f, Offset(cx + 18f, cy - 24f))
-    drawCircle(Color.White.copy(alpha = 0.6f), 1.5f, Offset(cx + 26f, cy - 8f))
-    drawCircle(Color.White.copy(alpha = 0.5f), 1.5f, Offset(cx - 28f, cy - 6f))
-    drawCircle(Color.White.copy(alpha = 0.4f), 1f, Offset(cx - 16f, cy - 26f))
-    drawCircle(Color.White.copy(alpha = 0.3f), 1f, Offset(cx + 14f, cy - 28f))
-    drawCircle(Color.White.copy(alpha = 0.25f), 1f, Offset(cx, cy - 32f))
+    drawCircle(Color.White.copy(alpha = 0.9f * alpha), 2.5f, Offset(cx - 22f, cy - 18f))
+    drawCircle(Color.White.copy(alpha = 0.7f * alpha), 2f, Offset(cx + 18f, cy - 24f))
+    drawCircle(Color.White.copy(alpha = 0.6f * alpha), 1.5f, Offset(cx + 26f, cy - 8f))
+    drawCircle(Color.White.copy(alpha = 0.5f * alpha), 1.5f, Offset(cx - 28f, cy - 6f))
+    drawCircle(Color.White.copy(alpha = 0.4f * alpha), 1f, Offset(cx - 16f, cy - 26f))
+    drawCircle(Color.White.copy(alpha = 0.3f * alpha), 1f, Offset(cx + 14f, cy - 28f))
+    drawCircle(Color.White.copy(alpha = 0.25f * alpha), 1f, Offset(cx, cy - 32f))
 
     val spark = Path().apply {
         moveTo(cx + 28f, cy - 16f)
@@ -911,7 +1000,7 @@ private fun DrawScope.drawGrandCart(
         lineTo(cx + 24f, cy - 14f)
         close()
     }
-    drawPath(spark, goldLight.copy(alpha = 0.5f))
+    drawPath(spark, goldLight.copy(alpha = 0.5f * alpha))
 
     val spark2 = Path().apply {
         moveTo(cx - 26f, cy - 20f)
@@ -924,7 +1013,7 @@ private fun DrawScope.drawGrandCart(
         lineTo(cx - 30f, cy - 18f)
         close()
     }
-    drawPath(spark2, goldLight.copy(alpha = 0.35f))
+    drawPath(spark2, goldLight.copy(alpha = 0.35f * alpha))
 }
 
 private fun diamondPath(cx: Float, cy: Float, size: Float): Path = Path().apply {

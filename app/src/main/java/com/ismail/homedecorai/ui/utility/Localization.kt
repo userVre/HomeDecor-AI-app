@@ -266,8 +266,9 @@ fun localizedReplacementPrompt(prompt: String): String =
 
 @StringRes
 fun discoverClusterRes(cluster: String): Int = when (cluster) {
-    "Architecture" -> R.string.discover_cluster_architecture
-    "Paysages" -> R.string.discover_cluster_landscapes
+    "architecture" -> R.string.discover_cluster_architecture
+    "landscape" -> R.string.discover_cluster_landscapes
+    "interior" -> R.string.discover_cluster_interiors
     else -> R.string.discover_cluster_interiors
 }
 

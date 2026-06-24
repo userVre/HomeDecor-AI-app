@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
@@ -84,7 +85,7 @@ import java.time.ZoneId
 fun SettingsDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(start = 72.dp),
-        color = StudioLine.copy(alpha = 0.65f),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
     )
 }
 
@@ -100,10 +101,10 @@ fun ToolToggle(
     Surface(
         onClick = onClick,
         shape = CircleShape,
-        color = if (selected) StudioBlue else StudioPaper,
+        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
         tonalElevation = studioStateElevation(selected),
         modifier = modifier
-            .height(48.dp)
+            .height(HomeDecorSpacing.TouchTarget)
             .border(1.dp, studioStateBorder(selected), CircleShape)
             .semantics {
                 this.contentDescription = contentDescription
@@ -112,8 +113,8 @@ fun ToolToggle(
             },
     ) {
         Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (selected) Color.White else StudioInk)
-            Text(label, color = if (selected) Color.White else StudioInk, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+            Text(label, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -128,16 +129,16 @@ fun MaskActionButton(
     contentDescription: String = label,
     showLabel: Boolean = true,
 ) {
-    val contentColor = if (enabled) StudioInk else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.52f)
+    val contentColor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.52f)
     Surface(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(18.dp),
-        color = if (enabled) StudioPaper else StudioMist.copy(alpha = 0.72f),
+        shape = HomeDecorShape.Badge,
+        color = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.72f),
         tonalElevation = if (enabled) 1.dp else 0.dp,
         modifier = modifier
-            .height(50.dp)
-            .border(1.dp, if (enabled) StudioLine else StudioLine.copy(alpha = 0.6f), RoundedCornerShape(18.dp))
+            .height(HomeDecorSpacing.TouchTarget)
+            .border(1.dp, if (enabled) MaterialTheme.colorScheme.outlineVariant else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), HomeDecorShape.Badge)
             .semantics {
                 this.contentDescription = contentDescription
                 role = Role.Button
@@ -172,7 +173,7 @@ fun StyleChoiceCard(
     onClick: () -> Unit,
 ) {
     val displayLabel = localizedOption(label)
-    val cardShape = RoundedCornerShape(16.dp)
+    val cardShape = HomeDecorShape.Card
     val scale by animateFloatAsState(
         targetValue = if (selected) 0.97f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
@@ -181,7 +182,7 @@ fun StyleChoiceCard(
     Surface(
         onClick = onClick,
         shape = cardShape,
-        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.18f) else Color.White,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp)
@@ -192,7 +193,7 @@ fun StyleChoiceCard(
             }
             .border(
                 if (selected) 2.dp else 1.dp,
-                if (selected) StudioBlue else StudioLine.copy(alpha = 0.7f),
+                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                 cardShape,
             ),
     ) {
@@ -204,8 +205,8 @@ fun StyleChoiceCard(
                 contentAlignment = Alignment.BottomCenter,
             ) {
                 if (label == "Suggestion IA") {
-                    Surface(shape = RoundedCornerShape(14.dp), color = StudioMist, tonalElevation = 1.dp) {
-                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(16.dp).size(28.dp), tint = StudioBlue)
+                    Surface(shape = HomeDecorShape.Medium, color = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 1.dp) {
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(16.dp).size(28.dp), tint = MaterialTheme.colorScheme.primary)
                     }
                 } else {
                     Image(
@@ -219,7 +220,7 @@ fun StyleChoiceCard(
                     Surface(
                         modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
                         shape = CircleShape,
-                        color = StudioBlue,
+                        color = MaterialTheme.colorScheme.primary,
                     ) {
                         Icon(
                             Icons.Rounded.Check,
@@ -261,7 +262,7 @@ fun ExpressiveChoiceChip(
     )
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = HomeDecorShape.Badge,
         color = studioStateContainer(selected),
         tonalElevation = studioStateElevation(selected),
         modifier = modifier
@@ -271,7 +272,7 @@ fun ExpressiveChoiceChip(
                 this.selected = selected
                 contentDescription = displayLabel
             }
-            .border(1.dp, studioStateBorder(selected), RoundedCornerShape(18.dp)),
+            .border(1.dp, studioStateBorder(selected), HomeDecorShape.Badge),
     ) {
         Row(
             Modifier.padding(horizontal = 8.dp),
@@ -313,12 +314,12 @@ fun IntensityChip(
     modifier: Modifier = Modifier,
 ) {
     val displayLabel = localizedOption(label)
-    val containerColor = if (selected) StudioBlue.copy(alpha = 0.08f) else StudioPaper
-    val borderColor = if (selected) StudioBlue else StudioLine
+    val containerColor = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
     val borderWidth = if (selected) 2.dp else 1.dp
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = HomeDecorShape.Badge,
         color = containerColor,
         modifier = modifier
             .height(78.dp)
@@ -326,7 +327,7 @@ fun IntensityChip(
                 this.selected = selected
                 contentDescription = displayLabel
             }
-            .border(borderWidth, borderColor, RoundedCornerShape(18.dp)),
+            .border(borderWidth, borderColor, HomeDecorShape.Badge),
     ) {
         Row(
             Modifier.padding(horizontal = 8.dp),
@@ -337,7 +338,7 @@ fun IntensityChip(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(if (selected) StudioBlue else StudioMist),
+                    .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -371,9 +372,9 @@ fun ReplaceSuggestionChip(
     modifier: Modifier = Modifier,
 ) {
     val displayLabel = localizedOption(label)
-    val shape = RoundedCornerShape(16.dp)
-    val containerColor = if (selected) StudioBlue else StudioPaper
-    val contentColor = if (selected) Color.White else StudioInk
+    val shape = HomeDecorShape.Card
+    val containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
     Surface(
         onClick = onClick,
         shape = shape,
@@ -385,7 +386,7 @@ fun ReplaceSuggestionChip(
                 this.selected = selected
                 contentDescription = displayLabel
             }
-            .border(if (selected) 2.dp else 1.dp, if (selected) StudioBlue else StudioLine, shape),
+            .border(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, shape),
     ) {
         Row(
             Modifier.padding(horizontal = 12.dp),
@@ -396,7 +397,7 @@ fun ReplaceSuggestionChip(
                 if (selected) Icons.Rounded.Check else replacementIcon(label),
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = if (selected) Color.White else StudioBlue,
+                tint = if (selected) Color.White else MaterialTheme.colorScheme.primary,
             )
             Text(
                 displayLabel,
@@ -425,8 +426,8 @@ fun ModeCard(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(22.dp),
-        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
+        shape = HomeDecorShape.ExtraExtraLarge,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface,
         modifier = modifier
             .height(188.dp)
             .semantics {
@@ -435,18 +436,18 @@ fun ModeCard(
             }
             .border(
             if (selected) 2.dp else 1.dp,
-            if (selected) StudioBlue else StudioLine,
-            RoundedCornerShape(22.dp),
+            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+            HomeDecorShape.ExtraExtraLarge,
         ),
     ) {
         Box {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Surface(shape = CircleShape, color = if (selected) StudioBlue else StudioMist) {
+                Surface(shape = CircleShape, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow) {
                     Icon(
                         if (title.contains("Renovation")) Icons.Rounded.AutoAwesome else Icons.Rounded.Brush,
                         contentDescription = null,
                         modifier = Modifier.padding(8.dp).size(22.dp),
-                        tint = if (selected) Color.White else StudioBlue,
+                        tint = if (selected) Color.White else MaterialTheme.colorScheme.primary,
                     )
                 }
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2)
@@ -462,7 +463,7 @@ fun ModeCard(
                 Surface(
                     modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
                     shape = CircleShape,
-                    color = StudioBlue,
+                    color = MaterialTheme.colorScheme.primary,
                 ) {
                     Icon(
                         Icons.Rounded.Check,
@@ -483,6 +484,8 @@ fun DailyRewardCard(
     modifier: Modifier = Modifier,
     dark: Boolean = false,
 ) {
+    val isDark = isSystemInDarkTheme()
+    val useDark = dark || isDark
     val reward = state.workspace.dailyReward
     val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
     val claimedToday = reward.lastClaimEpochDay == today
@@ -491,30 +494,59 @@ fun DailyRewardCard(
         else -> 0
     }
     val displayDay = if (claimedToday) activeStreak.coerceAtLeast(1) else (activeStreak + 1).coerceAtLeast(1)
-    val titleColor = if (dark) Color.White else StudioInk
-    val bodyColor = if (dark) PaywallTextSecondary else MaterialTheme.colorScheme.onSurfaceVariant
-    val container = if (dark) PaywallCardAlt else StudioPaper
-    val borderColor = if (dark) PaywallBorder else StudioLine
-    val cardShape = RoundedCornerShape(20.dp)
+
+    val containerColor = if (useDark) {
+        MaterialTheme.colorScheme.surfaceContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+    val titleColor = MaterialTheme.colorScheme.onSurface
+    val subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val pillBg = if (useDark) {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    }
+    val pillTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val iconBg = if (useDark) {
+        HomeDecorExtra.diamondAccent.copy(alpha = 0.12f)
+    } else {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+    }
+    val iconTint = if (useDark) {
+        HomeDecorExtra.diamondAccent
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
+    val cardShape = HomeDecorShape.CardLarge
     ElevatedCard(
         shape = cardShape,
-        colors = CardDefaults.elevatedCardColors(containerColor = container),
-        modifier = modifier.fillMaxWidth().border(1.dp, borderColor, cardShape),
+        colors = CardDefaults.elevatedCardColors(containerColor = containerColor),
+        modifier = modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
-            Surface(shape = CircleShape, color = if (dark) PaywallAccent.copy(alpha = 0.20f) else StudioProContainer) {
-                Icon(
-                    Icons.Rounded.Diamond,
-                    contentDescription = null,
-                    modifier = Modifier.padding(8.dp).size(19.dp),
-                    tint = if (dark) PaywallPremiumGold else StudioGold,
-                )
+            Surface(
+                shape = HomeDecorShape.Medium,
+                color = iconBg,
+            ) {
+                Box(Modifier.padding(10.dp)) {
+                    Icon(
+                        Icons.Rounded.Diamond,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = iconTint,
+                    )
+                }
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(
+                Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
                 Text(
                     stringResource(R.string.daily_reward_title),
                     color = titleColor,
@@ -525,15 +557,19 @@ fun DailyRewardCard(
                 )
                 Text(
                     stringResource(R.string.daily_reward_subtitle),
-                    color = bodyColor,
+                    color = subtitleColor,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     DailyRewardQuietPill(
                         label = stringResource(R.string.daily_reward_day_format, displayDay),
-                        dark = dark,
+                        bgColor = pillBg,
+                        textColor = pillTextColor,
                     )
                     DailyRewardQuietPill(
                         label = if (activeStreak > 0) {
@@ -541,24 +577,35 @@ fun DailyRewardCard(
                         } else {
                             stringResource(R.string.daily_reward_soft_start)
                         },
-                        dark = dark,
+                        bgColor = pillBg,
+                        textColor = pillTextColor,
                     )
                 }
             }
             Button(
                 onClick = { onClaim() },
                 enabled = !claimedToday,
-                shape = CircleShape,
-                colors = if (dark) studioProButtonColors() else studioPrimaryButtonColors(),
-                contentPadding = PaddingValues(horizontal = 12.dp),
-                modifier = Modifier.height(48.dp),
+                shape = HomeDecorShape.Button,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (useDark) HomeDecorExtra.diamondAccent else MaterialTheme.colorScheme.primary,
+                    contentColor = if (useDark) Color(0xFF0A1F21) else MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                ),
+                contentPadding = PaddingValues(horizontal = 14.dp),
+                modifier = Modifier.height(HomeDecorSpacing.TouchTarget),
             ) {
-                Icon(if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Add, contentDescription = null, Modifier.size(16.dp))
+                Icon(
+                    if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Diamond,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
                 Spacer(Modifier.width(6.dp))
                 Text(
                     stringResource(if (claimedToday) R.string.daily_reward_claimed else R.string.daily_reward_claim),
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
+                    style = MaterialTheme.typography.labelLarge,
                 )
             }
         }
@@ -568,16 +615,18 @@ fun DailyRewardCard(
 @Composable
 fun DailyRewardQuietPill(
     label: String,
-    dark: Boolean,
+    dark: Boolean = isSystemInDarkTheme(),
+    bgColor: Color = if (dark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow,
+    textColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Surface(
-        shape = CircleShape,
-        color = if (dark) Color.White.copy(alpha = 0.10f) else StudioMist.copy(alpha = 0.72f),
+        shape = HomeDecorShape.Badge,
+        color = bgColor,
     ) {
         Text(
             label,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            color = if (dark) Color.White.copy(alpha = 0.78f) else HomeDecorColors.InkSoft,
+            color = textColor,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
@@ -601,11 +650,11 @@ fun CreditPill(
     Surface(
         onClick = { onClick?.invoke() },
         shape = CircleShape,
-        color = if (state.isPro) StudioProContainer else StudioPaper,
+        color = if (state.isPro) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
         modifier = Modifier
             .minimumTouchTarget()
-            .border(1.dp, StudioLine, CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
             .semantics { contentDescription = pillDescription },
     ) {
         Row(
@@ -613,7 +662,7 @@ fun CreditPill(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Rounded.Diamond, contentDescription = null, Modifier.size(17.dp), tint = if (state.isPro) StudioGold else StudioBlue)
+            Icon(Icons.Rounded.Diamond, contentDescription = null, Modifier.size(17.dp), tint = if (state.isPro) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary)
             Text(if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}", fontWeight = FontWeight.SemiBold)
         }
     }
@@ -630,7 +679,7 @@ fun ReferenceImagePicker(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
-                Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(8.dp).size(18.dp), tint = StudioBlue)
+                Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(8.dp).size(18.dp), tint = MaterialTheme.colorScheme.primary)
             }
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.reference_picker_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -638,10 +687,10 @@ fun ReferenceImagePicker(
             }
         }
         Surface(
-            shape = RoundedCornerShape(22.dp),
+            shape = HomeDecorShape.ExtraExtraLarge,
             color = studioStateContainer(selectedUri != null || selectedExample != null),
             tonalElevation = 2.dp,
-            modifier = Modifier.fillMaxWidth().border(1.dp, studioStateBorder(selectedUri != null || selectedExample != null), RoundedCornerShape(22.dp)),
+            modifier = Modifier.fillMaxWidth().border(1.dp, studioStateBorder(selectedUri != null || selectedExample != null), HomeDecorShape.ExtraExtraLarge),
         ) {
             Row(
                 Modifier.padding(16.dp),
@@ -664,16 +713,16 @@ fun ReferenceImagePicker(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-                Icon(Icons.Rounded.Check, null, tint = if (selectedUri != null || selectedExample != null) StudioBlue else StudioLine)
+                Icon(Icons.Rounded.Check, null, tint = if (selectedUri != null || selectedExample != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onImport, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+            OutlinedButton(onClick = onImport, shape = CircleShape, modifier = Modifier.weight(1f).height(HomeDecorSpacing.TouchTarget)) {
                 Icon(Icons.Rounded.Add, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.import_action))
             }
-            OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.weight(1f).height(48.dp)) {
+            OutlinedButton(onClick = onExample, shape = CircleShape, modifier = Modifier.weight(1f).height(HomeDecorSpacing.TouchTarget)) {
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.example))
@@ -688,10 +737,10 @@ fun ProjectHeaderPreview(
     results: List<GeneratedResult>,
 ) {
     Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = StudioPaper,
+        shape = HomeDecorShape.Card,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        border = BorderStroke(1.dp, StudioLine),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -703,7 +752,7 @@ fun ProjectHeaderPreview(
                 imageUrl = project.coverImageUrl,
                 imageUri = project.coverImageUri ?: project.originalPhotoUris.firstOrNull(),
                 contentDescription = project.name,
-                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(16.dp)),
+                modifier = Modifier.size(64.dp).clip(HomeDecorShape.ImageLarge),
             )
             Column(Modifier.weight(1f)) {
                 Text(
@@ -723,7 +772,7 @@ fun ProjectHeaderPreview(
                 if (results.isNotEmpty()) {
                     Text(
                         "${results.size} result${if (results.size > 1) "s" else ""}",
-                        color = StudioBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -739,15 +788,15 @@ fun ProjectMetricChip(
     text: String,
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = StudioMist,
+        shape = HomeDecorShape.Medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
             Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = StudioInk)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurface)
             Text(text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
         }
     }
@@ -761,10 +810,10 @@ fun ProjectResultThumb(
     imageRes: Int = 0,
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = StudioPaper,
+        shape = HomeDecorShape.Medium,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        border = BorderStroke(1.dp, StudioLine),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.size(100.dp),
     ) {
         Box {
@@ -802,8 +851,8 @@ fun PurchaseSyncNotice(
     onRetry: () -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = StudioErrorContainer,
+        shape = HomeDecorShape.Badge,
+        color = MaterialTheme.colorScheme.errorContainer,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -811,11 +860,11 @@ fun PurchaseSyncNotice(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Rounded.Error, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
+            Icon(Icons.Rounded.Error, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
             Text(
                 message,
                 modifier = Modifier.weight(1f),
-                color = StudioRose,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -825,7 +874,7 @@ fun PurchaseSyncNotice(
                     enabled = !busy,
                     shape = CircleShape,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    modifier = Modifier.height(48.dp),
+                    modifier = Modifier.height(HomeDecorSpacing.TouchTarget),
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))

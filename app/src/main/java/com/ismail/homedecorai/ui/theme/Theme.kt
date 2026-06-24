@@ -10,8 +10,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.expressiveLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -20,8 +23,51 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+// ---------------------------------------------------------------------------
+// Extended semantic color tokens (beyond MD3 core scheme)
+// ---------------------------------------------------------------------------
+
+@Immutable
+data class HomeDecorExtraColors(
+    val success: Color,
+    val successContainer: Color,
+    val warning: Color,
+    val warningContainer: Color,
+    val accent: Color,
+    val accentContainer: Color,
+    val diamondAccent: Color,
+    val proAccent: Color,
+    val premiumGold: Color,
+    val card: Color,
+    val elevatedCard: Color,
+)
+
+val LocalHomeDecorExtraColors = staticCompositionLocalOf {
+    HomeDecorExtraColors(
+        success = Color.Unspecified,
+        successContainer = Color.Unspecified,
+        warning = Color.Unspecified,
+        warningContainer = Color.Unspecified,
+        accent = Color.Unspecified,
+        accentContainer = Color.Unspecified,
+        diamondAccent = Color.Unspecified,
+        proAccent = Color.Unspecified,
+        premiumGold = Color.Unspecified,
+        card = Color.Unspecified,
+        elevatedCard = Color.Unspecified,
+    )
+}
+
+val HomeDecorExtra: HomeDecorExtraColors
+    @Composable
+    get() = LocalHomeDecorExtraColors.current
+
+// ---------------------------------------------------------------------------
+// Light color scheme  –  warm cream surfaces, teal primary, gold tertiary
+// ---------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private val LightColorScheme = expressiveLightColorScheme().copy(
+private val LightColorScheme = lightColorScheme(
     primary = HomeDecorColors.Primary,
     onPrimary = HomeDecorColors.OnPrimary,
     primaryContainer = HomeDecorColors.PrimaryContainer,
@@ -38,7 +84,7 @@ private val LightColorScheme = expressiveLightColorScheme().copy(
     onError = HomeDecorColors.OnError,
     errorContainer = HomeDecorColors.ErrorContainerColor,
     onErrorContainer = HomeDecorColors.OnErrorContainer,
-    background = HomeDecorColors.Background,
+    background = HomeDecorColors.Canvas,
     onBackground = HomeDecorColors.OnBackground,
     surface = HomeDecorColors.Canvas,
     onSurface = HomeDecorColors.OnSurface,
@@ -54,37 +100,85 @@ private val LightColorScheme = expressiveLightColorScheme().copy(
     surfaceContainerHighest = HomeDecorColors.SurfaceContainerHighest,
 )
 
+// ---------------------------------------------------------------------------
+// Dark color scheme  –  warm charcoal / deep green-gray, never pure black
+// ---------------------------------------------------------------------------
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF9CD0D3),
-    onPrimary = Color(0xFF0A3335),
-    primaryContainer = Color(0xFF2A4E50),
-    onPrimaryContainer = Color(0xFFD8ECEF),
-    secondary = Color(0xFFB4C8B8),
-    onSecondary = Color(0xFF1E3322),
-    secondaryContainer = Color(0xFF364E3E),
-    onSecondaryContainer = Color(0xFFE0EDE2),
-    tertiary = Color(0xFFCCB8DC),
-    onTertiary = Color(0xFF342844),
-    tertiaryContainer = Color(0xFF4C3E60),
-    onTertiaryContainer = Color(0xFFF0E4F8),
-    error = Color(0xFFF2B8B5),
-    onError = Color(0xFF601410),
-    errorContainer = Color(0xFF8C1D18),
-    onErrorContainer = Color(0xFFF2B8B5),
+    primary = HomeDecorColors.DarkPrimary,
+    onPrimary = HomeDecorColors.DarkOnPrimary,
+    primaryContainer = HomeDecorColors.DarkPrimaryContainer,
+    onPrimaryContainer = HomeDecorColors.DarkOnPrimaryContainer,
+    secondary = HomeDecorColors.DarkSecondary,
+    onSecondary = HomeDecorColors.DarkOnSecondary,
+    secondaryContainer = HomeDecorColors.DarkSecondaryContainer,
+    onSecondaryContainer = HomeDecorColors.DarkOnSecondaryContainer,
+    tertiary = HomeDecorColors.DarkTertiary,
+    onTertiary = HomeDecorColors.DarkOnTertiary,
+    tertiaryContainer = HomeDecorColors.DarkTertiaryContainer,
+    onTertiaryContainer = HomeDecorColors.DarkOnTertiaryContainer,
+    error = HomeDecorColors.DarkError,
+    onError = HomeDecorColors.DarkOnError,
+    errorContainer = HomeDecorColors.DarkErrorContainer,
+    onErrorContainer = HomeDecorColors.DarkOnErrorContainer,
     background = HomeDecorColors.Dark,
-    onBackground = Color(0xFFE8E0D5),
+    onBackground = HomeDecorColors.DarkOnBackground,
     surface = HomeDecorColors.DarkSurface,
-    onSurface = Color(0xFFE8E0D5),
-    onSurfaceVariant = Color(0xFFCCC3B5),
-    outline = Color(0xFF968E80),
-    outlineVariant = Color(0xFF4C4639),
+    onSurface = HomeDecorColors.DarkOnSurface,
+    onSurfaceVariant = HomeDecorColors.DarkOnSurfaceVariant,
+    outline = HomeDecorColors.DarkOutline,
+    outlineVariant = HomeDecorColors.DarkOutlineVariant,
+    surfaceDim = HomeDecorColors.DarkSurfaceDim,
+    surfaceBright = HomeDecorColors.DarkSurfaceBright,
+    surfaceContainerLowest = HomeDecorColors.DarkSurfaceContainerLowest,
+    surfaceContainerLow = HomeDecorColors.DarkSurfaceContainerLow,
+    surfaceContainer = HomeDecorColors.DarkSurfaceContainer,
+    surfaceContainerHigh = HomeDecorColors.DarkSurfaceContainerHigh,
+    surfaceContainerHighest = HomeDecorColors.DarkSurfaceContainerHighest,
 )
+
+// ---------------------------------------------------------------------------
+// Extra semantic tokens – light vs dark
+// ---------------------------------------------------------------------------
+
+private val LightExtra = HomeDecorExtraColors(
+    success = HomeDecorColors.Success,
+    successContainer = HomeDecorColors.SuccessContainer,
+    warning = HomeDecorColors.Warning,
+    warningContainer = HomeDecorColors.WarningContainer,
+    accent = HomeDecorColors.Accent,
+    accentContainer = HomeDecorColors.AccentContainer,
+    diamondAccent = HomeDecorColors.DiamondAccent,
+    proAccent = HomeDecorColors.ProAccent,  // teal
+    premiumGold = HomeDecorColors.PremiumGold,
+    card = HomeDecorColors.Paper,
+    elevatedCard = HomeDecorColors.SurfaceContainerLow,
+)
+
+private val DarkExtra = HomeDecorExtraColors(
+    success = HomeDecorColors.DarkSuccess,
+    successContainer = HomeDecorColors.DarkSuccessContainer,
+    warning = HomeDecorColors.DarkWarning,
+    warningContainer = HomeDecorColors.DarkWarningContainer,
+    accent = HomeDecorColors.DarkAccent,
+    accentContainer = HomeDecorColors.DarkAccentContainer,
+    diamondAccent = HomeDecorColors.DarkDiamondAccent,
+    proAccent = HomeDecorColors.DarkProAccent,
+    premiumGold = HomeDecorColors.DarkPremiumGold,
+    card = HomeDecorColors.DarkSurface,
+    elevatedCard = HomeDecorColors.DarkOverlay,
+)
+
+// ---------------------------------------------------------------------------
+// Theme composable
+// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeDecorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
@@ -96,13 +190,22 @@ fun HomeDecorTheme(
         else -> LightColorScheme
     }
 
+    val extraColors = if (darkTheme) DarkExtra else LightExtra
+
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
         typography = HomeDecorTypography,
         shapes = HomeDecorShapes,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(LocalHomeDecorExtraColors provides extraColors) {
+            content()
+        }
+    }
 }
+
+// ---------------------------------------------------------------------------
+// Utility modifiers & helpers (kept for backward compatibility)
+// ---------------------------------------------------------------------------
 
 fun Modifier.minimumTouchTarget(): Modifier = sizeIn(minWidth = 48.dp, minHeight = 48.dp)
 

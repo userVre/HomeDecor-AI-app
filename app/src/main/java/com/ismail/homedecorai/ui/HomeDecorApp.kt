@@ -201,8 +201,6 @@ private fun AppScaffold(
                     MainTab.Profile -> ProfileScreen(
                         state = state,
                         viewModel = viewModel,
-                        currentLanguageTag = currentLanguageTag,
-                        onLanguageSelected = onLanguageSelected,
                     )
                     MainTab.MyBoard -> MyBoardScreen(state = state, viewModel = viewModel)
                     MainTab.Create -> CreateScreen(state = state, viewModel = viewModel)
@@ -251,6 +249,7 @@ private fun AppScaffold(
                         onFeedback = viewModel::submitSettingsFeedback,
                         onDeleteAccount = viewModel::deleteAccountData,
                         onLogout = viewModel::logOut,
+                        onOpenDiamondStore = viewModel::openDiamondStore,
                         currentLanguageTag = currentLanguageTag,
                         onLanguageSelected = onLanguageSelected,
                     )
@@ -346,12 +345,12 @@ private fun RowScope.NavItem(
     NavigationBarItem(
         selected = selected,
         onClick = { onSelect(tab) },
-        modifier = Modifier.heightIn(min = 48.dp),
+        modifier = Modifier.heightIn(min = HomeDecorSpacing.TouchTarget),
         icon = {
             Icon(
                 icon,
                 contentDescription = label,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
             )
         },
         label = {
@@ -361,7 +360,7 @@ private fun RowScope.NavItem(
                 softWrap = false,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             )
         },
         colors = NavigationBarItemDefaults.colors(

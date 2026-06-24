@@ -26,6 +26,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -125,6 +126,98 @@ import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 
+// ── Theme-aware Pro palette ────────────────────────────────────────────────────
+
+@Composable
+private fun rememberProPaywallColors(): ProPaywallColors {
+    val dark = isSystemInDarkTheme()
+    return remember(dark) {
+        if (dark) ProPaywallColors.Dark else ProPaywallColors.Light
+    }
+}
+
+private class ProPaywallColors(
+    val gradientStart: Color,
+    val gradientMid: Color,
+    val gradientEnd: Color,
+    val accent: Color,
+    val accentLight: Color,
+    val accentSurface: Color,
+    val cardSurface: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
+    val badgeBg: Color,
+    val badgeText: Color,
+    val gold: Color,
+    val goldSurface: Color,
+    val checkGreen: Color,
+    val celebration: Color,
+    val border: Color,
+    val borderSelected: Color,
+    val ctaGradientStart: Color,
+    val ctaGradientEnd: Color,
+    val ctaDisabled: Color,
+    val surface: Color,
+    val surfaceAlt: Color,
+    val overlayBg: Color,
+) {
+    companion object {
+        val Light = ProPaywallColors(
+            gradientStart = ProDarkStart,
+            gradientMid = ProDarkMid,
+            gradientEnd = ProDarkEnd,
+            accent = ProAccent,
+            accentLight = ProAccentLight,
+            accentSurface = ProAccentSurface,
+            cardSurface = ProCardSurface,
+            textPrimary = ProTextPrimary,
+            textSecondary = ProTextSecondary,
+            textMuted = ProTextMuted,
+            badgeBg = ProBadgeBg,
+            badgeText = ProBadgeText,
+            gold = ProGold,
+            goldSurface = Color(0xFFFFF8E1),
+            checkGreen = ProCheckGreen,
+            celebration = ProCelebration,
+            border = ProBorder,
+            borderSelected = ProBorderSelected,
+            ctaGradientStart = ProCtaGradientStart,
+            ctaGradientEnd = ProCtaGradientEnd,
+            ctaDisabled = ProCtaDisabled,
+            surface = ProSurface,
+            surfaceAlt = ProSurfaceAlt,
+            overlayBg = Color.Black.copy(alpha = 0.5f),
+        )
+        val Dark = ProPaywallColors(
+            gradientStart = ProDarkGradientStart,
+            gradientMid = ProDarkGradientMid,
+            gradientEnd = ProDarkGradientEnd,
+            accent = ProDarkAccent,
+            accentLight = ProDarkAccentLight,
+            accentSurface = ProDarkAccentSurface,
+            cardSurface = ProDarkCardSurface,
+            textPrimary = ProDarkTextPrimary,
+            textSecondary = ProDarkTextSecondary,
+            textMuted = ProDarkTextMuted,
+            badgeBg = ProDarkBadgeBg,
+            badgeText = ProDarkBadgeText,
+            gold = ProDarkGold,
+            goldSurface = Color(0xFF3D3100),
+            checkGreen = Color(0xFF81D98A),
+            celebration = ProDarkCelebration,
+            border = ProDarkBorder,
+            borderSelected = ProDarkBorderSelected,
+            ctaGradientStart = ProDarkCtaGradientStart,
+            ctaGradientEnd = ProDarkCtaGradientEnd,
+            ctaDisabled = ProDarkCtaDisabled,
+            surface = ProDarkSurface,
+            surfaceAlt = ProDarkSurfaceAlt,
+            overlayBg = Color.Black.copy(alpha = 0.7f),
+        )
+    }
+}
+
 @Composable
 fun PaywallSheet(
     state: HomeDecorUiState,
@@ -145,6 +238,7 @@ fun PaywallSheet(
     var selectedReminder by remember { mutableStateOf<String?>(null) }
     val benefitPagerState = rememberPagerState(pageCount = { 6 })
     val coroutineScope = rememberCoroutineScope()
+    val proColors = rememberProPaywallColors()
 
     fun loadOfferings() {
         offeringsLoading = true
@@ -221,7 +315,7 @@ fun PaywallSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.7f))
+            .background(proColors.overlayBg)
             .clickable(interactionSource = modalTapBlocker, indication = null, onClick = {}),
     ) {
         AnimatedContent(
@@ -239,10 +333,12 @@ fun PaywallSheet(
         ) { step ->
             when (step) {
                 0 -> ProIntroScreen(
+                    colors = proColors,
                     onClose = onClose,
                     onContinue = { currentStep = 1 },
                 )
                 1 -> ProBenefitCarousel(
+                    colors = proColors,
                     pagerState = benefitPagerState,
                     onClose = onClose,
                     onContinue = {
@@ -255,6 +351,7 @@ fun PaywallSheet(
                     onBack = { currentStep = 0 },
                 )
                 2 -> ProReminderScreen(
+                    colors = proColors,
                     selectedReminder = selectedReminder,
                     onSelectReminder = { selectedReminder = it },
                     onClose = onClose,
@@ -262,6 +359,7 @@ fun PaywallSheet(
                     onBack = { currentStep = 1 },
                 )
                 3 -> ProPlanScreen(
+                    colors = proColors,
                     selectedPlan = selectedPlan,
                     weeklyPrice = weeklyPrice,
                     yearlyPackage = yearlyPackage,
@@ -284,6 +382,7 @@ fun PaywallSheet(
                     onRestore = { onRetrySync() },
                 )
                 4 -> ProCheckoutScreen(
+                    colors = proColors,
                     processing = purchaseBusy,
                     success = purchaseSuccess,
                     selectedPlan = selectedPlan,
@@ -298,10 +397,10 @@ fun PaywallSheet(
 // ── Shared Components ──────────────────────────────────────────────────────────
 
 @Composable
-private fun ProBadge() {
+private fun ProBadge(colors: ProPaywallColors = rememberProPaywallColors()) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = ProBadgeBg,
+        color = colors.badgeBg,
     ) {
         Row(
             Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
@@ -312,11 +411,11 @@ private fun ProBadge() {
                 Icons.Rounded.AutoAwesome,
                 contentDescription = null,
                 modifier = Modifier.size(14.dp),
-                tint = ProBadgeText,
+                tint = colors.badgeText,
             )
             Text(
                 stringResource(R.string.pro_badge_label),
-                color = ProBadgeText,
+                color = colors.badgeText,
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.sp,
@@ -328,6 +427,7 @@ private fun ProBadge() {
 
 @Composable
 private fun ProScreenHeader(
+    colors: ProPaywallColors,
     onBack: (() -> Unit)?,
     onClose: () -> Unit,
 ) {
@@ -341,19 +441,19 @@ private fun ProScreenHeader(
                 Icon(
                     Icons.AutoMirrored.Rounded.ArrowBack,
                     contentDescription = stringResource(R.string.back),
-                    tint = ProTextSecondary,
+                    tint = colors.textSecondary,
                     modifier = Modifier.size(22.dp),
                 )
             }
         } else {
             Spacer(Modifier.size(HomeDecorSpacing.TouchTarget))
         }
-        ProBadge()
+        ProBadge(colors)
         IconButton(onClick = onClose, modifier = Modifier.size(HomeDecorSpacing.TouchTarget)) {
             Icon(
                 Icons.Rounded.Close,
                 contentDescription = stringResource(R.string.pro_a11y_close),
-                tint = ProTextSecondary,
+                tint = colors.textSecondary,
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -362,6 +462,7 @@ private fun ProScreenHeader(
 
 @Composable
 private fun ProCtaButton(
+    colors: ProPaywallColors,
     label: String,
     processing: Boolean,
     success: Boolean,
@@ -382,13 +483,13 @@ private fun ProCtaButton(
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = when {
-                success -> ProCheckGreen
-                !buttonEnabled -> ProCtaDisabled
-                else -> ProAccent
+                success -> colors.checkGreen
+                !buttonEnabled -> colors.ctaDisabled
+                else -> colors.accent
             },
             contentColor = Color.White,
-            disabledContainerColor = ProCtaDisabled,
-            disabledContentColor = ProTextSecondary.copy(alpha = 0.6f),
+            disabledContainerColor = colors.ctaDisabled,
+            disabledContentColor = colors.textSecondary.copy(alpha = 0.6f),
         ),
         contentPadding = PaddingValues(),
         enabled = buttonEnabled,
@@ -428,7 +529,7 @@ private fun ProCtaButton(
 }
 
 @Composable
-private fun ProPageIndicator(pageCount: Int, currentPage: Int) {
+private fun ProPageIndicator(colors: ProPaywallColors, pageCount: Int, currentPage: Int) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         verticalAlignment = Alignment.CenterVertically,
@@ -439,7 +540,7 @@ private fun ProPageIndicator(pageCount: Int, currentPage: Int) {
                     .size(if (index == currentPage) 24.dp else 8.dp, 8.dp)
                     .clip(CircleShape)
                     .background(
-                        if (index == currentPage) ProAccent else ProTextMuted.copy(alpha = 0.3f),
+                        if (index == currentPage) colors.accent else colors.textMuted.copy(alpha = 0.3f),
                     ),
             )
         }
@@ -512,19 +613,31 @@ private fun ProBottomLinks(onRestore: () -> Unit) {
     }
 }
 
-// ── Living Room Hero Illustration ──────────────────────────────────────────────
+// ── Room Transformation Hero ──────────────────────────────────────────────────
 
 @Composable
-private fun ProHeroIllustration(modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "hero_glow")
+private fun RoomTransformationHero(
+    colors: ProPaywallColors,
+    modifier: Modifier = Modifier,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "room_glow")
     val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
+        initialValue = 0.4f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = EaseInOut),
+            animation = tween(2200, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "glow_alpha",
+    )
+    val arrowBounce by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "arrow_bounce",
     )
 
     Box(modifier.clip(RoundedCornerShape(24.dp))) {
@@ -534,315 +647,231 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            ProAccent.copy(alpha = 0.2f),
-                            ProGradientEnd.copy(alpha = 0.1f),
+                            colors.accent.copy(alpha = 0.08f),
+                            colors.gold.copy(alpha = 0.05f),
                             Color.Transparent,
                         ),
                     ),
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            // Detailed interior room scene — cozy living room
-            androidx.compose.foundation.Canvas(
+            Canvas(
                 Modifier
                     .fillMaxWidth(0.92f)
                     .height(180.dp),
             ) {
                 val w = size.width
                 val h = size.height
+                val dividerX = w * 0.48f
 
-                // ── Back wall ──
+                // ── "BEFORE" side (left) ──
+                // Room outline
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.20f),
-                    topLeft = Offset.Zero,
-                    size = Size(w, h * 0.78f),
+                    color = colors.textMuted.copy(alpha = 0.12f),
+                    topLeft = Offset(w * 0.02f, h * 0.08f),
+                    size = Size(w * 0.44f, h * 0.74f),
                     cornerRadius = CornerRadius(10.dp.toPx()),
                 )
-
-                // Wall wood-panel texture (subtle vertical lines)
-                for (i in 1..6) {
-                    val x = w * (0.12f + i * 0.12f)
+                // Wall texture
+                for (i in 1..3) {
+                    val x = w * (0.08f + i * 0.10f)
                     drawLine(
-                        color = ProTextMuted.copy(alpha = 0.15f),
-                        start = Offset(x, h * 0.04f),
-                        end = Offset(x, h * 0.34f),
+                        color = colors.textMuted.copy(alpha = 0.08f),
+                        start = Offset(x, h * 0.12f),
+                        end = Offset(x, h * 0.38f),
                         strokeWidth = 1.dp.toPx(),
                     )
                 }
-
-                // ── Window with warm glow ──
-                val winX = w * 0.30f
-                val winY = h * 0.06f
-                val winW = w * 0.38f
-                val winH = h * 0.44f
-
-                // Glow behind window
+                // Plain sofa
                 drawRoundRect(
-                    color = ProGold.copy(alpha = glowAlpha * 0.25f),
-                    topLeft = Offset(winX - 10.dp.toPx(), winY - 6.dp.toPx()),
-                    size = Size(winW + 20.dp.toPx(), winH + 12.dp.toPx()),
-                    cornerRadius = CornerRadius(14.dp.toPx()),
+                    color = colors.textMuted.copy(alpha = 0.18f),
+                    topLeft = Offset(w * 0.06f, h * 0.48f),
+                    size = Size(w * 0.34f, h * 0.20f),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
                 )
-                // Window glass
+                // Plain floor
+                drawLine(
+                    color = colors.textMuted.copy(alpha = 0.15f),
+                    start = Offset(w * 0.04f, h * 0.68f),
+                    end = Offset(w * 0.44f, h * 0.68f),
+                    strokeWidth = 1.dp.toPx(),
+                )
+                // "BEFORE" label background
                 drawRoundRect(
-                    color = ProGold.copy(alpha = glowAlpha * 0.35f),
-                    topLeft = Offset(winX, winY),
-                    size = Size(winW, winH),
+                    color = colors.textMuted.copy(alpha = 0.15f),
+                    topLeft = Offset(w * 0.10f, h * 0.82f),
+                    size = Size(w * 0.28f, h * 0.10f),
                     cornerRadius = CornerRadius(6.dp.toPx()),
                 )
-                // Window cross-bars
-                drawLine(
-                    color = ProTextMuted.copy(alpha = 0.40f),
-                    start = Offset(winX + winW / 2, winY),
-                    end = Offset(winX + winW / 2, winY + winH),
-                    strokeWidth = 1.5.dp.toPx(),
-                )
-                drawLine(
-                    color = ProTextMuted.copy(alpha = 0.40f),
-                    start = Offset(winX, winY + winH * 0.45f),
-                    end = Offset(winX + winW, winY + winH * 0.45f),
-                    strokeWidth = 1.5.dp.toPx(),
-                )
-                // Left curtain
-                drawRoundRect(
-                    color = ProTextMuted.copy(alpha = 0.28f),
-                    topLeft = Offset(winX - 14.dp.toPx(), winY - 6.dp.toPx()),
-                    size = Size(12.dp.toPx(), winH + 20.dp.toPx()),
-                    cornerRadius = CornerRadius(5.dp.toPx()),
-                )
-                // Right curtain
-                drawRoundRect(
-                    color = ProTextMuted.copy(alpha = 0.28f),
-                    topLeft = Offset(winX + winW + 2.dp.toPx(), winY - 6.dp.toPx()),
-                    size = Size(12.dp.toPx(), winH + 20.dp.toPx()),
-                    cornerRadius = CornerRadius(5.dp.toPx()),
-                )
 
-                // ── Wall art (above sofa) ──
-                drawRoundRect(
-                    color = ProTextMuted.copy(alpha = 0.40f),
-                    topLeft = Offset(w * 0.10f, h * 0.08f),
-                    size = Size(w * 0.16f, h * 0.22f),
-                    cornerRadius = CornerRadius(3.dp.toPx()),
-                    style = Stroke(width = 1.5.dp.toPx()),
+                // ── Sparkle divider ──
+                val sparkleX = dividerX + arrowBounce
+                drawCircle(
+                    color = colors.gold.copy(alpha = glowAlpha * 0.4f),
+                    radius = 12.dp.toPx(),
+                    center = Offset(sparkleX, h * 0.45f),
                 )
-                // Art inner landscape
-                drawRoundRect(
-                    color = ProAccent.copy(alpha = glowAlpha * 0.28f),
-                    topLeft = Offset(w * 0.115f, h * 0.10f),
-                    size = Size(w * 0.13f, h * 0.18f),
-                    cornerRadius = CornerRadius(2.dp.toPx()),
+                drawCircle(
+                    color = colors.accent.copy(alpha = glowAlpha * 0.3f),
+                    radius = 8.dp.toPx(),
+                    center = Offset(sparkleX - 4.dp.toPx(), h * 0.38f),
+                )
+                drawCircle(
+                    color = colors.gold.copy(alpha = glowAlpha * 0.25f),
+                    radius = 6.dp.toPx(),
+                    center = Offset(sparkleX + 6.dp.toPx(), h * 0.52f),
+                )
+                // Arrow
+                drawLine(
+                    color = colors.accent.copy(alpha = glowAlpha * 0.7f),
+                    start = Offset(w * 0.43f, h * 0.45f),
+                    end = Offset(w * 0.53f, h * 0.45f),
+                    strokeWidth = 2.5.dp.toPx(),
+                    cap = StrokeCap.Round,
                 )
                 drawPath(
                     path = Path().apply {
-                        moveTo(w * 0.115f, h * 0.24f)
-                        lineTo(w * 0.16f, h * 0.14f)
-                        lineTo(w * 0.21f, h * 0.20f)
-                        lineTo(w * 0.245f, h * 0.16f)
-                        lineTo(w * 0.245f, h * 0.28f)
-                        lineTo(w * 0.115f, h * 0.28f)
-                        close()
+                        moveTo(w * 0.50f, h * 0.40f)
+                        lineTo(w * 0.55f, h * 0.45f)
+                        lineTo(w * 0.50f, h * 0.50f)
                     },
-                    color = ProAccent.copy(alpha = glowAlpha * 0.22f),
+                    color = colors.accent.copy(alpha = glowAlpha * 0.7f),
                 )
 
-                // ── Floor line ──
-                drawLine(
-                    color = ProAccent.copy(alpha = 0.30f),
-                    start = Offset(w * 0.02f, h * 0.78f),
-                    end = Offset(w * 0.98f, h * 0.78f),
-                    strokeWidth = 1.5.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-
-                // ── Rug (oval, under furniture) ──
-                drawOval(
-                    color = ProAccent.copy(alpha = 0.18f),
-                    topLeft = Offset(w * 0.06f, h * 0.72f),
-                    size = Size(w * 0.68f, h * 0.14f),
-                )
-                drawOval(
-                    color = ProGold.copy(alpha = 0.14f),
-                    topLeft = Offset(w * 0.10f, h * 0.74f),
-                    size = Size(w * 0.60f, h * 0.08f),
-                )
-
-                // ── Sofa ──
-                // Legs
-                drawLine(
-                    color = ProTextMuted.copy(alpha = 0.45f),
-                    start = Offset(w * 0.16f, h * 0.78f),
-                    end = Offset(w * 0.16f, h * 0.82f),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-                drawLine(
-                    color = ProTextMuted.copy(alpha = 0.45f),
-                    start = Offset(w * 0.60f, h * 0.78f),
-                    end = Offset(w * 0.60f, h * 0.82f),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-                // Sofa body
+                // ── "AFTER" side (right) ──
+                // Room outline
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.70f),
-                    topLeft = Offset(w * 0.08f, h * 0.50f),
-                    size = Size(w * 0.58f, h * 0.28f),
-                    cornerRadius = CornerRadius(14.dp.toPx()),
+                    color = colors.accent.copy(alpha = 0.15f),
+                    topLeft = Offset(w * 0.54f, h * 0.08f),
+                    size = Size(w * 0.44f, h * 0.74f),
+                    cornerRadius = CornerRadius(10.dp.toPx()),
+                )
+                // Window with warm glow
+                drawRoundRect(
+                    color = colors.gold.copy(alpha = glowAlpha * 0.2f),
+                    topLeft = Offset(w * 0.62f, h * 0.12f),
+                    size = Size(w * 0.26f, h * 0.28f),
+                    cornerRadius = CornerRadius(4.dp.toPx()),
+                )
+                // Window cross-bars
+                drawLine(
+                    color = colors.accent.copy(alpha = 0.25f),
+                    start = Offset(w * 0.75f, h * 0.12f),
+                    end = Offset(w * 0.75f, h * 0.40f),
+                    strokeWidth = 1.dp.toPx(),
+                )
+                drawLine(
+                    color = colors.accent.copy(alpha = 0.25f),
+                    start = Offset(w * 0.62f, h * 0.26f),
+                    end = Offset(w * 0.88f, h * 0.26f),
+                    strokeWidth = 1.dp.toPx(),
+                )
+                // Styled sofa
+                drawRoundRect(
+                    color = colors.accent.copy(alpha = 0.55f),
+                    topLeft = Offset(w * 0.58f, h * 0.48f),
+                    size = Size(w * 0.34f, h * 0.20f),
+                    cornerRadius = CornerRadius(10.dp.toPx()),
                 )
                 // Sofa backrest
                 drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.55f),
-                    topLeft = Offset(w * 0.10f, h * 0.38f),
-                    size = Size(w * 0.54f, h * 0.14f),
-                    cornerRadius = CornerRadius(12.dp.toPx()),
-                )
-                // Left armrest
-                drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.60f),
-                    topLeft = Offset(w * 0.06f, h * 0.42f),
-                    size = Size(w * 0.08f, h * 0.30f),
-                    cornerRadius = CornerRadius(8.dp.toPx()),
-                )
-                // Right armrest
-                drawRoundRect(
-                    color = ProAccent.copy(alpha = 0.60f),
-                    topLeft = Offset(w * 0.60f, h * 0.42f),
-                    size = Size(w * 0.08f, h * 0.30f),
-                    cornerRadius = CornerRadius(8.dp.toPx()),
-                )
-                // Left cushion
-                drawRoundRect(
-                    color = ProAccentLight.copy(alpha = 0.40f),
-                    topLeft = Offset(w * 0.14f, h * 0.53f),
-                    size = Size(w * 0.22f, h * 0.12f),
-                    cornerRadius = CornerRadius(8.dp.toPx()),
-                )
-                // Right cushion
-                drawRoundRect(
-                    color = ProAccentLight.copy(alpha = 0.40f),
-                    topLeft = Offset(w * 0.40f, h * 0.53f),
-                    size = Size(w * 0.22f, h * 0.12f),
+                    color = colors.accent.copy(alpha = 0.40f),
+                    topLeft = Offset(w * 0.60f, h * 0.40f),
+                    size = Size(w * 0.30f, h * 0.10f),
                     cornerRadius = CornerRadius(8.dp.toPx()),
                 )
                 // Throw pillow
                 drawRoundRect(
-                    color = ProGold.copy(alpha = 0.35f),
-                    topLeft = Offset(w * 0.14f, h * 0.41f),
-                    size = Size(w * 0.10f, h * 0.10f),
-                    cornerRadius = CornerRadius(6.dp.toPx()),
+                    color = colors.gold.copy(alpha = 0.45f),
+                    topLeft = Offset(w * 0.60f, h * 0.42f),
+                    size = Size(w * 0.08f, h * 0.08f),
+                    cornerRadius = CornerRadius(5.dp.toPx()),
                 )
-
-                // ── Coffee table ──
-                // Table top
+                // Coffee table
                 drawRoundRect(
-                    color = ProGold.copy(alpha = 0.42f),
-                    topLeft = Offset(w * 0.24f, h * 0.72f),
-                    size = Size(w * 0.30f, h * 0.05f),
-                    cornerRadius = CornerRadius(4.dp.toPx()),
-                )
-                // Table legs
-                drawLine(
-                    color = ProGold.copy(alpha = 0.35f),
-                    start = Offset(w * 0.27f, h * 0.77f),
-                    end = Offset(w * 0.27f, h * 0.82f),
-                    strokeWidth = 1.5.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-                drawLine(
-                    color = ProGold.copy(alpha = 0.35f),
-                    start = Offset(w * 0.51f, h * 0.77f),
-                    end = Offset(w * 0.51f, h * 0.82f),
-                    strokeWidth = 1.5.dp.toPx(),
-                    cap = StrokeCap.Round,
+                    color = colors.gold.copy(alpha = 0.35f),
+                    topLeft = Offset(w * 0.66f, h * 0.64f),
+                    size = Size(w * 0.18f, h * 0.04f),
+                    cornerRadius = CornerRadius(3.dp.toPx()),
                 )
                 // Vase on table
                 drawRoundRect(
-                    color = ProGold.copy(alpha = 0.50f),
-                    topLeft = Offset(w * 0.35f, h * 0.64f),
-                    size = Size(w * 0.07f, h * 0.08f),
-                    cornerRadius = CornerRadius(3.dp.toPx()),
+                    color = colors.gold.copy(alpha = 0.45f),
+                    topLeft = Offset(w * 0.72f, h * 0.57f),
+                    size = Size(w * 0.05f, h * 0.07f),
+                    cornerRadius = CornerRadius(2.dp.toPx()),
                 )
-                // Stem
+                // Plant stem
                 drawLine(
-                    color = ProCheckGreen.copy(alpha = 0.50f),
-                    start = Offset(w * 0.385f, h * 0.64f),
-                    end = Offset(w * 0.385f, h * 0.58f),
+                    color = ProCheckGreen.copy(alpha = 0.5f),
+                    start = Offset(w * 0.745f, h * 0.57f),
+                    end = Offset(w * 0.745f, h * 0.52f),
                     strokeWidth = 1.5.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
                 // Leaf
                 drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.48f),
-                    radius = w * 0.022f,
-                    center = Offset(w * 0.395f, h * 0.56f),
-                )
-
-                // ── Floor lamp (right side) ──
-                // Base
-                drawOval(
-                    color = ProGold.copy(alpha = 0.45f),
-                    topLeft = Offset(w * 0.76f, h * 0.78f),
-                    size = Size(w * 0.10f, h * 0.03f),
-                )
-                // Pole
-                drawLine(
-                    color = ProGold.copy(alpha = 0.55f),
-                    start = Offset(w * 0.81f, h * 0.78f),
-                    end = Offset(w * 0.81f, h * 0.28f),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-                // Shade (trapezoid)
-                drawPath(
-                    path = Path().apply {
-                        moveTo(w * 0.75f, h * 0.28f)
-                        lineTo(w * 0.87f, h * 0.28f)
-                        lineTo(w * 0.84f, h * 0.20f)
-                        lineTo(w * 0.78f, h * 0.20f)
-                        close()
-                    },
-                    color = ProGold.copy(alpha = glowAlpha * 0.65f),
-                )
-                // Lamp glow
-                drawCircle(
-                    color = ProGold.copy(alpha = glowAlpha * 0.14f),
-                    radius = w * 0.09f,
-                    center = Offset(w * 0.81f, h * 0.24f),
-                )
-
-                // ── Potted plant (far left) ──
-                // Pot
-                drawRoundRect(
-                    color = ProGold.copy(alpha = 0.45f),
-                    topLeft = Offset(w * 0.00f, h * 0.64f),
-                    size = Size(w * 0.07f, h * 0.14f),
-                    cornerRadius = CornerRadius(4.dp.toPx()),
-                )
-                // Stems + leaves
-                drawLine(
                     color = ProCheckGreen.copy(alpha = 0.45f),
-                    start = Offset(w * 0.035f, h * 0.64f),
-                    end = Offset(w * 0.035f, h * 0.56f),
-                    strokeWidth = 2.dp.toPx(),
+                    radius = w * 0.018f,
+                    center = Offset(w * 0.755f, h * 0.51f),
+                )
+                // Floor with rug
+                drawOval(
+                    color = colors.accent.copy(alpha = 0.12f),
+                    topLeft = Offset(w * 0.58f, h * 0.62f),
+                    size = Size(w * 0.34f, h * 0.10f),
+                )
+                drawLine(
+                    color = colors.accent.copy(alpha = 0.25f),
+                    start = Offset(w * 0.56f, h * 0.68f),
+                    end = Offset(w * 0.96f, h * 0.68f),
+                    strokeWidth = 1.dp.toPx(),
+                )
+                // Floor lamp
+                drawLine(
+                    color = colors.gold.copy(alpha = 0.45f),
+                    start = Offset(w * 0.90f, h * 0.68f),
+                    end = Offset(w * 0.90f, h * 0.30f),
+                    strokeWidth = 1.5.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
                 drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.52f),
-                    radius = w * 0.045f,
-                    center = Offset(w * 0.035f, h * 0.52f),
+                    color = colors.gold.copy(alpha = glowAlpha * 0.15f),
+                    radius = w * 0.05f,
+                    center = Offset(w * 0.90f, h * 0.28f),
                 )
-                drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.40f),
-                    radius = w * 0.032f,
-                    center = Offset(w * 0.01f, h * 0.49f),
-                )
-                drawCircle(
-                    color = ProCheckGreen.copy(alpha = 0.48f),
-                    radius = w * 0.028f,
-                    center = Offset(w * 0.06f, h * 0.50f),
+                // "AFTER" label background
+                drawRoundRect(
+                    color = colors.accent.copy(alpha = 0.18f),
+                    topLeft = Offset(w * 0.64f, h * 0.82f),
+                    size = Size(w * 0.24f, h * 0.10f),
+                    cornerRadius = CornerRadius(6.dp.toPx()),
                 )
             }
+
+            // "BEFORE" and "AFTER" text labels
+            Text(
+                "BEFORE",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp,
+                ),
+                color = colors.textMuted.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 28.dp, bottom = 22.dp),
+            )
+            Text(
+                "AFTER",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp,
+                ),
+                color = colors.accent.copy(alpha = 0.8f),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 28.dp, bottom = 22.dp),
+            )
         }
     }
 }
@@ -850,14 +879,14 @@ private fun ProHeroIllustration(modifier: Modifier = Modifier) {
 // ── Sparkle Particles ──────────────────────────────────────────────────────────
 
 @Composable
-private fun CelebrationParticles(modifier: Modifier = Modifier) {
+private fun CelebrationParticles(colors: ProPaywallColors, modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "sparkles")
     val particles = remember {
         List(5) { index ->
             Triple(
-                0.15f + (index * 0.175f),   // x position
-                0.3f + (index % 3) * 0.15f,  // y position
-                0.8f + (index % 2) * 0.4f,   // size multiplier
+                0.15f + (index * 0.175f),
+                0.3f + (index % 3) * 0.15f,
+                0.8f + (index % 2) * 0.4f,
             )
         }
     }
@@ -892,7 +921,7 @@ private fun CelebrationParticles(modifier: Modifier = Modifier) {
             Icon(
                 Icons.Rounded.AutoAwesome,
                 contentDescription = null,
-                tint = ProGold.copy(alpha = alpha * 0.7f),
+                tint = colors.gold.copy(alpha = alpha * 0.7f),
                 modifier = Modifier
                     .offset(
                         x = (sizeMul * 2).dp,
@@ -917,42 +946,36 @@ private fun UnlimitedIllustration(accentColor: Color) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            // Room outline
             drawRoundRect(
                 color = accentColor.copy(alpha = 0.25f),
                 topLeft = Offset(w * 0.1f, h * 0.15f),
                 size = Size(w * 0.8f, h * 0.7f),
                 cornerRadius = CornerRadius(12.dp.toPx()),
             )
-            // Left room (before)
             drawRoundRect(
-                color = ProTextMuted.copy(alpha = 0.20f),
+                color = Color(0xFFA8A29E).copy(alpha = 0.20f),
                 topLeft = Offset(w * 0.12f, h * 0.20f),
                 size = Size(w * 0.35f, h * 0.55f),
                 cornerRadius = CornerRadius(8.dp.toPx()),
             )
-            // Sofa shape
             drawRoundRect(
-                color = ProTextMuted.copy(alpha = 0.30f),
+                color = Color(0xFFA8A29E).copy(alpha = 0.30f),
                 topLeft = Offset(w * 0.15f, h * 0.50f),
                 size = Size(w * 0.28f, h * 0.15f),
                 cornerRadius = CornerRadius(6.dp.toPx()),
             )
-            // Right room (after)
             drawRoundRect(
                 color = accentColor.copy(alpha = 0.35f),
                 topLeft = Offset(w * 0.53f, h * 0.20f),
                 size = Size(w * 0.35f, h * 0.55f),
                 cornerRadius = CornerRadius(8.dp.toPx()),
             )
-            // Sofa shape (styled)
             drawRoundRect(
                 color = accentColor.copy(alpha = 0.55f),
                 topLeft = Offset(w * 0.56f, h * 0.50f),
                 size = Size(w * 0.28f, h * 0.15f),
                 cornerRadius = CornerRadius(6.dp.toPx()),
             )
-            // Arrow between
             drawLine(
                 color = accentColor.copy(alpha = 0.60f),
                 start = Offset(w * 0.48f, h * 0.48f),
@@ -970,7 +993,6 @@ private fun FourKIllustration(accentColor: Color) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            // Photo frame
             drawRoundRect(
                 color = accentColor.copy(alpha = 0.30f),
                 topLeft = Offset(w * 0.15f, h * 0.10f),
@@ -978,14 +1000,12 @@ private fun FourKIllustration(accentColor: Color) {
                 cornerRadius = CornerRadius(8.dp.toPx()),
                 style = Stroke(width = 3.dp.toPx()),
             )
-            // Inner image
             drawRoundRect(
                 color = accentColor.copy(alpha = 0.15f),
                 topLeft = Offset(w * 0.20f, h * 0.15f),
                 size = Size(w * 0.60f, h * 0.55f),
                 cornerRadius = CornerRadius(4.dp.toPx()),
             )
-            // Mountain landscape
             drawPath(
                 path = Path().apply {
                     moveTo(w * 0.20f, h * 0.70f)
@@ -997,7 +1017,6 @@ private fun FourKIllustration(accentColor: Color) {
                 },
                 color = accentColor.copy(alpha = 0.35f),
             )
-            // 4K badge
             drawRoundRect(
                 color = accentColor.copy(alpha = 0.60f),
                 topLeft = Offset(w * 0.60f, h * 0.72f),
@@ -1020,29 +1039,26 @@ private fun NoWatermarkIllustration(accentColor: Color) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            // Clean card
             drawRoundRect(
                 color = accentColor.copy(alpha = 0.20f),
                 topLeft = Offset(w * 0.10f, h * 0.10f),
                 size = Size(w * 0.80f, h * 0.70f),
                 cornerRadius = CornerRadius(10.dp.toPx()),
             )
-            // Watermark ghost (crossed out)
             drawLine(
-                color = ProTextMuted.copy(alpha = 0.25f),
+                color = Color(0xFFA8A29E).copy(alpha = 0.25f),
                 start = Offset(w * 0.20f, h * 0.55f),
                 end = Offset(w * 0.80f, h * 0.35f),
                 strokeWidth = 2.5.dp.toPx(),
                 cap = StrokeCap.Round,
             )
             drawLine(
-                color = ProTextMuted.copy(alpha = 0.25f),
+                color = Color(0xFFA8A29E).copy(alpha = 0.25f),
                 start = Offset(w * 0.20f, h * 0.35f),
                 end = Offset(w * 0.80f, h * 0.55f),
                 strokeWidth = 2.5.dp.toPx(),
                 cap = StrokeCap.Round,
             )
-            // Checkmark
             drawPath(
                 path = Path().apply {
                     moveTo(w * 0.35f, h * 0.48f)
@@ -1062,7 +1078,6 @@ private fun FastIllustration(accentColor: Color) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            // Lightning bolt
             drawPath(
                 path = Path().apply {
                     moveTo(w * 0.55f, h * 0.08f)
@@ -1075,7 +1090,6 @@ private fun FastIllustration(accentColor: Color) {
                 },
                 color = accentColor.copy(alpha = 0.65f),
             )
-            // Speed lines
             for (i in 0..2) {
                 val y = h * (0.25f + i * 0.20f)
                 drawLine(
@@ -1096,12 +1110,11 @@ private fun StylesIllustration(accentColor: Color) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            // Color swatches
             val swatchColors = listOf(
-                ProAccent.copy(alpha = 0.50f),
-                ProGold.copy(alpha = 0.50f),
-                ProCheckGreen.copy(alpha = 0.50f),
-                ProCelebration.copy(alpha = 0.50f),
+                accentColor.copy(alpha = 0.50f),
+                Color(0xFFFFC107).copy(alpha = 0.50f),
+                Color(0xFF4CAF50).copy(alpha = 0.50f),
+                Color(0xFFFF6D00).copy(alpha = 0.50f),
             )
             swatchColors.forEachIndexed { index, color ->
                 val x = w * (0.15f + index * 0.18f)
@@ -1112,7 +1125,6 @@ private fun StylesIllustration(accentColor: Color) {
                     cornerRadius = CornerRadius(6.dp.toPx()),
                 )
             }
-            // Fabric texture lines
             for (i in 0..3) {
                 val x = w * (0.15f + i * 0.18f)
                 drawLine(
@@ -1138,30 +1150,25 @@ private fun HistoryIllustration(accentColor: Color) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            // Timeline line
             drawLine(
                 color = accentColor.copy(alpha = 0.35f),
                 start = Offset(w * 0.50f, h * 0.10f),
                 end = Offset(w * 0.50f, h * 0.90f),
                 strokeWidth = 2.dp.toPx(),
             )
-            // Timeline nodes with room thumbnails
             for (i in 0..2) {
                 val y = h * (0.20f + i * 0.30f)
-                // Node dot
                 drawCircle(
                     color = accentColor.copy(alpha = 0.50f),
                     radius = 5.dp.toPx(),
                     center = Offset(w * 0.50f, y),
                 )
-                // Thumbnail (right side)
                 drawRoundRect(
                     color = accentColor.copy(alpha = 0.20f + i * 0.10f),
                     topLeft = Offset(w * 0.58f, y - h * 0.08f),
                     size = Size(w * 0.30f, h * 0.18f),
                     cornerRadius = CornerRadius(4.dp.toPx()),
                 )
-                // Mini furniture
                 drawRoundRect(
                     color = accentColor.copy(alpha = 0.30f + i * 0.10f),
                     topLeft = Offset(w * 0.62f, y + h * 0.02f),
@@ -1177,6 +1184,7 @@ private fun HistoryIllustration(accentColor: Color) {
 
 @Composable
 private fun ProIntroScreen(
+    colors: ProPaywallColors,
     onClose: () -> Unit,
     onContinue: () -> Unit,
 ) {
@@ -1185,7 +1193,7 @@ private fun ProIntroScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(ProDarkStart, ProDarkMid, ProDarkEnd),
+                    colors = listOf(colors.gradientStart, colors.gradientMid, colors.gradientEnd),
                 ),
             )
             .windowInsetsPadding(WindowInsets.statusBars),
@@ -1196,7 +1204,7 @@ private fun ProIntroScreen(
                 .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ProScreenHeader(onBack = null, onClose = onClose)
+            ProScreenHeader(colors = colors, onBack = null, onClose = onClose)
 
             Spacer(Modifier.height(HomeDecorSpacing.Md))
 
@@ -1207,20 +1215,20 @@ private fun ProIntroScreen(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.sp,
                 ),
-                color = ProGold,
+                color = colors.gold,
                 textAlign = TextAlign.Center,
             )
 
             Spacer(Modifier.height(HomeDecorSpacing.Base))
 
-            // Hero illustration with sparkle particles
+            // Room transformation hero with sparkle particles
             Box(
                 Modifier
                     .fillMaxWidth()
                     .height(220.dp),
             ) {
-                ProHeroIllustration(Modifier.fillMaxSize())
-                CelebrationParticles(Modifier.fillMaxSize())
+                RoomTransformationHero(colors = colors, Modifier.fillMaxSize())
+                CelebrationParticles(colors = colors, Modifier.fillMaxSize())
             }
 
             Spacer(Modifier.height(HomeDecorSpacing.Lg))
@@ -1233,7 +1241,7 @@ private fun ProIntroScreen(
                     lineHeight = 36.sp,
                     letterSpacing = (-0.5).sp,
                 ),
-                color = ProTextPrimary,
+                color = colors.textPrimary,
                 textAlign = TextAlign.Center,
             )
 
@@ -1243,18 +1251,18 @@ private fun ProIntroScreen(
             Text(
                 stringResource(R.string.pro_intro_sub),
                 style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
-                color = ProTextSecondary,
+                color = colors.textSecondary,
                 textAlign = TextAlign.Center,
             )
 
             Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             // PRO badge below subtitle
-            ProBadge()
+            ProBadge(colors)
 
             Spacer(Modifier.height(HomeDecorSpacing.Md))
 
-            // Benefit preview chips (wrapped to prevent clipping)
+            // Benefit preview chips
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
@@ -1266,8 +1274,8 @@ private fun ProIntroScreen(
                 ).forEach { label ->
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = ProAccent.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, ProAccent.copy(alpha = 0.2f)),
+                        color = colors.accent.copy(alpha = 0.10f),
+                        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.2f)),
                     ) {
                         Row(
                             Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
@@ -1277,13 +1285,13 @@ private fun ProIntroScreen(
                             Icon(
                                 Icons.Rounded.Check,
                                 contentDescription = null,
-                                tint = ProAccentLight,
+                                tint = colors.accentLight,
                                 modifier = Modifier.size(12.dp),
                             )
                             Text(
                                 label,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = ProTextSecondary,
+                                color = colors.textSecondary,
                                 maxLines = 1,
                             )
                         }
@@ -1295,6 +1303,7 @@ private fun ProIntroScreen(
 
             // CTA
             ProCtaButton(
+                colors = colors,
                 label = stringResource(R.string.pro_intro_cta),
                 processing = false,
                 success = false,
@@ -1306,7 +1315,7 @@ private fun ProIntroScreen(
             Text(
                 stringResource(R.string.pro_google_play_checkout),
                 style = MaterialTheme.typography.bodySmall,
-                color = ProTextMuted,
+                color = colors.textMuted,
                 textAlign = TextAlign.Center,
             )
 
@@ -1321,6 +1330,7 @@ private fun ProIntroScreen(
 
 @Composable
 private fun ProBenefitCarousel(
+    colors: ProPaywallColors,
     pagerState: androidx.compose.foundation.pager.PagerState,
     onClose: () -> Unit,
     onContinue: () -> Unit,
@@ -1329,12 +1339,12 @@ private fun ProBenefitCarousel(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val benefits = listOf(
-        ProBenefit(Icons.Rounded.AllInclusive, R.string.pro_benefit_unlimited_title, R.string.pro_benefit_unlimited_sub, ProAccent),
-        ProBenefit(Icons.Rounded.HighQuality, R.string.pro_benefit_4k_title, R.string.pro_benefit_4k_sub, ProGold),
-        ProBenefit(Icons.Rounded.WaterDrop, R.string.pro_benefit_watermark_title, R.string.pro_benefit_watermark_sub, ProCheckGreen),
-        ProBenefit(Icons.Rounded.Speed, R.string.pro_benefit_faster_title, R.string.pro_benefit_faster_sub, ProCelebration),
-        ProBenefit(Icons.Rounded.Palette, R.string.pro_benefit_styles_title, R.string.pro_benefit_styles_sub, ProGoldDark),
-        ProBenefit(Icons.Rounded.History, R.string.pro_benefit_history_title, R.string.pro_benefit_history_sub, ProAccentLight),
+        ProBenefitItem(Icons.Rounded.AllInclusive, R.string.pro_benefit_unlimited_title, R.string.pro_benefit_unlimited_sub, colors.accent),
+        ProBenefitItem(Icons.Rounded.HighQuality, R.string.pro_benefit_4k_title, R.string.pro_benefit_4k_sub, colors.gold),
+        ProBenefitItem(Icons.Rounded.WaterDrop, R.string.pro_benefit_watermark_title, R.string.pro_benefit_watermark_sub, colors.checkGreen),
+        ProBenefitItem(Icons.Rounded.Speed, R.string.pro_benefit_faster_title, R.string.pro_benefit_faster_sub, colors.celebration),
+        ProBenefitItem(Icons.Rounded.Palette, R.string.pro_benefit_styles_title, R.string.pro_benefit_styles_sub, ProGoldDark),
+        ProBenefitItem(Icons.Rounded.History, R.string.pro_benefit_history_title, R.string.pro_benefit_history_sub, colors.accentLight),
     )
 
     val isLastPage = pagerState.currentPage == 5
@@ -1344,7 +1354,7 @@ private fun ProBenefitCarousel(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(ProDarkStart, ProDarkMid, ProDarkEnd),
+                    colors = listOf(colors.gradientStart, colors.gradientMid, colors.gradientEnd),
                 ),
             )
             .windowInsetsPadding(WindowInsets.statusBars),
@@ -1355,7 +1365,7 @@ private fun ProBenefitCarousel(
                 .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ProScreenHeader(onBack = onBack, onClose = onClose)
+            ProScreenHeader(colors = colors, onBack = onBack, onClose = onClose)
 
             Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
@@ -1367,7 +1377,7 @@ private fun ProBenefitCarousel(
                     6,
                 ),
                 style = MaterialTheme.typography.labelMedium,
-                color = ProTextMuted,
+                color = colors.textMuted,
             )
 
             Spacer(Modifier.height(HomeDecorSpacing.Md))
@@ -1407,7 +1417,7 @@ private fun ProBenefitCarousel(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.3).sp,
                         ),
-                        color = ProTextPrimary,
+                        color = colors.textPrimary,
                         textAlign = TextAlign.Center,
                     )
 
@@ -1416,16 +1426,13 @@ private fun ProBenefitCarousel(
                     Text(
                         stringResource(benefit.subRes),
                         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
-                        color = ProTextSecondary,
+                        color = colors.textSecondary,
                         textAlign = TextAlign.Center,
                     )
                 }
             }
 
-            ProPageIndicator(
-                pageCount = 6,
-                currentPage = pagerState.currentPage,
-            )
+            ProPageIndicator(colors = colors, pageCount = 6, currentPage = pagerState.currentPage)
 
             Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
@@ -1441,18 +1448,19 @@ private fun ProBenefitCarousel(
                         .weight(1f)
                         .height(HomeDecorSpacing.ButtonHeight)
                         .clip(RoundedCornerShape(16.dp))
-                        .border(1.dp, ProTextMuted.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                        .border(1.dp, colors.textMuted.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                         .clickable { onSkip() },
                 ) {
                     Text(
                         stringResource(R.string.pro_benefit_skip),
                         style = MaterialTheme.typography.titleSmall,
-                        color = ProTextSecondary,
+                        color = colors.textSecondary,
                     )
                 }
 
                 // Next / Start Trial button
                 ProCtaButton(
+                    colors = colors,
                     label = if (isLastPage) stringResource(R.string.pro_cta_start_trial)
                     else stringResource(R.string.pro_benefit_next),
                     processing = false,
@@ -1475,7 +1483,7 @@ private fun ProBenefitCarousel(
     }
 }
 
-private data class ProBenefit(
+private data class ProBenefitItem(
     val icon: ImageVector,
     val titleRes: Int,
     val subRes: Int,
@@ -1486,6 +1494,7 @@ private data class ProBenefit(
 
 @Composable
 private fun ProReminderScreen(
+    colors: ProPaywallColors,
     selectedReminder: String?,
     onSelectReminder: (String) -> Unit,
     onClose: () -> Unit,
@@ -1501,7 +1510,7 @@ private fun ProReminderScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(ProDarkStart, ProDarkMid, ProDarkEnd),
+                    colors = listOf(colors.gradientStart, colors.gradientMid, colors.gradientEnd),
                 ),
             )
             .windowInsetsPadding(WindowInsets.statusBars),
@@ -1512,22 +1521,22 @@ private fun ProReminderScreen(
                 .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ProScreenHeader(onBack = onBack, onClose = onClose)
+            ProScreenHeader(colors = colors, onBack = onBack, onClose = onClose)
 
             Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             // Notification bell icon
             Surface(
                 shape = CircleShape,
-                color = ProGold.copy(alpha = 0.15f),
-                border = BorderStroke(1.5.dp, ProGold.copy(alpha = 0.3f)),
+                color = colors.gold.copy(alpha = 0.15f),
+                border = BorderStroke(1.5.dp, colors.gold.copy(alpha = 0.3f)),
                 modifier = Modifier.size(88.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Rounded.Notifications,
                         contentDescription = null,
-                        tint = ProGold,
+                        tint = colors.gold,
                         modifier = Modifier.size(40.dp),
                     )
                 }
@@ -1541,7 +1550,7 @@ private fun ProReminderScreen(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.3).sp,
                 ),
-                color = ProTextPrimary,
+                color = colors.textPrimary,
                 textAlign = TextAlign.Center,
             )
 
@@ -1550,13 +1559,14 @@ private fun ProReminderScreen(
             Text(
                 stringResource(R.string.pro_reminder_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
-                color = ProTextSecondary,
+                color = colors.textSecondary,
                 textAlign = TextAlign.Center,
             )
 
             Spacer(Modifier.height(HomeDecorSpacing.Md))
 
             ReminderOption(
+                colors = colors,
                 label = stringResource(R.string.pro_reminder_2days),
                 selected = selectedReminder == "2days",
                 onClick = { onSelectReminder("2days") },
@@ -1566,6 +1576,7 @@ private fun ProReminderScreen(
             Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             ReminderOption(
+                colors = colors,
                 label = stringResource(R.string.pro_reminder_3days),
                 selected = selectedReminder == "3days",
                 onClick = { onSelectReminder("3days") },
@@ -1581,19 +1592,20 @@ private fun ProReminderScreen(
                 Icon(
                     Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = ProCheckGreen,
+                    tint = colors.checkGreen,
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
                     stringResource(R.string.pro_reminder_reassurance),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = ProTextSecondary,
+                    color = colors.textSecondary,
                 )
             }
 
             Spacer(Modifier.weight(1f))
 
             ProCtaButton(
+                colors = colors,
                 label = stringResource(R.string.pro_cta_start_trial),
                 processing = false,
                 success = false,
@@ -1610,20 +1622,21 @@ private fun ProReminderScreen(
 
 @Composable
 private fun ReminderOption(
+    colors: ProPaywallColors,
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
     contentDescription: String,
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (selected) ProAccent else ProTextMuted.copy(alpha = 0.2f),
+        targetValue = if (selected) colors.accent else colors.textMuted.copy(alpha = 0.2f),
         animationSpec = tween(200),
         label = "reminderBorder",
     )
     val cd = contentDescription
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = if (selected) ProAccent.copy(alpha = 0.12f) else ProCardSurface,
+        color = if (selected) colors.accent.copy(alpha = 0.12f) else colors.cardSurface,
         border = BorderStroke(
             width = if (selected) 2.dp else 1.dp,
             color = borderColor,
@@ -1648,10 +1661,10 @@ private fun ReminderOption(
                 modifier = Modifier
                     .size(24.dp)
                     .clip(CircleShape)
-                    .background(if (selected) ProAccent else Color.Transparent)
+                    .background(if (selected) colors.accent else Color.Transparent)
                     .then(
                         if (!selected) {
-                            Modifier.border(2.dp, ProTextMuted.copy(alpha = 0.4f), CircleShape)
+                            Modifier.border(2.dp, colors.textMuted.copy(alpha = 0.4f), CircleShape)
                         } else Modifier,
                     ),
                 contentAlignment = Alignment.Center,
@@ -1670,7 +1683,7 @@ private fun ReminderOption(
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
                 ),
-                color = if (selected) ProTextPrimary else ProTextSecondary,
+                color = if (selected) colors.textPrimary else colors.textSecondary,
             )
         }
     }
@@ -1680,6 +1693,7 @@ private fun ReminderOption(
 
 @Composable
 private fun ProPlanScreen(
+    colors: ProPaywallColors,
     selectedPlan: String,
     weeklyPrice: String,
     yearlyPackage: Package?,
@@ -1691,7 +1705,6 @@ private fun ProPlanScreen(
     onContinue: () -> Unit,
     onRestore: () -> Unit,
 ) {
-    // Dynamic "BEST VALUE" badge based on actual price-per-day comparison
     val recommendedPlan = remember(yearlyPackage, weeklyPackage) {
         val yearly = yearlyPackage?.product?.price?.amountMicros?.let { it / 1_000_000.0 }
         val weekly = weeklyPackage?.product?.price?.amountMicros?.let { it / 1_000_000.0 }
@@ -1700,7 +1713,7 @@ private fun ProPlanScreen(
             val weeklyPerDay = weekly / 7.0
             if (yearlyPerDay < weeklyPerDay) "yearly" else "weekly"
         } else {
-            "yearly" // default when prices unknown
+            "yearly"
         }
     }
 
@@ -1709,7 +1722,7 @@ private fun ProPlanScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(ProDarkStart, ProDarkMid, ProDarkEnd),
+                    colors = listOf(colors.gradientStart, colors.gradientMid, colors.gradientEnd),
                 ),
             )
             .windowInsetsPadding(WindowInsets.statusBars),
@@ -1721,7 +1734,7 @@ private fun ProPlanScreen(
                 .padding(horizontal = HomeDecorSpacing.Base),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ProScreenHeader(onBack = onBack, onClose = onClose)
+            ProScreenHeader(colors = colors, onBack = onBack, onClose = onClose)
 
             Spacer(Modifier.height(HomeDecorSpacing.Lg))
 
@@ -1730,7 +1743,7 @@ private fun ProPlanScreen(
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
                 ),
-                color = ProTextPrimary,
+                color = colors.textPrimary,
                 textAlign = TextAlign.Center,
             )
 
@@ -1738,6 +1751,7 @@ private fun ProPlanScreen(
 
             // Yearly plan card
             ProPlanCard(
+                colors = colors,
                 planLabel = stringResource(R.string.pro_plan_annual),
                 price = yearlyPackage?.product?.price?.formatted,
                 priceSuffix = stringResource(R.string.pro_plan_per_year),
@@ -1752,6 +1766,7 @@ private fun ProPlanScreen(
 
             // Weekly plan card
             ProPlanCard(
+                colors = colors,
                 planLabel = stringResource(R.string.pro_plan_weekly),
                 price = weeklyPrice.ifEmpty { null },
                 priceSuffix = stringResource(R.string.pro_plan_per_week),
@@ -1772,13 +1787,13 @@ private fun ProPlanScreen(
                 Icon(
                     Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = ProCheckGreen,
+                    tint = colors.checkGreen,
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
                     stringResource(R.string.pro_trial_note),
                     style = MaterialTheme.typography.bodySmall,
-                    color = ProTextSecondary,
+                    color = colors.textSecondary,
                 )
             }
 
@@ -1786,6 +1801,7 @@ private fun ProPlanScreen(
 
             // CTA
             ProCtaButton(
+                colors = colors,
                 label = stringResource(R.string.pro_plan_trial_cta),
                 processing = false,
                 success = false,
@@ -1804,13 +1820,13 @@ private fun ProPlanScreen(
                 Icon(
                     Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = ProCheckGreen,
+                    tint = colors.checkGreen,
                     modifier = Modifier.size(14.dp),
                 )
                 Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(
                     stringResource(R.string.pro_cancel_anytime),
-                    color = ProTextMuted,
+                    color = colors.textMuted,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -1821,7 +1837,7 @@ private fun ProPlanScreen(
             Text(
                 stringResource(R.string.pro_plan_terms),
                 style = MaterialTheme.typography.bodySmall,
-                color = ProTextMuted.copy(alpha = 0.6f),
+                color = colors.textMuted.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center,
             )
 
@@ -1838,6 +1854,7 @@ private fun ProPlanScreen(
 
 @Composable
 private fun ProPlanCard(
+    colors: ProPaywallColors,
     planLabel: String,
     price: String?,
     priceSuffix: String,
@@ -1849,9 +1866,9 @@ private fun ProPlanCard(
 ) {
     val borderColor by animateColorAsState(
         targetValue = when {
-            isRecommended && selected -> ProGold
-            selected -> ProAccent
-            else -> ProTextMuted.copy(alpha = 0.15f)
+            isRecommended && selected -> colors.gold
+            selected -> colors.accent
+            else -> colors.textMuted.copy(alpha = 0.15f)
         },
         animationSpec = tween(200),
         label = "planBorder",
@@ -1859,9 +1876,9 @@ private fun ProPlanCard(
 
     val bgBrush = when {
         isRecommended -> Brush.horizontalGradient(
-            colors = listOf(ProGradientStart.copy(alpha = 0.15f), ProGradientEnd.copy(alpha = 0.1f)),
+            colors = listOf(colors.accent.copy(alpha = 0.08f), colors.gold.copy(alpha = 0.05f)),
         )
-        else -> SolidColor(if (selected) ProAccentSurface else ProCardSurface)
+        else -> SolidColor(if (selected) colors.accentSurface else colors.cardSurface)
     }
 
     Surface(
@@ -1881,7 +1898,7 @@ private fun ProPlanCard(
             Modifier
                 .padding(if (selected) 2.dp else 1.dp)
                 .background(
-                    color = if (selected) ProAccentSurface else ProCardSurface,
+                    color = if (selected) colors.accentSurface else colors.cardSurface,
                     shape = RoundedCornerShape(14.dp),
                 )
                 .padding(HomeDecorSpacing.Base),
@@ -1900,17 +1917,17 @@ private fun ProPlanCard(
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.SemiBold,
                         ),
-                        color = if (selected) ProAccentLight else ProTextSecondary,
+                        color = if (selected) colors.accentLight else colors.textSecondary,
                     )
                     if (isRecommended) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = ProGold.copy(alpha = 0.2f),
+                            color = colors.gold.copy(alpha = 0.15f),
                         ) {
                             Text(
                                 stringResource(R.string.pro_plan_best_value),
                                 modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = 3.dp),
-                                color = ProGold,
+                                color = colors.gold,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             )
                         }
@@ -1920,9 +1937,9 @@ private fun ProPlanCard(
                     modifier = Modifier
                         .size(22.dp)
                         .clip(CircleShape)
-                        .background(if (selected) ProAccent else Color.Transparent)
+                        .background(if (selected) colors.accent else Color.Transparent)
                         .then(
-                            if (!selected) Modifier.border(2.dp, ProTextMuted.copy(alpha = 0.4f), CircleShape) else Modifier,
+                            if (!selected) Modifier.border(2.dp, colors.textMuted.copy(alpha = 0.4f), CircleShape) else Modifier,
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -1941,26 +1958,25 @@ private fun ProPlanCard(
 
             Row(verticalAlignment = Alignment.Bottom) {
                 if (price == null && offeringsLoading) {
-                    // Loading skeleton for price
                     Box(
                         Modifier
                             .width(80.dp)
                             .height(32.dp)
                             .clip(RoundedCornerShape(6.dp))
-                            .background(ProTextMuted.copy(alpha = 0.1f)),
+                            .background(colors.textMuted.copy(alpha = 0.1f)),
                     )
                 } else {
                     Text(
                         price ?: "\u2014",
                         style = MaterialTheme.typography.displaySmall.copy(letterSpacing = (-1).sp),
-                        color = ProTextPrimary,
+                        color = colors.textPrimary,
                     )
                 }
                 Spacer(Modifier.width(HomeDecorSpacing.Xs))
                 Text(
                     priceSuffix,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = ProTextMuted,
+                    color = colors.textMuted,
                     modifier = Modifier.padding(bottom = HomeDecorSpacing.Xs),
                 )
             }
@@ -1970,7 +1986,7 @@ private fun ProPlanCard(
             Text(
                 detail,
                 style = MaterialTheme.typography.bodySmall,
-                color = ProTextMuted,
+                color = colors.textMuted,
             )
         }
     }
@@ -1980,13 +1996,13 @@ private fun ProPlanCard(
 
 @Composable
 private fun ProCheckoutScreen(
+    colors: ProPaywallColors,
     processing: Boolean,
     success: Boolean,
     selectedPlan: String,
     selectedPackage: Package?,
     onClose: () -> Unit,
 ) {
-    // Auto-close on success after brief celebration
     LaunchedEffect(success) {
         if (success) {
             delay(1800)
@@ -2008,7 +2024,7 @@ private fun ProCheckoutScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(ProDarkStart, ProDarkMid, ProDarkEnd),
+                    colors = listOf(colors.gradientStart, colors.gradientMid, colors.gradientEnd),
                 ),
             )
             .windowInsetsPadding(WindowInsets.statusBars),
@@ -2023,29 +2039,29 @@ private fun ProCheckoutScreen(
             if (processing && !success) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(56.dp),
-                    color = ProAccent,
+                    color = colors.accent,
                     strokeWidth = 4.dp,
                 )
                 Spacer(Modifier.height(HomeDecorSpacing.Lg))
                 Text(
                     stringResource(R.string.pro_checkout_setting_up),
                     style = MaterialTheme.typography.titleMedium,
-                    color = ProTextSecondary,
+                    color = colors.textSecondary,
                     textAlign = TextAlign.Center,
                 )
             } else if (success) {
                 // Animated checkmark
                 Surface(
                     shape = CircleShape,
-                    color = ProCheckGreen.copy(alpha = 0.15f),
-                    border = BorderStroke(2.dp, ProCheckGreen.copy(alpha = 0.3f)),
+                    color = colors.checkGreen.copy(alpha = 0.15f),
+                    border = BorderStroke(2.dp, colors.checkGreen.copy(alpha = 0.3f)),
                     modifier = Modifier.size(100.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Rounded.Check,
                             contentDescription = null,
-                            tint = ProCheckGreen,
+                            tint = colors.checkGreen,
                             modifier = Modifier
                                 .size(48.dp)
                                 .scale(checkScale),
@@ -2060,7 +2076,7 @@ private fun ProCheckoutScreen(
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                     ),
-                    color = ProTextPrimary,
+                    color = colors.textPrimary,
                     textAlign = TextAlign.Center,
                 )
 
@@ -2069,14 +2085,13 @@ private fun ProCheckoutScreen(
                 // Plan confirmation card
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = ProCardSurface,
+                    color = colors.cardSurface,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(
                         Modifier.padding(HomeDecorSpacing.Base),
                         verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                     ) {
-                        // Plan name
                         Text(
                             stringResource(
                                 if (selectedPlan == "yearly") R.string.pro_plan_annual
@@ -2085,38 +2100,33 @@ private fun ProCheckoutScreen(
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
                             ),
-                            color = ProTextPrimary,
+                            color = colors.textPrimary,
                         )
-                        // Price
                         Text(
                             selectedPackage?.product?.price?.formatted ?: "",
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Bold,
                             ),
-                            color = ProAccentLight,
+                            color = colors.accentLight,
                         )
-                        // Billing period
                         Text(
                             stringResource(
                                 if (selectedPlan == "yearly") R.string.pro_plan_annual_detail
                                 else R.string.pro_plan_weekly_detail
                             ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = ProTextMuted,
+                            color = colors.textMuted,
                         )
-                        // Divider
-                        HorizontalDivider(color = ProTextMuted.copy(alpha = 0.15f))
-                        // Trial info
+                        HorizontalDivider(color = colors.textMuted.copy(alpha = 0.15f))
                         Text(
                             stringResource(R.string.pro_trial_note),
                             style = MaterialTheme.typography.bodySmall,
-                            color = ProTextSecondary,
+                            color = colors.textSecondary,
                         )
-                        // Cancel note
                         Text(
                             stringResource(R.string.pro_cancel_anytime),
                             style = MaterialTheme.typography.bodySmall,
-                            color = ProCheckGreen,
+                            color = colors.checkGreen,
                         )
                     }
                 }
@@ -2126,7 +2136,7 @@ private fun ProCheckoutScreen(
                 Text(
                     stringResource(R.string.pro_hero_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = ProTextSecondary,
+                    color = colors.textSecondary,
                     textAlign = TextAlign.Center,
                 )
             }

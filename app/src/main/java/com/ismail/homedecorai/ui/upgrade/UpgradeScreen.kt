@@ -1,6 +1,7 @@
 package com.ismail.homedecorai.ui.upgrade
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -114,6 +116,11 @@ private fun ProActiveScreen() {
 
 @Composable
 private fun ProLandingScreen(onOpenPaywall: () -> Unit) {
+    val dark = isSystemInDarkTheme()
+    val landingColors = remember(dark) {
+        if (dark) LandingColors.Dark else LandingColors.Light
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -121,20 +128,63 @@ private fun ProLandingScreen(onOpenPaywall: () -> Unit) {
             .windowInsetsPadding(WindowInsets.statusBars),
         contentPadding = PaddingValues(bottom = navBarBottomPadding()),
     ) {
-        item { ProHeroHeader() }
-        item { ProBenefitsList() }
-        item { ProCtaSection(onOpenPaywall = onOpenPaywall) }
+        item { ProHeroHeader(landingColors) }
+        item { ProBenefitsList(landingColors) }
+        item { ProCtaSection(landingColors, onOpenPaywall = onOpenPaywall) }
+    }
+}
+
+private class LandingColors(
+    val gradientStart: Color,
+    val gradientMid: Color,
+    val gradientEnd: Color,
+    val accent: Color,
+    val badgeBg: Color,
+    val badgeText: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textMuted: Color,
+    val cardSurface: Color,
+    val ctaDisabled: Color,
+) {
+    companion object {
+        val Light = LandingColors(
+            gradientStart = ProDarkStart,
+            gradientMid = ProDarkMid,
+            gradientEnd = ProDarkEnd,
+            accent = ProAccent,
+            badgeBg = ProBadgeBg,
+            badgeText = ProBadgeText,
+            textPrimary = ProTextPrimary,
+            textSecondary = ProTextSecondary,
+            textMuted = ProTextMuted,
+            cardSurface = ProCardSurface,
+            ctaDisabled = ProCtaDisabled,
+        )
+        val Dark = LandingColors(
+            gradientStart = ProDarkGradientStart,
+            gradientMid = ProDarkGradientMid,
+            gradientEnd = ProDarkGradientEnd,
+            accent = ProDarkAccent,
+            badgeBg = ProDarkBadgeBg,
+            badgeText = ProDarkBadgeText,
+            textPrimary = ProDarkTextPrimary,
+            textSecondary = ProDarkTextSecondary,
+            textMuted = ProDarkTextMuted,
+            cardSurface = ProDarkCardSurface,
+            ctaDisabled = ProDarkCtaDisabled,
+        )
     }
 }
 
 @Composable
-private fun ProHeroHeader() {
+private fun ProHeroHeader(colors: LandingColors) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(ProDarkStart, ProDarkMid, ProDarkEnd),
+                    colors = listOf(colors.gradientStart, colors.gradientMid, colors.gradientEnd),
                 ),
             )
             .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Xxl),
@@ -146,7 +196,7 @@ private fun ProHeroHeader() {
         ) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
-                color = ProBadgeBg,
+                color = colors.badgeBg,
             ) {
                 Row(
                     Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
@@ -157,11 +207,11 @@ private fun ProHeroHeader() {
                         Icons.Rounded.AutoAwesome,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = ProBadgeText,
+                        tint = colors.badgeText,
                     )
                     Text(
                         stringResource(R.string.pro_badge_label),
-                        color = ProBadgeText,
+                        color = colors.badgeText,
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 1.sp,
@@ -174,14 +224,14 @@ private fun ProHeroHeader() {
                 text = stringResource(R.string.pro_intro_headline),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = ProTextPrimary,
+                color = colors.textPrimary,
                 textAlign = TextAlign.Center,
                 lineHeight = 32.sp,
             )
             Text(
                 text = stringResource(R.string.pro_hero_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
-                color = ProTextSecondary,
+                color = colors.textSecondary,
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp,
             )
@@ -190,13 +240,14 @@ private fun ProHeroHeader() {
 }
 
 @Composable
-private fun ProBenefitsList() {
+private fun ProBenefitsList(colors: LandingColors) {
     Column(
         modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Lg),
         verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
     ) {
         proBenefits.forEach { benefit ->
             ProBenefitRow(
+                colors = colors,
                 title = stringResource(benefit.titleRes),
                 subtitle = stringResource(benefit.subtitleRes),
             )
@@ -205,10 +256,10 @@ private fun ProBenefitsList() {
 }
 
 @Composable
-private fun ProBenefitRow(title: String, subtitle: String) {
+private fun ProBenefitRow(colors: LandingColors, title: String, subtitle: String) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = ProCardSurface,
+        color = colors.cardSurface,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -218,14 +269,14 @@ private fun ProBenefitRow(title: String, subtitle: String) {
         ) {
             Surface(
                 shape = CircleShape,
-                color = ProAccent.copy(alpha = 0.12f),
+                color = colors.accent.copy(alpha = 0.12f),
                 modifier = Modifier.size(44.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Rounded.CheckCircle,
                         contentDescription = null,
-                        tint = ProAccent,
+                        tint = colors.accent,
                         modifier = Modifier.size(22.dp),
                     )
                 }
@@ -235,13 +286,13 @@ private fun ProBenefitRow(title: String, subtitle: String) {
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = ProTextPrimary,
+                    color = colors.textPrimary,
                 )
                 Spacer(Modifier.height(HomeDecorSpacing.Xxs))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = ProTextMuted,
+                    color = colors.textMuted,
                     lineHeight = 18.sp,
                 )
             }
@@ -250,7 +301,7 @@ private fun ProBenefitRow(title: String, subtitle: String) {
 }
 
 @Composable
-private fun ProCtaSection(onOpenPaywall: () -> Unit) {
+private fun ProCtaSection(colors: LandingColors, onOpenPaywall: () -> Unit) {
     Column(
         modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Base),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -260,7 +311,7 @@ private fun ProCtaSection(onOpenPaywall: () -> Unit) {
             onClick = onOpenPaywall,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = ProAccent,
+                containerColor = colors.accent,
                 contentColor = Color.White,
             ),
             contentPadding = PaddingValues(),
@@ -277,7 +328,7 @@ private fun ProCtaSection(onOpenPaywall: () -> Unit) {
         Text(
             text = stringResource(R.string.pro_trial_note),
             style = MaterialTheme.typography.bodySmall,
-            color = ProTextMuted,
+            color = colors.textMuted,
             textAlign = TextAlign.Center,
             lineHeight = 18.sp,
         )

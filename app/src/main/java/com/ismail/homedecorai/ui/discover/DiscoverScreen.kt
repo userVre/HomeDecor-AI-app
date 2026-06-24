@@ -3,6 +3,7 @@ package com.ismail.homedecorai.ui.discover
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +37,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,8 +44,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +52,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -85,10 +85,10 @@ fun DiscoverScreen(
     viewModel: HomeDecorViewModel,
 ) {
     val context = LocalContext.current
-    var selectedCluster by remember { mutableStateOf("Intérieurs") }
+    var selectedCluster by remember { mutableStateOf("interior") }
     var detailSection by remember { mutableStateOf<DiscoverSection?>(null) }
     var previewTarget by remember { mutableStateOf<DiscoverPreviewTarget?>(null) }
-    val clusters = listOf("Intérieurs", "Architecture", "Paysages")
+    val clusters = listOf("interior", "architecture", "landscape")
     val sections = HomeDecorCatalog.discoverSections.filter { it.cluster == selectedCluster }
     val favoriteSources = remember(state.workspace.favorites) { state.workspace.favorites.map { it.sourceType }.toSet() }
     fun openPreview(section: DiscoverSection, item: GalleryItem) {
@@ -134,7 +134,7 @@ fun DiscoverScreen(
         }
         return
     }
-    Column(Modifier.fillMaxSize().background(StudioMist)) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         ScreenHeaderPills(title = stringResource(R.string.discover_styles_title), trailing = null)
         LazyColumn(
             contentPadding = PaddingValues(
@@ -213,8 +213,8 @@ fun DiscoverHero(
     val firstTitle = localizedGalleryTitle(first)
     ElevatedCard(
         onClick = { onPreview(first) },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
+        shape = HomeDecorShape.CardLarge,
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
     ) {
         Box(Modifier.fillMaxWidth().height(240.dp)) {
@@ -229,11 +229,11 @@ fun DiscoverHero(
                 modifier = Modifier.align(Alignment.BottomStart).padding(HomeDecorSpacing.Base),
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
-                Surface(shape = RoundedCornerShape(8.dp), color = StudioPrimaryContainer) {
+                Surface(shape = HomeDecorShape.Chip, color = MaterialTheme.colorScheme.primaryContainer) {
                     Text(
                         sectionCluster,
                         modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
-                        color = StudioInk,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
@@ -244,7 +244,6 @@ fun DiscoverHero(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiscoverClusterTabs(
     clusters: List<String>,
@@ -255,39 +254,35 @@ fun DiscoverClusterTabs(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = HomeDecorSpacing.Xs, vertical = HomeDecorSpacing.Xxs),
-        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
     ) {
         clusters.forEach { cluster ->
             val clusterLabel = localizedDiscoverCluster(cluster)
             val isSelected = selected == cluster
             val chipDescription = stringResource(R.string.a11y_discover_cluster_format, clusterLabel)
-            FilterChip(
-                selected = isSelected,
-                onClick = { onSelect(cluster) },
-                label = {
-                    Text(
-                        clusterLabel,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = StudioAccent,
-                    selectedLabelColor = Color.White,
-                    containerColor = Color.Transparent,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = StudioLine,
-                    selectedBorderColor = Color.Transparent,
-                    borderWidth = 1.dp,
-                ),
-                modifier = Modifier.semantics {
-                    this.selected = isSelected
-                    contentDescription = chipDescription
-                },
+            val underlineColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+            Text(
+                text = clusterLabel,
+                modifier = Modifier
+                    .padding(vertical = HomeDecorSpacing.Xs)
+                    .drawBehind {
+                        val strokeWidth = 2.dp.toPx()
+                        val y = size.height + 4.dp.toPx()
+                        drawLine(
+                            color = underlineColor,
+                            start = Offset(0f, y),
+                            end = Offset(size.width, y),
+                            strokeWidth = strokeWidth,
+                        )
+                    }
+                    .semantics {
+                        this.selected = isSelected
+                        contentDescription = chipDescription
+                    }
+                    .clickable { onSelect(cluster) },
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -344,7 +339,7 @@ fun DiscoverSectionRow(
                 Text(
                     stringResource(R.string.see_all),
                     style = MaterialTheme.typography.labelLarge,
-                    color = StudioAccent,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -374,7 +369,7 @@ fun DiscoverDetailScreen(
     onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
-    Column(Modifier.fillMaxSize().background(StudioMist)) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Row(
             modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
@@ -386,11 +381,11 @@ fun DiscoverDetailScreen(
             Column(Modifier.weight(1f)) {
                 Text(sectionTitle, style = MaterialTheme.typography.titleLarge)
             }
-            Surface(shape = RoundedCornerShape(10.dp), color = StudioPrimaryContainer, tonalElevation = 2.dp) {
+            Surface(shape = HomeDecorShape.Badge, color = MaterialTheme.colorScheme.primaryContainer, tonalElevation = 2.dp) {
                 Text(
                     stringResource(R.string.ideas_count, section.items.size),
                     modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
-                    color = StudioBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
@@ -438,7 +433,7 @@ fun DiscoverPreviewDialog(
                     onUseStyle()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                shape = HomeDecorShape.Button,
                 colors = studioPrimaryButtonColors(),
             ) {
                 Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(HomeDecorSpacing.Base))
@@ -448,8 +443,8 @@ fun DiscoverPreviewDialog(
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = onFavorite, shape = RoundedCornerShape(14.dp), modifier = Modifier.weight(1f)) {
-                    Icon(Icons.Rounded.Star, null, Modifier.size(HomeDecorSpacing.Base), tint = if (isFavorite) StudioGold else Color.Unspecified)
+                OutlinedButton(onClick = onFavorite, shape = HomeDecorShape.Button, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Rounded.Star, null, Modifier.size(HomeDecorSpacing.Base), tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else Color.Unspecified)
                     Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(
                         stringResource(if (isFavorite) R.string.favorited else R.string.favorite),
@@ -458,7 +453,7 @@ fun DiscoverPreviewDialog(
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
-                OutlinedButton(onClick = onMoodboard, shape = RoundedCornerShape(14.dp), modifier = Modifier.weight(1f)) {
+                OutlinedButton(onClick = onMoodboard, shape = HomeDecorShape.Button, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Rounded.Save, null, Modifier.size(HomeDecorSpacing.Base))
                     Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(
@@ -476,13 +471,13 @@ fun DiscoverPreviewDialog(
                 Image(
                     painter = painterResource(item.imageRes),
                     contentDescription = itemTitle,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(0.92f).clip(RoundedCornerShape(16.dp)),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(0.92f).clip(HomeDecorShape.ImageLarge),
                     contentScale = ContentScale.Crop,
                 )
                 Text(itemTitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             }
         },
-        shape = RoundedCornerShape(24.dp),
+        shape = HomeDecorShape.Dialog,
     )
 }
 
@@ -498,49 +493,20 @@ fun GalleryCard(
     val galleryDescription = stringResource(R.string.a11y_gallery_card_format, itemTitle, itemCategory)
     ElevatedCard(
         onClick = onClick,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = StudioPaper),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp, pressedElevation = 4.dp),
+        shape = HomeDecorShape.Card,
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp, pressedElevation = 3.dp),
         modifier = modifier.semantics {
             contentDescription = galleryDescription
             role = Role.Button
         },
     ) {
-        Column {
-            Box(Modifier.fillMaxWidth().aspectRatio(0.75f)) {
-                Image(
-                    painter = painterResource(item.imageRes),
-                    contentDescription = itemTitle,
-                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp)),
-                    contentScale = ContentScale.Crop,
-                )
-                Box(
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f))
-                            )
-                        )
-                        .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
-                ) {
-                    Text(
-                        itemTitle,
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            Text(
-                itemCategory,
-                modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        Box(Modifier.fillMaxWidth().aspectRatio(0.8f)) {
+            Image(
+                painter = painterResource(item.imageRes),
+                contentDescription = itemTitle,
+                modifier = Modifier.fillMaxSize().clip(HomeDecorShape.Card),
+                contentScale = ContentScale.Crop,
             )
         }
     }

@@ -1220,32 +1220,32 @@
 
   <!-- Paywall PRO — Duolingo-inspired flow -->
   <string name="pro_badge_label">HomeDecor PRO</string>
-  <string name="pro_intro_celebration">You deserve the best tools</string>
-  <string name="pro_intro_headline">Unlock Your\nCreative Potential</string>
-  <string name="pro_intro_sub">Join thousands of designers creating\nstunning rooms with HomeDecor PRO</string>
-  <string name="pro_intro_cta">Start Free Trial</string>
+  <string name="pro_intro_celebration">Your space deserves more</string>
+  <string name="pro_intro_headline">See Your Room\nTransformed</string>
+  <string name="pro_intro_sub">From bare walls to stunning designs.\nUnlock every tool to make it happen.</string>
+  <string name="pro_intro_cta">See What Pro Unlocks</string>
   <string name="pro_hero_title">Design without limits</string>
-  <string name="pro_hero_subtitle">Create stunning rooms with AI-powered tools, premium styles, and crystal-clear exports.</string>
+  <string name="pro_hero_subtitle">Transform any room with AI-powered design, premium styles, and crystal-clear 4K exports.</string>
   <string name="pro_cta_start_trial">Start My Free Trial</string>
   <string name="pro_cta_continue">Continue</string>
   <string name="pro_cta_processing">Processing\u2026</string>
   <string name="pro_cta_welcome">Welcome to PRO</string>
   <string name="pro_cancel_anytime">Cancel anytime \u2014 no commitment</string>
-  <string name="pro_trial_note">Start a 3-day free trial. Cancel anytime before it ends and you won\'t be charged.</string>
+  <string name="pro_trial_note">Start a 3-day free trial. Cancel before it ends and you won\'t be charged a thing.</string>
 
   <!-- Benefit carousel -->
-  <string name="pro_benefit_unlimited_title">Unlimited AI Designs</string>
-  <string name="pro_benefit_unlimited_sub">Create endless room transformations.\nNo daily limits, no restrictions.</string>
+  <string name="pro_benefit_unlimited_title">Unlimited Room Designs</string>
+  <string name="pro_benefit_unlimited_sub">Transform every room in your home.\nNo daily limits, no restrictions.</string>
   <string name="pro_benefit_4k_title">Crystal Clear 4K Export</string>
-  <string name="pro_benefit_4k_sub">Ultra-high resolution renders\nperfect for print and presentations.</string>
+  <string name="pro_benefit_4k_sub">Ultra-high resolution renders\nperfect for printing and sharing.</string>
   <string name="pro_benefit_watermark_title">No Watermark</string>
-  <string name="pro_benefit_watermark_sub">Export clean, professional renders\nready to share with clients.</string>
+  <string name="pro_benefit_watermark_sub">Clean, professional renders\nready to show anyone.</string>
   <string name="pro_benefit_faster_title">Lightning Fast Generation</string>
-  <string name="pro_benefit_faster_sub">Priority AI processing means\nyou get results in seconds.</string>
+  <string name="pro_benefit_faster_sub">Priority AI processing means\nyour designs appear in seconds.</string>
   <string name="pro_benefit_styles_title">Premium Styles &amp; Palettes</string>
-  <string name="pro_benefit_styles_sub">Exclusive design styles and\ncurated color palettes.</string>
+  <string name="pro_benefit_styles_sub">Exclusive interior design styles\nand curated color palettes.</string>
   <string name="pro_benefit_history_title">Saved Design History</string>
-  <string name="pro_benefit_history_sub">Access and revisit all your\npast designs anytime.</string>
+  <string name="pro_benefit_history_sub">Revisit every room transformation\nyou\'ve ever created.</string>
   <string name="pro_benefit_skip">Skip</string>
   <string name="pro_benefit_next">Next</string>
 
@@ -1262,11 +1262,11 @@
   <string name="pro_plan_title">Choose Your Plan</string>
   <string name="pro_plan_annual">Yearly</string>
   <string name="pro_plan_weekly">Weekly</string>
-  <string name="pro_plan_best_value">MOST POPULAR</string>
+  <string name="pro_plan_best_value">BEST VALUE</string>
   <string name="pro_plan_per_year">/ year</string>
   <string name="pro_plan_per_week">/ week</string>
   <string name="pro_plan_save_format">Save %1$s</string>
-  <string name="pro_plan_annual_detail">Billed annually</string>
+  <string name="pro_plan_annual_detail">Billed annually \u2014 best per-room value</string>
   <string name="pro_plan_weekly_detail">Billed weekly</string>
   <string name="pro_plan_trial_cta">Start 3-Day Free Trial</string>
   <string name="pro_plan_trial_detail">Then %1$s/%2$s. Cancel anytime.</string>

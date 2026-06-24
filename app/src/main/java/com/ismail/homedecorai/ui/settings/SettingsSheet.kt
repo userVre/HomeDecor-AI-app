@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Help
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Policy
@@ -84,6 +85,7 @@ fun SettingsSheet(
     onFeedback: (String) -> Unit,
     onDeleteAccount: () -> Unit,
     onLogout: () -> Unit,
+    onOpenDiamondStore: () -> Unit,
     currentLanguageTag: String,
     onLanguageSelected: (String) -> Unit,
 ) {
@@ -205,6 +207,17 @@ fun SettingsSheet(
                                 stringResource(R.string.language),
                                 AppLocale.labelFor(context, currentLanguageTag),
                                 onClick = { languagePickerVisible = true },
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Diamond,
+                                stringResource(R.string.diamond_store),
+                                stringResource(R.string.diamond_store_subtitle),
+                                iconTint = StudioBlue,
+                                onClick = {
+                                    onClose()
+                                    onOpenDiamondStore()
+                                },
                             )
                             SettingsDivider()
                             SettingsRow(

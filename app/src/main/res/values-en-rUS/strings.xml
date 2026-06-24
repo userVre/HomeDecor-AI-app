@@ -382,6 +382,13 @@
   <string name="locked">Locked</string>
   <string name="streak">Streak</string>
   <string name="daily_reward">DAILY REWARD</string>
+  <string name="daily_reward_title">Daily reward</string>
+  <string name="daily_reward_subtitle">+1 diamond, available once per day.</string>
+  <string name="daily_reward_day_format">Day %1$d</string>
+  <string name="daily_reward_streak_format">%1$d-day streak</string>
+  <string name="daily_reward_soft_start">Fresh start</string>
+  <string name="daily_reward_claim">Claim</string>
+  <string name="daily_reward_claimed">Claimed</string>
   <string name="elite_intro">Claim 1 diamond per day. On D7, receive 3 diamonds and 24h Pro once the reward is confirmed.</string>
   <string name="elite_footer_syncing">Syncing daily rewards...</string>
   <string name="elite_footer_day7_confirmed">Day 7 reward confirmed. Pro is active.</string>

@@ -307,7 +307,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "kitchen",
             title = "Cuisine",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "kitchen",
@@ -324,7 +324,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "living-room",
             title = "Salon",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "living",
@@ -341,7 +341,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "bedroom",
             title = "Chambre",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "bedroom",
@@ -358,7 +358,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "bathroom",
             title = "Salle de bain",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "bathroom",
@@ -371,7 +371,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "dining",
             title = "Salle à manger",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "dining",
@@ -384,7 +384,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "home-office",
             title = "Bureau à domicile",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "office",
@@ -397,7 +397,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "library",
             title = "Bibliothèque",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "library",
@@ -410,7 +410,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "hall",
             title = "Entrée / couloir",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "hall",
@@ -423,7 +423,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "gaming",
             title = "Salle de jeux",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "gaming",
@@ -436,7 +436,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "laundry",
             title = "Blanchisserie",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "interior",
             items = numberedDiscoverItems(
                 "laundry",
@@ -449,7 +449,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "villa",
             title = "Villa",
-            cluster = "Architecture",
+            cluster = "architecture",
             serviceToolId = "facade",
             items = numberedDiscoverItems(
                 "villa",
@@ -462,7 +462,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "house",
             title = "Maison",
-            cluster = "Architecture",
+            cluster = "architecture",
             serviceToolId = "facade",
             items = numberedDiscoverItems(
                 "house",
@@ -474,7 +474,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "apartment",
             title = "Appartement",
-            cluster = "Architecture",
+            cluster = "architecture",
             serviceToolId = "facade",
             items = numberedDiscoverItems(
                 "apartment",
@@ -486,7 +486,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "office-building",
             title = "Immeuble de bureaux",
-            cluster = "Architecture",
+            cluster = "architecture",
             serviceToolId = "facade",
             items = numberedDiscoverItems(
                 "office-building",
@@ -498,7 +498,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "retail",
             title = "Vente au détail",
-            cluster = "Architecture",
+            cluster = "architecture",
             serviceToolId = "facade",
             items = numberedDiscoverItems(
                 "retail",
@@ -510,7 +510,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "residential",
             title = "Résidentiel",
-            cluster = "Architecture",
+            cluster = "architecture",
             serviceToolId = "facade",
             items = numberedDiscoverItems(
                 "residential",
@@ -523,7 +523,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "wall-scenes",
             title = "Murs",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "paint",
             items = listOf(
                 GalleryItem("wall-1", "Ivoire doux", "Mur", R.drawable.assets_media_discover_wallscenes_softivorykitchen),
@@ -539,7 +539,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "floors",
             title = "Sols",
-            cluster = "Intérieurs",
+            cluster = "interior",
             serviceToolId = "floor",
             items = listOf(
                 GalleryItem("floor-1", "Chêne naturel", "Sol", R.drawable.assets_media_discover_floorscenes_naturaloakparquet),
@@ -556,7 +556,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "garden",
             title = "Jardin",
-            cluster = "Paysages",
+            cluster = "landscape",
             serviceToolId = "garden",
             items = numberedDiscoverItems(
                 "garden",
@@ -569,7 +569,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "backyard",
             title = "Cour arrière",
-            cluster = "Paysages",
+            cluster = "landscape",
             serviceToolId = "garden",
             items = numberedDiscoverItems(
                 "backyard",
@@ -581,7 +581,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "terrace",
             title = "Terrasse",
-            cluster = "Paysages",
+            cluster = "landscape",
             serviceToolId = "garden",
             items = numberedDiscoverItems(
                 "terrace",
@@ -593,7 +593,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "patio",
             title = "Patio",
-            cluster = "Paysages",
+            cluster = "landscape",
             serviceToolId = "garden",
             items = numberedDiscoverItems(
                 "patio",
@@ -605,7 +605,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "yard",
             title = "Cour",
-            cluster = "Paysages",
+            cluster = "landscape",
             serviceToolId = "garden",
             items = numberedDiscoverItems(
                 "yard",
@@ -618,7 +618,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "pool",
             title = "Piscine",
-            cluster = "Paysages",
+            cluster = "landscape",
             serviceToolId = "garden",
             items = numberedDiscoverItems(
                 "pool",
@@ -630,7 +630,7 @@ object HomeDecorCatalog {
         DiscoverSection(
             id = "front-garden",
             title = "Jardin avant",
-            cluster = "Paysages",
+            cluster = "landscape",
             serviceToolId = "garden",
             items = numberedDiscoverItems(
                 "front-garden",
