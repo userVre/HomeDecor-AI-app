@@ -58,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -66,6 +67,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
@@ -235,7 +237,7 @@ fun DiamondStoreSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = if (isDark) 0.6f else 0.35f))
+            .background(HomeDecorExtra.scrim.copy(alpha = if (isDark) 0.6f else 0.35f))
             .clickable(
                 interactionSource = scrimTapBlocker,
                 indication = null,
@@ -298,7 +300,7 @@ fun DiamondStoreSheet(
                         }
 
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = if (isDark) {
                                 MaterialTheme.colorScheme.surfaceContainerHigh
                             } else {
@@ -306,20 +308,20 @@ fun DiamondStoreSheet(
                             },
                         ) {
                             Row(
-                                Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                                Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                             ) {
                                 Icon(
                                     Icons.Rounded.Diamond,
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
+                                    modifier = Modifier.size(12.dp),
                                     tint = HomeDecorExtra.diamondAccent,
                                 )
                                 Text(
                                     "${state.diamonds}",
                                     color = titleColor,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                 )
                             }
@@ -364,71 +366,60 @@ fun DiamondStoreSheet(
 
                 if (storeLoading && loadError == null) {
                     item {
-                        Row(
-                            Modifier.padding(horizontal = HomeDecorSpacing.Lg),
-                            verticalAlignment = Alignment.CenterVertically,
+                        LazyRow(
+                            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg),
                             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                            modifier = Modifier.padding(top = HomeDecorSpacing.Xs),
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = HomeDecorExtra.diamondAccent,
-                                strokeWidth = 2.dp,
-                            )
-                            Text(
-                                stringResource(R.string.loading_packs),
-                                color = subtitleColor,
-                            )
+                            items(3) { index ->
+                                SkeletonPackCard(isDark = isDark)
+                            }
                         }
                     }
                 }
 
                 if (loadError != null) {
                     item {
-                        ElevatedCard(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.elevatedCardColors(
-                                containerColor = if (isDark) {
-                                    MaterialTheme.colorScheme.surfaceContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainerLow
-                                },
-                            ),
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = HomeDecorSpacing.Lg),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
                         ) {
-                            Column(
-                                modifier = Modifier.padding(HomeDecorSpacing.Base),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
+                            Text(
+                                stringResource(R.string.store_error_friendly),
+                                color = subtitleColor,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                            )
+                            OutlinedButton(
+                                onClick = { loadAttempt += 1 },
+                                enabled = !storeLoading && loadingPack == null && !state.purchaseBusy,
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = HomeDecorExtra.diamondAccent,
+                                ),
+                                modifier = Modifier.height(HomeDecorSpacing.Xxl),
                             ) {
-                                Icon(
-                                    Icons.Rounded.Diamond,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(32.dp),
-                                    tint = HomeDecorExtra.diamondAccent.copy(alpha = 0.5f),
-                                )
+                                Icon(Icons.Rounded.Refresh, null, Modifier.size(14.dp))
+                                Spacer(Modifier.width(HomeDecorSpacing.Sm))
                                 Text(
-                                    loadError.orEmpty(),
-                                    color = subtitleColor,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    textAlign = TextAlign.Center,
+                                    stringResource(R.string.store_retry),
+                                    style = MaterialTheme.typography.labelMedium,
                                 )
-                                OutlinedButton(
-                                    onClick = { loadAttempt += 1 },
-                                    enabled = !storeLoading && loadingPack == null && !state.purchaseBusy,
-                                    shape = RoundedCornerShape(14.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = HomeDecorExtra.diamondAccent,
-                                    ),
-                                    modifier = Modifier.height(HomeDecorSpacing.Xxl),
-                                ) {
-                                    Icon(Icons.Rounded.Refresh, null, Modifier.size(14.dp))
-                                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
-                                    Text(
-                                        stringResource(R.string.retry),
-                                        style = MaterialTheme.typography.labelMedium,
-                                    )
+                            }
+                        }
+                    }
+                    item {
+                        LazyRow(
+                            contentPadding = PaddingValues(start = HomeDecorSpacing.Lg, end = HomeDecorSpacing.Lg),
+                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                            modifier = Modifier.padding(top = HomeDecorSpacing.Sm),
+                        ) {
+                            items(3) { index ->
+                                Box(modifier = Modifier.alpha(0.35f)) {
+                                    SkeletonPackCard(isDark = isDark)
                                 }
                             }
                         }
@@ -552,10 +543,10 @@ private fun DiamondOfferCard(
             if (isDark) MaterialTheme.colorScheme.surfaceContainerLow
             else MaterialTheme.colorScheme.surfaceContainerLowest
         }
-        packIndex == 0 -> if (isDark) Color(0xFF0D2233) else Color(0xFFE0F5F7)
-        packIndex == 1 -> if (isDark) Color(0xFF1D1540) else Color(0xFFEDE5FF)
-        packIndex == 2 -> if (isDark) Color(0xFF0D2A1A) else Color(0xFFE0F5E8)
-        else -> if (isDark) Color(0xFF2A1D0A) else Color(0xFFFFF5E0)
+        packIndex == 0 -> if (isDark) HomeDecorColors.DarkPackTopTeal else HomeDecorColors.PackTopTeal
+        packIndex == 1 -> if (isDark) HomeDecorColors.DarkPackTopPurple else HomeDecorColors.PackTopPurple
+        packIndex == 2 -> if (isDark) HomeDecorColors.DarkPackTopGreen else HomeDecorColors.PackTopGreen
+        else -> if (isDark) HomeDecorColors.DarkPackTopGold else HomeDecorColors.PackTopGold
     }
 
     val cardBottomColor = if (isDark) {
@@ -671,8 +662,8 @@ private fun DiamondOfferCard(
                             Modifier
                                 .fillMaxSize()
                                 .background(
-                                    if (isDark) Color.Black.copy(alpha = 0.4f)
-                                    else Color.White.copy(alpha = 0.6f),
+                                    if (isDark) HomeDecorExtra.scrim.copy(alpha = 0.4f)
+                                    else MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
                                     RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
                                 ),
                             contentAlignment = Alignment.Center,
@@ -788,10 +779,10 @@ private fun DiamondOfferCard(
     }
 }
 
-private val DiamondTeal = Color(0xFF4DD9E0)
-private val PurpleGlow = Color(0xFF9B6EFF)
-private val GreenGlow = Color(0xFF34D399)
-private val GoldGlow = Color(0xFFFFD166)
+private val DiamondTeal = HomeDecorColors.DiamondStoreTeal
+private val PurpleGlow = HomeDecorColors.DiamondStorePurple
+private val GreenGlow = HomeDecorColors.DiamondStoreGreen
+private val GoldGlow = HomeDecorColors.DiamondStoreGold
 
 @Composable
 private fun DiamondPackVisual(
@@ -1022,4 +1013,68 @@ private fun diamondPath(cx: Float, cy: Float, size: Float): Path = Path().apply 
     lineTo(cx, cy + size * 0.5f)
     lineTo(cx - size * 0.65f, cy)
     close()
+}
+
+@Composable
+private fun SkeletonPackCard(isDark: Boolean) {
+    val skeletonColor = if (isDark) {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    }
+    val shimmerColor = if (isDark) {
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    }
+
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = skeletonColor,
+        modifier = Modifier
+            .width(172.dp)
+            .height(280.dp),
+    ) {
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .background(shimmerColor)
+            )
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(horizontal = HomeDecorSpacing.Base, vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(shimmerColor)
+                )
+                Box(
+                    Modifier
+                        .fillMaxWidth(0.4f)
+                        .height(12.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(shimmerColor)
+                )
+            }
+            Box(
+                Modifier
+                    .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md)
+                    .fillMaxWidth()
+                    .height(HomeDecorSpacing.TouchTarget)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(shimmerColor)
+            )
+        }
+    }
 }

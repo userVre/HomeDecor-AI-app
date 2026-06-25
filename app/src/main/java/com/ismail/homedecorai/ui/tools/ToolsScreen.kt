@@ -2,6 +2,8 @@ package com.ismail.homedecorai.ui.tools
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,9 +28,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -158,6 +163,17 @@ fun ToolCard(
     val description = localizedToolDescription(tool)
     val toolCardDescription = stringResource(R.string.a11y_tool_card_format, title, description)
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessHigh,
+        ),
+        label = "toolCardScale",
+    )
+
     val gradientOverlay = Brush.verticalGradient(
         0.0f to Color.Transparent,
         0.35f to Color.Transparent,
@@ -171,9 +187,11 @@ fun ToolCard(
         onClick = onClick,
         shape = ToolCardShape,
         color = Color.Transparent,
+        interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
             .height(220.dp)
+            .scale(pressScale)
             .clip(ToolCardShape)
             .semantics {
                 contentDescription = toolCardDescription
@@ -219,7 +237,7 @@ fun ToolCard(
                 Spacer(Modifier.height(12.dp))
                 Surface(
                     shape = CtaPillShape,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
                     modifier = Modifier.widthIn(min = 120.dp),
                 ) {
                     Row(
@@ -230,12 +248,12 @@ fun ToolCard(
                             Icons.Rounded.AutoAwesome,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
                             stringResource(R.string.try_this),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
                         )

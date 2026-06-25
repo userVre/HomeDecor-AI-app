@@ -57,7 +57,7 @@ fun PreviewTile(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(Modifier.fillMaxWidth().aspectRatio(1.08f).clip(RoundedCornerShape(16.dp)).background(StudioMist)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1.08f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)) {
             UriOrResourceImage(
                 uri = uri,
                 imageRes = imageRes,
@@ -180,7 +180,7 @@ fun NetworkOrResourceImage(
 @Composable
 fun ImageLoadingState(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.background(StudioMist),
+        modifier = modifier.background(MaterialTheme.colorScheme.surfaceContainerLow),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -188,20 +188,20 @@ fun ImageLoadingState(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Surface(shape = CircleShape, color = StudioPaper) {
-                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.padding(10.dp).size(20.dp), tint = StudioBlue)
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface) {
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.padding(10.dp).size(20.dp), tint = MaterialTheme.colorScheme.primary)
             }
             Text(
                 stringResource(R.string.image_loading_title),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = StudioInk,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
             )
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(0.72f).height(6.dp).clip(CircleShape),
-                color = StudioBlue,
-                trackColor = StudioLine,
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.outlineVariant,
             )
             Text(
                 stringResource(R.string.image_loading_body),
@@ -216,7 +216,7 @@ fun ImageLoadingState(modifier: Modifier = Modifier) {
 @Composable
 fun ImageFailureState(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.background(StudioErrorContainer),
+        modifier = modifier.background(MaterialTheme.colorScheme.errorContainer),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -224,9 +224,9 @@ fun ImageFailureState(modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(28.dp), tint = StudioRose)
-            Text(stringResource(R.string.image_unavailable_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = StudioRose, textAlign = TextAlign.Center)
-            Text(stringResource(R.string.image_unavailable_body), style = MaterialTheme.typography.bodySmall, color = StudioInk, textAlign = TextAlign.Center)
+            Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(28.dp), tint = MaterialTheme.colorScheme.error)
+            Text(stringResource(R.string.image_unavailable_title), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+            Text(stringResource(R.string.image_unavailable_body), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
         }
     }
 }

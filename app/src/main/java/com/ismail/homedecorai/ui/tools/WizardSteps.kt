@@ -11,9 +11,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
@@ -237,14 +246,26 @@ fun CreateScreen(
             viewModel.previousStage()
         }
     }
-    Column(Modifier.fillMaxSize().background(StudioCanvas)) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         DesignStepHeader(
             state = state,
             onBack = viewModel::previousStage,
             onClose = { viewModel.selectTab(MainTab.Tools) },
-            onCredits = viewModel::openDiamondStore,
         )
-        AnimatedContent(targetState = state.wizardStage, label = "wizard", modifier = Modifier.weight(1f)) { stage ->
+        AnimatedContent(
+            targetState = state.wizardStage,
+            label = "wizard",
+            modifier = Modifier.weight(1f),
+            transitionSpec = {
+                if (targetState.ordinal > initialState.ordinal) {
+                    slideInHorizontally(initialOffsetX = { it }) + fadeIn() togetherWith
+                        slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
+                } else {
+                    slideInHorizontally(initialOffsetX = { -it }) + fadeIn() togetherWith
+                        slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+                }
+            },
+        ) { stage ->
             when (stage) {
                 WizardStage.Photo -> if (state.selectedTool.id == "reference") {
                     ReferenceImagesStep(state = state, viewModel = viewModel)
@@ -299,58 +320,34 @@ fun DesignStepHeader(
     state: HomeDecorUiState,
     onBack: () -> Unit,
     onClose: () -> Unit,
-    onCredits: () -> Unit,
 ) {
     val step = wizardStepNumber(state.wizardStage, state.selectedTool)
     val totalSteps = wizardTotalSteps(state.selectedTool)
-    val progress = step.toFloat() / totalSteps.toFloat()
-    Surface(color = StudioPaper, tonalElevation = 2.dp) {
+    Surface(color = MaterialTheme.colorScheme.background) {
         Column(
-            modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(start = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, top = HomeDecorSpacing.Sm, bottom = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(
+                    start = HomeDecorSpacing.Base,
+                    end = HomeDecorSpacing.Base,
+                    top = HomeDecorSpacing.Xs,
+                    bottom = HomeDecorSpacing.Sm,
+                ),
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-            ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     localizedWorkflowTitle(state.selectedTool),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.Center).padding(horizontal = 48.dp),
                 )
                 Row(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
-                    if (step == 1) {
-                        val creditsDescription = stringResource(R.string.a11y_open_diamond_store)
-                        Row(
-                            modifier = Modifier
-                                .semantics {
-                                    contentDescription = creditsDescription
-                                    role = Role.Button
-                                }
-                                .clickable(onClick = onCredits)
-                                .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
-                        ) {
-                            Icon(
-                                Icons.Rounded.Diamond,
-                                contentDescription = stringResource(R.string.a11y_diamond_credits),
-                                modifier = Modifier.size(18.dp),
-                                tint = StudioBlue,
-                            )
-                            Text(
-                                if (state.isPro) stringResource(R.string.pro_upper) else "${state.diamonds}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    }
                     IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
                         Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close))
                     }
@@ -363,24 +360,117 @@ fun DesignStepHeader(
                     }
                 }
             }
-            Spacer(Modifier.height(HomeDecorSpacing.Xs))
-            LinearProgressIndicator(
-                progress = { progress },
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            WizardStepIndicator(
+                currentStep = step,
+                totalSteps = totalSteps,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun WizardStepIndicator(
+    currentStep: Int,
+    totalSteps: Int,
+    modifier: Modifier = Modifier,
+) {
+    val pulseAnim = remember { Animatable(0f) }
+    LaunchedEffect(currentStep) {
+        pulseAnim.snapTo(0f)
+        pulseAnim.animateTo(
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1200),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        )
+    }
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(0.dp),
+    ) {
+        repeat(totalSteps) { index ->
+            val isCompleted = index < currentStep - 1
+            val isActive = index == currentStep - 1
+
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(2.dp)),
-                color = StudioBlue,
-                trackColor = StudioMist,
-            )
-            Spacer(Modifier.height(HomeDecorSpacing.Xs))
-            Text(
-                stringResource(R.string.step_count_format, step, totalSteps),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = HomeDecorSpacing.Xxs),
-            )
-            Spacer(Modifier.height(HomeDecorSpacing.Xxs))
+                    .weight(1f)
+                    .height(5.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (index > 0) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                if (isCompleted || isActive)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                                else
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            ),
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(if (isActive) 12.dp else 10.dp)
+                    .graphicsLayer {
+                        if (isActive) {
+                            val scale = 1f + pulseAnim.value * 0.18f
+                            scaleX = scale
+                            scaleY = scale
+                            alpha = 0.85f + pulseAnim.value * 0.15f
+                        }
+                    }
+                    .clip(CircleShape)
+                    .background(
+                        when {
+                            isCompleted -> MaterialTheme.colorScheme.primary
+                            isActive -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        }
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isCompleted) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(6.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(5.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (index < totalSteps - 1) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                if (isCompleted)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                                else
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            ),
+                    )
+                }
+            }
         }
     }
 }
@@ -418,7 +508,7 @@ fun StepScaffold(
                 start = HomeDecorSpacing.Base,
                 end = HomeDecorSpacing.Base,
                 top = HomeDecorSpacing.Sm,
-                bottom = contentBottomPadding + HomeDecorSpacing.CtaBarHeight + HomeDecorSpacing.Md,
+                bottom = contentBottomPadding + HomeDecorSpacing.CtaBarHeight,
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
@@ -436,9 +526,7 @@ fun StepScaffold(
             item { content() }
         }
         Surface(
-            color = StudioPaper,
-            tonalElevation = 1.dp,
-            shadowElevation = 4.dp,
+            color = MaterialTheme.colorScheme.background,
         ) {
             val buttonModifier = if (buttonAllowsTwoLines) {
                 Modifier.fillMaxWidth().heightIn(min = 56.dp)
@@ -446,7 +534,7 @@ fun StepScaffold(
                 Modifier.fillMaxWidth().height(56.dp)
             }
             Column(
-                Modifier.fillMaxWidth().padding(PaddingValues(start = HomeDecorSpacing.Base, top = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.Md)),
+                Modifier.fillMaxWidth().padding(PaddingValues(start = HomeDecorSpacing.Base, top = HomeDecorSpacing.Sm, end = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.Md)),
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 if (showValidationBanner && !validationMessage.isNullOrBlank()) {
@@ -454,31 +542,20 @@ fun StepScaffold(
                 }
                 Button(
                     onClick = {
-                        if (canProceed) {
-                            if (showValidationBanner) {
-                                showValidationBanner = false
-                                onButton()
-                            } else if (!validationMessage.isNullOrBlank()) {
-                                showValidationBanner = true
-                                onValidationFailed?.invoke()
-                            } else {
-                                onButton()
-                            }
-                        } else {
+                        if (showValidationBanner) {
+                            showValidationBanner = false
+                            onButton()
+                        } else if (!validationMessage.isNullOrBlank()) {
                             showValidationBanner = true
                             onValidationFailed?.invoke()
+                        } else {
+                            onButton()
                         }
                     },
+                    enabled = canProceed,
                     shape = CircleShape,
-                    colors = if (canProceed) {
-                        studioPrimaryButtonColors()
-                    } else {
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.30f),
-                        )
-                    },
-                    modifier = buttonModifier.disabledSemantics(!canProceed),
+                    colors = studioPrimaryButtonColors(),
+                    modifier = buttonModifier.disabledSemantics(canProceed),
                 ) {
                     Icon(buttonIcon, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(HomeDecorSpacing.Sm))
@@ -590,28 +667,28 @@ fun ReferenceDualImagePicker(
     onCamera: () -> Unit,
     onExample: () -> Unit,
 ) {
-    val dashedBorderStroke = BorderStroke(1.5.dp, StudioLine.copy(alpha = 0.6f))
+    val dashedBorderStroke = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else Color.Transparent,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
             .then(
                 if (!selected) {
                     Modifier.border(dashedBorderStroke, RoundedCornerShape(24.dp))
                 } else {
-                    Modifier.border(1.5.dp, StudioBlue.copy(alpha = 0.36f), RoundedCornerShape(24.dp))
+                    Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.36f), RoundedCornerShape(24.dp))
                 }
             ),
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
-                Surface(shape = CircleShape, color = if (selected) StudioBlue else StudioMist) {
+                Surface(shape = CircleShape, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow) {
                     Icon(
                         if (selected) Icons.Rounded.Check else Icons.Rounded.PhotoLibrary,
                         contentDescription = null,
                         modifier = Modifier.padding(9.dp).size(19.dp),
-                        tint = if (selected) Color.White else StudioBlue,
+                        tint = if (selected) Color.White else MaterialTheme.colorScheme.primary,
                     )
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs)) {
@@ -628,7 +705,7 @@ fun ReferenceDualImagePicker(
                     .fillMaxWidth()
                     .height(172.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(if (selected) Color.Transparent else StudioMist),
+                    .background(if (selected) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow),
             ) {
                 if (selected) {
                     UriOrResourceImage(
@@ -647,7 +724,7 @@ fun ReferenceDualImagePicker(
                             Icons.Rounded.PhotoLibrary,
                             contentDescription = null,
                             modifier = Modifier.size(36.dp),
-                            tint = StudioBlue.copy(alpha = 0.6f),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         )
                         Spacer(Modifier.height(HomeDecorSpacing.Sm))
                         Text(
@@ -696,18 +773,18 @@ fun ReferenceDualImagePicker(
 fun ReferenceContinueHint(message: String) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = StudioErrorContainer,
+        color = MaterialTheme.colorScheme.errorContainer,
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, StudioRose.copy(alpha = 0.28f), RoundedCornerShape(16.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.28f), RoundedCornerShape(16.dp)),
     ) {
         Row(
             Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
-            Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioRose)
-            Text(message, color = StudioRose, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+            Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+            Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -717,16 +794,16 @@ fun SourcePreviewCard(state: HomeDecorUiState) {
     val firstPhoto = state.selectedPhotos.firstOrNull()
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp)),
     ) {
         Row(
             Modifier.padding(HomeDecorSpacing.Md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
-            Box(Modifier.size(76.dp).clip(RoundedCornerShape(16.dp)).background(StudioMist)) {
+            Box(Modifier.size(76.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerLow)) {
                 UriOrResourceImage(
                     uri = firstPhoto?.uri,
                     imageRes = firstPhoto?.let { selectedPhotoImageRes(state, it) } ?: selectedExampleImageRes(state),
@@ -738,7 +815,7 @@ fun SourcePreviewCard(state: HomeDecorUiState) {
                 Text(stringResource(R.string.source_photo_preview), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(stringResource(R.string.source_photo_preview_body), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             }
-            Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioGreen, modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = HomeDecorExtra.success, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -751,13 +828,13 @@ fun MaskPreviewCard(
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp)),
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
-                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = StudioBlue)
+                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             }
             Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
@@ -773,7 +850,7 @@ fun MaskPreviewBox(state: HomeDecorUiState) {
             .fillMaxWidth()
             .aspectRatio(1.18f)
             .clip(RoundedCornerShape(16.dp))
-            .background(StudioMist),
+            .background(MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         val firstPhoto = state.selectedPhotos.firstOrNull()
         UriOrResourceImage(
@@ -811,9 +888,9 @@ fun ReferenceStylePreview(state: HomeDecorUiState) {
         ?: R.drawable.tool_reference
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp)),
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             Text(stringResource(R.string.reference_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -849,9 +926,9 @@ fun SelectedPhotoStrip(
             Box(Modifier.width(72.dp).height(64.dp)) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = StudioPaper,
+                    color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 3.dp,
-                    modifier = Modifier.fillMaxSize().border(1.dp, if (index == 0) StudioBlue else StudioLine, RoundedCornerShape(16.dp)),
+                    modifier = Modifier.fillMaxSize().border(1.dp, if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
                 ) {
                     UriOrResourceImage(
                         uri = slot.uri,
@@ -886,12 +963,12 @@ fun SelectedPhotoStrip(
                 Surface(
                     onClick = onAdd,
                     shape = RoundedCornerShape(16.dp),
-                    color = StudioPaper,
+                    color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 1.dp,
-                    modifier = Modifier.width(72.dp).height(64.dp).border(1.dp, StudioLine, RoundedCornerShape(16.dp)),
+                    modifier = Modifier.width(72.dp).height(64.dp).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.add_photo), tint = StudioInk)
+                        Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.add_photo), tint = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -995,7 +1072,7 @@ fun PhotoStep(
         validationMessage = stepValidation.validationMessage,
         onButton = viewModel::nextStage,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             if (!hasMainPhoto) {
                 MoziUploadCard(
                     onGallery = { imageInputActions.openGallery() },
@@ -1024,7 +1101,7 @@ fun PhotoStep(
         ModalBottomSheet(
             onDismissRequest = { showUploadSheet = false },
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            containerColor = StudioPaper,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) {
             Column(
                 Modifier.padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Sm),
@@ -1050,11 +1127,11 @@ fun PhotoStep(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                     ) {
-                        Icon(Icons.Rounded.PhotoCamera, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Rounded.PhotoCamera, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                         Text(stringResource(R.string.camera), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                 }
-                HorizontalDivider(color = StudioLine.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Surface(
                     onClick = {
                         showUploadSheet = false
@@ -1069,11 +1146,11 @@ fun PhotoStep(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                     ) {
-                        Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                         Text(stringResource(R.string.photos), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                 }
-                HorizontalDivider(color = StudioLine.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Surface(
                     onClick = {
                         showUploadSheet = false
@@ -1089,7 +1166,7 @@ fun PhotoStep(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                     ) {
-                        Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                         Text(stringResource(R.string.try_with_example), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -1108,14 +1185,23 @@ private fun PhotoPreviewCard(
     val replaceDescription = stringResource(R.string.a11y_replace_image)
     val removeDescription = stringResource(R.string.a11y_remove_selected_image)
     val previewDescription = stringResource(R.string.a11y_selected_image_preview)
+    val checkScale by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh,
+        ),
+        label = "checkScale",
+        initialValue = 0f,
+    )
     Surface(
         shape = HomeDecorShape.ExtraLarge,
-        color = StudioPaper,
-        tonalElevation = 1.dp,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = previewDescription }
-            .border(1.dp, StudioBlue.copy(alpha = 0.28f), HomeDecorShape.ExtraLarge),
+            .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.36f), HomeDecorShape.ExtraLarge),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
             Box(
@@ -1133,11 +1219,15 @@ private fun PhotoPreviewCard(
                 )
                 Surface(
                     shape = CircleShape,
-                    color = StudioBlue,
+                    color = HomeDecorExtra.success,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(12.dp)
-                        .size(40.dp),
+                        .size(36.dp)
+                        .graphicsLayer {
+                            scaleX = checkScale
+                            scaleY = checkScale
+                        },
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -1160,27 +1250,27 @@ private fun PhotoPreviewCard(
                     shape = CircleShape,
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(44.dp)
                         .semantics { contentDescription = replaceDescription },
                     contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                    Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(stringResource(R.string.upload_photo_replace), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
                 }
                 OutlinedButton(
                     onClick = onRemove,
                     shape = CircleShape,
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = StudioRose,
+                        contentColor = MaterialTheme.colorScheme.error,
                     ),
                     modifier = Modifier
-                        .height(48.dp)
+                        .height(44.dp)
                         .semantics { contentDescription = removeDescription },
                     contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
                     Icon(Icons.Rounded.Delete, contentDescription = null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                    Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(stringResource(R.string.upload_photo_remove), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -1200,67 +1290,74 @@ private fun MoziUploadCard(
     val exampleDescription = stringResource(R.string.a11y_try_example)
     Surface(
         shape = HomeDecorShape.ExtraLarge,
-        color = StudioPaper,
-        tonalElevation = 1.dp,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = uploadAreaDescription }
-            .border(1.dp, StudioLine, HomeDecorShape.ExtraLarge),
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), HomeDecorShape.ExtraLarge),
     ) {
         Column(
-            modifier = Modifier.padding(HomeDecorSpacing.Lg),
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
+            modifier = Modifier.padding(HomeDecorSpacing.Base),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1.8f)
+                    .aspectRatio(2f)
                     .clip(HomeDecorShape.Large)
-                    .background(StudioMist.copy(alpha = 0.4f)),
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.25f),
+                            ),
+                        ),
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
+                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = StudioPrimaryContainer,
-                        modifier = Modifier.size(56.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Rounded.PhotoCamera,
                                 contentDescription = null,
-                                tint = StudioBlue,
-                                modifier = Modifier.size(26.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp),
                             )
                         }
                     }
                     Text(
                         stringResource(R.string.upload_photo_hint),
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 OutlinedButton(
                     onClick = onGallery,
                     shape = CircleShape,
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp)
+                        .height(48.dp)
                         .semantics { contentDescription = galleryDescription },
-                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
-                    Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(20.dp))
-                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                    Icon(Icons.Rounded.PhotoLibrary, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(
                         stringResource(R.string.gallery),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -1271,15 +1368,15 @@ private fun MoziUploadCard(
                     shape = CircleShape,
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp)
+                        .height(48.dp)
                         .semantics { contentDescription = cameraDescription },
-                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
+                    contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Md),
                 ) {
-                    Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(20.dp))
-                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                    Icon(Icons.Rounded.PhotoCamera, contentDescription = null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(
                         stringResource(R.string.camera),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -1291,14 +1388,14 @@ private fun MoziUploadCard(
                 shape = CircleShape,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(48.dp)
                     .semantics { contentDescription = exampleDescription },
             ) {
-                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(20.dp))
+                Icon(Icons.Rounded.AutoAwesome, contentDescription = null, Modifier.size(18.dp))
                 Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(
                     stringResource(R.string.try_with_example),
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
@@ -1342,9 +1439,9 @@ fun SelectedMaterialPreview(
     val displayLabel = localizedOption(label)
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = StudioMist,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioBlue.copy(alpha = 0.26f), RoundedCornerShape(16.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.26f), RoundedCornerShape(16.dp)),
     ) {
         Row(
             Modifier.padding(HomeDecorSpacing.Md),
@@ -1353,9 +1450,9 @@ fun SelectedMaterialPreview(
         ) {
             MaterialSwatchThumb(label = label, selected = true, modifier = Modifier.size(52.dp))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioInk)
+                Text(displayLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
             }
-            Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
+            Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -1391,7 +1488,7 @@ fun MaterialSwatchCard(
                 displayLabel,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = StudioInk,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -1410,7 +1507,7 @@ fun MaterialSwatchThumb(
         modifier
             .clip(RoundedCornerShape(16.dp))
             .background(Brush.linearGradient(listOf(spec.base, spec.base.copy(alpha = 0.82f), spec.accent.copy(alpha = 0.5f))))
-            .border(1.dp, if (selected) StudioBlue else StudioLine, RoundedCornerShape(16.dp)),
+            .border(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
@@ -1451,8 +1548,8 @@ fun MaterialSwatchThumb(
             }
         }
         if (selected) {
-            Surface(shape = CircleShape, color = Color.White) {
-                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(5.dp).size(15.dp), tint = StudioBlue)
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface) {
+                Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(5.dp).size(15.dp), tint = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -1667,9 +1764,9 @@ fun AdvancedControls(
     val advancedControlsDescription = stringResource(R.string.a11y_advance_controls)
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp)),
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
             Row(
@@ -1683,7 +1780,7 @@ fun AdvancedControls(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
             ) {
-                Icon(Icons.Rounded.Settings, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
+                Icon(Icons.Rounded.Settings, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(stringResource(R.string.advanced_controls), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.advanced_controls_subtitle), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -2164,12 +2261,12 @@ fun SurfaceMaskStatus(
     requiredText: String,
 ) {
     val icon = if (hasMask) Icons.Rounded.Check else Icons.Rounded.Brush
-    val color = if (hasMask) StudioPrimaryContainer else StudioMist.copy(alpha = 0.72f)
-    val contentColor = if (hasMask) StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant
+    val color = if (hasMask) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.72f)
+    val contentColor = if (hasMask) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = color,
-        modifier = Modifier.fillMaxWidth().border(1.dp, if (hasMask) StudioBlue.copy(alpha = 0.32f) else StudioLine, RoundedCornerShape(16.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, if (hasMask) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f) else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
     ) {
         Row(
             Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
@@ -2197,9 +2294,9 @@ fun BrushSizeControl(
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = StudioPaper,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(16.dp)),
+        modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
             Row(
@@ -2208,12 +2305,12 @@ fun BrushSizeControl(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(stringResource(R.string.brush_size), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-                Surface(shape = CircleShape, color = StudioPrimaryContainer) {
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
                     Text(
                         "${brushSize.toInt()} px",
                         modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
                         style = MaterialTheme.typography.labelMedium,
-                        color = StudioBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
@@ -2224,7 +2321,7 @@ fun BrushSizeControl(
                         Modifier
                             .size((10f + (brushSize / 72f) * 24f).dp)
                             .clip(CircleShape)
-                            .background(StudioBlue.copy(alpha = 0.7f)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
                     )
                 }
                 Slider(
@@ -2267,8 +2364,8 @@ fun MaskCanvas(
             .fillMaxWidth()
             .aspectRatio(1.18f)
             .clip(RoundedCornerShape(24.dp))
-            .background(StudioLine)
-            .border(2.dp, if (hasMask) StudioBlue else StudioLine, RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.outlineVariant)
+            .border(2.dp, if (hasMask) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
             .onSizeChanged { canvasSize = it }
             .pointerInput(state.brushSize, state.eraserSelected) {
                 detectDragGestures(
@@ -2316,7 +2413,7 @@ fun MaskCanvas(
         if (hasMask && readyLabel != null) {
             Surface(
                 shape = CircleShape,
-                color = StudioBlue,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
             ) {
                 Row(
@@ -2350,18 +2447,18 @@ fun SurfacePanel(
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
-                Surface(shape = CircleShape, color = StudioPaper) {
-                    Icon(icon, contentDescription = null, Modifier.padding(8.dp).size(18.dp), tint = StudioInk)
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface) {
+                    Icon(icon, contentDescription = null, Modifier.padding(8.dp).size(18.dp), tint = MaterialTheme.colorScheme.onSurface)
                 }
-                Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) StudioBlue else StudioInk)
+                Text(title, fontWeight = FontWeight.SemiBold, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), verticalAlignment = Alignment.CenterVertically) {
                 Button(
                     onClick = onPrimary,
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selected) StudioBlue else StudioPaper,
-                        contentColor = if (selected) Color.White else StudioInk,
+                        containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                        contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
                     ),
                     contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
                     modifier = Modifier.height(48.dp).weight(1f),
@@ -2369,7 +2466,7 @@ fun SurfacePanel(
                     Text(primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 IconButton(onClick = onMagic, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Rounded.AutoAwesome, contentDescription = stringResource(R.string.option_ai_suggestion), tint = StudioBlue)
+                    Icon(Icons.Rounded.AutoAwesome, contentDescription = stringResource(R.string.option_ai_suggestion), tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -2445,26 +2542,16 @@ fun LayoutPlanningStep(
                 }
                 Button(
                     onClick = {
-                        if (canGenerate) {
-                            showValidationBanner = false
-                            viewModel.generate()
-                        } else {
-                            showValidationBanner = true
-                        }
+                        showValidationBanner = false
+                        viewModel.generate()
                     },
+                    enabled = canGenerate,
                     shape = CircleShape,
-                    colors = if (canGenerate) {
-                        studioPrimaryButtonColors()
-                    } else {
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                            contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.30f),
-                        )
-                    },
+                    colors = studioPrimaryButtonColors(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .disabledSemantics(!canGenerate),
+                        .disabledSemantics(canGenerate),
                 ) {
                     Icon(Icons.AutoMirrored.Rounded.ViewQuilt, contentDescription = null, modifier = Modifier.size(19.dp))
                     Spacer(Modifier.width(HomeDecorSpacing.Sm))
@@ -2489,7 +2576,7 @@ fun LayoutGoalChip(
     modifier: Modifier = Modifier,
 ) {
     val displayLabel = localizedOption(label)
-    val borderColor = if (selected) StudioBlue else StudioLine
+    val borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
     val borderWidth = if (selected) 2.dp else 1.dp
     val scale by androidx.compose.animation.core.animateFloatAsState(
         targetValue = if (selected) 0.96f else 1f,
@@ -2502,7 +2589,7 @@ fun LayoutGoalChip(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
-        color = StudioPaper,
+        color = MaterialTheme.colorScheme.surface,
         modifier = modifier
             .height(64.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
@@ -2521,20 +2608,20 @@ fun LayoutGoalChip(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(StudioMist),
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     choiceIcon(label),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = if (selected) StudioBlue else StudioInk.copy(alpha = 0.5f),
+                    tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 )
             }
             Text(
                 displayLabel,
                 modifier = Modifier.weight(1f),
-                color = StudioInk,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = if (displayLabel.length > 12) {
                     MaterialTheme.typography.titleMedium.copy(fontSize = 13.sp, lineHeight = 17.sp)
                 } else {
@@ -2714,10 +2801,10 @@ fun ReplacementReadinessSummary(
     val allReady = hasMask && hasReplacementPrompt
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = if (allReady) StudioPrimaryContainer else StudioMist.copy(alpha = 0.72f),
+        color = if (allReady) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.72f),
         modifier = Modifier.fillMaxWidth().border(
             1.dp,
-            if (allReady) StudioBlue.copy(alpha = 0.36f) else StudioLine,
+            if (allReady) MaterialTheme.colorScheme.primary.copy(alpha = 0.36f) else MaterialTheme.colorScheme.outlineVariant,
             RoundedCornerShape(24.dp),
         ),
     ) {
@@ -2748,7 +2835,7 @@ fun ReplacementSummaryLine(
     text: String,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), verticalAlignment = Alignment.Top) {
-        Surface(shape = CircleShape, color = if (checked) StudioBlue else StudioPaper, modifier = Modifier.padding(top = 1.dp)) {
+        Surface(shape = CircleShape, color = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface, modifier = Modifier.padding(top = 1.dp)) {
             Icon(
                 if (checked) Icons.Rounded.Check else Icons.Rounded.Lock,
                 contentDescription = null,
@@ -2756,7 +2843,7 @@ fun ReplacementSummaryLine(
                 tint = if (checked) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Text(text, color = StudioInk.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium)
+        Text(text, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.78f), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -2771,7 +2858,7 @@ fun PaletteChoiceCard(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
-        color = if (selected) StudioPrimaryContainer.copy(alpha = 0.3f) else StudioPaper,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface,
         modifier = modifier
             .fillMaxWidth()
             .height(142.dp)
@@ -2781,15 +2868,15 @@ fun PaletteChoiceCard(
             }
             .border(
                 if (selected) 2.dp else 1.dp,
-                if (selected) StudioBlue else StudioLine,
+                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                 RoundedCornerShape(16.dp),
             ),
     ) {
         Box {
             Column {
                 if (label == "Suggestion IA") {
-                    Box(Modifier.fillMaxWidth().height(82.dp).background(StudioMist), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = StudioBlue)
+                    Box(Modifier.fillMaxWidth().height(82.dp).background(MaterialTheme.colorScheme.surfaceContainerLow), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = MaterialTheme.colorScheme.primary)
                     }
                 } else {
                     Row(Modifier.fillMaxWidth().height(82.dp).clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))) {
@@ -2811,7 +2898,7 @@ fun PaletteChoiceCard(
                 Surface(
                     modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
                     shape = CircleShape,
-                    color = StudioBlue,
+                    color = MaterialTheme.colorScheme.primary,
                 ) {
                     Icon(
                         Icons.Rounded.Check,
@@ -2873,9 +2960,9 @@ fun ProcessingStep(
     ) {
         Surface(
             shape = RoundedCornerShape(32.dp),
-            color = StudioPaper,
+            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 4.dp,
-            border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine.copy(alpha = 0.5f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -2884,7 +2971,7 @@ fun ProcessingStep(
                         .fillMaxWidth()
                         .height(180.dp)
                         .clip(RoundedCornerShape(24.dp))
-                        .background(StudioMist),
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow),
                 ) {
                     Image(
                         painter = painterResource(heroImage),
@@ -2892,7 +2979,7 @@ fun ProcessingStep(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
                     )
-                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)))))
+                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, HomeDecorExtra.scrim.copy(alpha = 0.55f)))))
                     Surface(
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.92f),
@@ -2903,8 +2990,8 @@ fun ProcessingStep(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(7.dp),
                         ) {
-                            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp), tint = StudioBlue)
-                            Text(stringResource(R.string.generation_progress_badge), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = StudioInk)
+                            Icon(Icons.Rounded.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.generation_progress_badge), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                     Column(
@@ -2945,7 +3032,7 @@ fun ProcessingStep(
                         }
                     }
                 }
-                Surface(shape = RoundedCornerShape(16.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
+                Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
                         verticalAlignment = Alignment.CenterVertically,
@@ -2955,7 +3042,7 @@ fun ProcessingStep(
                             Icons.Rounded.AutoAwesome,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = StudioBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             message.ifBlank { stringResource(R.string.processing_transform) },
@@ -2980,13 +3067,13 @@ fun GenerationStepDot(
     val completed = index < visibleStep
     val active = index == visibleStep
     val dotColor = when {
-        completed -> StudioBlue
+        completed -> MaterialTheme.colorScheme.primary
         active -> StudioGold
-        else -> StudioLine
+        else -> MaterialTheme.colorScheme.outlineVariant
     }
     val textColor = when {
-        completed -> StudioBlue
-        active -> StudioInk
+        completed -> MaterialTheme.colorScheme.primary
+        active -> MaterialTheme.colorScheme.onSurface
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     Column(
@@ -3024,24 +3111,24 @@ fun GenerationStepDot(
 fun LayoutResultSummary(state: HomeDecorUiState) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPrimaryContainer,
-        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 2.dp,
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
-            Text(stringResource(R.string.layout_changes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
+            Text(stringResource(R.string.layout_changes), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
             Text(
                 layoutChangeSummary(state),
                 style = MaterialTheme.typography.bodyLarge,
-                color = StudioInk,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(Modifier.height(HomeDecorSpacing.Xxs))
-            Text(stringResource(R.string.layout_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
+            Text(stringResource(R.string.layout_suggestions), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
             layoutSuggestions(state).forEach { suggestion ->
                 Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm), verticalAlignment = Alignment.Top) {
-                    Icon(Icons.Rounded.Check, null, Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
-                    Text(suggestion, style = MaterialTheme.typography.bodyMedium, color = StudioInk)
+                    Icon(Icons.Rounded.Check, null, Modifier.padding(top = 2.dp).size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                    Text(suggestion, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -3089,8 +3176,8 @@ fun ReplacementResultSummary(
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPrimaryContainer,
-        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.45f)),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 2.dp,
     ) {
@@ -3099,12 +3186,12 @@ fun ReplacementResultSummary(
                 stringResource(R.string.replacement_result_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = StudioBlue,
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 stringResource(R.string.replacement_result_body),
                 style = MaterialTheme.typography.bodyMedium,
-                color = StudioInk,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             ReplacementResultRow(
                 label = stringResource(R.string.replacement_result_mask_used),
@@ -3128,10 +3215,10 @@ fun ReplacementResultRow(
     value: String,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md), verticalAlignment = Alignment.Top) {
-        Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(top = 2.dp).size(18.dp), tint = StudioBlue)
+        Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.padding(top = 2.dp).size(18.dp), tint = MaterialTheme.colorScheme.primary)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, style = MaterialTheme.typography.labelLarge, color = StudioBlue, fontWeight = FontWeight.SemiBold)
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = StudioInk)
+            Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -3249,7 +3336,7 @@ fun ResultStep(
                     resultReady = true,
                 )
             }
-            Surface(shape = RoundedCornerShape(24.dp), color = StudioPaper, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, StudioLine, RoundedCornerShape(24.dp))) {
+            Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 1.dp, modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))) {
                 Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                     Text(stringResource(if (isReplaceResult) R.string.replacement_summary else R.string.metadata), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.metadata_service, localizedWorkflowTitle(state.selectedTool)))
@@ -3340,7 +3427,7 @@ fun ResultStep(
                             },
                             shape = CircleShape,
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (feedbackState == "liked") StudioPrimaryContainer else Color.Transparent,
+                                containerColor = if (feedbackState == "liked") MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                             ),
                             modifier = Modifier.height(44.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -3349,7 +3436,7 @@ fun ResultStep(
                                 Icons.Rounded.ThumbUp,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
-                                tint = if (feedbackState == "liked") StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = if (feedbackState == "liked") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Spacer(Modifier.width(HomeDecorSpacing.Sm))
                             Text(stringResource(R.string.like), fontWeight = FontWeight.SemiBold)
@@ -3358,7 +3445,7 @@ fun ResultStep(
                             onClick = { feedbackState = "disliked" },
                             shape = CircleShape,
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (feedbackState == "disliked") StudioErrorContainer else Color.Transparent,
+                                containerColor = if (feedbackState == "disliked") MaterialTheme.colorScheme.errorContainer else Color.Transparent,
                             ),
                             modifier = Modifier.height(44.dp),
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -3367,7 +3454,7 @@ fun ResultStep(
                                 Icons.Rounded.ThumbDown,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
-                                tint = if (feedbackState == "disliked") StudioRose else MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = if (feedbackState == "disliked") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Spacer(Modifier.width(HomeDecorSpacing.Sm))
                             Text(stringResource(R.string.dislike), fontWeight = FontWeight.SemiBold)
@@ -3392,7 +3479,7 @@ fun BeforeAfterResultSlider(
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(32.dp))
-                .background(StudioMist),
+                .background(MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             WorkspaceImage(
                 imageUrl = result.imageUrl,
@@ -3428,7 +3515,7 @@ fun BeforeAfterResultSlider(
                     center = Offset(handleX, size.height / 2f),
                 )
                 drawLine(
-                    color = StudioInk,
+                    color = MaterialTheme.colorScheme.onSurface,
                     start = Offset(handleX - 7.dp.toPx(), size.height / 2f),
                     end = Offset(handleX + 7.dp.toPx(), size.height / 2f),
                     strokeWidth = 2.dp.toPx(),
@@ -3462,7 +3549,7 @@ fun BeforeAfterResultSlider(
 fun ComparisonBadge(label: String) {
     Surface(
         shape = CircleShape,
-        color = Color.Black.copy(alpha = 0.54f),
+        color = HomeDecorExtra.scrim.copy(alpha = 0.54f),
     ) {
         Text(
             label,
@@ -3510,21 +3597,21 @@ fun ResultProjectWorkspaceActions(
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPrimaryContainer,
-        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.28f)),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
-                Surface(shape = CircleShape, color = StudioPaper) {
-                    Icon(Icons.Rounded.Layers, null, Modifier.padding(8.dp).size(20.dp), tint = StudioBlue)
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface) {
+                    Icon(Icons.Rounded.Layers, null, Modifier.padding(8.dp).size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.result_workspace_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioInk)
+                    Text(stringResource(R.string.result_workspace_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     Text(
                         attachedProject?.let { stringResource(R.string.result_workspace_project, it.name) }
                             ?: stringResource(R.string.result_workspace_body),
-                        color = StudioInk.copy(alpha = 0.78f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.78f),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -3591,15 +3678,15 @@ fun ResultContentsSummary(
     }
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPrimaryContainer,
-        border = androidx.compose.foundation.BorderStroke(1.dp, StudioBlue.copy(alpha = 0.35f)),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(HomeDecorSpacing.Base), verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
-            Text(stringResource(R.string.result_contains_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = StudioBlue)
-            Text(description, color = StudioInk, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.result_contains_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+            Text(description, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium)
             if (resultReady) {
-                Text(stringResource(R.string.result_saved_to_profile_history), color = StudioInk, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.result_saved_to_profile_history), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -3614,8 +3701,8 @@ fun ResultStateNotice(
     val samples = sampleProjectCards()
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = StudioPaper,
-        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
@@ -3623,8 +3710,8 @@ fun ResultStateNotice(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
-            Surface(shape = CircleShape, color = StudioPrimaryContainer) {
-                Icon(icon, contentDescription = null, modifier = Modifier.padding(HomeDecorSpacing.Base).size(28.dp), tint = StudioBlue)
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+                Icon(icon, contentDescription = null, modifier = Modifier.padding(HomeDecorSpacing.Base).size(28.dp), tint = MaterialTheme.colorScheme.primary)
             }
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center)

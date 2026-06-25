@@ -1,0 +1,291 @@
+<DesignBoard>
+
+<Section id="diamond-store" label="Diamond Store">
+
+<Artboard id="ds-before" x="0" y="0" label="Current State">
+<Screen surface="mobile">
+<div style="display:flex;flex-direction:column;gap:0;padding:0;height:100%;background:var(--wf-paper)">
+  <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--wf-line)">
+    <div style="flex:1"><strong style="font-size:18px">Diamond Store</strong><br><span class="wf-muted" style="font-size:12px">Power up your creativity</span></div>
+    <div class="wf-pill accent" style="display:flex;align-items:center;gap:6px"><span data-icon="diamond" style="width:14px;height:14px"></span><span style="font-weight:600">128</span></div>
+    <button style="background:none;border:none;cursor:pointer;padding:8px"><span data-icon="close"></span></button>
+  </div>
+  <div style="padding:16px">
+    <div class="wf-card" style="padding:14px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px"><span data-icon="diamond" style="color:var(--wf-accent);width:18px;height:18px"></span><span style="font-weight:600;font-size:13px">Daily Reward</span></div>
+      <span class="wf-muted" style="font-size:12px">+1 diamond, available once per day.</span>
+      <div style="display:flex;gap:6px"><span class="wf-pill">Day 3</span><span class="wf-pill">3-day streak</span></div>
+      <button class="primary" style="margin-top:4px;border:none;padding:10px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer">Claim</button>
+    </div>
+  </div>
+  <div style="padding:0 16px 8px"><span style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--wf-muted)">CHOOSE YOUR PACK</span></div>
+  <div style="padding:0 16px">
+    <div class="wf-card" style="display:flex;flex-direction:column;align-items:center;padding:16px;text-align:center">
+      <span data-icon="diamond" style="width:32px;height:32px;color:var(--wf-accent)"></span>
+      <span style="margin-top:8px;font-size:13px;color:var(--wf-muted)">Could not load packs right now.</span>
+      <button style="margin-top:8px;border:1px solid var(--wf-accent);background:none;color:var(--wf-accent);padding:8px 16px;border-radius:14px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px"><span data-icon="refresh" style="width:12px;height:12px"></span>Retry</button>
+    </div>
+  </div>
+</div>
+</Screen>
+</Artboard>
+
+<Artboard id="ds-after" x="420" y="0" label="Improved State">
+<Screen surface="mobile">
+<div style="display:flex;flex-direction:column;gap:0;padding:0;height:100%;background:var(--wf-paper)">
+  <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--wf-line)">
+    <div style="flex:1"><strong style="font-size:18px">Diamond Store</strong><br><span class="wf-muted" style="font-size:12px">Power up your creativity</span></div>
+    <div class="wf-pill accent" style="display:flex;align-items:center;gap:4px;padding:4px 10px"><span data-icon="diamond" style="width:12px;height:12px"></span><span style="font-weight:600;font-size:13px">128</span></div>
+    <button style="background:none;border:none;cursor:pointer;padding:8px"><span data-icon="close"></span></button>
+  </div>
+  <div style="padding:16px">
+    <div class="wf-card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px"><span data-icon="diamond" style="color:var(--wf-accent);width:18px;height:18px"></span><span style="font-weight:600;font-size:13px">Daily Reward</span></div>
+      <span class="wf-muted" style="font-size:12px">Claim today's free diamonds</span>
+      <div style="display:flex;gap:4px;align-items:center">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+      </div>
+      <button class="primary" style="margin-top:2px;border:none;padding:10px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer">Claim</button>
+    </div>
+  </div>
+  <div style="padding:0 16px 8px"><span style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--wf-muted)">CHOOSE YOUR PACK</span></div>
+  <div style="padding:0 16px;display:flex;gap:8px;overflow-x:auto">
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:linear-gradient(135deg,#E0F5F7,#fff);display:flex;align-items:center;justify-content:center"><span data-icon="diamond" style="width:28px;height:28px;color:#4DD9E0"></span></div>
+      <div style="padding:8px;text-align:center"><strong style="font-size:12px">Starter</strong><br><span style="font-size:11px;color:var(--wf-muted)">50 diamonds</span></div>
+      <button style="border:none;padding:8px;background:var(--wf-accent);color:white;border-radius:8px;font-size:12px;font-weight:600;margin:0 8px 8px;cursor:pointer">$0.99</button>
+    </div>
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden;border-color:var(--wf-accent)">
+      <div style="height:80px;background:linear-gradient(135deg,#EDE5FF,#fff);display:flex;align-items:center;justify-content:center"><span data-icon="diamond" style="width:28px;height:28px;color:#9B6EFF"></span></div>
+      <div style="padding:8px;text-align:center"><strong style="font-size:12px">Designer</strong><br><span style="font-size:11px;color:var(--wf-muted)">150 diamonds</span></div>
+      <button style="border:none;padding:8px;background:#9B6EFF;color:white;border-radius:8px;font-size:12px;font-weight:600;margin:0 8px 8px;cursor:pointer">$2.49</button>
+    </div>
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:linear-gradient(135deg,#E0F5E8,#fff);display:flex;align-items:center;justify-content:center"><span data-icon="diamond" style="width:28px;height:28px;color:#34D399"></span></div>
+      <div style="padding:8px;text-align:center"><strong style="font-size:12px">Architect</strong><br><span style="font-size:11px;color:var(--wf-muted)">350 diamonds</span></div>
+      <button style="border:none;padding:8px;background:#34D399;color:white;border-radius:8px;font-size:12px;font-weight:600;margin:0 8px 8px;cursor:pointer">$4.99</button>
+    </div>
+  </div>
+</div>
+</Screen>
+</Artboard>
+
+<Artboard id="ds-skeleton" x="840" y="0" label="Loading Skeleton">
+<Screen surface="mobile">
+<div style="display:flex;flex-direction:column;gap:0;padding:0;height:100%;background:var(--wf-paper)">
+  <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--wf-line)">
+    <div style="flex:1"><strong style="font-size:18px">Diamond Store</strong><br><span class="wf-muted" style="font-size:12px">Power up your creativity</span></div>
+    <div class="wf-pill accent" style="display:flex;align-items:center;gap:4px;padding:4px 10px"><span data-icon="diamond" style="width:12px;height:12px"></span><span style="font-weight:600;font-size:13px">128</span></div>
+    <button style="background:none;border:none;cursor:pointer;padding:8px"><span data-icon="close"></span></button>
+  </div>
+  <div style="padding:16px">
+    <div class="wf-card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:4px;background:var(--wf-line)"></div><div style="width:80px;height:12px;border-radius:4px;background:var(--wf-line)"></div></div>
+      <div style="width:160px;height:10px;border-radius:4px;background:var(--wf-line)"></div>
+      <div style="display:flex;gap:4px"><div style="width:48px;height:18px;border-radius:10px;background:var(--wf-line)"></div><div style="width:68px;height:18px;border-radius:10px;background:var(--wf-line)"></div></div>
+      <div style="width:100%;height:36px;border-radius:8px;background:var(--wf-line)"></div>
+    </div>
+  </div>
+  <div style="padding:0 16px 8px"><div style="width:120px;height:10px;border-radius:4px;background:var(--wf-line)"></div></div>
+  <div style="padding:0 16px;display:flex;gap:8px;overflow-x:auto">
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:var(--wf-line)"></div>
+      <div style="padding:8px;display:flex;flex-direction:column;gap:4px;align-items:center"><div style="width:60px;height:10px;border-radius:4px;background:var(--wf-line)"></div><div style="width:80px;height:8px;border-radius:4px;background:var(--wf-line)"></div></div>
+      <div style="margin:0 8px 8px;height:28px;border-radius:8px;background:var(--wf-line)"></div>
+    </div>
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:var(--wf-line)"></div>
+      <div style="padding:8px;display:flex;flex-direction:column;gap:4px;align-items:center"><div style="width:60px;height:10px;border-radius:4px;background:var(--wf-line)"></div><div style="width:80px;height:8px;border-radius:4px;background:var(--wf-line)"></div></div>
+      <div style="margin:0 8px 8px;height:28px;border-radius:8px;background:var(--wf-line)"></div>
+    </div>
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:var(--wf-line)"></div>
+      <div style="padding:8px;display:flex;flex-direction:column;gap:4px;align-items:center"><div style="width:60px;height:10px;border-radius:4px;background:var(--wf-line)"></div><div style="width:80px;height:8px;border-radius:4px;background:var(--wf-line)"></div></div>
+      <div style="margin:0 8px 8px;height:28px;border-radius:8px;background:var(--wf-line)"></div>
+    </div>
+  </div>
+</div>
+</Screen>
+</Artboard>
+
+<Artboard id="ds-error" x="1260" y="0" label="Polished Error State">
+<Screen surface="mobile">
+<div style="display:flex;flex-direction:column;gap:0;padding:0;height:100%;background:var(--wf-paper)">
+  <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--wf-line)">
+    <div style="flex:1"><strong style="font-size:18px">Diamond Store</strong><br><span class="wf-muted" style="font-size:12px">Power up your creativity</span></div>
+    <div class="wf-pill accent" style="display:flex;align-items:center;gap:4px;padding:4px 10px"><span data-icon="diamond" style="width:12px;height:12px"></span><span style="font-weight:600;font-size:13px">128</span></div>
+    <button style="background:none;border:none;cursor:pointer;padding:8px"><span data-icon="close"></span></button>
+  </div>
+  <div style="padding:16px">
+    <div class="wf-card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px"><span data-icon="diamond" style="color:var(--wf-accent);width:18px;height:18px"></span><span style="font-weight:600;font-size:13px">Daily Reward</span></div>
+      <span class="wf-muted" style="font-size:12px">Claim today's free diamonds</span>
+      <div style="display:flex;gap:4px;align-items:center">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--wf-line)"></div>
+      </div>
+      <button class="primary" style="margin-top:2px;border:none;padding:10px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer">Claim</button>
+    </div>
+  </div>
+  <div style="padding:0 16px 8px"><span style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--wf-muted)">CHOOSE YOUR PACK</span></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div style="text-align:center;padding:12px"><span style="font-size:12px;color:var(--wf-muted)">We couldn't load packs right now.</span></div>
+    <button style="border:1px solid var(--wf-accent);background:none;color:var(--wf-accent);padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;width:fit-content;margin:0 auto;display:flex;align-items:center;gap:4px"><span data-icon="refresh" style="width:12px;height:12px"></span>Retry</button>
+  </div>
+  <div style="padding:0 16px;margin-top:8px;display:flex;gap:8px;overflow-x:auto;opacity:0.35">
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:var(--wf-line)"></div>
+      <div style="padding:8px;text-align:center"><div style="width:60px;height:10px;border-radius:4px;background:var(--wf-line);margin:0 auto"></div></div>
+      <div style="margin:0 8px 8px;height:28px;border-radius:8px;background:var(--wf-line)"></div>
+    </div>
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:var(--wf-line)"></div>
+      <div style="padding:8px;text-align:center"><div style="width:60px;height:10px;border-radius:4px;background:var(--wf-line);margin:0 auto"></div></div>
+      <div style="margin:0 8px 8px;height:28px;border-radius:8px;background:var(--wf-line)"></div>
+    </div>
+    <div class="wf-card" style="min-width:150px;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="height:80px;background:var(--wf-line)"></div>
+      <div style="padding:8px;text-align:center"><div style="width:60px;height:10px;border-radius:4px;background:var(--wf-line);margin:0 auto"></div></div>
+      <div style="margin:0 8px 8px;height:28px;border-radius:8px;background:var(--wf-line)"></div>
+    </div>
+  </div>
+</div>
+</Screen>
+</Artboard>
+
+</Section>
+
+<Section id="daily-reward" label="Daily Reward" x="0" y="520">
+
+<Artboard id="dr-unclaimed" x="0" y="520" label="Unclaimed State">
+<Screen surface="mobile">
+<div style="display:flex;flex-direction:column;gap:0;padding:0;height:100%;background:var(--wf-paper)">
+  <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--wf-line)">
+    <div style="flex:1"><strong style="font-size:18px">Diamond Store</strong><br><span class="wf-muted" style="font-size:12px">Power up your creativity</span></div>
+    <div class="wf-pill accent" style="display:flex;align-items:center;gap:4px;padding:4px 10px"><span data-icon="diamond" style="width:12px;height:12px"></span><span style="font-weight:600;font-size:13px">128</span></div>
+    <button style="background:none;border:none;cursor:pointer;padding:8px"><span data-icon="close"></span></button>
+  </div>
+  <div style="padding:16px">
+    <div class="wf-card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(46,196,182,0.12);display:flex;align-items:center;justify-content:center"><span data-icon="diamond" style="width:20px;height:20px;color:var(--wf-accent)"></span></div>
+        <div><strong style="font-size:14px">Daily Reward</strong><br><span class="wf-muted" style="font-size:12px">Claim today's free diamonds</span></div>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-line)"></div>
+      </div>
+      <button class="primary" style="border:none;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><span data-icon="diamond" style="width:16px;height:16px"></span>Claim</button>
+    </div>
+  </div>
+</div>
+</Screen>
+</Artboard>
+
+<Artboard id="dr-claimed" x="420" y="520" label="Claimed State">
+<Screen surface="mobile">
+<div style="display:flex;flex-direction:column;gap:0;padding:0;height:100%;background:var(--wf-paper)">
+  <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--wf-line)">
+    <div style="flex:1"><strong style="font-size:18px">Diamond Store</strong><br><span class="wf-muted" style="font-size:12px">Power up your creativity</span></div>
+    <div class="wf-pill accent" style="display:flex;align-items:center;gap:4px;padding:4px 10px"><span data-icon="diamond" style="width:12px;height:12px"></span><span style="font-weight:600;font-size:13px">128</span></div>
+    <button style="background:none;border:none;cursor:pointer;padding:8px"><span data-icon="close"></span></button>
+  </div>
+  <div style="padding:16px">
+    <div class="wf-card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(46,196,182,0.12);display:flex;align-items:center;justify-content:center"><span data-icon="check" style="width:20px;height:20px;color:var(--wf-accent)"></span></div>
+        <div><strong style="font-size:14px">Reward claimed</strong><br><span class="wf-muted" style="font-size:12px">Come back tomorrow</span></div>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-line)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-line)"></div>
+      </div>
+      <div style="text-align:center;padding:10px;border-radius:10px;background:var(--wf-line);color:var(--wf-muted);font-size:13px;font-weight:500">Come back tomorrow</div>
+    </div>
+  </div>
+</div>
+</Screen>
+</Artboard>
+
+<Artboard id="dr-streak-7" x="840" y="520" label="7-Day Streak">
+<Screen surface="mobile">
+<div style="display:flex;flex-direction:column;gap:0;padding:0;height:100%;background:var(--wf-paper)">
+  <div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--wf-line)">
+    <div style="flex:1"><strong style="font-size:18px">Diamond Store</strong><br><span class="wf-muted" style="font-size:12px">Power up your creativity</span></div>
+    <div class="wf-pill accent" style="display:flex;align-items:center;gap:4px;padding:4px 10px"><span data-icon="diamond" style="width:12px;height:12px"></span><span style="font-weight:600;font-size:13px">128</span></div>
+    <button style="background:none;border:none;cursor:pointer;padding:8px"><span data-icon="close"></span></button>
+  </div>
+  <div style="padding:16px">
+    <div class="wf-card" style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(46,196,182,0.12);display:flex;align-items:center;justify-content:center"><span data-icon="check" style="width:20px;height:20px;color:var(--wf-accent)"></span></div>
+        <div><strong style="font-size:14px">Reward claimed</strong><br><span class="wf-muted" style="font-size:12px">Come back tomorrow</span></div>
+      </div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--wf-accent)"></div>
+      </div>
+      <div style="text-align:center;padding:10px;border-radius:10px;background:var(--wf-line);color:var(--wf-muted);font-size:13px;font-weight:500">Come back tomorrow</div>
+    </div>
+  </div>
+</div>
+</Screen>
+</Artboard>
+
+</Section>
+
+<Annotation targetId="ds-before" placement="right">
+Diamond balance chip is large with rounded container (14dp radius, 16dp icon). Error state takes significant vertical space with large icon and full-width card.
+</Annotation>
+
+<Annotation targetId="ds-after" placement="right">
+Diamond balance chip is smaller (10px padding, 12dp icon). Pack cards show colored top gradients. Smooth horizontal scroll layout.
+</Annotation>
+
+<Annotation targetId="ds-skeleton" placement="right">
+Skeleton placeholders match pack card dimensions. Neutral geometry with no text. Loading indicator replaced by pulsing placeholders.
+</Annotation>
+
+<Annotation targetId="ds-error" placement="right">
+Compact error message "We couldn't load packs right now." with small retry button. Disabled/skeleton pack cards visible below at reduced opacity.
+</Annotation>
+
+<Annotation targetId="dr-unclaimed" placement="right">
+Clear "Claim today's free diamonds" subtitle. 7-dot streak indicator showing 3/7 completed. Gold diamond icon accent. Full-width Claim button with diamond icon.
+</Annotation>
+
+<Annotation targetId="dr-claimed" placement="right">
+Title changes to "Reward claimed". Subtitle becomes "Come back tomorrow". Button replaced with disabled soft-text bar. Streak dots update to show new count.
+</Annotation>
+
+<Annotation targetId="dr-streak-7" placement="right">
+All 7 streak dots filled with accent color on 7-day completion. Check icon replaces diamond icon. Prominent streak completion feedback.
+</Annotation>
+
+</DesignBoard>

@@ -53,10 +53,6 @@ import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.ui.dialogs.DeleteAccountDialog
 import com.ismail.homedecorai.ui.dialogs.FeedbackDialog
-import com.ismail.homedecorai.ui.theme.StudioBlue
-import com.ismail.homedecorai.ui.theme.StudioCanvas
-import com.ismail.homedecorai.ui.theme.StudioLine
-import com.ismail.homedecorai.ui.theme.StudioRose
 import com.ismail.homedecorai.ui.utility.openGooglePlayReview
 import kotlinx.coroutines.launch
 
@@ -109,10 +105,10 @@ fun SettingsScreen(
                             fontWeight = FontWeight.SemiBold,
                         )
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = StudioCanvas),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
                 )
             },
-            containerColor = StudioCanvas,
+            containerColor = MaterialTheme.colorScheme.surface,
         ) { padding ->
             LazyColumn(
                 modifier = Modifier
@@ -149,8 +145,8 @@ fun SettingsScreen(
                     SettingsItemRow(
                         icon = Icons.Rounded.Delete,
                         title = stringResource(R.string.delete_information),
-                        titleColor = StudioRose,
-                        iconTint = StudioRose,
+                        titleColor = MaterialTheme.colorScheme.error,
+                        iconTint = MaterialTheme.colorScheme.error,
                         onClick = { deleteDialogVisible = true },
                     )
                 }
@@ -197,7 +193,7 @@ private fun SettingsItemRow(
     icon: ImageVector,
     title: String,
     titleColor: Color = Color.Unspecified,
-    iconTint: Color = StudioBlue,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit,
 ) {
     Row(
@@ -229,7 +225,7 @@ private fun SettingsItemRow(
 
 @Composable
 private fun SettingsFullDivider() {
-    HorizontalDivider(color = StudioLine.copy(alpha = 0.65f))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f))
 }
 
 @Composable
@@ -307,7 +303,7 @@ private fun LanguageRow(
             Icon(
                 Icons.Rounded.Check,
                 contentDescription = stringResource(R.string.a11y_check_icon),
-                tint = StudioBlue,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(22.dp),
             )
         }

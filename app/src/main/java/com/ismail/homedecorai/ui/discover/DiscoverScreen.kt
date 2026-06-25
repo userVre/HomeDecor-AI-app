@@ -1,11 +1,14 @@
 package com.ismail.homedecorai.ui.discover
 
 import android.widget.Toast
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -46,15 +49,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -224,7 +225,7 @@ fun DiscoverHero(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
-            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f)))))
+            Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, HomeDecorExtra.scrim.copy(alpha = 0.88f)))))
             Column(
                 modifier = Modifier.align(Alignment.BottomStart).padding(HomeDecorSpacing.Base),
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
@@ -250,40 +251,49 @@ fun DiscoverClusterTabs(
     selected: String,
     onSelect: (String) -> Unit,
 ) {
-    Row(
+    val selectedIndex = clusters.indexOf(selected).coerceAtLeast(0)
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = HomeDecorSpacing.Xs, vertical = HomeDecorSpacing.Xxs),
-        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
     ) {
-        clusters.forEach { cluster ->
-            val clusterLabel = localizedDiscoverCluster(cluster)
-            val isSelected = selected == cluster
-            val chipDescription = stringResource(R.string.a11y_discover_cluster_format, clusterLabel)
-            val underlineColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-            Text(
-                text = clusterLabel,
-                modifier = Modifier
-                    .padding(vertical = HomeDecorSpacing.Xs)
-                    .drawBehind {
-                        val strokeWidth = 2.dp.toPx()
-                        val y = size.height + 4.dp.toPx()
-                        drawLine(
-                            color = underlineColor,
-                            start = Offset(0f, y),
-                            end = Offset(size.width, y),
-                            strokeWidth = strokeWidth,
-                        )
-                    }
-                    .semantics {
-                        this.selected = isSelected
-                        contentDescription = chipDescription
-                    }
-                    .clickable { onSelect(cluster) },
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        val tabWidth = maxWidth / clusters.size
+        val animatedOffset by animateDpAsState(
+            targetValue = tabWidth * selectedIndex,
+            animationSpec = spring(dampingRatio = 0.7f, stiffness = 300f),
+            label = "tabOffset",
+        )
+        Box(
+            modifier = Modifier
+                .offset(x = animatedOffset)
+                .width(tabWidth)
+                .height(2.dp)
+                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(1.dp))
+                .align(Alignment.BottomCenter),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            clusters.forEachIndexed { index, cluster ->
+                val clusterLabel = localizedDiscoverCluster(cluster)
+                val isSelected = selected == cluster
+                val chipDescription = stringResource(R.string.a11y_discover_cluster_format, clusterLabel)
+                Text(
+                    text = clusterLabel,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onSelect(cluster) }
+                        .padding(vertical = HomeDecorSpacing.Xs)
+                        .semantics {
+                            this.selected = isSelected
+                            contentDescription = chipDescription
+                        },
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -299,7 +309,6 @@ fun DiscoverSectionRow(
     onUseStyle: (GalleryItem) -> Unit,
 ) {
     val sectionTitle = localizedDiscoverSection(section)
-    val sectionSubtitle = localizedDiscoverSectionSubtitle(section)
     val seeAllDescription = stringResource(R.string.a11y_see_all_format, sectionTitle)
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val availableWidth = screenWidth - HomeDecorSpacing.ScreenHorizontal * 2
@@ -309,24 +318,15 @@ fun DiscoverSectionRow(
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(
+            Text(
+                sectionTitle,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.3).sp,
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-            ) {
-                Text(
-                    sectionTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = (-0.2).sp,
-                )
-                Text(
-                    sectionSubtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            )
             TextButton(
                 onClick = onSeeAll,
                     contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
@@ -465,7 +465,7 @@ fun DiscoverPreviewDialog(
                 }
             }
         },
-        title = { Text(itemCategory, style = MaterialTheme.typography.titleMedium) },
+        title = { Text(itemTitle, style = MaterialTheme.typography.titleMedium) },
         text = {
     Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
                 Image(

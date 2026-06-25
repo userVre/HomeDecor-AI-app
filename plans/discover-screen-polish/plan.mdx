@@ -1,0 +1,107 @@
+# Discover Screen Polish — Plan
+
+## Overview
+
+Polish the Discover screen in HomeDecor AI: clean up tab styling (no circle, clean underline), remove repeated numbered category labels from images, and fix accessibility semantics.
+
+---
+
+## Changes
+
+### 1. Tab Styling — `DiscoverClusterTabs` (DiscoverScreen.kt:248-289)
+
+**Current:** Uses `drawBehind` to draw a 2dp underline offset by 4dp below text. The underline uses `primary` color for selected and `Transparent` for unselected. Font weight changes between `Bold` and `Normal`.
+
+**Target (MD3 Expressive):**
+- Clean underline: 2dp thick, `primary` color for selected, transparent for unselected
+- Remove circle background — already clean, just refine spacing
+- Proper padding: 16dp horizontal, 12dp vertical for touch target
+- Font: `titleSmall` style (slightly larger than current `labelLarge`)
+- Underline positioned at bottom of touch target
+- Smooth letter spacing
+
+**File:** `DiscoverScreen.kt` lines 248-289
+
+### 2. Tab Accessibility — `DiscoverClusterTabs`
+
+**Current:** Uses `semantics { selected = isSelected; contentDescription = chipDescription }` where `chipDescription` is "Interior tab" format.
+
+**Target:**
+- Keep `selected` state on the `Text` modifier (already present)
+- Add `Role.Tab` to each tab element
+- Content description: "Interior, selected" / "Interior, not selected" (or keep existing "%1$s tab" format but add state info)
+
+**File:** `DiscoverScreen.kt` lines 278-281
+
+### 3. Remove Numbered Titles from Gallery Items
+
+**Current flow:**
+- `HomeDecorCatalog.kt:300-304` — `numberedDiscoverItems()` creates titles like "Cuisine 1", "Salon 2"
+- `Localization.kt:450-453` — `localizedGalleryTitle()` formats as "Kitchen 1", "Living room 2" via `gallery_numbered_title` format string
+
+**Target:**
+- Change `numberedDiscoverItems()` to pass the category name only (no number in title): `GalleryItem("$idPrefix-$number", category, category, image)`
+- `localizedGalleryTitle()` will then fall through to `localizedGalleryCategory()` which returns just "Kitchen", "Living room", etc.
+
+**Files:**
+- `HomeDecorCatalog.kt` line 303: change `"$category $number"` to `category`
+- `Localization.kt` line 452: remove the `galleryItemNumber` branch (or leave it as dead code — it won't trigger since titles won't contain numbers anymore)
+
+### 4. Fix Gallery Card Content Descriptions
+
+**Current:** `a11y_gallery_card_format` is `%1$s, %2$s` which produces "Kitchen 1, Kitchen" (title + category repeated).
+
+**Target:** Change to `%1$s inspiration image` where `%1$s` is the category name (e.g., "Kitchen inspiration image", "Living room inspiration image", "Architecture inspiration image").
+
+**Files:**
+- `values/strings.xml` line 1197: change `a11y_gallery_card_format` from `%1$s, %2$s` to `%1$s inspiration image`
+- `values-en-rUS/strings.xml`: add/update `a11y_gallery_card_format` to `%1$s inspiration image`
+- `DiscoverScreen.kt` line 493: change the `galleryDescription` to use just the category name, not the numbered title
+
+### 5. Fix Hero Image Content Description
+
+**Current:** `firstTitle` (line 223) which is the numbered title like "Kitchen 1".
+
+**Target:** Use category name only — `localizedGalleryCategory(first.category)`.
+
+**File:** `DiscoverScreen.kt` line 223
+
+### 6. Fix Preview Dialog Content Description
+
+**Current:** `itemTitle` (line 473) which is numbered.
+
+**Target:** Use category name only.
+
+**File:** `DiscoverScreen.kt` line 473
+
+### 7. Update Cluster Label Strings
+
+The user wants tabs labeled "Interior", "Architecture", "Landscape" (all singular).
+
+**Default `values/strings.xml`:**
+- Line 431: `discover_cluster_interiors` = "Interior" ✓ (already correct)
+- Line 432: `discover_cluster_architecture` = "Exterior" → **"Architecture"**
+- Line 433: `discover_cluster_landscapes` = "Garden" → **"Landscape"**
+
+**en-rUS `values-en-rUS/strings.xml`:**
+- Line 343: `discover_cluster_interiors` = "Interiors" → **"Interior"**
+- Line 344: `discover_cluster_architecture` = "Architecture" ✓ (already correct)
+- Line 345: `discover_cluster_landscapes` = "Landscapes" → **"Landscape"**
+
+---
+
+## Files to Edit
+
+| File | What |
+|------|------|
+| `DiscoverScreen.kt` | Tab styling, a11y roles, card descriptions, hero/preview descriptions |
+| `HomeDecorCatalog.kt` | Remove number from item titles |
+| `Localization.kt` | Remove galleryItemNumber branch (optional cleanup) |
+| `values/strings.xml` | Update `a11y_gallery_card_format`, fix cluster labels ("Exterior" → "Architecture", "Garden" → "Landscape") |
+| `values-en-rUS/strings.xml` | Fix cluster labels ("Interiors" → "Interior", "Landscapes" → "Landscape"), add/update `a11y_gallery_card_format` |
+
+---
+
+## Open Questions
+
+None — all decisions are clear from the user's spec.

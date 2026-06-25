@@ -1,0 +1,121 @@
+---
+title: "Diamond Store & Daily Reward UI Improvements"
+slug: "diamond-store-ui-improvements"
+kind: "plan"
+status: "draft"
+---
+
+# Diamond Store & Daily Reward UI Improvements
+
+## Objective
+
+Polish the Diamond Store bottom sheet and Daily Reward card in the HomeDecor AI Android app to feel premium, trustworthy, and aligned with the existing MD3 Expressive design system. The work focuses on four areas: light mode background consistency, diamond balance chip sizing, error/loading state refinement, and Daily Reward visual clarity with streak indicators.
+
+## Scope
+
+**In scope:**
+- Diamond Store light mode background fix (use `MaterialTheme.colorScheme.surface` which maps to warm cream `#FAF8F5`)
+- Diamond balance chip: reduce size, tighten padding
+- Error state: replace large error card with compact fallback + retry + disabled skeleton cards
+- Loading state: add skeleton placeholders for pack cards
+- Daily Reward unclaimed/claimed state clarity
+- 7-day streak dot indicator
+- New string resources for improved copy
+- Theme token integration (`HomeDecorExtra.diamondAccent`, `HomeDecorShape`, `HomeDecorSpacing`)
+
+**Out of scope:**
+- Dark mode changes (already correct)
+- RevenueCat integration changes
+- Diamond pack pricing or catalog changes
+- Sparkle animations (deferred to future iteration)
+
+## Files to Modify
+
+### 1. `DiamondStoreSheet.kt`
+**Path:** `app/src/main/java/com/ismail/homedecorai/ui/store/DiamondStoreSheet.kt`
+
+**Changes:**
+- **Diamond balance chip** (lines 300-326): Reduce padding from `HomeDecorSpacing.Md` horizontal / `HomeDecorSpacing.Sm` vertical to `HomeDecorSpacing.Sm` horizontal / `HomeDecorSpacing.Xs` vertical. Reduce icon size from `16.dp` to `12.dp`. Reduce text style from `titleMedium` to `labelLarge`. Reduce chip corner radius from `14.dp` to `10.dp`.
+- **Loading state** (lines 365-383): Replace the single `CircularProgressIndicator` row with a `LazyRow` of 3 skeleton card placeholders matching `DiamondOfferCard` dimensions (172dp x 280dp). Use `data.skeleton: true` pattern with neutral geometry.
+- **Error state** (lines 385-436): Replace the large `ElevatedCard` error block with a compact inline section: small muted error text, a `Button` with `Icons.Rounded.Refresh` and "Retry" label, and 3 disabled/skeleton `DiamondOfferCard` previews at reduced opacity below the error message.
+
+### 2. `SharedComponents.kt`
+**Path:** `app/src/main/java/com/ismail/homedecorai/ui/components/SharedComponents.kt`
+
+**Changes to `DailyRewardCard` composable (lines 480-613):**
+- **Unclaimed state:** Keep title as `daily_reward_title`, change subtitle to `daily_reward_subtitle_new` ("Claim today's free diamonds"). Add a row of 7 small circle indicators (`Box` with `CircleShape`, 8dp diameter) showing completed vs remaining days. Use `HomeDecorExtra.diamondAccent` for completed dots, `MaterialTheme.colorScheme.outlineVariant` for remaining. Add diamond icon inside the Claim button.
+- **Claimed state:** Change title to `daily_reward_claimed_title` ("Reward claimed"). Change subtitle to `daily_reward_claimed_subtitle` ("Come back tomorrow"). Replace the button with a disabled soft-text surface showing "Come back tomorrow".
+- **Streak dots:** Add a `Row` of 7 circle indicators between subtitle and button. Compute `displayDay` for filled count. Animate dot fill with subtle scale spring.
+- **Spacing:** Increase vertical gap between title/subtitle and dots to `HomeDecorSpacing.Sm`. Increase dots to button gap to `HomeDecorSpacing.Md`.
+
+### 3. `strings.xml`
+**Path:** `app/src/main/res/values/strings.xml`
+
+**New/updated string resources:**
+```xml
+<string name="daily_reward_subtitle_new">Claim today\'s free diamonds</string>
+<string name="daily_reward_claimed_title">Reward claimed</string>
+<string name="daily_reward_claimed_subtitle">Come back tomorrow</string>
+<string name="daily_reward_come_back">Come back tomorrow</string>
+<string name="store_error_friendly">We couldn\'t load packs right now.</string>
+<string name="diamonds_count_short">%1$s</string>
+```
+
+## Theme Integration
+
+All changes use existing design tokens:
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `HomeDecorExtra.diamondAccent` | Light: `#2EC4B6`, Dark: `#5CE0D4` | Streak dots, diamond icon tint, retry button accent |
+| `HomeDecorShape.Badge` | `RoundedCornerShape(8.dp)` | Streak dot containers |
+| `HomeDecorShape.CardLarge` | `RoundedCornerShape(20.dp)` | DailyRewardCard shape |
+| `HomeDecorSpacing.Sm` | `8.dp` | Dot spacing, chip padding |
+| `HomeDecorSpacing.Md` | `12.dp` | Section gaps |
+| `MaterialTheme.colorScheme.surface` | Light: `#FAF8F5` (Canvas) | Sheet background in light mode |
+| `MaterialTheme.colorScheme.outlineVariant` | Light: `#CCC5B8` | Unclaimed streak dots |
+
+## Implementation Steps
+
+### Step 1: Update string resources
+Add new strings to `values/strings.xml`. Add same keys to all locale files with English fallback values for now.
+
+### Step 2: Refine diamond balance chip
+In `DiamondStoreSheet.kt`, modify the `Surface` block at line 300:
+- Reduce `RoundedCornerShape(14.dp)` to `RoundedCornerShape(10.dp)`
+- Reduce padding to `HomeDecorSpacing.Sm` horizontal, `HomeDecorSpacing.Xs` vertical
+- Reduce icon size to `12.dp`
+- Change text style to `MaterialTheme.typography.labelLarge`
+
+### Step 3: Add skeleton loading state
+In `DiamondStoreSheet.kt`, replace the loading indicator (lines 365-383) with a `LazyRow` containing 3 skeleton card placeholders. Each placeholder is a `Surface` matching `DiamondOfferCard` dimensions with `background: var(--wf-line)` neutral geometry.
+
+### Step 4: Polish error state
+In `DiamondStoreSheet.kt`, replace the error `ElevatedCard` (lines 385-436) with:
+1. A small centered text: `stringResource(R.string.store_error_friendly)`
+2. An outlined retry button with refresh icon
+3. Below the error: a `LazyRow` of 3 disabled `DiamondOfferCard` instances at 0.35f alpha
+
+### Step 5: Enhance DailyRewardCard
+In `SharedComponents.kt`, update `DailyRewardCard`:
+1. Add streak dots `Row` between subtitle and button
+2. Update subtitle text for unclaimed state
+3. Add claimed state title/subtitle changes
+4. Replace button with disabled surface in claimed state
+5. Add diamond icon inside Claim button
+
+### Step 6: Verify light/dark mode
+- Light mode: Sheet uses `MaterialTheme.colorScheme.surface` (warm cream `#FAF8F5`)
+- Dark mode: Sheet uses `MaterialTheme.colorScheme.surfaceContainerLow` (unchanged)
+- All accent colors follow `HomeDecorExtra` tokens which auto-switch
+
+## Verification
+
+1. **Build check:** Run `./gradlew assembleDebug` to verify compilation
+2. **Light mode visual check:** Open Diamond Store in light mode. Background should be warm cream (`#FAF8F5`), not black. Diamond chip should be compact.
+3. **Error state check:** Disconnect network, open store. Should see friendly error message + retry button + disabled skeleton cards
+4. **Loading state check:** Open store with slow connection. Should see skeleton placeholders instead of spinner
+5. **Daily Reward unclaimed:** Open store on a day not yet claimed. Should see "Claim today's free diamonds" with 7 streak dots and active Claim button
+6. **Daily Reward claimed:** Claim reward. Should see "Reward claimed" / "Come back tomorrow" with disabled button
+7. **Dark mode:** Repeat all checks in dark mode. Background should be warm charcoal, accents should use dark variants
+8. **Accessibility:** Verify TalkBack reads all new content descriptions and button labels

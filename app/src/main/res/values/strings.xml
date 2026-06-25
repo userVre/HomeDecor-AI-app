@@ -10,8 +10,8 @@
   <string name="nav_profile">Profile</string>
   <string name="paywall_cmp_energy">Energy</string>
   <string name="paywall_cmp_energy_free">3</string>
-  <string name="paywall_cmp_energy_pro">Unlimited \u221E</string>
-  <string name="paywall_cmp_4k_export">4K Export</string>
+  <string name="paywall_cmp_energy_pro">Included \u2713</string>
+  <string name="paywall_cmp_4k_export">High-Res Export</string>
   <string name="paywall_cmp_4k_export_free">HD</string>
   <string name="paywall_cmp_4k_export_pro">Included \u2713</string>
   <string name="paywall_cmp_no_watermark">No Watermark</string>
@@ -477,6 +477,12 @@
   <string name="daily_reward_soft_start">Fresh start</string>
   <string name="daily_reward_claim">Claim</string>
   <string name="daily_reward_claimed">Claimed</string>
+  <string name="daily_reward_subtitle_new">Claim today\'s free diamonds</string>
+  <string name="daily_reward_claimed_title">Reward claimed</string>
+  <string name="daily_reward_claimed_subtitle">Come back tomorrow</string>
+  <string name="daily_reward_come_back">Come back tomorrow</string>
+  <string name="store_error_friendly">We couldn\'t load packs right now.</string>
+  <string name="store_retry">Retry</string>
   <string name="elite_intro">Claim 1 diamond per day. On D7, receive 3 diamonds and 24h Pro once the reward is confirmed.</string>
   <string name="elite_footer_syncing">Syncing daily rewards...</string>
   <string name="elite_footer_day7_confirmed">Day 7 reward confirmed. Pro is active.</string>
@@ -503,10 +509,10 @@
   <string name="open_diamond_store">Open diamond store</string>
   <string name="a11y_open_diamond_store_balance">Open diamond store. %1$s</string>
   <string name="day_7_pro">D7 Pro</string>
-  <string name="unlock_unlimited_designs">Unlock unlimited designs</string>
+  <string name="unlock_unlimited_designs">Unlock more AI designs</string>
   <string name="feature_priority_ai">Generate faster with priority AI</string>
-  <string name="feature_clean_exports">Export in 4K with no watermarks</string>
-  <string name="feature_frictionless_generations">Create unlimited room transformations</string>
+  <string name="feature_clean_exports">Export in high resolution with no watermarks</string>
+  <string name="feature_frictionless_generations">Create more room transformations</string>
   <string name="profile_personal_space">Personal space</string>
   <string name="profile_photo_preview">Profile photo preview</string>
   <string name="profile_sign_in_sync">Sign in to sync your creations and purchases.</string>
@@ -631,7 +637,7 @@
   <string name="purchases">Purchases</string>
   <string name="credits_available">%1$d credits available</string>
   <string name="active_pro_access">Active Pro access</string>
-  <string name="clean_exports_and_generations">Clean exports and frictionless generations</string>
+  <string name="clean_exports_and_generations">Clean exports and more generations</string>
   <string name="store">Store</string>
   <string name="manage">Manage</string>
   <string name="view">View</string>
@@ -653,12 +659,12 @@
   <string name="empty_portfolio_body">Your generated concepts will appear here with their tool, style, and final image.</string>
   <string name="create_design">Create a design</string>
   <string name="paywall_title">Upgrade to Pro</string>
-  <string name="paywall_subtitle">Design like a pro with unlimited AI transforms, 4K export, and no watermarks.</string>
+  <string name="paywall_subtitle">Design like a pro with more AI transforms, clean exports, and no watermarks.</string>
   <string name="paywall_eyebrow">PRO STUDIO</string>
-  <string name="paywall_pro_studio_title">The Pro studio for your interior projects.</string>
-  <string name="paywall_pro_studio_subtitle">Unlimited AI designs, 4K exports, and faster rendering for portfolio-ready work.</string>
-  <string name="paywall_outcome_4k_title">Create unlimited AI room transformations</string>
-  <string name="paywall_outcome_4k_body">Iterate freely through room concepts and client-ready variations.</string>
+  <string name="paywall_pro_studio_title">The Pro studio for your design projects.</string>
+  <string name="paywall_pro_studio_subtitle">AI designs, high-res exports, and faster rendering for portfolio-ready work.</string>
+  <string name="paywall_outcome_4k_title">Create more AI room transformations</string>
+  <string name="paywall_outcome_4k_body">Iterate through room concepts and client-ready variations.</string>
   <string name="paywall_outcome_watermark_title">Remove watermarks</string>
   <string name="paywall_outcome_watermark_body">Export clean, polished visuals for sharing and portfolios.</string>
   <string name="paywall_outcome_priority_title">Generate faster</string>
@@ -680,7 +686,7 @@
   <string name="paywall_diamond_store_title">Diamond Store</string>
   <string name="paywall_diamond_store_subtitle">Buy generation credits without a subscription</string>
   <string name="premium_creation">Premium creation</string>
-  <string name="paywall_feature_generations">Unlimited AI room transformations</string>
+  <string name="paywall_feature_generations">Create more AI room transformations</string>
   <string name="paywall_feature_fast">Generate faster with priority rendering</string>
   <string name="paywall_feature_styles">Unlock every premium style</string>
   <string name="paywall_feature_history">Full design history</string>
@@ -1066,7 +1072,7 @@
   <string name="sign_in_to_account">Sign in to your account</string>
   <string name="sign_in_to_account_body">Sign in to save your designs, access your board\nacross devices, and keep track of your favorite styles.</string>
   <string name="go_premium">Go Premium</string>
-  <string name="go_premium_body">Unlimited generations &amp; boards</string>
+  <string name="go_premium_body">More generations &amp; boards</string>
   <string name="upgrade">Upgrade</string>
   <string name="account_section">ACCOUNT</string>
   <string name="settings_section">SETTINGS</string>
@@ -1106,24 +1112,24 @@
 
   <!-- Paywall (clean premium design) -->
   <string name="paywall_upgrade_pro">PRO</string>
-  <string name="paywall_hero_title">Design like a pro</string>
-  <string name="paywall_hero_subtitle">Create unlimited AI room transformations, export in 4K, and unlock every premium style.</string>
-  <string name="paywall_slide_unlimited_title">Unlimited Designs</string>
-  <string name="paywall_slide_unlimited_sub">Create as many room transformations as you want without limits.</string>
+  <string name="paywall_hero_title">Design with more power</string>
+  <string name="paywall_hero_subtitle">Create more AI room transformations, export in high resolution, and unlock every premium style.</string>
+  <string name="paywall_slide_unlimited_title">More Designs</string>
+  <string name="paywall_slide_unlimited_sub">Create as many room transformations as you need.</string>
   <string name="paywall_slide_watermark_title">No Watermark</string>
   <string name="paywall_slide_watermark_sub">Save and share clean, professional renders.</string>
   <string name="paywall_slide_faster_title">Faster Rendering</string>
-  <string name="paywall_slide_faster_sub">Priority processing so your designs are ready sooner.</string>
-  <string name="paywall_slide_4k_title">4K Quality</string>
-  <string name="paywall_slide_4k_sub">Ultra-high resolution exports for print and presentations.</string>
+  <string name="paywall_slide_faster_sub">Priority processing so your designs finish sooner.</string>
+  <string name="paywall_slide_4k_title">High Quality</string>
+  <string name="paywall_slide_4k_sub">High-resolution exports for print and presentations.</string>
   <string name="paywall_slide_styles_title">Premium Styles</string>
   <string name="paywall_slide_styles_sub">Access exclusive design styles and palettes.</string>
   <string name="paywall_slide_control_title">Creative Control</string>
   <string name="paywall_slide_control_sub">Fine-tune every detail of your room transformation.</string>
-  <string name="paywall_feat_4k">Create unlimited AI room transformations</string>
+  <string name="paywall_feat_4k">Create more AI room transformations</string>
   <string name="paywall_feat_4k_sub">Iterate freely on every room, style, and layout</string>
-  <string name="paywall_feat_unlimited">Export in 4K</string>
-  <string name="paywall_feat_unlimited_sub">Ultra HD quality for sharing and portfolios</string>
+  <string name="paywall_feat_unlimited">Export in high resolution</string>
+  <string name="paywall_feat_unlimited_sub">High quality for sharing and portfolios</string>
   <string name="paywall_feat_priority">Remove watermarks</string>
   <string name="paywall_feat_priority_sub">Clean exports ready for any use</string>
   <string name="paywall_feat_portfolio">Unlock premium styles</string>
@@ -1147,8 +1153,8 @@
   <string name="paywall_cmp_free">Free</string>
   <string name="paywall_cmp_pro">Pro</string>
   <string name="paywall_cmp_renders">Generations</string>
-  <string name="paywall_cmp_unlimited">Unlimited</string>
-  <string name="paywall_cmp_export">4K Export</string>
+  <string name="paywall_cmp_unlimited">Included \u2713</string>
+  <string name="paywall_cmp_export">High-Res Export</string>
   <string name="paywall_cmp_4k">HD only</string>
   <string name="paywall_cmp_watermark">Watermark</string>
   <string name="paywall_cmp_yes">Yes</string>
@@ -1173,10 +1179,10 @@
   <string name="paywall_a11y_weekly_plan">Weekly plan</string>
   <string name="paywall_a11y_select_annual">Select annual plan</string>
   <string name="paywall_a11y_select_weekly">Select weekly plan</string>
-  <string name="a11y_benefit_unlimited">Unlimited designs icon</string>
+  <string name="a11y_benefit_unlimited">More designs icon</string>
   <string name="a11y_benefit_watermark">No watermark icon</string>
   <string name="a11y_benefit_faster">Faster generation icon</string>
-  <string name="a11y_benefit_4k">4K export icon</string>
+  <string name="a11y_benefit_4k">High-resolution export icon</string>
   <string name="a11y_benefit_styles">Premium styles icon</string>
   <string name="a11y_benefit_control">Creative control icon</string>
   <string name="a11y_paywall_cta">Unlock Pro subscription</string>
@@ -1220,12 +1226,12 @@
 
   <!-- Paywall PRO — Duolingo-inspired flow -->
   <string name="pro_badge_label">HomeDecor PRO</string>
-  <string name="pro_intro_celebration">Your space deserves more</string>
+  <string name="pro_intro_celebration">Your space deserves better</string>
   <string name="pro_intro_headline">See Your Room\nTransformed</string>
-  <string name="pro_intro_sub">From bare walls to stunning designs.\nUnlock every tool to make it happen.</string>
+  <string name="pro_intro_sub">From bare walls to beautiful designs.\nUnlock every tool to make it happen.</string>
   <string name="pro_intro_cta">See What Pro Unlocks</string>
-  <string name="pro_hero_title">Design without limits</string>
-  <string name="pro_hero_subtitle">Transform any room with AI-powered design, premium styles, and crystal-clear 4K exports.</string>
+  <string name="pro_hero_title">Design with more power</string>
+  <string name="pro_hero_subtitle">Transform any room with AI-powered design, premium styles, and crystal-clear exports.</string>
   <string name="pro_cta_start_trial">Start My Free Trial</string>
   <string name="pro_cta_continue">Continue</string>
   <string name="pro_cta_processing">Processing\u2026</string>
@@ -1234,18 +1240,18 @@
   <string name="pro_trial_note">Start a 3-day free trial. Cancel before it ends and you won\'t be charged a thing.</string>
 
   <!-- Benefit carousel -->
-  <string name="pro_benefit_unlimited_title">Unlimited Room Designs</string>
-  <string name="pro_benefit_unlimited_sub">Transform every room in your home.\nNo daily limits, no restrictions.</string>
-  <string name="pro_benefit_4k_title">Crystal Clear 4K Export</string>
-  <string name="pro_benefit_4k_sub">Ultra-high resolution renders\nperfect for printing and sharing.</string>
+  <string name="pro_benefit_unlimited_title">More Room Designs</string>
+  <string name="pro_benefit_unlimited_sub">Transform every room in your home.\nMore designs, fewer limits.</string>
+  <string name="pro_benefit_4k_title">High-Quality Export</string>
+  <string name="pro_benefit_4k_sub">High-resolution renders\nperfect for printing and sharing.</string>
   <string name="pro_benefit_watermark_title">No Watermark</string>
   <string name="pro_benefit_watermark_sub">Clean, professional renders\nready to show anyone.</string>
-  <string name="pro_benefit_faster_title">Lightning Fast Generation</string>
-  <string name="pro_benefit_faster_sub">Priority AI processing means\nyour designs appear in seconds.</string>
+  <string name="pro_benefit_faster_title">Faster Generation</string>
+  <string name="pro_benefit_faster_sub">Priority AI processing means\nyour designs finish sooner.</string>
   <string name="pro_benefit_styles_title">Premium Styles &amp; Palettes</string>
   <string name="pro_benefit_styles_sub">Exclusive interior design styles\nand curated color palettes.</string>
   <string name="pro_benefit_history_title">Saved Design History</string>
-  <string name="pro_benefit_history_sub">Revisit every room transformation\nyou\'ve ever created.</string>
+  <string name="pro_benefit_history_sub">Revisit every room transformation\nyou\'ve created.</string>
   <string name="pro_benefit_skip">Skip</string>
   <string name="pro_benefit_next">Next</string>
 
@@ -1266,7 +1272,7 @@
   <string name="pro_plan_per_year">/ year</string>
   <string name="pro_plan_per_week">/ week</string>
   <string name="pro_plan_save_format">Save %1$s</string>
-  <string name="pro_plan_annual_detail">Billed annually \u2014 best per-room value</string>
+  <string name="pro_plan_annual_detail">Billed annually \u2014 best value</string>
   <string name="pro_plan_weekly_detail">Billed weekly</string>
   <string name="pro_plan_trial_cta">Start 3-Day Free Trial</string>
   <string name="pro_plan_trial_detail">Then %1$s/%2$s. Cancel anytime.</string>
@@ -1302,4 +1308,77 @@
   <string name="start_a_design">Start a design</string>
   <string name="profile_sign_in_title">Sign in to your account</string>
   <string name="profile_sign_in_body">Save your settings, sync preferences across devices, and manage your subscription.</string>
+
+  <!-- My Board polish -->
+  <string name="board_sign_in_cta">Sign in to save your designs</string>
+  <string name="board_preview_locked">Sign in to unlock</string>
+  <string name="board_upgrade_subtitle">Unlock more generations</string>
+  <string name="board_saved_designs_title">Your saved designs</string>
+
+  <!-- Profile polish -->
+  <string name="profile_status_diamonds">Diamonds</string>
+  <string name="profile_status_plan">Plan</string>
+  <string name="profile_status_saved">Saved</string>
+  <string name="profile_sign_in_subtitle">Create an account to sync your designs and preferences.</string>
+
+  <!-- Settings sections -->
+  <string name="settings_section_account">Account</string>
+  <string name="settings_section_app">App</string>
+  <string name="settings_section_purchases">Purchases</string>
+  <string name="settings_section_support">Support</string>
+  <string name="settings_section_legal">Legal</string>
+  <string name="settings_account_body">Profile, security, diamonds</string>
+  <string name="settings_language_body">App language</string>
+  <string name="settings_diamond_store_body">Buy diamond packs</string>
+  <string name="settings_restore_body">Restore previous purchases</string>
+  <string name="settings_rate_body">Rate us on Google Play</string>
+  <string name="settings_share_body">Share with friends</string>
+  <string name="settings_faq_body">Frequently asked questions</string>
+  <string name="settings_feedback_body">Send us your thoughts</string>
+  <string name="settings_terms_body">Terms of service</string>
+  <string name="settings_privacy_body">Privacy policy</string>
+  <string name="settings_delete_body">Permanently remove your data</string>
+  <string name="settings_logout_body">Sign out of your account</string>
+
+  <!-- Upgrade Screen v3 — MD3 Expressive, premium, conversion-focused -->
+  <string name="upgrade_v3_headline">Unlock Your Full\nDesign Studio</string>
+  <string name="upgrade_v3_subtitle">Create more room makeovers, explore premium tools, and export cleaner results.</string>
+  <string name="upgrade_v3_cta">Start 3-Day Free Trial</string>
+  <string name="upgrade_v3_secondary">Maybe later</string>
+  <string name="upgrade_v3_trial_badge">Free for 3 days</string>
+  <string name="upgrade_v3_benefit_generations">More room makeovers</string>
+  <string name="upgrade_v3_benefit_export">Clean high-res export</string>
+  <string name="upgrade_v3_benefit_styles">Every premium style</string>
+  <string name="upgrade_v3_benefit_speed">Priority AI speed</string>
+  <string name="upgrade_v3_benefit_no_watermark">No watermark</string>
+  <string name="upgrade_v3_benefit_history">Design history</string>
+  <string name="upgrade_v3_trust">Cancel anytime. Secure Google Play checkout.</string>
+  <string name="upgrade_v3_before">Before</string>
+  <string name="upgrade_v3_after">After</string>
+
+  <!-- Paywall v3 — single-screen, premium, no duplicate badges -->
+  <string name="paywall_v3_headline">Unlock Your Full\nDesign Studio</string>
+  <string name="paywall_v3_subtitle">Create more room makeovers, explore premium tools, and export cleaner results.</string>
+  <string name="paywall_v3_cta">Start 3-Day Free Trial</string>
+  <string name="paywall_v3_secondary">Maybe later</string>
+  <string name="paywall_v3_trial_note">3-day free trial. Cancel anytime before it ends.</string>
+  <string name="paywall_v3_trust">Secure Google Play checkout. Cancel anytime.</string>
+  <string name="paywall_v3_benefit_generations">More designs</string>
+  <string name="paywall_v3_benefit_export">Clean export</string>
+  <string name="paywall_v3_benefit_watermark">No watermark</string>
+  <string name="paywall_v3_benefit_speed">Priority speed</string>
+  <string name="paywall_v3_benefit_styles">Premium styles</string>
+  <string name="paywall_v3_benefit_history">Design history</string>
+  <string name="paywall_v3_plan_yearly">Annual</string>
+  <string name="paywall_v3_plan_weekly">Weekly</string>
+  <string name="paywall_v3_plan_best_value">BEST VALUE</string>
+  <string name="paywall_v3_plan_per_year">/ year</string>
+  <string name="paywall_v3_plan_per_week">/ week</string>
+  <string name="paywall_v3_plan_annual_detail">Billed annually \u2014 best per-room value</string>
+  <string name="paywall_v3_plan_weekly_detail">Billed weekly</string>
+  <string name="paywall_v3_restore">Restore purchase</string>
+  <string name="paywall_v3_checkout_processing">Setting up your Pro access\u2026</string>
+  <string name="paywall_v3_checkout_welcome">Welcome to Pro</string>
+  <string name="paywall_v3_before">Before</string>
+  <string name="paywall_v3_after">After</string>
 </resources>

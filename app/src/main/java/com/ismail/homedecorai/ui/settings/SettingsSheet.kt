@@ -28,7 +28,9 @@ import androidx.compose.material.icons.automirrored.rounded.Help
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Diamond
+import androidx.compose.material.icons.rounded.Feedback
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.RateReview
@@ -147,7 +149,7 @@ fun SettingsSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(StudioCanvas)
+            .background(MaterialTheme.colorScheme.background)
             .clickable(
                 interactionSource = modalTapBlocker,
                 indication = null,
@@ -179,7 +181,7 @@ fun SettingsSheet(
                         } else {
                             Surface(
                                 shape = RoundedCornerShape(18.dp),
-                                color = StudioMist,
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Text(
@@ -193,136 +195,192 @@ fun SettingsSheet(
                         }
                     }
                 }
-                item {
-                    Surface(
-                        shape = RoundedCornerShape(24.dp),
-                        color = StudioPaper,
-                        tonalElevation = 1.dp,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column(Modifier.padding(vertical = 6.dp)) {
+
+                // ── Account ──
+                if (signedIn) {
+                    item {
+                        SettingsSectionHeader(stringResource(R.string.settings_section_account))
+                    }
+                    item {
+                        SettingsCardSurface {
                             SettingsRow(
-                                Icons.Rounded.Language,
-                                stringResource(R.string.language),
-                                AppLocale.labelFor(context, currentLanguageTag),
-                                onClick = { languagePickerVisible = true },
+                                Icons.Rounded.Person,
+                                stringResource(R.string.edit_profile),
+                                stringResource(R.string.settings_account_body),
+                                iconTint = MaterialTheme.colorScheme.secondary,
+                                onClick = {},
                             )
                             SettingsDivider()
                             SettingsRow(
                                 Icons.Rounded.Diamond,
-                                stringResource(R.string.diamond_store),
-                                stringResource(R.string.diamond_store_subtitle),
-                                iconTint = StudioBlue,
+                                stringResource(R.string.my_diamonds),
+                                stringResource(R.string.my_diamonds_body, state.diamonds),
+                                iconTint = HomeDecorExtra.diamondAccent,
                                 onClick = {
                                     onClose()
                                     onOpenDiamondStore()
                                 },
                             )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Star,
-                                stringResource(R.string.rate_us),
-                                stringResource(R.string.rate_us_subtitle),
-                                onClick = { openGooglePlayReview(context) },
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Share,
-                                stringResource(R.string.share_app),
-                                stringResource(R.string.share_app_subtitle),
-                                onClick = {
-                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, "https://play.google.com/store/apps/details?id=${context.packageName}")
-                                    }
-                                    runCatching {
-                                        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_app_chooser)))
-                                    }
-                                },
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.AutoMirrored.Rounded.Help,
-                                stringResource(R.string.faq),
-                                stringResource(R.string.faq_subtitle),
-                                onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/faq"))) },
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Policy,
-                                stringResource(R.string.terms),
-                                stringResource(R.string.terms_subtitle),
-                                onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/terms"))) },
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Policy,
-                                stringResource(R.string.privacy_policy),
-                                stringResource(R.string.privacy_subtitle),
-                                onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/privacy"))) },
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.RateReview,
-                                stringResource(R.string.feedback),
-                                stringResource(R.string.feedback_subtitle),
-                                onClick = {
-                                    if (actionBusy) settingsMessage = resources.getString(R.string.settings_action_in_progress) else feedbackDialogVisible = true
-                                },
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Refresh,
-                                stringResource(R.string.restore_purchases),
-                                when {
-                                    restoring -> stringResource(R.string.restoring)
-                                    !Purchases.isConfigured -> stringResource(R.string.restore_unavailable)
-                                    else -> stringResource(R.string.restore_purchases_subtitle)
-                                },
-                                onClick = { restorePurchases() },
-                                trailingLoading = restoring,
-                            )
                         }
                     }
                 }
+
+                // ── App ──
                 item {
-                    Surface(
-                        shape = RoundedCornerShape(24.dp),
-                        color = StudioPaper,
-                        tonalElevation = 1.dp,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, StudioLine),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column(Modifier.padding(vertical = 6.dp)) {
+                    SettingsSectionHeader(stringResource(R.string.settings_section_app))
+                }
+                item {
+                    SettingsCardSurface {
+                        SettingsRow(
+                            Icons.Rounded.Language,
+                            stringResource(R.string.language),
+                            AppLocale.labelFor(context, currentLanguageTag),
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            onClick = { languagePickerVisible = true },
+                        )
+                    }
+                }
+
+                // ── Purchases ──
+                item {
+                    SettingsSectionHeader(stringResource(R.string.settings_section_purchases))
+                }
+                item {
+                    SettingsCardSurface {
+                        SettingsRow(
+                            Icons.Rounded.Diamond,
+                            stringResource(R.string.diamond_store),
+                            stringResource(R.string.settings_diamond_store_body),
+                            iconTint = HomeDecorExtra.diamondAccent,
+                            onClick = {
+                                onClose()
+                                onOpenDiamondStore()
+                            },
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            Icons.Rounded.Refresh,
+                            stringResource(R.string.restore_purchases),
+                            when {
+                                restoring -> stringResource(R.string.restoring)
+                                !Purchases.isConfigured -> stringResource(R.string.restore_unavailable)
+                                else -> stringResource(R.string.settings_restore_body)
+                            },
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            onClick = { restorePurchases() },
+                            trailingLoading = restoring,
+                        )
+                    }
+                }
+
+                // ── Support ──
+                item {
+                    SettingsSectionHeader(stringResource(R.string.settings_section_support))
+                }
+                item {
+                    SettingsCardSurface {
+                        SettingsRow(
+                            Icons.AutoMirrored.Rounded.Help,
+                            stringResource(R.string.faq),
+                            stringResource(R.string.settings_faq_body),
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/faq"))) },
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            Icons.Rounded.Share,
+                            stringResource(R.string.share_app),
+                            stringResource(R.string.settings_share_body),
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            onClick = {
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, "https://play.google.com/store/apps/details?id=${context.packageName}")
+                                }
+                                runCatching {
+                                    context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_app_chooser)))
+                                }
+                            },
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            Icons.Rounded.RateReview,
+                            stringResource(R.string.rate_us),
+                            stringResource(R.string.settings_rate_body),
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            onClick = { openGooglePlayReview(context) },
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            Icons.Rounded.Feedback,
+                            stringResource(R.string.feedback),
+                            stringResource(R.string.settings_feedback_body),
+                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = {
+                                if (actionBusy) settingsMessage = resources.getString(R.string.settings_action_in_progress) else feedbackDialogVisible = true
+                            },
+                        )
+                    }
+                }
+
+                // ── Legal ──
+                item {
+                    SettingsSectionHeader(stringResource(R.string.settings_section_legal))
+                }
+                item {
+                    SettingsCardSurface {
+                        SettingsRow(
+                            Icons.Rounded.Policy,
+                            stringResource(R.string.terms),
+                            stringResource(R.string.settings_terms_body),
+                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/terms"))) },
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            Icons.Rounded.Policy,
+                            stringResource(R.string.privacy_policy),
+                            stringResource(R.string.settings_privacy_body),
+                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/privacy"))) },
+                        )
+                    }
+                }
+
+                // ── Account actions (signed in only) ──
+                if (signedIn) {
+                    item {
+                        SettingsSectionHeader(stringResource(R.string.account_section))
+                    }
+                    item {
+                        SettingsCardSurface {
+                            SettingsRow(
+                                Icons.AutoMirrored.Rounded.Logout,
+                                stringResource(R.string.log_out),
+                                state.signedInEmail ?: stringResource(R.string.settings_logout_body),
+                                iconTint = MaterialTheme.colorScheme.error,
+                                onClick = {
+                                    if (actionBusy) {
+                                        settingsMessage = resources.getString(R.string.settings_action_in_progress)
+                                    } else {
+                                        logoutDialogVisible = true
+                                    }
+                                },
+                            )
+                            SettingsDivider()
                             SettingsRow(
                                 Icons.Rounded.Delete,
                                 stringResource(R.string.delete_account),
-                                stringResource(R.string.delete_account_subtitle),
-                                iconTint = StudioRose,
+                                stringResource(R.string.settings_delete_body),
+                                iconTint = MaterialTheme.colorScheme.error,
                                 onClick = {
                                     if (actionBusy) settingsMessage = resources.getString(R.string.settings_action_in_progress) else deleteDialogVisible = true
                                 },
                             )
-                            if (signedIn) {
-                                SettingsDivider()
-                                SettingsRow(
-                                    Icons.AutoMirrored.Rounded.Logout,
-                                    stringResource(R.string.log_out),
-                                    state.signedInEmail ?: stringResource(R.string.logout_subtitle),
-                                    iconTint = StudioRose,
-                                    onClick = {
-                                        if (actionBusy) {
-                                            settingsMessage = resources.getString(R.string.settings_action_in_progress)
-                                        } else {
-                                            logoutDialogVisible = true
-                                        }
-                                    },
-                                )
-                            }
                         }
                     }
                 }
+
                 item {
                     Text(
                         stringResource(R.string.version_label, "1.0.0"),
@@ -388,12 +446,40 @@ fun SettingsSheet(
 }
 
 @Composable
+private fun SettingsSectionHeader(title: String) {
+    Text(
+        title,
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Xs),
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun SettingsCardSurface(
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        shape = HomeDecorShape.ExtraExtraLarge,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(vertical = 6.dp)) {
+            content()
+        }
+    }
+}
+
+@Composable
 fun SettingsRow(
     icon: ImageVector,
     title: String,
     subtitle: String,
     enabled: Boolean = true,
-    iconTint: Color = StudioBlue,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     trailingLoading: Boolean = false,
     onClick: () -> Unit,
 ) {
@@ -413,7 +499,7 @@ fun SettingsRow(
             )
         },
         leadingContent = {
-            Surface(shape = CircleShape, color = if (enabled) iconTint.copy(alpha = 0.12f) else StudioMist) {
+            Surface(shape = CircleShape, color = if (enabled) iconTint.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Icon(
                     icon,
                     contentDescription = null,
@@ -439,7 +525,7 @@ fun SettingsRow(
             }
         },
         colors = ListItemDefaults.colors(
-            containerColor = if (enabled) StudioPaper else StudioMist,
+            containerColor = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerHigh,
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -449,4 +535,3 @@ fun SettingsRow(
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     )
 }
-

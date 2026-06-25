@@ -86,7 +86,7 @@ fun DesignViewerSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -96,10 +96,11 @@ fun DesignViewerSheet(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = HomeDecorSpacing.Base)
+                .windowInsetsPadding(WindowInsets.statusBars)
                 .windowInsetsPadding(WindowInsets.navigationBars),
         ) {
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -108,8 +109,8 @@ fun DesignViewerSheet(
             ) {
                 Surface(
                     onClick = onBack,
-                    shape = RoundedCornerShape(14.dp),
-                    color = StudioPaper,
+                    shape = HomeDecorShape.Medium,
+                    color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 1.dp,
                     modifier = Modifier.size(44.dp),
                 ) {
@@ -117,7 +118,7 @@ fun DesignViewerSheet(
                         Icons.Rounded.Diamond,
                         contentDescription = null,
                         modifier = Modifier.padding(10.dp).size(24.dp),
-                        tint = StudioBlue,
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 Text(
@@ -128,7 +129,7 @@ fun DesignViewerSheet(
                 Surface(
                     onClick = onBack,
                     shape = CircleShape,
-                    color = StudioPaper,
+                    color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 1.dp,
                     modifier = Modifier.size(44.dp),
                 ) {
@@ -136,12 +137,12 @@ fun DesignViewerSheet(
                         Icons.Rounded.Close,
                         contentDescription = stringResource(R.string.close),
                         modifier = Modifier.padding(10.dp).size(24.dp),
-                        tint = StudioInk,
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
 
             if (result != null && result.isGeneratedResult() && result.status != "failed") {
                 var comparePosition by remember(result.id) { mutableStateOf(0.5f) }
@@ -151,8 +152,8 @@ fun DesignViewerSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(StudioMist),
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow),
                 ) {
                     WorkspaceImage(
                         imageUrl = result.imageUrl,
@@ -193,14 +194,14 @@ fun DesignViewerSheet(
                             val barGap = 4.dp.toPx()
                             val barHeight = 14.dp.toPx()
                             drawLine(
-                                color = StudioInk,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 start = Offset(handleX - barGap - barWidth, size.height / 2f - barHeight / 2),
                                 end = Offset(handleX - barGap - barWidth, size.height / 2f + barHeight / 2),
                                 strokeWidth = barWidth,
                                 cap = StrokeCap.Round,
                             )
                             drawLine(
-                                color = StudioInk,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 start = Offset(handleX + barGap, size.height / 2f - barHeight / 2),
                                 end = Offset(handleX + barGap, size.height / 2f + barHeight / 2),
                                 strokeWidth = barWidth,
@@ -211,7 +212,7 @@ fun DesignViewerSheet(
 
                     Surface(
                         shape = CircleShape,
-                        color = StudioBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .padding(12.dp)
@@ -228,7 +229,7 @@ fun DesignViewerSheet(
                     Surface(
                         onClick = { onDelete?.invoke() },
                         shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.4f),
+                        color = HomeDecorExtra.scrim.copy(alpha = 0.4f),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(12.dp)
@@ -244,7 +245,7 @@ fun DesignViewerSheet(
 
                     Surface(
                         shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.4f),
+                        color = HomeDecorExtra.scrim.copy(alpha = 0.4f),
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(12.dp)
@@ -259,7 +260,7 @@ fun DesignViewerSheet(
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Base))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -267,7 +268,7 @@ fun DesignViewerSheet(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = StudioPaper,
+                        color = MaterialTheme.colorScheme.surface,
                         tonalElevation = 1.dp,
                         modifier = Modifier.weight(1f),
                     ) {
@@ -288,7 +289,7 @@ fun DesignViewerSheet(
                     }
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = StudioPaper,
+                        color = MaterialTheme.colorScheme.surface,
                         tonalElevation = 1.dp,
                         modifier = Modifier.weight(1f),
                     ) {
@@ -309,7 +310,7 @@ fun DesignViewerSheet(
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Base))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -318,7 +319,7 @@ fun DesignViewerSheet(
                     Button(
                         onClick = { onRegenerate?.invoke() },
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudioBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.weight(1f).height(52.dp),
                     ) {
                         Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -333,7 +334,7 @@ fun DesignViewerSheet(
                             }
                         },
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudioBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.weight(1f).height(52.dp),
                     ) {
                         Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -348,7 +349,7 @@ fun DesignViewerSheet(
                             }
                         },
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudioBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.weight(1f).height(52.dp),
                     ) {
                         Icon(Icons.Rounded.Share, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -357,7 +358,7 @@ fun DesignViewerSheet(
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Base))
 
                 Text(
                     stringResource(R.string.rate_this_result),
@@ -380,16 +381,16 @@ fun DesignViewerSheet(
                         },
                         shape = CircleShape,
                         colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = if (feedbackState == "liked") StudioPrimaryContainer else Color.Transparent,
+                            containerColor = if (feedbackState == "liked") MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                         ),
                         modifier = Modifier.height(48.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base, vertical = 8.dp),
                     ) {
                         Icon(
                             Icons.Rounded.ThumbUp,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
-                            tint = if (feedbackState == "liked") StudioBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (feedbackState == "liked") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(R.string.like), fontWeight = FontWeight.SemiBold)
@@ -401,33 +402,33 @@ fun DesignViewerSheet(
                         },
                         shape = CircleShape,
                         colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = if (feedbackState == "disliked") StudioErrorContainer else Color.Transparent,
+                            containerColor = if (feedbackState == "disliked") MaterialTheme.colorScheme.errorContainer else Color.Transparent,
                         ),
                         modifier = Modifier.height(48.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base, vertical = 8.dp),
                     ) {
                         Icon(
                             Icons.Rounded.ThumbDown,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
-                            tint = if (feedbackState == "disliked") StudioRose else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (feedbackState == "disliked") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(R.string.dislike), fontWeight = FontWeight.SemiBold)
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(HomeDecorSpacing.Base))
             } else {
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(shape = CircleShape, color = StudioMist, modifier = Modifier.size(72.dp)) {
-                            Icon(Icons.Rounded.Diamond, null, Modifier.padding(18.dp).size(36.dp), tint = StudioLine)
+                        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.size(72.dp)) {
+                            Icon(Icons.Rounded.Diamond, null, Modifier.padding(18.dp).size(36.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(HomeDecorSpacing.Base))
                         Text(
                             stringResource(R.string.no_designs_yet),
                             style = MaterialTheme.typography.titleMedium,

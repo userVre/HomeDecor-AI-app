@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -78,7 +79,7 @@ fun AuthSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .clickable(
                 interactionSource = modalTapBlocker,
                 indication = null,
@@ -100,14 +101,14 @@ fun AuthSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = StudioInk)
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close), tint = MaterialTheme.colorScheme.onSurface)
                 }
             }
 
             Spacer(Modifier.height(4.dp))
 
-            Surface(shape = CircleShape, color = StudioMist, modifier = Modifier.size(72.dp)) {
-                Icon(Icons.Rounded.Diamond, null, Modifier.padding(18.dp).size(36.dp), tint = StudioInk)
+            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.size(72.dp)) {
+                Icon(Icons.Rounded.Diamond, null, Modifier.padding(18.dp).size(36.dp), tint = MaterialTheme.colorScheme.primary)
             }
 
             Spacer(Modifier.height(20.dp))
@@ -130,7 +131,7 @@ fun AuthSheet(
 
             ElevatedCard(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = Color(0xFFF8F6F3)),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -141,19 +142,20 @@ fun AuthSheet(
                     OutlinedButton(
                         onClick = onAuth,
                         shape = CircleShape,
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF4285F4).copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                     ) {
-                        Text(
-                            "\uD83D\uDD35",
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF4285F4),
+                        Icon(
+                            Icons.Rounded.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp),
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(
                             stringResource(R.string.continue_with_google),
-                            color = StudioInk,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
 
@@ -162,13 +164,13 @@ fun AuthSheet(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = StudioLine)
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
                         Text(
                             stringResource(R.string.or),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
                         )
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = StudioLine)
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
                     }
 
                     AuthTextField(
@@ -196,7 +198,7 @@ fun AuthSheet(
                     ) {
                         Text(
                             stringResource(R.string.forgot_password),
-                            color = StudioBlue,
+                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -207,10 +209,10 @@ fun AuthSheet(
                     Button(
                         onClick = onAuth,
                         shape = CircleShape,
-                        modifier = Modifier.fillMaxWidth().height(54.dp),
+                        modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isFormValid) StudioBlue else StudioLine.copy(alpha = 0.5f),
-                            contentColor = Color.White,
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                         enabled = isFormValid,
                     ) {
@@ -244,7 +246,7 @@ fun AuthSheet(
                 )
                 Text(
                     stringResource(R.string.sign_up),
-                    color = StudioInk,
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable { },
@@ -267,7 +269,7 @@ private fun AuthTextField(
 ) {
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFF5F3F0),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(

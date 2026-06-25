@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Diamond
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
@@ -49,6 +51,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -112,13 +115,19 @@ fun ProfileScreen(
                 item("signin-hero") {
                     SignInHeroCard(
                         onSignIn = openRealAuth,
-                        onGoogle = openRealAuth,
                     )
                 }
             } else {
                 item("profile-hero") {
                     SignedInProfileHero(
                         state = state,
+                    )
+                }
+                item("status-cards") {
+                    ProfileStatusCards(
+                        state = state,
+                        onDiamondsClick = viewModel::openDiamondStore,
+                        onPlanClick = viewModel::openPaywall,
                     )
                 }
                 item("account-section") {
@@ -174,7 +183,6 @@ fun ProfileScreen(
 @Composable
 private fun SignInHeroCard(
     onSignIn: () -> Unit,
-    onGoogle: () -> Unit,
 ) {
     Surface(
         shape = HomeDecorShape.ExtraExtraLarge,
@@ -186,7 +194,23 @@ private fun SignInHeroCard(
         Column(
             Modifier.padding(HomeDecorSpacing.CardInternal),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
+            Surface(
+                shape = HomeDecorShape.CardLarge,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                modifier = Modifier.size(56.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Spacer(Modifier.height(HomeDecorSpacing.Xs))
             Text(
                 stringResource(R.string.profile_sign_in_body),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -194,24 +218,106 @@ private fun SignInHeroCard(
                 style = MaterialTheme.typography.bodyMedium,
                 lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
             )
-            Spacer(Modifier.height(HomeDecorSpacing.Lg))
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
             Button(
                 onClick = onSignIn,
                 shape = HomeDecorShape.Button,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
             ) {
-                Text(stringResource(R.string.sign_in))
+                Text(
+                    stringResource(R.string.profile_sign_in_register),
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
-            Spacer(Modifier.height(HomeDecorSpacing.Md))
-            OutlinedButton(
-                onClick = onGoogle,
-                shape = HomeDecorShape.Button,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
-            ) {
-                Text(stringResource(R.string.continue_with_google))
-            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileStatusCards(
+    state: HomeDecorUiState,
+    onDiamondsClick: () -> Unit,
+    onPlanClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+    ) {
+        StatusCard(
+            icon = Icons.Rounded.Diamond,
+            label = stringResource(R.string.profile_status_diamonds),
+            value = state.diamonds.toString(),
+            iconTint = HomeDecorExtra.diamondAccent,
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+            modifier = Modifier.weight(1f),
+            onClick = onDiamondsClick,
+        )
+        StatusCard(
+            icon = Icons.Rounded.Star,
+            label = stringResource(R.string.profile_status_plan),
+            value = if (state.isPro) "Pro" else stringResource(R.string.free_plan),
+            iconTint = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
+            containerColor = if (state.isPro) {
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+            } else {
+                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+            },
+            modifier = Modifier.weight(1f),
+            onClick = onPlanClick,
+        )
+        StatusCard(
+            icon = Icons.Rounded.FavoriteBorder,
+            label = stringResource(R.string.profile_status_saved),
+            value = state.workspace.favorites.size.toString(),
+            iconTint = MaterialTheme.colorScheme.error,
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+            modifier = Modifier.weight(1f),
+            onClick = onPlanClick,
+        )
+    }
+}
+
+@Composable
+private fun StatusCard(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    iconTint: Color,
+    containerColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+) {
+    Surface(
+        shape = HomeDecorShape.Card,
+        color = containerColor,
+        modifier = modifier
+            .minimumTouchTarget()
+            .semantics { role = Role.Button }
+            .clickable(onClick = onClick),
+    ) {
+        Column(
+            modifier = Modifier.padding(HomeDecorSpacing.Md),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = iconTint,
+            )
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

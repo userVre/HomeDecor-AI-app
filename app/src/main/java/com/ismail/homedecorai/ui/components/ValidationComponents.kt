@@ -88,7 +88,7 @@ fun UnifiedWizardError(
     ) {
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = StudioErrorContainer,
+            color = MaterialTheme.colorScheme.errorContainer,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Column(
@@ -102,13 +102,13 @@ fun UnifiedWizardError(
                     Icon(
                         Icons.Rounded.ErrorOutline,
                         contentDescription = null,
-                        tint = StudioRose,
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(20.dp),
                     )
                     Text(
                         text = message,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = StudioRose,
+                        color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f),
                     )
@@ -119,7 +119,7 @@ fun UnifiedWizardError(
                             Button(
                                 onClick = retry,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = StudioRose,
+                                    containerColor = MaterialTheme.colorScheme.error,
                                     contentColor = Color.White,
                                 ),
                                 shape = RoundedCornerShape(8.dp),

@@ -14,6 +14,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +41,7 @@ data class HomeDecorExtraColors(
     val premiumGold: Color,
     val card: Color,
     val elevatedCard: Color,
+    val scrim: Color,
 )
 
 val LocalHomeDecorExtraColors = staticCompositionLocalOf {
@@ -55,6 +57,7 @@ val LocalHomeDecorExtraColors = staticCompositionLocalOf {
         premiumGold = Color.Unspecified,
         card = Color.Unspecified,
         elevatedCard = Color.Unspecified,
+        scrim = Color.Unspecified,
     )
 }
 
@@ -84,9 +87,9 @@ private val LightColorScheme = lightColorScheme(
     onError = HomeDecorColors.OnError,
     errorContainer = HomeDecorColors.ErrorContainerColor,
     onErrorContainer = HomeDecorColors.OnErrorContainer,
-    background = HomeDecorColors.Canvas,
+    background = HomeDecorColors.Paper,
     onBackground = HomeDecorColors.OnBackground,
-    surface = HomeDecorColors.Canvas,
+    surface = HomeDecorColors.Paper,
     onSurface = HomeDecorColors.OnSurface,
     onSurfaceVariant = HomeDecorColors.OnSurfaceVariant,
     outline = HomeDecorColors.Outline,
@@ -154,6 +157,7 @@ private val LightExtra = HomeDecorExtraColors(
     premiumGold = HomeDecorColors.PremiumGold,
     card = HomeDecorColors.Paper,
     elevatedCard = HomeDecorColors.SurfaceContainerLow,
+    scrim = HomeDecorColors.Scrim,
 )
 
 private val DarkExtra = HomeDecorExtraColors(
@@ -168,6 +172,7 @@ private val DarkExtra = HomeDecorExtraColors(
     premiumGold = HomeDecorColors.DarkPremiumGold,
     card = HomeDecorColors.DarkSurface,
     elevatedCard = HomeDecorColors.DarkOverlay,
+    scrim = HomeDecorColors.DarkScrim,
 )
 
 // ---------------------------------------------------------------------------
@@ -211,6 +216,27 @@ fun Modifier.minimumTouchTarget(): Modifier = sizeIn(minWidth = 48.dp, minHeight
 
 fun Modifier.disabledSemantics(enabled: Boolean): Modifier =
     if (enabled) this else semantics { disabled() }
+
+@Composable
+fun isReducedMotionEnabled(): Boolean {
+    val context = LocalContext.current
+    val accessibilityManager = remember {
+        context.getSystemService(android.content.Context.ACCESSIBILITY_SERVICE)
+            as? android.view.accessibility.AccessibilityManager
+    }
+
+    val animationScale = remember {
+        try {
+            android.provider.Settings.Global.getFloat(
+                context.contentResolver,
+                android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+                1f,
+            )
+        } catch (_: Exception) { 1f }
+    }
+
+    return animationScale == 0f || accessibilityManager?.isTouchExplorationEnabled == true
+}
 
 @Composable
 fun studioStateContainer(selected: Boolean): Color =

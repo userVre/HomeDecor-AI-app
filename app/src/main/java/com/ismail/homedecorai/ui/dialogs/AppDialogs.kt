@@ -137,7 +137,7 @@ fun DeleteAccountDialog(
                 onClick = onConfirm,
                 enabled = !busy,
                 shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = StudioRose),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
             ) {
                 Text(if (busy) stringResource(R.string.deleting_account) else stringResource(R.string.delete_account_confirm))
             }
@@ -190,7 +190,7 @@ fun LanguagePickerDialog(
             ) {
                 val systemSelected = currentLanguageTag == AppLocale.SYSTEM_LANGUAGE_TAG
                 Surface(
-                    color = if (systemSelected) StudioPrimaryContainer else Color.Transparent,
+                    color = if (systemSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -198,7 +198,7 @@ fun LanguagePickerDialog(
                         headlineContent = { Text(stringResource(R.string.language_system_default), fontWeight = FontWeight.SemiBold) },
                         trailingContent = {
                             if (systemSelected) {
-                                Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue)
+                                Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             }
                         },
                         modifier = Modifier
@@ -210,7 +210,7 @@ fun LanguagePickerDialog(
                 AppLocale.supportedLanguages.forEach { language ->
                     val selected = language.tag == currentLanguageTag
                     Surface(
-                        color = if (selected) StudioPrimaryContainer else Color.Transparent,
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -218,7 +218,7 @@ fun LanguagePickerDialog(
                             headlineContent = { Text(stringResource(language.labelRes), fontWeight = FontWeight.SemiBold) },
                             trailingContent = {
                                 if (selected) {
-                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue)
+                                    Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 }
                             },
                             modifier = Modifier
@@ -273,7 +273,7 @@ fun AddToProjectDialog(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 if (state.workspace.projects.isEmpty()) {
-                    Surface(shape = RoundedCornerShape(18.dp), color = StudioMist, modifier = Modifier.fillMaxWidth()) {
+                    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
                         Text(
                             stringResource(R.string.no_projects_yet),
                             modifier = Modifier.padding(14.dp),
@@ -290,9 +290,9 @@ fun AddToProjectDialog(
                             Surface(
                                 onClick = { onSelectProject(project) },
                                 shape = RoundedCornerShape(18.dp),
-                                color = if (alreadyLinked) StudioPrimaryContainer else StudioPaper,
+                                color = if (alreadyLinked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
                                 tonalElevation = 1.dp,
-                                border = BorderStroke(1.dp, if (alreadyLinked) StudioBlue.copy(alpha = 0.36f) else StudioLine),
+                                border = BorderStroke(1.dp, if (alreadyLinked) MaterialTheme.colorScheme.primary.copy(alpha = 0.36f) else MaterialTheme.colorScheme.outlineVariant),
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Row(
@@ -317,7 +317,7 @@ fun AddToProjectDialog(
                                         )
                                     }
                                     if (alreadyLinked) {
-                                        Icon(Icons.Rounded.Check, contentDescription = null, tint = StudioBlue, modifier = Modifier.size(20.dp))
+                                        Icon(Icons.Rounded.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                     }
                                 }
                             }
@@ -569,7 +569,7 @@ fun GenerationErrorNotice(
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = StudioErrorContainer,
+        color = MaterialTheme.colorScheme.errorContainer,
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(
@@ -577,11 +577,11 @@ fun GenerationErrorNotice(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(Icons.Rounded.Refresh, contentDescription = null, tint = StudioRose, modifier = Modifier.size(18.dp))
+            Icon(Icons.Rounded.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
             Text(
                 message,
                 modifier = Modifier.weight(1f),
-                color = StudioRose,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
             )

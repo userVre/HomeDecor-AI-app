@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,9 +63,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
 import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.GeneratedResult
 import com.ismail.homedecorai.model.HomeDecorUiState
@@ -502,12 +509,6 @@ fun DailyRewardCard(
     }
     val titleColor = MaterialTheme.colorScheme.onSurface
     val subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val pillBg = if (useDark) {
-        MaterialTheme.colorScheme.surfaceContainerHigh
-    } else {
-        MaterialTheme.colorScheme.surfaceContainerLow
-    }
-    val pillTextColor = MaterialTheme.colorScheme.onSurfaceVariant
     val iconBg = if (useDark) {
         HomeDecorExtra.diamondAccent.copy(alpha = 0.12f)
     } else {
@@ -518,6 +519,37 @@ fun DailyRewardCard(
     } else {
         MaterialTheme.colorScheme.primary
     }
+    val dotActiveColor = if (useDark) {
+        HomeDecorExtra.diamondAccent
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+    val dotInactiveColor = if (useDark) {
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    } else {
+        MaterialTheme.colorScheme.outlineVariant
+    }
+
+    // Sparkle animation for unclaimed state
+    val infiniteTransition = rememberInfiniteTransition(label = "sparkle")
+    val sparkleAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "sparkleAlpha",
+    )
+    val iconScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "iconScale",
+    )
 
     val cardShape = HomeDecorShape.CardLarge
     ElevatedCard(
@@ -525,88 +557,175 @@ fun DailyRewardCard(
         colors = CardDefaults.elevatedCardColors(containerColor = containerColor),
         modifier = modifier.fillMaxWidth(),
     ) {
-        Row(
-            Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
+        Column(
+            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
         ) {
-            Surface(
-                shape = HomeDecorShape.Medium,
-                color = iconBg,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
             ) {
-                Box(Modifier.padding(10.dp)) {
+                // Diamond icon with sparkle effect
+                Box(contentAlignment = Alignment.Center) {
+                    Surface(
+                        shape = HomeDecorShape.Medium,
+                        color = iconBg,
+                    ) {
+                        Box(Modifier.padding(10.dp)) {
+                            Icon(
+                                Icons.Rounded.Diamond,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .graphicsLayer {
+                                        if (!claimedToday) {
+                                            scaleX = iconScale
+                                            scaleY = iconScale
+                                        }
+                                    },
+                                tint = iconTint,
+                            )
+                        }
+                    }
+                    // Sparkle icons when unclaimed
+                    if (!claimedToday) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(12.dp)
+                                .offset(x = 18.dp, y = (-18).dp)
+                                .graphicsLayer { alpha = sparkleAlpha },
+                            tint = dotActiveColor.copy(alpha = 0.7f),
+                        )
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(8.dp)
+                                .offset(x = (-14).dp, y = 16.dp)
+                                .graphicsLayer { alpha = sparkleAlpha * 0.7f },
+                            tint = dotActiveColor.copy(alpha = 0.5f),
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        if (claimedToday) stringResource(R.string.daily_reward_claimed_title) else stringResource(R.string.daily_reward_title),
+                        color = titleColor,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        if (claimedToday) stringResource(R.string.daily_reward_claimed_subtitle) else stringResource(R.string.daily_reward_subtitle_new),
+                        color = subtitleColor,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(HomeDecorSpacing.Md))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(7) { index ->
+                    val isFilled = index < displayDay.coerceAtMost(7)
+                    val dotScale by animateFloatAsState(
+                        targetValue = if (isFilled) 1f else 0.8f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow,
+                        ),
+                        label = "dotScale",
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .graphicsLayer {
+                                scaleX = dotScale
+                                scaleY = dotScale
+                            }
+                            .clip(CircleShape)
+                            .background(if (isFilled) dotActiveColor else dotInactiveColor)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                DailyRewardQuietPill(
+                    label = if (activeStreak > 0) {
+                        stringResource(R.string.daily_reward_streak_format, activeStreak)
+                    } else {
+                        stringResource(R.string.daily_reward_soft_start)
+                    },
+                    bgColor = if (useDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow,
+                    textColor = subtitleColor,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(HomeDecorSpacing.Md))
+
+            if (claimedToday) {
+                Surface(
+                    shape = HomeDecorShape.Button,
+                    color = if (useDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(HomeDecorSpacing.TouchTarget),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = dotActiveColor,
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            stringResource(R.string.daily_reward_come_back),
+                            color = subtitleColor,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { onClaim() },
+                    shape = HomeDecorShape.Button,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (useDark) HomeDecorExtra.diamondAccent else MaterialTheme.colorScheme.primary,
+                        contentColor = if (useDark) HomeDecorColors.OnPrimaryContainer else MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    contentPadding = PaddingValues(horizontal = 14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(HomeDecorSpacing.TouchTarget),
+                ) {
                     Icon(
                         Icons.Rounded.Diamond,
                         contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                        tint = iconTint,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        stringResource(R.string.daily_reward_claim),
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.labelLarge,
                     )
                 }
-            }
-            Column(
-                Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    stringResource(R.string.daily_reward_title),
-                    color = titleColor,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    stringResource(R.string.daily_reward_subtitle),
-                    color = subtitleColor,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    DailyRewardQuietPill(
-                        label = stringResource(R.string.daily_reward_day_format, displayDay),
-                        bgColor = pillBg,
-                        textColor = pillTextColor,
-                    )
-                    DailyRewardQuietPill(
-                        label = if (activeStreak > 0) {
-                            stringResource(R.string.daily_reward_streak_format, activeStreak)
-                        } else {
-                            stringResource(R.string.daily_reward_soft_start)
-                        },
-                        bgColor = pillBg,
-                        textColor = pillTextColor,
-                    )
-                }
-            }
-            Button(
-                onClick = { onClaim() },
-                enabled = !claimedToday,
-                shape = HomeDecorShape.Button,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (useDark) HomeDecorExtra.diamondAccent else MaterialTheme.colorScheme.primary,
-                    contentColor = if (useDark) Color(0xFF0A1F21) else MaterialTheme.colorScheme.onPrimary,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                ),
-                contentPadding = PaddingValues(horizontal = 14.dp),
-                modifier = Modifier.height(HomeDecorSpacing.TouchTarget),
-            ) {
-                Icon(
-                    if (claimedToday) Icons.Rounded.Check else Icons.Rounded.Diamond,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    stringResource(if (claimedToday) R.string.daily_reward_claimed else R.string.daily_reward_claim),
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.labelLarge,
-                )
             }
         }
     }
@@ -826,7 +945,7 @@ fun ProjectResultThumb(
             )
             Surface(
                 shape = RoundedCornerShape(bottomStart = 14.dp),
-                color = Color.Black.copy(alpha = 0.54f),
+                color = HomeDecorExtra.scrim.copy(alpha = 0.54f),
                 modifier = Modifier.align(Alignment.BottomStart),
             ) {
                 Text(
@@ -878,7 +997,7 @@ fun PurchaseSyncNotice(
                 ) {
                     Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Retry", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.retry), fontWeight = FontWeight.SemiBold)
                 }
             }
         }

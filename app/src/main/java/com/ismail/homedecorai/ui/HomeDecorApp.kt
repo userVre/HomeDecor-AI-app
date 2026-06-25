@@ -342,33 +342,37 @@ private fun RowScope.NavItem(
     onSelect: (MainTab) -> Unit,
 ) {
     val selected = selectedTab == tab
+    val isUpgrade = tab == MainTab.Upgrade
     NavigationBarItem(
         selected = selected,
         onClick = { onSelect(tab) },
-        modifier = Modifier.heightIn(min = HomeDecorSpacing.TouchTarget),
+        modifier = Modifier
+            .heightIn(min = 44.dp)
+            .semantics {
+                contentDescription = if (selected) "$label, selected" else label
+            },
         icon = {
             Icon(
                 icon,
-                contentDescription = label,
-                modifier = Modifier.size(22.dp),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
             )
         },
         label = {
             Text(
                 label,
                 maxLines = 1,
-                softWrap = false,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             )
         },
         colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            selectedIconColor = if (isUpgrade) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+            selectedTextColor = if (isUpgrade) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+            indicatorColor = if (isUpgrade) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
         ),
     )
 }
