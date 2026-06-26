@@ -20,11 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -60,13 +57,14 @@ private val CtaShape = HomeDecorShape.Button
 @Composable
 fun SharedToolsScreen(
     state: ToolsScreenState,
-    onCredits: () -> Unit,
     onToolClick: (ToolItem) -> Unit,
 ) {
     val screenWidth = getScreenWidthDp()
+    val isDesktop = screenWidth >= 1024
+    val isTablet = screenWidth in 640..1023
     val columns = when {
-        screenWidth >= 1000 -> 3
-        screenWidth >= 640 -> 2
+        isDesktop -> 4
+        isTablet -> 2
         else -> 1
     }
 
@@ -83,28 +81,33 @@ fun SharedToolsScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .testTag(Strings.TestTags.toolsScreen),
     ) {
-        ToolsHeader(state = state, onCredits = onCredits)
+        ToolsHeader(
+            state = state,
+            isDesktop = isDesktop,
+            isTablet = isTablet,
+        )
 
         val chunkedTools = state.tools.chunked(columns)
 
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(
-                start = HomeDecorSpacing.ScreenHorizontal,
-                end = HomeDecorSpacing.ScreenHorizontal,
+                start = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.ScreenHorizontal,
+                end = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Base,
-                bottom = navBarBottomPadding(additionalContentPadding = 140.dp),
+                bottom = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.NavBarReservation,
             ),
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+            verticalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Base),
         ) {
             itemsIndexed(
                 items = chunkedTools,
                 key = { _, row -> row.joinToString(",") { it.id } },
             ) { rowIndex, rowTools ->
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Base),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     rowTools.forEach { tool ->
@@ -113,6 +116,8 @@ fun SharedToolsScreen(
                             tool = tool,
                             toolIndex = toolIndex,
                             onClick = { onToolClick(tool) },
+                            isDesktop = isDesktop,
+                            isTablet = isTablet,
                             modifier = if (columns > 1) Modifier.weight(1f) else Modifier.fillMaxWidth(),
                         )
                     }
@@ -177,55 +182,33 @@ private fun ToolsErrorContent(message: String) {
 @Composable
 fun ToolsHeader(
     state: ToolsScreenState,
-    onCredits: () -> Unit,
+    isDesktop: Boolean = false,
+    isTablet: Boolean = false,
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
+        modifier = Modifier.testTag(Strings.TestTags.toolsHeader),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Md),
+                .padding(
+                    horizontal = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Base,
+                    vertical = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Md,
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 Strings.navTools,
-                style = MaterialTheme.typography.headlineMedium,
+                style = when {
+                    isDesktop -> MaterialTheme.typography.displaySmall
+                    isTablet -> MaterialTheme.typography.headlineLarge
+                    else -> MaterialTheme.typography.headlineMedium
+                },
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
-            Surface(
-                onClick = onCredits,
-                shape = CtaShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                tonalElevation = 2.dp,
-                modifier = Modifier.semantics {
-                    contentDescription = Strings.a11yOpenDiamondStore
-                    role = Role.Button
-                },
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
-                    modifier = Modifier
-                        .height(HomeDecorSpacing.TouchTarget)
-                        .padding(horizontal = HomeDecorSpacing.Md),
-                ) {
-                    Icon(
-                        Icons.Rounded.Diamond,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = HomeDecorExtra.diamondAccent,
-                    )
-                    Text(
-                        if (state.isPro) Strings.proUpper else "${state.diamonds}",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
         }
     }
 }
@@ -235,6 +218,8 @@ fun ToolCard(
     tool: ToolItem,
     toolIndex: Int,
     onClick: () -> Unit,
+    isDesktop: Boolean = false,
+    isTablet: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val title = Strings.toolTitle(tool.id)
@@ -263,10 +248,61 @@ fun ToolCard(
 
     val textGradient = Brush.verticalGradient(
         0.0f to Color.Transparent,
-        0.45f to Color.Transparent,
-        0.7f to Color.Black.copy(alpha = 0.25f),
-        1.0f to Color.Black.copy(alpha = 0.7f),
+        0.70f to Color.Transparent,
+        0.88f to Color.Black.copy(alpha = 0.05f),
+        1.0f to Color.Black.copy(alpha = 0.14f),
     )
+
+    val cardHeight = when {
+        isDesktop -> 380.dp
+        isTablet -> 280.dp
+        else -> 240.dp
+    }
+    val titleStyle = when {
+        isDesktop -> MaterialTheme.typography.headlineMedium
+        isTablet -> MaterialTheme.typography.headlineSmall
+        else -> MaterialTheme.typography.titleMedium
+    }
+    val descStyle = when {
+        isDesktop -> MaterialTheme.typography.titleMedium
+        isTablet -> MaterialTheme.typography.bodyLarge
+        else -> MaterialTheme.typography.bodyMedium
+    }
+    val ctaStyle = when {
+        isDesktop -> MaterialTheme.typography.titleLarge
+        isTablet -> MaterialTheme.typography.titleMedium
+        else -> MaterialTheme.typography.labelLarge
+    }
+    val ctaHPadding = when {
+        isDesktop -> 36.dp
+        isTablet -> 20.dp
+        else -> 16.dp
+    }
+    val ctaVPadding = when {
+        isDesktop -> 16.dp
+        isTablet -> 12.dp
+        else -> 10.dp
+    }
+    val ctaMinWidth = when {
+        isDesktop -> 200.dp
+        isTablet -> 140.dp
+        else -> 120.dp
+    }
+    val ctaIconSize = when {
+        isDesktop -> 20.dp
+        isTablet -> 16.dp
+        else -> 14.dp
+    }
+    val contentHPadding = when {
+        isDesktop -> 32.dp
+        isTablet -> 20.dp
+        else -> 16.dp
+    }
+    val contentVPadding = when {
+        isDesktop -> 28.dp
+        isTablet -> 20.dp
+        else -> 16.dp
+    }
 
     Surface(
         onClick = onClick,
@@ -275,12 +311,13 @@ fun ToolCard(
         shadowElevation = hoverElevation.dp,
         interactionSource = interactionSource,
         modifier = modifier
-            .height(220.dp)
+            .height(cardHeight)
             .graphicsLayer {
                 scaleX = pressScale
                 scaleY = pressScale
             }
             .clip(CardShape)
+            .testTag(Strings.formatTestTag(Strings.TestTags.toolCard, tool.id))
             .semantics {
                 contentDescription = toolCardDescription
                 role = Role.Button
@@ -313,52 +350,53 @@ fun ToolCard(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = contentHPadding, vertical = contentVPadding),
             ) {
                 Text(
                     title,
                     color = Color.White,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = titleStyle,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(if (isDesktop) 8.dp else if (isTablet) 4.dp else 2.dp))
                 Text(
                     description,
-                    color = Color.White.copy(alpha = 0.85f),
-                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.9f),
+                    style = descStyle,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(if (isDesktop) 24.dp else if (isTablet) 14.dp else 10.dp))
                 Surface(
                     shape = CtaShape,
-                    color = Color.White.copy(alpha = 0.18f),
+                    color = Color.White.copy(alpha = 0.90f),
+                    shadowElevation = 2.dp,
                     modifier = Modifier
-                        .widthIn(min = 110.dp)
+                        .widthIn(min = ctaMinWidth)
                         .border(
                             width = 1.dp,
-                            color = Color.White.copy(alpha = 0.3f),
+                            color = Color.White.copy(alpha = 0.6f),
                             shape = CtaShape,
                         ),
                 ) {
                     Row(
-                        Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        Modifier.padding(horizontal = ctaHPadding, vertical = ctaVPadding),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             Strings.tryThis,
-                            color = Color.White,
-                            style = MaterialTheme.typography.labelMedium,
+                            color = HomeDecorColors.Accent,
+                            style = ctaStyle,
                             fontWeight = FontWeight.SemiBold,
                         )
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                            tint = Color.White,
+                            modifier = Modifier.size(ctaIconSize),
+                            tint = HomeDecorColors.Accent,
                         )
                     }
                 }

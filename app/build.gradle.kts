@@ -55,6 +55,10 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
         }
 
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
+
         androidMain.dependencies {
             implementation("androidx.activity:activity-compose:1.13.0")
             implementation("androidx.compose.material:material-icons-extended")
@@ -118,4 +122,22 @@ android {
 dependencies {
     "debugImplementation"("androidx.compose.ui:ui-tooling")
     "debugImplementation"("androidx.compose.ui:ui-test-manifest")
+}
+
+// SPA fallback: copy index.html -> 404.html in dist so static hosts serve the
+// app for any client-side route (e.g. /tools, /discover, /profile, etc.)
+tasks.register<Copy>("wasmJsBrowserCopySpaFallback") {
+    description = "Copies index.html to 404.html in the dist folder for SPA routing"
+    group = "distribution"
+    val distDir = layout.buildDirectory.dir("wasm/packages/HomeDecorAI-app/dist")
+    from(distDir) {
+        include("index.html")
+    }
+    into(distDir)
+    rename("index.html", "404.html")
+    dependsOn("wasmJsBrowserDistribution")
+}
+
+tasks.named("wasmJsBrowserDistribution") {
+    finalizedBy("wasmJsBrowserCopySpaFallback")
 }

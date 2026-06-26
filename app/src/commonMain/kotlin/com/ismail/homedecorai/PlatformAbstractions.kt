@@ -10,6 +10,8 @@ expect fun setpageTitle(title: String)
 
 expect fun pushHistoryState(path: String, title: String)
 
+expect fun replaceHistoryState(path: String, title: String)
+
 expect fun isReducedMotionEnabled(): Boolean
 
 expect fun announceToScreenReader(message: String)

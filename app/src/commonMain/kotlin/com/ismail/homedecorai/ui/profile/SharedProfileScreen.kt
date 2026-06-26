@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Brightness6
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Dashboard
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Mail
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
@@ -61,8 +63,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -99,7 +103,8 @@ fun SharedProfileScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .testTag(Strings.TestTags.profileScreen),
     ) {
         LazyColumn(
             contentPadding = PaddingValues(
@@ -112,7 +117,9 @@ fun SharedProfileScreen(
         ) {
             item("profile-title") {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(Strings.TestTags.profileHeading),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -120,6 +127,7 @@ fun SharedProfileScreen(
                         Text(
                             Strings.myProfileTitle,
                             style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.semantics { heading() },
                         )
                         Spacer(Modifier.height(HomeDecorSpacing.Xs))
                         Text(
@@ -130,7 +138,9 @@ fun SharedProfileScreen(
                     }
                     IconButton(
                         onClick = onSettings,
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier
+                            .size(48.dp)
+                            .testTag(Strings.TestTags.profileSettingsButton),
                     ) {
                         Icon(
                             Icons.Rounded.Settings,
@@ -490,78 +500,114 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         if (isDesktop) {
+            // Desktop: 2-column — headline + benefit grid | preview cards
             Row(
                 Modifier.padding(HomeDecorSpacing.CardInternal),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xl),
             ) {
+                // Left column: headline + benefits + CTA
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
                 ) {
-                    Surface(
-                        shape = HomeDecorShape.CardLarge,
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                        modifier = Modifier.size(56.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.Person,
-                                contentDescription = null,
-                                modifier = Modifier.size(28.dp),
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
+                    Text(
+                        Strings.boardGuestHeadline,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
                     Text(
                         Strings.profileSignInBody,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyLarge,
                     )
+
+                    // 2x2 benefit grid
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            ProfileBenefitCard(
+                                icon = Icons.Rounded.FavoriteBorder,
+                                title = Strings.profileGuestBenefit1Title,
+                                body = Strings.profileGuestBenefit1Body,
+                                modifier = Modifier.weight(1f),
+                            )
+                            ProfileBenefitCard(
+                                icon = Icons.Rounded.PhoneAndroid,
+                                title = Strings.profileGuestBenefit2Title,
+                                body = Strings.profileGuestBenefit2Body,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            ProfileBenefitCard(
+                                icon = Icons.Rounded.Diamond,
+                                title = Strings.profileGuestBenefit3Title,
+                                body = Strings.profileGuestBenefit3Body,
+                                modifier = Modifier.weight(1f),
+                            )
+                            ProfileBenefitCard(
+                                icon = Icons.Rounded.Star,
+                                title = Strings.profileGuestBenefit4Title,
+                                body = Strings.profileGuestBenefit4Body,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+
                     Button(
                         onClick = onSignIn,
                         shape = HomeDecorShape.Button,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier
-                            .width(200.dp)
-                            .height(HomeDecorSpacing.ButtonHeight),
+                            .width(220.dp)
+                            .height(HomeDecorSpacing.ButtonHeight)
+                            .testTag(Strings.TestTags.profileSignInButton),
                     ) {
                         Text(
-                            Strings.profileSignInRegister,
+                            Strings.boardGuestCta,
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }
 
-                // Right: Decorative preview
+                // Right column: design preview cards
                 Column(
                     verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
                     ProfileDesignPreviewCard("Living Room", "Scandinavian")
                     ProfileDesignPreviewCard("Bedroom", "Bohemian")
+                    ProfileDesignPreviewCard("Kitchen", "Minimalist")
                 }
             }
         } else {
+            // Mobile: stacked — preview row, headline, benefits, CTA
             Column(
                 Modifier.padding(HomeDecorSpacing.CardInternal),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
             ) {
-                Surface(
-                    shape = HomeDecorShape.CardLarge,
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                    modifier = Modifier.size(56.dp),
+                // Preview designs row
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Rounded.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(28.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
+                    item { ProfileDesignPreviewCard("Living Room", "Scandinavian") }
+                    item { ProfileDesignPreviewCard("Bedroom", "Bohemian") }
                 }
-                Spacer(Modifier.height(HomeDecorSpacing.Xs))
+
+                Text(
+                    Strings.boardGuestHeadline,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
                 Text(
                     Strings.profileSignInBody,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -569,21 +615,128 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                     style = MaterialTheme.typography.bodyMedium,
                     lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
                 )
-                Spacer(Modifier.height(HomeDecorSpacing.Sm))
+
+                // Compact benefit chips
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    ProfileBenefitChip(
+                        icon = Icons.Rounded.FavoriteBorder,
+                        label = Strings.profileGuestBenefit1Title,
+                        modifier = Modifier.weight(1f),
+                    )
+                    ProfileBenefitChip(
+                        icon = Icons.Rounded.PhoneAndroid,
+                        label = "Cross-device",
+                        modifier = Modifier.weight(1f),
+                    )
+                    ProfileBenefitChip(
+                        icon = Icons.Rounded.Star,
+                        label = "History",
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
                 Button(
                     onClick = onSignIn,
                     shape = HomeDecorShape.Button,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(HomeDecorSpacing.ButtonHeight),
+                        .height(HomeDecorSpacing.ButtonHeight)
+                        .testTag(Strings.TestTags.profileSignInButton),
                 ) {
                     Text(
-                        Strings.profileSignInRegister,
+                        Strings.boardGuestCta,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProfileBenefitCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    body: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = HomeDecorShape.Card,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier.padding(HomeDecorSpacing.Md),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Surface(
+                shape = HomeDecorShape.Badge,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                modifier = Modifier.size(36.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    body,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileBenefitChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = HomeDecorShape.Chip,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -601,32 +754,66 @@ private fun ProfileDesignPreviewCard(name: String, style: String) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
+                    .height(90.dp)
                     .clip(HomeDecorShape.Large)
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.15f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f),
                                 MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f),
                             ),
                         ),
                     ),
             ) {
+                // Room silhouette shapes
                 Box(
                     modifier = Modifier
-                        .padding(HomeDecorSpacing.Md)
-                        .size(35.dp, 40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)),
+                        .padding(start = 12.dp, top = 40.dp)
+                        .size(50.dp, 24.dp)
+                        .clip(RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                 )
                 Box(
                     modifier = Modifier
-                        .padding(start = 50.dp, top = 15.dp)
-                        .size(50.dp, 30.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                        .padding(start = 68.dp, top = 44.dp)
+                        .size(34.dp, 18.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.25f)),
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(start = 112.dp, top = 24.dp)
+                        .size(18.dp, 34.dp)
+                        .clip(RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp))
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)),
                 )
+                Box(
+                    modifier = Modifier
+                        .padding(start = 12.dp, top = 66.dp)
+                        .size(110.dp, 10.dp)
+                        .clip(RoundedCornerShape(5.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)),
+                )
+
+                // AI sparkle badge
+                Surface(
+                    shape = HomeDecorShape.Badge,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(HomeDecorSpacing.Sm)
+                        .size(22.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(11.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
             }
             Column(Modifier.padding(HomeDecorSpacing.Sm)) {
                 Text(
@@ -751,6 +938,7 @@ private fun StatusCard(
         color = if (isHovered) containerColor.copy(alpha = 0.8f) else containerColor,
         modifier = modifier
             .minimumTouchTarget()
+            .testTag(Strings.formatTestTag(Strings.TestTags.profileStatusCard, label))
             .semantics { role = Role.Button }
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
     ) {
@@ -1049,6 +1237,7 @@ private fun ProfileRow(
         modifier = Modifier
             .fillMaxWidth()
             .minimumTouchTarget()
+            .testTag(Strings.formatTestTag(Strings.TestTags.profileRow, title))
             .semantics { role = Role.Button }
             .clickable(onClick = onClick),
     )

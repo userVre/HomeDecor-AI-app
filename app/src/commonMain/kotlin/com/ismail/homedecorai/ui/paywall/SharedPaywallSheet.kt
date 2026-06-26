@@ -65,8 +65,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -122,7 +124,8 @@ fun SharedPaywallSheet(
         Modifier
             .fillMaxSize()
             .background(proColors.overlayBg)
-            .clickable(interactionSource = modalTapBlocker, indication = null, onClick = {}),
+            .clickable(interactionSource = modalTapBlocker, indication = null, onClick = {})
+            .testTag(Strings.TestTags.paywallSheet),
     ) {
         Box(
             Modifier
@@ -208,12 +211,18 @@ private fun PaywallTopBar(
         Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = 4.dp)
+            .testTag(Strings.TestTags.paywallTopBar),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
             onClick = if (currentStep == 1) onClose else onBack,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier
+                .size(48.dp)
+                .testTag(
+                    if (currentStep == 1) Strings.TestTags.paywallCloseButton
+                    else Strings.TestTags.paywallBackButton
+                ),
         ) {
             Icon(
                 imageVector = if (currentStep == 1) Icons.Rounded.Close else Icons.Rounded.ArrowBack,
@@ -229,7 +238,9 @@ private fun PaywallTopBar(
             shape = RoundedCornerShape(14.dp),
             color = ProCardSurface,
             border = BorderStroke(1.dp, ProBorder),
-            modifier = Modifier.height(28.dp),
+            modifier = Modifier
+                .height(28.dp)
+                .testTag(Strings.TestTags.paywallStepIndicator),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -785,6 +796,7 @@ private fun PaywallPlanCard(
         border = BorderStroke(if (selected) 2.dp else 1.dp, borderColor),
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(Strings.formatTestTag(Strings.TestTags.paywallPlanCard, title.lowercase()))
             .clickable(onClick = onClick),
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -1170,6 +1182,7 @@ private fun PaywallCtaButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
+            .testTag(Strings.TestTags.paywallCtaButton)
             .scale(scale),
     ) {
         Row(
@@ -1197,6 +1210,7 @@ private fun PaywallBottomLinks(onRestore: () -> Unit) {
         Box(
             modifier = Modifier
                 .clickable { onRestore() }
+                .testTag(Strings.TestTags.paywallRestoreButton)
                 .semantics {
                     role = Role.Button
                     contentDescription = Strings.pwS5Restore

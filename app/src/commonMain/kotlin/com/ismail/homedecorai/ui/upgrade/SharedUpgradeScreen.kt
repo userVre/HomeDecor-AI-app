@@ -67,6 +67,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -298,6 +299,7 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
                         .widthIn(max = 480.dp)
                         .fillMaxWidth()
                         .height(HomeDecorSpacing.ButtonHeight)
+                        .testTag(Strings.TestTags.upgradeCtaButton)
                         .scale(ctaScale),
                 ) {
                     Icon(
@@ -537,7 +539,8 @@ private fun PlanCard(
         shape = RoundedCornerShape(20.dp),
         color = if (isHovered) colors.accentSurface else colors.cardSurface,
         border = BorderStroke(borderWidth, borderColor),
-        modifier = modifier,
+        modifier = modifier
+            .testTag(Strings.formatTestTag(Strings.TestTags.upgradePlanCard, title.lowercase())),
     ) {
         Box {
             if (isRecommended) {
@@ -1009,6 +1012,7 @@ private fun SharedUpgradeBeforeAfterHero(colors: SharedUpgradeColors) {
                 Modifier
                     .fillMaxWidth()
                     .height(160.dp)
+                    .testTag(Strings.TestTags.upgradeBeforeAfter)
                     .semantics {
                         contentDescription = "${Strings.upgradeV3Before} and ${Strings.upgradeV3After} comparison"
                     }

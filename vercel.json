@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/((?!assets/|app.js|app-.*\\.js|kotlin/|.*\\.wasm|.*\\.css|.*\\.ico|.*\\.png|.*\\.webp|.*\\.svg|.*\\.jpg|.*\\.json).*)", "destination": "/index.html" }
+  ]
+}

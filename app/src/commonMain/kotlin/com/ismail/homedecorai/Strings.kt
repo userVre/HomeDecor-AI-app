@@ -66,6 +66,20 @@ object Strings {
     const val currentPlanBodyFree = "Upgrade for unlimited generations"
     const val profileSignInBody = "Sign in to save your projects and access your diamonds across devices."
     const val profileSignInRegister = "Sign In / Register"
+    const val profileGuestHeadline = "Welcome to HomeDecor AI"
+    const val profileGuestSubtitle = "Create an account to unlock the full experience"
+    const val profileGuestBenefit1 = "Save and organize your favorite designs"
+    const val profileGuestBenefit2 = "Track your design history across sessions"
+    const val profileGuestBenefit3 = "Access your work from any device"
+    const val profileGuestBenefit4 = "Get personalized style recommendations"
+    const val profileGuestBenefit1Title = "Save & Organize"
+    const val profileGuestBenefit1Body = "Save unlimited designs and organize them into projects"
+    const val profileGuestBenefit2Title = "Cross-Device Sync"
+    const val profileGuestBenefit2Body = "Access your designs from phone, tablet, or desktop"
+    const val profileGuestBenefit3Title = "Design History"
+    const val profileGuestBenefit3Body = "Track your creative journey and revisit past makeovers"
+    const val profileGuestBenefit4Title = "Diamonds Wallet"
+    const val profileGuestBenefit4Body = "Earn and spend diamonds across all your devices"
     const val profileStatusDiamonds = "Diamonds"
     const val profileStatusPlan = "Plan"
     const val profileStatusSaved = "Saved"
@@ -167,6 +181,18 @@ object Strings {
     const val boardGuestBenefit1 = "Save unlimited designs to your board"
     const val boardGuestBenefit2 = "Access your designs on any device"
     const val boardGuestBenefit3 = "Organize into custom projects"
+    const val boardGuestBenefit4 = "Track your design history"
+    const val boardGuestBenefit5 = "Sync across all your devices"
+    const val boardGuestMiniCta = "Sign in to unlock your board"
+    const val boardGuestBenefitSaved = "Saved Designs"
+    const val boardGuestBenefitSavedBody = "Keep every design you create in one place"
+    const val boardGuestBenefitFavorites = "Favorites"
+    const val boardGuestBenefitFavoritesBody = "Bookmark the styles you love for quick access"
+    const val boardGuestBenefitProjects = "Project History"
+    const val boardGuestBenefitProjectsBody = "Track your room makeovers from start to finish"
+    const val boardGuestBenefitCrossDevice = "Cross-Device Access"
+    const val boardGuestBenefitCrossDeviceBody = "Pick up where you left off on any device"
+    const val boardGuestCta = "Get Started Free"
     const val boardSampleLivingRoom = "Modern Living Room"
     const val boardSampleBedroom = "Cozy Bedroom"
     const val boardSampleKitchen = "Minimalist Kitchen"
@@ -177,6 +203,9 @@ object Strings {
     const val boardSampleStyle = "Scandinavian"
     const val boardViewAll = "View all"
     const val boardUpgradeToUnlock = "Upgrade to Pro to unlock all features"
+    const val boardLockedGenerated = "Your AI designs will appear here"
+    const val boardLockedFavorites = "Saved favorites show up here"
+    const val boardLockedProjects = "Your project collections live here"
 
     // Settings sections
     const val settingsSectionAccount = "Account"
@@ -506,4 +535,121 @@ object Strings {
     // Loading & Error
     const val loadingContent = "Loading..."
     const val errorGeneric = "Something went wrong"
+
+    // ── A11y headings / landmark labels ─────────────────────────────────────
+    const val a11yToolsHeading = "Tools"
+    const val a11yDiscoverHeading = "Discover"
+    const val a11yBoardHeading = "My Board"
+    const val a11yProfileHeading = "Profile"
+    const val a11yUpgradeHeading = "Upgrade to Pro"
+    const val a11yBottomBar = "Main navigation"
+    const val a11yTopBar = "Top navigation"
+    const val a11yWizardHeading = "Design wizard"
+    const val a11yPaywallHeading = "Subscription"
+    const val a11ySettingsHeading = "Settings"
+    const val a11yDiscoverDetailHeading = "Discover detail"
+
+    // ── A11y labels for interactive controls ────────────────────────────────
+    const val a11yDiamondBadge = "Credits badge"
+    const val a11ySignInBackground = "Sign in to save your designs"
+    const val a11yBoardProBanner = "Upgrade to unlock all features"
+    const val a11yWizardBack = "Go back to previous step"
+    const val a11yWizardClose = "Close wizard"
+    const val a11yWizardNext = "Go to next step"
+    const val a11yWizardGenerate = "Generate design"
+    const val a11yPaywallClose = "Close paywall"
+    const val a11yPaywallBack = "Go to previous step"
+    const val a11yPaywallCta = "Continue with selected plan"
+
+    // ── Test Tags (for Compose test / accessibility snapshots) ──────────────
+    object TestTags {
+        // Navigation
+        const val bottomNav = "bottom_nav"
+        const val topNav = "top_nav"
+        const val bottomNavItem = "bottom_nav_item_%s"
+        const val topNavItem = "top_nav_item_%s"
+
+        // Screens
+        const val toolsScreen = "tools_screen"
+        const val discoverScreen = "discover_screen"
+        const val boardScreen = "board_screen"
+        const val profileScreen = "profile_screen"
+        const val upgradeScreen = "upgrade_screen"
+        const val wizardScreen = "wizard_screen"
+
+        // Tools
+        const val toolsHeader = "tools_header"
+        const val toolCard = "tool_card_%s"
+        const val toolCardCta = "tool_card_cta_%s"
+
+        // Discover
+        const val discoverClusterTab = "discover_cluster_tab_%s"
+        const val discoverSectionRow = "discover_section_row_%s"
+        const val discoverSectionCard = "discover_section_card_%s"
+        const val discoverSeeAll = "discover_see_all_%s"
+
+        // Board
+        const val boardTabRow = "board_tab_row"
+        const val boardTab = "board_tab_%s"
+        const val boardGuestHero = "board_guest_hero"
+        const val boardSignInButton = "board_sign_in_button"
+        const val boardGeneratedCard = "board_generated_card"
+        const val boardFavoriteCard = "board_favorite_card"
+        const val boardProjectCard = "board_project_card"
+
+        // Profile
+        const val profileHeading = "profile_heading"
+        const val profileSettingsButton = "profile_settings_button"
+        const val profileSignInButton = "profile_sign_in_button"
+        const val profileStatusCard = "profile_status_card_%s"
+        const val profileRow = "profile_row_%s"
+
+        // Wizard
+        const val wizardHeader = "wizard_header"
+        const val wizardBackButton = "wizard_back_button"
+        const val wizardCloseButton = "wizard_close_button"
+        const val wizardProgressBar = "wizard_progress_bar"
+        const val wizardUploadDropZone = "wizard_upload_drop_zone"
+        const val wizardTryExample = "wizard_try_example"
+        const val wizardPhotoPreview = "wizard_photo_preview"
+        const val wizardOptionCard = "wizard_option_card_%s"
+        const val wizardStyleCard = "wizard_style_card_%s"
+        const val wizardGenerateButton = "wizard_generate_button"
+        const val wizardBottomBar = "wizard_bottom_bar"
+        const val wizardBackStepButton = "wizard_back_step_button"
+        const val wizardNextStepButton = "wizard_next_step_button"
+        const val wizardReviewEditRoom = "wizard_review_edit_room"
+        const val wizardReviewEditStyle = "wizard_review_edit_style"
+
+        // Paywall
+        const val paywallSheet = "paywall_sheet"
+        const val paywallTopBar = "paywall_top_bar"
+        const val paywallCloseButton = "paywall_close_button"
+        const val paywallBackButton = "paywall_back_button"
+        const val paywallStepIndicator = "paywall_step_indicator"
+        const val paywallPlanCard = "paywall_plan_card_%s"
+        const val paywallCtaButton = "paywall_cta_button"
+        const val paywallRestoreButton = "paywall_restore_button"
+
+        // Upgrade
+        const val upgradeCtaButton = "upgrade_cta_button"
+        const val upgradePlanCard = "upgrade_plan_card_%s"
+        const val upgradeBeforeAfter = "upgrade_before_after"
+    }
+
+    // ── A11y labels for test tags with dynamic values ───────────────────────
+    fun a11yBottomNavItem(label: String) = "Navigate to $label"
+    fun a11yTopNavItem(label: String) = "Navigate to $label"
+    fun a11yBoardTab(label: String, selected: Boolean) = "$label tab${if (selected) ", selected" else ""}"
+    fun a11yPaywallPlan(title: String, selected: Boolean) = "$title plan${if (selected) ", selected" else ""}"
+    fun a11yUpgradePlan(title: String, recommended: Boolean) = "$title plan${if (recommended) ", recommended" else ""}"
+    fun a11yProfileRow(title: String) = title
+    fun a11yWizardOption(label: String, selected: Boolean) = "$label${if (selected) ", selected" else ""}"
+
+    // ── Test tag formatting helper ──────────────────────────────────────────
+    fun formatTestTag(pattern: String, vararg args: Any): String {
+        var result = pattern
+        args.forEach { result = result.replaceFirst("%s", it.toString()) }
+        return result
+    }
 }

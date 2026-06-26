@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Dashboard
@@ -51,11 +52,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardScreenState
@@ -119,16 +123,6 @@ fun App() {
 
         var hasPushedInitial by remember { mutableStateOf(false) }
         LaunchedEffect(selectedTab, activeWizard) {
-            if (!hasPushedInitial) {
-                hasPushedInitial = true
-                val title = if (activeWizard != null) {
-                    "${Strings.toolTitle(activeWizard!!.id)} - HomeDecor AI"
-                } else {
-                    selectedTab.pageTitle
-                }
-                setpageTitle(title)
-                return@LaunchedEffect
-            }
             val title = if (activeWizard != null) {
                 "${Strings.toolTitle(activeWizard!!.id)} - HomeDecor AI"
             } else {
@@ -140,7 +134,15 @@ fun App() {
             } else {
                 selectedTab.route
             }
-            pushHistoryState(path, title)
+            if (!hasPushedInitial) {
+                hasPushedInitial = true
+                // Use replaceState on first composition so the initial URL keeps
+                // its correct path but gets a history entry for back/forward.
+                replaceHistoryState(path, title)
+            } else {
+                pushHistoryState(path, title)
+            }
+            announceToScreenReader(title)
         }
 
         val toolsState = remember {
@@ -365,10 +367,12 @@ fun App() {
                                 .padding(padding),
                         ) {
                             if (activeWizard != null) {
-                                WebWizardScreen(
-                                    tool = activeWizard!!,
-                                    onBack = { activeWizard = null },
-                                )
+                                Box(Modifier.testTag(Strings.TestTags.wizardScreen)) {
+                                    WebWizardScreen(
+                                        tool = activeWizard!!,
+                                        onBack = { activeWizard = null },
+                                    )
+                                }
                             } else {
                                 AnimatedContent(
                                     targetState = selectedTab,
@@ -378,38 +382,47 @@ fun App() {
                                     },
                                 ) { tab ->
                                     when (tab) {
-                                        WebTab.Tools -> SharedToolsScreen(
-                                            state = toolsState,
-                                            onCredits = { paywallVisible = true },
-                            onToolClick = { tool -> activeWizard = tool },
-                                        )
-                                        WebTab.Discover -> SharedDiscoverScreen(
-                                            state = discoverState,
-                                            onToggleFavorite = { _, _ -> },
-                                            onAddToMoodboard = { _, _ -> },
-                                            onUseStyle = { _, _ -> },
-                                        )
-                                        WebTab.Board -> SharedMyBoardScreen(
-                                            state = boardState,
-                                            isGuest = profileState.isGuest,
-                                            isPro = toolsState.isPro,
-                                            onSignIn = { },
-                                            onNavigateToTools = { selectedTab = WebTab.Tools },
-                                            onNavigateToDiscover = { selectedTab = WebTab.Discover },
-                                            onOpenUpgrade = { paywallVisible = true },
-                                        )
-                                        WebTab.Upgrade -> SharedUpgradeScreen(
-                                            isPro = false,
-                                            onOpenPaywall = { paywallVisible = true },
-                                        )
-                                        WebTab.Profile -> SharedProfileScreen(
-                                            state = profileState,
-                                            onSettings = { settingsVisible = true },
-                                            onSignIn = { },
-                                            onOpenDiamonds = { },
-                                            onOpenPaywall = { paywallVisible = true },
-                                            onOpenBoard = { selectedTab = WebTab.Board },
-                                        )
+                                        WebTab.Tools -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
+                                            SharedToolsScreen(
+                                                state = toolsState,
+                                                onToolClick = { tool -> activeWizard = tool },
+                                            )
+                                        }
+                                        WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
+                                            SharedDiscoverScreen(
+                                                state = discoverState,
+                                                onToggleFavorite = { _, _ -> },
+                                                onAddToMoodboard = { _, _ -> },
+                                                onUseStyle = { _, _ -> },
+                                            )
+                                        }
+                                        WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
+                                            SharedMyBoardScreen(
+                                                state = boardState,
+                                                isGuest = profileState.isGuest,
+                                                isPro = toolsState.isPro,
+                                                onSignIn = { },
+                                                onNavigateToTools = { selectedTab = WebTab.Tools },
+                                                onNavigateToDiscover = { selectedTab = WebTab.Discover },
+                                                onOpenUpgrade = { paywallVisible = true },
+                                            )
+                                        }
+                                        WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
+                                            SharedUpgradeScreen(
+                                                isPro = false,
+                                                onOpenPaywall = { paywallVisible = true },
+                                            )
+                                        }
+                                        WebTab.Profile -> Box(Modifier.testTag(Strings.TestTags.profileScreen)) {
+                                            SharedProfileScreen(
+                                                state = profileState,
+                                                onSettings = { settingsVisible = true },
+                                                onSignIn = { },
+                                                onOpenDiamonds = { },
+                                                onOpenPaywall = { paywallVisible = true },
+                                                onOpenBoard = { selectedTab = WebTab.Board },
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -463,12 +476,14 @@ fun App() {
                                     purchaseSuccess = false,
                                 )
                                 Box(
-                                    modifier = Modifier.onPreviewKeyEvent { event ->
-                                        if (event.key == Key.Escape) {
-                                            paywallVisible = false
-                                            true
-                                        } else false
-                                    }
+                                    modifier = Modifier
+                                        .testTag(Strings.TestTags.paywallSheet)
+                                        .onPreviewKeyEvent { event ->
+                                            if (event.key == Key.Escape) {
+                                                paywallVisible = false
+                                                true
+                                            } else false
+                                        }
                                 ) {
                                     SharedPaywallSheet(
                                         state = paywallState.copy(selectedPlanId = selectedPlan),
@@ -497,12 +512,16 @@ private fun WebBottomBar(
     NavigationBar(
         containerColor = HomeDecorColors.Paper,
         contentColor = HomeDecorColors.Ink,
+        modifier = Modifier.testTag(Strings.TestTags.bottomNav),
     ) {
         WebTab.entries.forEach { tab ->
             val selected = tab == selectedTab
             NavigationBarItem(
                 selected = selected,
                 onClick = { onSelectTab(tab) },
+                modifier = Modifier.testTag(
+                    Strings.formatTestTag(Strings.TestTags.bottomNavItem, tab.name)
+                ),
                 icon = {
                     Icon(
                         imageVector = tab.icon,
@@ -557,59 +576,76 @@ private fun DesktopAppLayout(
             onSelectTab = onSelectTab,
             diamonds = toolsState.diamonds,
             isPro = toolsState.isPro,
+            onCredits = onOpenPaywall,
         )
 
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            if (activeWizard != null) {
-                WebWizardScreen(
-                    tool = activeWizard,
-                    onBack = onWizardBack,
-                )
-            } else {
-                AnimatedContent(
-                    targetState = selectedTab,
-                    label = "tab",
-                    transitionSpec = {
-                        fadeIn() + slideInVertically { it / 20 } togetherWith fadeOut() + slideOutVertically { it / 20 }
-                    },
-                ) { tab ->
-                    when (tab) {
-                        WebTab.Tools -> SharedToolsScreen(
-                            state = toolsState,
-                            onCredits = { },
-                            onToolClick = { tool -> onToolClick(tool) },
+            Box(
+                modifier = Modifier.widthIn(max = 1200.dp),
+            ) {
+                if (activeWizard != null) {
+                    Box(Modifier.testTag(Strings.TestTags.wizardScreen)) {
+                        WebWizardScreen(
+                            tool = activeWizard,
+                            onBack = onWizardBack,
                         )
-                        WebTab.Discover -> SharedDiscoverScreen(
-                            state = discoverState,
-                            onToggleFavorite = { _, _ -> },
-                            onAddToMoodboard = { _, _ -> },
-                            onUseStyle = { _, _ -> },
-                        )
-                        WebTab.Board -> SharedMyBoardScreen(
-                            state = boardState,
-                            isGuest = profileState.isGuest,
-                            isPro = toolsState.isPro,
-                            onSignIn = { },
-                            onNavigateToTools = { onSelectTab(WebTab.Tools) },
-                            onNavigateToDiscover = { onSelectTab(WebTab.Discover) },
-                            onOpenUpgrade = onOpenPaywall,
-                        )
-                        WebTab.Upgrade -> SharedUpgradeScreen(
-                            isPro = false,
-                            onOpenPaywall = onOpenPaywall,
-                        )
-                        WebTab.Profile -> SharedProfileScreen(
-                            state = profileState,
-                            onSettings = { onSettingsOpen() },
-                            onSignIn = { },
-                            onOpenDiamonds = { },
-                            onOpenPaywall = onOpenPaywall,
-                            onOpenBoard = { onSelectTab(WebTab.Board) },
-                        )
+                    }
+                } else {
+                    AnimatedContent(
+                        targetState = selectedTab,
+                        label = "tab",
+                        transitionSpec = {
+                            fadeIn() + slideInVertically { it / 20 } togetherWith fadeOut() + slideOutVertically { it / 20 }
+                        },
+                    ) { tab ->
+                        when (tab) {
+                            WebTab.Tools -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
+                                SharedToolsScreen(
+                                    state = toolsState,
+                                    onToolClick = { tool -> onToolClick(tool) },
+                                )
+                            }
+                            WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
+                                SharedDiscoverScreen(
+                                    state = discoverState,
+                                    onToggleFavorite = { _, _ -> },
+                                    onAddToMoodboard = { _, _ -> },
+                                    onUseStyle = { _, _ -> },
+                                )
+                            }
+                            WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
+                                SharedMyBoardScreen(
+                                    state = boardState,
+                                    isGuest = profileState.isGuest,
+                                    isPro = toolsState.isPro,
+                                    onSignIn = { },
+                                    onNavigateToTools = { onSelectTab(WebTab.Tools) },
+                                    onNavigateToDiscover = { onSelectTab(WebTab.Discover) },
+                                    onOpenUpgrade = onOpenPaywall,
+                                )
+                            }
+                            WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
+                                SharedUpgradeScreen(
+                                    isPro = false,
+                                    onOpenPaywall = onOpenPaywall,
+                                )
+                            }
+                            WebTab.Profile -> Box(Modifier.testTag(Strings.TestTags.profileScreen)) {
+                                SharedProfileScreen(
+                                    state = profileState,
+                                    onSettings = { onSettingsOpen() },
+                                    onSignIn = { },
+                                    onOpenDiamonds = { },
+                                    onOpenPaywall = onOpenPaywall,
+                                    onOpenBoard = { onSelectTab(WebTab.Board) },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -663,12 +699,14 @@ private fun DesktopAppLayout(
                     purchaseSuccess = false,
                 )
                 Box(
-                    modifier = Modifier.onPreviewKeyEvent { event ->
-                        if (event.key == Key.Escape) {
-                            onPaywallDismiss()
-                            true
-                        } else false
-                    }
+                    modifier = Modifier
+                        .testTag(Strings.TestTags.paywallSheet)
+                        .onPreviewKeyEvent { event ->
+                            if (event.key == Key.Escape) {
+                                onPaywallDismiss()
+                                true
+                            } else false
+                        }
                 ) {
                     SharedPaywallSheet(
                         state = paywallState.copy(selectedPlanId = selectedPlan),
@@ -691,6 +729,7 @@ private fun DesktopTopNav(
     onSelectTab: (WebTab) -> Unit,
     diamonds: Int,
     isPro: Boolean,
+    onCredits: () -> Unit = {},
 ) {
     Surface(
         color = HomeDecorColors.Paper,
@@ -701,7 +740,8 @@ private fun DesktopTopNav(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .testTag(Strings.TestTags.topNav),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -709,6 +749,7 @@ private fun DesktopTopNav(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = HomeDecorColors.Accent,
+                modifier = Modifier.semantics { heading() },
             )
 
             Spacer(Modifier.width(32.dp))
@@ -720,14 +761,20 @@ private fun DesktopTopNav(
                     icon = tab.icon,
                     isSelected = isSelected,
                     onClick = { onSelectTab(tab) },
+                    testTag = Strings.formatTestTag(Strings.TestTags.topNavItem, tab.name),
                 )
             }
 
             Spacer(Modifier.weight(1f))
 
             Surface(
+                onClick = onCredits,
                 shape = RoundedCornerShape(20.dp),
                 color = HomeDecorColors.SurfaceContainerHigh,
+                modifier = Modifier.semantics {
+                    contentDescription = Strings.a11yOpenDiamondStore
+                    role = Role.Button
+                },
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -758,6 +805,7 @@ private fun DesktopTopNavItem(
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
+    testTag: String = "",
 ) {
     val contentColor = if (isSelected) HomeDecorColors.Accent else HomeDecorColors.InkSoft
 
@@ -765,11 +813,13 @@ private fun DesktopTopNavItem(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
         color = if (isSelected) HomeDecorColors.Accent.copy(alpha = 0.08f) else Color.Transparent,
-        modifier = Modifier.semantics {
-            role = Role.Tab
-            selected = isSelected
-            contentDescription = label
-        },
+        modifier = Modifier
+            .testTag(testTag)
+            .semantics {
+                role = Role.Tab
+                selected = isSelected
+                contentDescription = label
+            },
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),

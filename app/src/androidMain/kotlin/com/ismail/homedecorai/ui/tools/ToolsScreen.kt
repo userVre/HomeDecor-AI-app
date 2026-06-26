@@ -40,7 +40,6 @@ fun ToolsScreen(
 
     SharedToolsScreen(
         state = ToolsScreenState(isPro = state.isPro, diamonds = state.diamonds, tools = tools),
-        onCredits = viewModel::openDiamondStore,
         onToolClick = { tool -> viewModel.startTool(HomeDecorCatalog.tools.first { it.id == tool.id }) },
     )
 }

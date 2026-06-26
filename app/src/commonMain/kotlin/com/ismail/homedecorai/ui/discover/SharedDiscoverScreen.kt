@@ -1,8 +1,6 @@
 package com.ismail.homedecorai.ui.discover
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -11,7 +9,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,7 +17,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -61,8 +57,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -148,14 +146,19 @@ fun SharedDiscoverScreen(
         return
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .testTag(Strings.TestTags.discoverScreen),
+    ) {
         ScreenHeaderPills(title = Strings.discoverStylesTitle, trailing = null)
         LazyColumn(
             contentPadding = PaddingValues(
                 start = if (isDesktop) HomeDecorSpacing.ScreenHorizontal else 0.dp,
                 end = if (isDesktop) HomeDecorSpacing.ScreenHorizontal else 0.dp,
                 top = HomeDecorSpacing.Xs,
-                bottom = navBarBottomPadding(120.dp),
+                bottom = HomeDecorSpacing.NavBarReservation + HomeDecorSpacing.Base,
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
         ) {
@@ -194,7 +197,10 @@ fun ScreenHeaderPills(title: String, trailing: (@Composable () -> Unit)?) {
             .fillMaxWidth()
             .padding(horizontal = HomeDecorSpacing.Base, vertical = HomeDecorSpacing.Sm)
             .height(48.dp)
-            .semantics { contentDescription = title },
+            .semantics {
+                contentDescription = title
+                heading()
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -208,46 +214,52 @@ fun ScreenHeaderPills(title: String, trailing: (@Composable () -> Unit)?) {
 
 @Composable
 fun DiscoverClusterTabs(clusters: List<String>, selected: String, onSelect: (String) -> Unit) {
-    val selectedIndex = clusters.indexOf(selected).coerceAtLeast(0)
     val isDesktop = rememberIsDesktop()
-    BoxWithConstraints(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Xs, vertical = HomeDecorSpacing.Xxs),
+    val containerHorizontalPadding = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Base
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = containerHorizontalPadding)
+            .padding(vertical = HomeDecorSpacing.Sm),
+        horizontalArrangement = if (isDesktop) Arrangement.Center else Arrangement.Start,
     ) {
-        val tabWidth = maxWidth / clusters.size
-        val animatedOffset by animateDpAsState(
-            targetValue = tabWidth * selectedIndex,
-            animationSpec = spring(dampingRatio = 0.7f, stiffness = 300f),
-            label = "tabOffset",
-        )
-        Box(
-            modifier = Modifier
-                .offset(x = animatedOffset)
-                .width(tabWidth)
-                .height(2.dp)
-                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(1.dp))
-                .align(Alignment.BottomStart),
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = if (isDesktop) Arrangement.spacedBy(HomeDecorSpacing.Xl, Alignment.CenterHorizontally) else Arrangement.SpaceEvenly,
-        ) {
-            clusters.forEachIndexed { index, cluster ->
-                val clusterLabel = Strings.discoverCluster(cluster)
-                val isSelected = selected == cluster
-                Text(
-                    text = clusterLabel,
-                    modifier = Modifier
-                        .clickable { onSelect(cluster) }
-                        .padding(horizontal = if (isDesktop) HomeDecorSpacing.Sm else 0.dp, vertical = HomeDecorSpacing.Xs)
-                        .semantics {
-                            this.selected = isSelected
-                            contentDescription = Strings.a11yDiscoverCluster(clusterLabel)
-                            role = Role.Tab
-                        },
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        clusters.forEach { cluster ->
+            val clusterLabel = Strings.discoverCluster(cluster)
+            val isSelected = selected == cluster
+
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = HomeDecorSpacing.Sm)
+                    .clickable { onSelect(cluster) }
+                    .testTag(Strings.formatTestTag(Strings.TestTags.discoverClusterTab, cluster))
+                    .semantics {
+                        this.selected = isSelected
+                        contentDescription = Strings.a11yDiscoverCluster(clusterLabel)
+                        role = Role.Tab
+                    }
+                    .padding(bottom = 2.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = clusterLabel,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .height(2.dp)
+                            .width(24.dp)
+                            .clip(RoundedCornerShape(1.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else Color.Transparent,
+                            ),
+                    )
+                }
             }
         }
     }
@@ -266,10 +278,14 @@ fun DiscoverSectionRow(
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val isDesktop = rememberIsDesktop()
 
-    Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+        modifier = Modifier
+            .padding(horizontal = if (isDesktop) 0.dp else HomeDecorSpacing.Base)
+            .testTag(Strings.formatTestTag(Strings.TestTags.discoverSectionRow, section.id)),
+    ) {
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -277,12 +293,15 @@ fun DiscoverSectionRow(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.3).sp,
-                modifier = Modifier.weight(1f),
             )
+            Spacer(Modifier.width(HomeDecorSpacing.Xs))
             TextButton(
                 onClick = onSeeAll,
-                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
-                modifier = Modifier.minimumTouchTarget().semantics { contentDescription = Strings.a11ySeeAll(sectionTitle) },
+                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Xs, vertical = 0.dp),
+                modifier = Modifier
+                    .minimumTouchTarget()
+                    .testTag(Strings.formatTestTag(Strings.TestTags.discoverSeeAll, section.id))
+                    .semantics { contentDescription = Strings.a11ySeeAll(sectionTitle) },
             ) {
                 Text(Strings.seeAll, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
@@ -299,8 +318,9 @@ fun DiscoverSectionRow(
             )
         } else {
             LazyRow(
-                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
+                contentPadding = PaddingValues(start = HomeDecorSpacing.Base, end = HomeDecorSpacing.Base, top = HomeDecorSpacing.Xxs, bottom = HomeDecorSpacing.Xxs),
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 items(section.items, key = { it.id }) { item ->
                     GalleryCard(
@@ -308,7 +328,7 @@ fun DiscoverSectionRow(
                         sectionTitle = sectionTitle,
                         isFavorite = item.id in favoriteSources,
                         isDesktop = false,
-                        modifier = Modifier.width(150.dp),
+                        modifier = Modifier.width(164.dp),
                         onClick = { onUseStyle(item) },
                         onPreview = { onPreview(item) },
                         onFavorite = { onFavorite(item) },
@@ -399,7 +419,7 @@ fun DiscoverDetailScreen(
         val columns = if (isDesktop) GridCells.Fixed(3) else GridCells.Fixed(2)
         LazyVerticalGrid(
             columns = columns,
-            contentPadding = PaddingValues(start = HomeDecorSpacing.ScreenHorizontal, end = HomeDecorSpacing.ScreenHorizontal, top = HomeDecorSpacing.Base, bottom = navBarBottomPadding(120.dp)),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.ScreenHorizontal, end = HomeDecorSpacing.ScreenHorizontal, top = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.NavBarReservation + HomeDecorSpacing.Base),
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
@@ -494,12 +514,14 @@ fun GalleryCard(
             pressedElevation = 3.dp,
         ),
         interactionSource = interactionSource,
-        modifier = modifier.semantics {
-            contentDescription = Strings.a11yInspirationImage(sectionTitle)
-            role = Role.Button
-        },
+        modifier = modifier
+            .testTag(Strings.formatTestTag(Strings.TestTags.discoverSectionCard, item.id))
+            .semantics {
+                contentDescription = Strings.a11yInspirationImage(sectionTitle)
+                role = Role.Button
+            },
     ) {
-        Box(Modifier.fillMaxWidth().aspectRatio(0.8f)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(3f / 4f)) {
             GalleryImageCard(
                 item = item,
                 sectionTitle = sectionTitle,
@@ -540,7 +562,7 @@ fun GalleryImageCard(
             NetworkImage(
                 url = item.imageUrl,
                 contentDescription = Strings.a11yInspirationImage(sectionTitle),
-                modifier = Modifier.fillMaxSize().clip(HomeDecorShape.Card),
+                modifier = Modifier.fillMaxSize(),
             )
         }
 

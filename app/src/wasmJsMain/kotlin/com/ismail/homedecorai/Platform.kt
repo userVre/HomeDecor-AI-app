@@ -37,6 +37,13 @@ actual fun pushHistoryState(path: String, title: String) {
     pushHistoryStateJs(path, title)
 }
 
+@JsFun("(path, title) => { history.replaceState({ path: path }, title, path); document.title = title; }")
+private external fun replaceHistoryStateJs(path: String, title: String)
+
+actual fun replaceHistoryState(path: String, title: String) {
+    replaceHistoryStateJs(path, title)
+}
+
 @JsFun("() => window.matchMedia('(prefers-reduced-motion: reduce)').matches")
 private external fun isReducedMotionEnabledJs(): Boolean
 

@@ -45,6 +45,10 @@ actual fun pushHistoryState(path: String, title: String) {
     // No-op on Android: navigation is handled by Compose Navigation
 }
 
+actual fun replaceHistoryState(path: String, title: String) {
+    // No-op on Android: navigation is handled by Compose Navigation
+}
+
 actual fun isReducedMotionEnabled(): Boolean {
     val context = getApplicationContext() ?: return false
     return try {

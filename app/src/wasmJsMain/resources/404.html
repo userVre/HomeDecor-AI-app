@@ -84,20 +84,6 @@
             outline-offset: 2px;
         }
 
-        /* Compose canvas focus ring override for web elements */
-        canvas:focus-visible {
-            outline: 3px solid #2E6B6E;
-            outline-offset: 2px;
-        }
-
-        /* Ensure focus indicators are visible even with high contrast */
-        @media (forced-colors: active) {
-            *:focus-visible {
-                outline: 3px solid Highlight;
-                outline-offset: 2px;
-            }
-        }
-
         /* Reduced motion preference */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -130,8 +116,6 @@
 
     <!-- Main application mount point with ARIA landmark -->
     <div id="composeApp" role="application" aria-label="HomeDecor AI application">
-        <!-- Main content anchor for skip navigation -->
-        <div id="main-content" tabindex="-1" class="sr-only" aria-hidden="false"></div>
         <!-- Loading indicator shown before Compose mounts -->
         <div id="app-loader" role="status" aria-label="Loading HomeDecor AI application" aria-live="polite" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:24px;font-family:system-ui,-apple-system,sans-serif;background:#f8fffe;">
             <h1 style="margin:0;font-size:28px;font-weight:700;color:#2E6B6E;letter-spacing:-0.5px;">HomeDecor AI</h1>
@@ -170,6 +154,16 @@
     <script src="app.js"></script>
 
     <script>
+        // SPA 404 fallback: when served as 404.html (e.g. GitHub Pages),
+        // redirect to the same path but served from index.html so the app loads.
+        (function() {
+            var path = window.location.pathname;
+            if (path && path !== '/' && path !== '/index.html' && path !== '/404.html') {
+                // Push the current path into history so the app reads it correctly
+                history.replaceState({ path: path }, document.title, path);
+            }
+        })();
+
         // Browser history integration helpers for Kotlin/JS interop
         window.a11yHelpers = {
             setPageTitle: function(title) {

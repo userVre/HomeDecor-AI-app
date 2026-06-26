@@ -80,8 +80,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -347,7 +349,8 @@ fun WebWizardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background)
+            .testTag(Strings.TestTags.wizardScreen),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         WizardHeader(
@@ -499,6 +502,7 @@ private fun WizardHeader(
     Surface(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
+        modifier = Modifier.testTag(Strings.TestTags.wizardHeader),
     ) {
         Row(
             modifier = Modifier
@@ -506,7 +510,10 @@ private fun WizardHeader(
                 .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.testTag(Strings.TestTags.wizardBackButton),
+            ) {
                 Icon(
                     Icons.AutoMirrored.Rounded.ArrowBack,
                     contentDescription = Strings.wizardBack,
@@ -526,7 +533,10 @@ private fun WizardHeader(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            IconButton(onClick = onClose) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.testTag(Strings.TestTags.wizardCloseButton),
+            ) {
                 Icon(
                     Icons.Rounded.Close,
                     contentDescription = Strings.wizardClose,
@@ -560,7 +570,9 @@ private fun WizardProgressBar(
         label = "progressAnim",
     )
 
-    Column(modifier = modifier.semantics {
+    Column(modifier = modifier
+        .testTag(Strings.TestTags.wizardProgressBar)
+        .semantics {
         contentDescription = "Step ${currentIndex + 1} of ${steps.size}: ${stepTitle(currentStep, toolId)}"
     }) {
         Row(
@@ -818,6 +830,7 @@ private fun UploadDropZone(
         modifier = Modifier
             .fillMaxWidth()
             .height(if (isWide) 280.dp else 220.dp)
+            .testTag(Strings.TestTags.wizardUploadDropZone)
             .semantics {
                 role = Role.Button
                 contentDescription = Strings.wizardChooseImage
@@ -903,6 +916,7 @@ private fun TryExampleButton(onTryExample: () -> Unit) {
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = Modifier
+            .testTag(Strings.TestTags.wizardTryExample)
             .semantics {
                 role = Role.Button
                 contentDescription = Strings.wizardTryExample
@@ -1321,7 +1335,8 @@ private fun ReviewStep(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp),
+                        .padding(8.dp)
+                        .testTag(Strings.TestTags.wizardReviewEditRoom),
                 ) {
                     Text(
                         Strings.wizardUploadChange,
@@ -1346,7 +1361,9 @@ private fun ReviewStep(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 1.dp,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(Strings.TestTags.wizardReviewEditRoom),
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -1379,7 +1396,9 @@ private fun ReviewStep(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 1.dp,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(Strings.TestTags.wizardReviewEditStyle),
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -1467,6 +1486,7 @@ private fun GenerateButton(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
+            .testTag(Strings.TestTags.wizardGenerateButton)
             .semantics {
                 role = Role.Button
                 contentDescription = Strings.wizardGenerate
@@ -1873,10 +1893,11 @@ private fun OptionCard(
         color = bgColor,
         interactionSource = interactionSource,
         modifier = modifier
+            .testTag(Strings.formatTestTag(Strings.TestTags.wizardOptionCard, label))
             .semantics {
                 role = Role.RadioButton
                 selected = isSelected
-                contentDescription = label
+                contentDescription = Strings.a11yWizardOption(label, isSelected)
             }
             .scale(scale)
             .border(
@@ -2092,10 +2113,11 @@ private fun StyleOptionCard(
         color = Color.Transparent,
         interactionSource = interactionSource,
         modifier = modifier
+            .testTag(Strings.formatTestTag(Strings.TestTags.wizardStyleCard, styleId))
             .semantics {
                 role = Role.RadioButton
                 selected = isSelected
-                contentDescription = label
+                contentDescription = Strings.a11yWizardOption(label, isSelected)
             }
             .scale(scale)
             .border(
@@ -2197,7 +2219,7 @@ private fun WizardBottomBar(
     Surface(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
-        modifier = modifier,
+        modifier = modifier.testTag(Strings.TestTags.wizardBottomBar),
     ) {
         Row(
             modifier = Modifier
@@ -2210,6 +2232,7 @@ private fun WizardBottomBar(
                     onClick = onBack,
                     shape = RoundedCornerShape(12.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.testTag(Strings.TestTags.wizardBackStepButton),
                 ) {
                     Text(
                         Strings.wizardBack,
@@ -2233,7 +2256,9 @@ private fun WizardBottomBar(
                         color = if (canProceed) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.surfaceContainerHigh,
                         interactionSource = interactionSource,
-                        modifier = Modifier.scale(scale),
+                        modifier = Modifier
+                            .testTag(Strings.TestTags.wizardNextStepButton)
+                            .scale(scale),
                     ) {
                         Text(
                             Strings.wizardNext,
