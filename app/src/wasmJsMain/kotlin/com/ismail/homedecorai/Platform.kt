@@ -1,0 +1,68 @@
+package com.ismail.homedecorai
+
+actual fun platformName(): String = "Web (WasmJs)"
+
+actual fun hasNetworkConnectivity(): Boolean = true
+
+@JsFun("(url) => window.open(url, '_blank')")
+private external fun openUrlJs(url: String)
+
+actual fun openUrl(url: String) {
+    openUrlJs(url)
+}
+
+@JsFun("(msg) => window.alert(msg)")
+private external fun showToastJs(msg: String)
+
+actual fun showToast(message: String) {
+    showToastJs(message)
+}
+
+@JsFun("() => Math.floor(window.innerWidth)")
+private external fun getScreenWidthDpJs(): Int
+
+actual fun getScreenWidthDp(): Int = getScreenWidthDpJs()
+
+@JsFun("(title) => { document.title = title; }")
+private external fun setPageTitleJs(title: String)
+
+actual fun setpageTitle(title: String) {
+    setPageTitleJs(title)
+}
+
+@JsFun("(path, title) => { if (window.location.pathname !== path) { history.pushState({ path: path }, title, path); document.title = title; } }")
+private external fun pushHistoryStateJs(path: String, title: String)
+
+actual fun pushHistoryState(path: String, title: String) {
+    pushHistoryStateJs(path, title)
+}
+
+@JsFun("() => window.matchMedia('(prefers-reduced-motion: reduce)').matches")
+private external fun isReducedMotionEnabledJs(): Boolean
+
+actual fun isReducedMotionEnabled(): Boolean = isReducedMotionEnabledJs()
+
+@JsFun("(msg) => { var el = document.getElementById('a11y-announcer'); if (el) { el.textContent = ''; requestAnimationFrame(() => { el.textContent = msg; }); } }")
+private external fun announceToScreenReaderJs(msg: String)
+
+actual fun announceToScreenReader(message: String) {
+    announceToScreenReaderJs(message)
+}
+
+@JsFun("() => window.location.pathname")
+private external fun getCurrentPathnameJs(): String
+
+actual fun getCurrentPathname(): String = getCurrentPathnameJs()
+
+@JsFun("""(callback) => {
+    var handler = function(event) {
+        var path = (event.detail && event.detail.path) ? event.detail.path : '';
+        callback(path);
+    };
+    window.addEventListener('navigation-change', handler);
+    return function() { window.removeEventListener('navigation-change', handler); };
+}""")
+private external fun subscribeToNavigationChangesJs(callback: (String) -> Unit): () -> Unit
+
+actual fun subscribeToNavigationChanges(onNavigate: (String) -> Unit): () -> Unit =
+    subscribeToNavigationChangesJs(onNavigate)

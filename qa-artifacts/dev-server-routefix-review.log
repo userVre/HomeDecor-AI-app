@@ -1,0 +1,102 @@
+Configuration 'wasmJsNpmAggregated' was resolved during configuration time.
+This is a build performance and scalability issue.
+See https://github.com/gradle/gradle/issues/2298
+Run with --info for a stacktrace.
+Configuration 'wasmJsTestNpmAggregated' was resolved during configuration time.
+This is a build performance and scalability issue.
+See https://github.com/gradle/gradle/issues/2298
+Run with --info for a stacktrace.
+> Task :kotlinWasmKotlinNpmCachesSetup
+> Task :kotlinWasmNodeJsSetup UP-TO-DATE
+> Task :kotlinWasmRestoreYarnLock UP-TO-DATE
+> Task :kotlinWasmYarnSetup UP-TO-DATE
+> Task :app:wasmJsPackageJson UP-TO-DATE
+> Task :app:wasmJsTestPackageJson UP-TO-DATE
+> Task :app:wasmJsPublicPackageJson UP-TO-DATE
+> Task :app:wasmJsTestPublicPackageJson UP-TO-DATE
+> Task :kotlinWasmPackageJsonUmbrella UP-TO-DATE
+> Task :wasmRootPackageJson UP-TO-DATE
+> Task :kotlinWasmNpmInstall UP-TO-DATE
+> Task :kotlinWasmStoreYarnLock UP-TO-DATE
+> Task :kotlinWasmToolingSetup UP-TO-DATE
+> Task :app:kmpPartiallyResolvedDependenciesChecker
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:checkWasmJsMainComposeLibrariesCompatibility
+> Task :app:convertXmlValueResourcesForCommonMain NO-SOURCE
+> Task :app:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :app:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :app:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :app:convertXmlValueResourcesForWasmJsMain NO-SOURCE
+> Task :app:copyNonXmlValueResourcesForWasmJsMain NO-SOURCE
+> Task :app:prepareComposeResourcesTaskForWasmJsMain NO-SOURCE
+> Task :app:generateResourceAccessorsForWasmJsMain NO-SOURCE
+> Task :app:convertXmlValueResourcesForWebMain NO-SOURCE
+> Task :app:copyNonXmlValueResourcesForWebMain NO-SOURCE
+> Task :app:prepareComposeResourcesTaskForWebMain NO-SOURCE
+> Task :app:generateResourceAccessorsForWebMain NO-SOURCE
+> Task :app:generateActualResourceCollectorsForWasmJsMain UP-TO-DATE
+> Task :app:generateComposeResClass UP-TO-DATE
+> Task :app:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :app:wasmJsResolveResourcesFromDependencies UP-TO-DATE
+> Task :app:assembleWasmJsMainResources UP-TO-DATE
+> Task :app:wasmJsResolveSelfResourcesCopyHierarchicalMultiplatformResources UP-TO-DATE
+> Task :app:wasmJsAggregateResources UP-TO-DATE
+> Task :app:wasmJsProcessResources UP-TO-DATE
+> Task :app:unpackSkikoWasmRuntime UP-TO-DATE
+> Task :app:processSkikoRuntimeForKWasm UP-TO-DATE
+> Task :app:compileKotlinWasmJs
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/commonMain/kotlin/com/ismail/homedecorai/ui/paywall/SharedPaywallSheet.kt:214:92 'val Icons.Rounded.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Rounded.ArrowBack.
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/commonMain/kotlin/com/ismail/homedecorai/ui/profile/SharedProfileScreen.kt:252:62 'val Icons.Rounded.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Rounded.Help.
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/commonMain/kotlin/com/ismail/homedecorai/ui/profile/SharedProfileScreen.kt:395:54 'val Icons.Rounded.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Rounded.Help.
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/commonMain/kotlin/com/ismail/homedecorai/ui/tools/WebWizardScreen.kt:1369:50 Unnecessary non-null assertion (!!) on a non-null receiver of type 'String'.
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/commonMain/kotlin/com/ismail/homedecorai/ui/tools/WebWizardScreen.kt:2203:33 'when' is exhaustive so 'else' is redundant here.
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/MainWebView.kt:6:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:7:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:14:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:21:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:26:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:33:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:40:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:45:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:52:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/Platform.kt:57:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:16:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:50:9 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:56:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:59:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:62:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:65:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:68:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:83:13 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:84:22 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/DragDrop.wasmJs.kt:84:33 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:15:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:18:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:19:41 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:21:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:22:39 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:24:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:25:40 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:27:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:30:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:33:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:36:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:39:2 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:65:21 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:66:9 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:66:23 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:67:9 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+w: file:///C:/Users/LENOVO/Desktop/HomeDecor%20AI%20(Web-App)/app/src/wasmJsMain/kotlin/com/ismail/homedecorai/imagepicker/ImagePicker.wasmJs.kt:67:22 This declaration needs opt-in. Its usage should be marked with '@kotlin.js.ExperimentalWasmJsInterop' or '@OptIn(kotlin.js.ExperimentalWasmJsInterop::class)'
+
+> Task :app:wasmJsMainClasses
+> Task :app:compileDevelopmentExecutableKotlinWasmJs
+> Task :app:wasmJsDevelopmentExecutableCompileSync
+
+> Task :app:wasmJsBrowserDevelopmentRun
+<i> [webpack-dev-server] Project is running at:
+<i> [webpack-dev-server] Loopback: http://localhost:8081/, http://[::1]:8081/
+<i> [webpack-dev-server] On Your Network (IPv4): http://192.168.193.1:8081/
+<i> [webpack-dev-server] Content not from webpack is served from 'C:\Users\LENOVO\Desktop\HomeDecor AI (Web-App)\build\wasm\packages\HomeDecorAI-app\kotlin, C:\Users\LENOVO\Desktop\HomeDecor AI (Web-App)\app\build\processedResources\wasmJs\main, C:\Users\LENOVO\Desktop\HomeDecor AI (Web-App)' directory
+<i> [webpack-dev-server] 404s will fallback to '/index.html'
+<i> [webpack-dev-middleware] wait until bundle finished: /
+webpack 5.101.3 compiled successfully in 5594 ms

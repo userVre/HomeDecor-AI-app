@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeDecor AI - AI-Powered Interior & Exterior Design Tool</title>
+    <meta name="description" content="AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.">
+    <meta name="theme-color" content="#2E6B6E">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="HomeDecor AI - AI-Powered Interior & Exterior Design Tool">
+    <meta property="og:description" content="AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.">
+    <meta property="og:url" content="https://homedecor-ai.com">
+    <meta property="og:site_name" content="HomeDecor AI">
+    <meta property="og:image" content="https://homedecor-ai.com/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HomeDecor AI - AI-Powered Interior & Exterior Design Tool">
+    <meta name="twitter:description" content="AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.">
+    <meta name="twitter:image" content="https://homedecor-ai.com/og-image.png">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://homedecor-ai.com">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "HomeDecor AI",
+        "url": "https://homedecor-ai.com",
+        "description": "AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #composeApp {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Skip navigation link - visible on focus for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 16px;
+            z-index: 10000;
+            padding: 12px 24px;
+            background: #2E6B6E;
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: top 0.15s ease;
+        }
+        .skip-link:focus {
+            top: 0;
+            outline: 3px solid #2E6B6E;
+            outline-offset: 2px;
+        }
+
+        /* Visible focus ring for all interactive elements */
+        *:focus-visible {
+            outline: 3px solid #2E6B6E;
+            outline-offset: 2px;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Screen reader only utility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip navigation for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ARIA live region for dynamic announcements -->
+    <div id="a11y-announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+    <!-- Main application mount point with ARIA landmark -->
+    <div id="composeApp" role="application" aria-label="HomeDecor AI application">
+        <!-- Loading indicator shown before Compose mounts -->
+        <div id="app-loader" role="status" aria-label="Loading HomeDecor AI application" aria-live="polite" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:24px;font-family:system-ui,-apple-system,sans-serif;background:#f8fffe;">
+            <h1 style="margin:0;font-size:28px;font-weight:700;color:#2E6B6E;letter-spacing:-0.5px;">HomeDecor AI</h1>
+            <div class="loader-bar-track" style="width:200px;height:4px;background:#e0eaea;border-radius:4px;overflow:hidden;">
+                <div class="loader-bar-fill" style="width:40%;height:100%;background:#2E6B6E;border-radius:4px;animation:loaderSlide 1.4s ease-in-out infinite;"></div>
+            </div>
+            <p style="margin:0;color:#6b7280;font-size:13px;">Preparing your design studio…</p>
+        </div>
+        <div id="app-error" role="alert" aria-label="Failed to load application" style="display:none;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:16px;font-family:system-ui,-apple-system,sans-serif;background:#f8fffe;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <h2 style="margin:0;font-size:18px;color:#1f2937;">Something went wrong</h2>
+            <p style="margin:0;color:#6b7280;font-size:14px;text-align:center;max-width:340px;">The application failed to load. Please check your connection and try again.</p>
+            <button id="app-retry-btn" style="margin-top:8px;padding:10px 28px;background:#2E6B6E;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#234f52'" onmouseout="this.style.background='#2E6B6E'">Retry</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes loaderSlide {
+            0%   { transform: translateX(-150%); }
+            50%  { transform: translateX(180%); }
+            100% { transform: translateX(-150%); }
+        }
+        @keyframes fadeOutLoader {
+            to { opacity: 0; }
+        }
+        #app-loader.fade-out,
+        #app-error.fade-out {
+            animation: fadeOutLoader 0.35s ease forwards;
+        }
+        #app-retry-btn:focus-visible {
+            outline: 3px solid #2E6B6E;
+            outline-offset: 2px;
+        }
+    </style>
+
+    <script src="app.js"></script>
+
+    <script>
+        // Browser history integration helpers for Kotlin/JS interop
+        window.a11yHelpers = {
+            setPageTitle: function(title) {
+                document.title = title;
+            },
+            pushState: function(path, title) {
+                if (window.location.pathname !== path) {
+                    history.pushState({ path: path }, title, path);
+                    document.title = title;
+                }
+            },
+            replaceState: function(path, title) {
+                history.replaceState({ path: path }, title, path);
+                document.title = title;
+            },
+            announce: function(message) {
+                var el = document.getElementById('a11y-announcer');
+                if (el) {
+                    el.textContent = '';
+                    requestAnimationFrame(function() {
+                        el.textContent = message;
+                    });
+                }
+            },
+            getHash: function() {
+                return window.location.hash || '';
+            },
+            isReducedMotion: function() {
+                return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            }
+        };
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.path) {
+                // Dispatch a custom event that Kotlin can listen to
+                window.dispatchEvent(new CustomEvent('navigation-change', {
+                    detail: { path: event.state.path }
+                }));
+            }
+        });
+
+        // Handle initial URL path on load
+        (function() {
+            var path = window.location.pathname;
+            if (path && path !== '/' && path !== '') {
+                history.replaceState({ path: path }, document.title, path);
+            }
+        })();
+
+        // Hide loading spinner once Compose app mounts (with smooth fade-out)
+        (function() {
+            var loader = document.getElementById('app-loader');
+            var errorEl = document.getElementById('app-error');
+            var retryBtn = document.getElementById('app-retry-btn');
+            if (!loader) return;
+
+            function fadeOutAndHide(el) {
+                el.classList.add('fade-out');
+                setTimeout(function() { el.style.display = 'none'; }, 350);
+            }
+
+            // Retry button reloads the page
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() { window.location.reload(); });
+            }
+
+            var observer = new MutationObserver(function(mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var nodes = mutations[i].addedNodes;
+                    for (var j = 0; j < nodes.length; j++) {
+                        var node = nodes[j];
+                        if (node.nodeName === 'CANVAS' || (node.nodeName === 'DIV' && node.id !== 'app-loader' && node.id !== 'app-error')) {
+                            fadeOutAndHide(loader);
+                            observer.disconnect();
+                            return;
+                        }
+                    }
+                }
+            });
+            observer.observe(document.getElementById('composeApp'), { childList: true, subtree: true });
+
+            // Show error after 10s if still loading
+            setTimeout(function() {
+                if (loader && loader.style.display !== 'none') {
+                    fadeOutAndHide(loader);
+                    if (errorEl) errorEl.style.display = 'flex';
+                }
+            }, 10000);
+        })();
+    </script>
+</body>
+</html>
