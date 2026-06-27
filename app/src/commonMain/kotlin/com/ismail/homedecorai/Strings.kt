@@ -9,32 +9,13 @@ object Strings {
     const val navMyBoard = "My Board"
     const val navCreate = "Create"
 
-    // Home / Landing section (desktop)
-    const val homeHeadline = "Design your dream space with AI"
-    const val homeSubtitle = "Upload a photo of any room and watch it transform. Instant mockups, unlimited styles, professional results."
-    const val homeCtaPrimary = "Upload your room"
-    const val homeCtaSecondary = "Explore tools"
-    const val homeBeforeLabel = "Before"
-    const val homeAfterLabel = "After"
-    const val homeFeature1Title = "AI-Powered"
-    const val homeFeature1Body = "Smart AI understands your space and applies design styles that actually work."
-    const val homeFeature2Title = "Instant Results"
-    const val homeFeature2Body = "See your redesigned room in seconds. No waiting, no complexity."
-    const val homeFeature3Title = "Unlimited Styles"
-    const val homeFeature3Body = "From minimalist to maximalist, Scandinavian to boho. Try them all."
-    const val homeTrust1 = "Free to start"
-    const val homeTrust2 = "No credit card"
-    const val homeTrust3 = "Cancel anytime"
-
     // Tools Screen
-    const val proUpper = "PRO"
     const val tryThis = "Try this"
     const val a11yOpenDiamondStore = "Open diamond store"
     fun a11yToolCard(title: String, description: String) = "$title: $description"
 
     // Discover Screen
     const val discoverStylesTitle = "Discover"
-    const val discoverHeroBody = "Find inspiration for your next redesign"
     const val back = "Back"
     fun ideasCount(count: Int) = "$count ideas"
     const val seeAll = "See all"
@@ -145,22 +126,12 @@ object Strings {
         else -> sectionId.replaceFirstChar { it.uppercase() }
     }
 
-    // Gallery items
-    fun galleryItemTitle(itemId: String): String {
-        val base = itemId.substringBeforeLast("-", itemId).replace("-", " ")
-        return base.replaceFirstChar { it.uppercase() }
-    }
-
-    fun galleryItemCategory(category: String): String = category
-        .replaceFirstChar { it.uppercase() }
-
     // Accessibility labels for gallery cards
     fun a11yInspirationImage(sectionTitle: String): String = "$sectionTitle inspiration image"
 
     // My Board
     const val myBoardTitle = "My Board"
     const val boardSignInCta = "Sign in to save your designs."
-    const val boardPreviewLocked = "Sign in to view"
     const val boardSignInToUnlock = "Sign in to unlock"
     const val boardEmptyGenerated = "No designs yet"
     const val boardEmptyGeneratedBody = "Create your first AI design and it will appear here."
@@ -181,8 +152,6 @@ object Strings {
     const val boardGuestBenefit1 = "Save unlimited designs to your board"
     const val boardGuestBenefit2 = "Access your designs on any device"
     const val boardGuestBenefit3 = "Organize into custom projects"
-    const val boardGuestBenefit4 = "Track your design history"
-    const val boardGuestBenefit5 = "Sync across all your devices"
     const val boardGuestMiniCta = "Sign in to unlock your board"
     const val boardGuestBenefitSaved = "Saved Designs"
     const val boardGuestBenefitSavedBody = "Keep every design you create in one place"
@@ -198,14 +167,6 @@ object Strings {
     const val boardSampleKitchen = "Minimalist Kitchen"
     const val boardSampleBathroom = "Luxury Bathroom"
     const val boardSampleOffice = "Home Office"
-    const val boardSampleGarden = "Garden Terrace"
-    const val boardSampleCreated = "Created by AI"
-    const val boardSampleStyle = "Scandinavian"
-    const val boardViewAll = "View all"
-    const val boardUpgradeToUnlock = "Upgrade to Pro to unlock all features"
-    const val boardLockedGenerated = "Your AI designs will appear here"
-    const val boardLockedFavorites = "Saved favorites show up here"
-    const val boardLockedProjects = "Your project collections live here"
 
     // Settings sections
     const val settingsSectionAccount = "Account"
@@ -347,34 +308,15 @@ object Strings {
     const val pwS5Restore = "Restore purchases"
 
     // Legacy aliases used by SharedPaywallSheet
-    const val paywallV3Headline = pwS1Heading
-    const val paywallV3Subtitle = "AI-powered design, premium styles, and export options"
-    const val paywallV3TrialNote = "Join the waitlist for early access"
-    const val paywallV3Before = "Before"
-    const val paywallV3After = "After"
-    const val paywallV3BenefitGenerations = "AI-powered redesigns"
-    const val paywallV3BenefitExport = "Export options"
-    const val paywallV3BenefitWatermark = "Clean output"
-    const val paywallV3BenefitSpeed = "Faster processing"
-    const val paywallV3BenefitStyles = "All styles"
-    const val paywallV3BenefitHistory = "Design history"
     const val paywallV3PlanYearly = "Yearly"
     const val paywallV3PlanPerYear = "/year"
     const val paywallV3PlanAnnualDetail = "Billed annually. Best value."
-    const val paywallV3PlanWeekly = "Weekly"
-    const val paywallV3PlanPerWeek = "/week"
-    const val paywallV3PlanWeeklyDetail = "Billed weekly."
     const val paywallV3PlanMonthly = "Monthly"
     const val paywallV3PlanPerMonth = "/month"
     const val paywallV3PlanMonthlyDetail = "Billed monthly."
     const val paywallV3PlanFamily = "Family"
     const val paywallV3PlanFamilyDetail = "Share with family members."
-    const val paywallV3PlanBestValue = "Best value"
-    const val paywallV3Cta = pwS1Cta
-    const val paywallV3Trust = "Cancel anytime. No commitment."
-    const val paywallV3Restore = "Restore purchases"
-    const val paywallV3JoinWaitlist = "Join waitlist"
-    const val paywallV3ContinueToCheckout = "Continue to checkout"
+
     const val terms = "Terms"
     const val privacyPolicy = "Privacy Policy"
 
@@ -429,7 +371,7 @@ object Strings {
     const val upgradeCompareGenerationsPro = "More"
     const val upgradeCompareExport = "Export Quality"
     const val upgradeCompareExportFree = "Standard"
-    const val upgradeCompareExportPro = "Standard"
+    const val upgradeCompareExportPro = "High"
     const val upgradeCompareWatermark = "Watermark"
     const val upgradeCompareWatermarkFree = "Yes"
     const val upgradeCompareWatermarkPro = "None"
@@ -581,7 +523,6 @@ object Strings {
         // Tools
         const val toolsHeader = "tools_header"
         const val toolCard = "tool_card_%s"
-        const val toolCardCta = "tool_card_cta_%s"
 
         // Discover
         const val discoverClusterTab = "discover_cluster_tab_%s"

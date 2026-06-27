@@ -251,7 +251,7 @@ fun ToolCard(
     )
 
     val cardHeight = when {
-        isDesktop -> 440.dp
+        isDesktop -> 380.dp
         isTablet -> 280.dp
         else -> 220.dp
     }
@@ -375,7 +375,7 @@ fun ToolCard(
                         .widthIn(min = ctaMinWidth)
                         .border(
                             width = 1.dp,
-                            color = Color.White.copy(alpha = 0.5f),
+                            color = Color.Black.copy(alpha = 0.15f),
                             shape = CtaShape,
                         ),
                 ) {

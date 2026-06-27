@@ -63,12 +63,11 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardScreenState
-import com.ismail.homedecorai.model.BoardTab
+import com.ismail.homedecorai.model.DiscoverScreenState
 import com.ismail.homedecorai.model.DiscoverSectionItem
 import com.ismail.homedecorai.model.GalleryCardItem
 import com.ismail.homedecorai.model.ToolItem
 import com.ismail.homedecorai.model.ToolsScreenState
-import com.ismail.homedecorai.model.DiscoverScreenState
 import com.ismail.homedecorai.ui.ResponsiveLayout
 import com.ismail.homedecorai.ui.board.SharedMyBoardScreen
 import com.ismail.homedecorai.ui.discover.SharedDiscoverScreen

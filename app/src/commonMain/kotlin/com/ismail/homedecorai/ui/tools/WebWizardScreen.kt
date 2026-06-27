@@ -2,15 +2,9 @@ package com.ismail.homedecorai.ui.tools
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -1574,16 +1568,13 @@ private fun GenerateButton(onClick: () -> Unit) {
 
 @Composable
 private fun GeneratingState() {
-    val infiniteTransition = rememberInfiniteTransition(label = "generating")
-    val shimmer by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "shimmer",
-    )
+    var shimmer by remember { mutableStateOf(0f) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            shimmer = 1f; kotlinx.coroutines.delay(750)
+            shimmer = 0f; kotlinx.coroutines.delay(750)
+        }
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1867,16 +1858,13 @@ private fun TipRow(text: String) {
 
 @Composable
 private fun WaitlistSuccess() {
-    val infiniteTransition = rememberInfiniteTransition(label = "success")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "pulse",
-    )
+    var pulse by remember { mutableStateOf(0.8f) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            pulse = 1.1f; kotlinx.coroutines.delay(500)
+            pulse = 0.8f; kotlinx.coroutines.delay(500)
+        }
+    }
 
     Surface(
         shape = RoundedCornerShape(20.dp),
@@ -1898,7 +1886,7 @@ private fun WaitlistSuccess() {
                         contentDescription = null,
                         modifier = Modifier
                             .size(36.dp)
-                            .graphicsLayer { scaleX = scale; scaleY = scale },
+                            .graphicsLayer { scaleX = pulse; scaleY = pulse },
                         tint = Color.White,
                     )
                 }

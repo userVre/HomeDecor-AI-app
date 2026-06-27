@@ -223,21 +223,22 @@ private fun PaywallTopBar(
             .testTag(Strings.TestTags.paywallTopBar),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(
-            onClick = if (currentStep == 1) onClose else onBack,
-            modifier = Modifier
-                .size(48.dp)
-                .testTag(
-                    if (currentStep == 1) Strings.TestTags.paywallCloseButton
-                    else Strings.TestTags.paywallBackButton
-                ),
-        ) {
-            Icon(
-                imageVector = if (currentStep == 1) Icons.Rounded.Close else Icons.Rounded.ArrowBack,
-                contentDescription = if (currentStep == 1) Strings.proA11yClose else Strings.paywallA11yBack,
-                tint = ProTextSecondary,
-                modifier = Modifier.size(22.dp),
-            )
+        if (currentStep == 1) {
+            Spacer(Modifier.size(48.dp))
+        } else {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .size(48.dp)
+                    .testTag(Strings.TestTags.paywallBackButton),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ArrowBack,
+                    contentDescription = Strings.paywallA11yBack,
+                    tint = ProTextSecondary,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
         }
 
         Spacer(Modifier.weight(1f))
@@ -267,7 +268,23 @@ private fun PaywallTopBar(
 
         Spacer(Modifier.weight(1f))
 
-        Spacer(Modifier.size(48.dp))
+        if (currentStep == 1) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier
+                    .size(48.dp)
+                    .testTag(Strings.TestTags.paywallCloseButton),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = Strings.proA11yClose,
+                    tint = ProTextSecondary,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+        } else {
+            Spacer(Modifier.size(48.dp))
+        }
     }
 }
 
@@ -619,7 +636,7 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
                 Triple(Strings.pwS3Row1Feature, Strings.pwS3Row1Free, "\u2713"),
                 Triple(Strings.pwS3Row2Feature, Strings.pwS3Row2Free, "\u2713"),
                 Triple(Strings.pwS3Row3Feature, Strings.pwS3Row3Free, "\u2713"),
-                Triple(Strings.pwS3Row4Feature, Strings.pwS3Row4Free, "Yes"),
+                Triple(Strings.pwS3Row4Feature, Strings.pwS3Row4Free, "\u2713"),
                 Triple(Strings.pwS3Row5Feature, Strings.pwS3Row5Free, "\u2713"),
                 Triple(Strings.pwS3Row6Feature, Strings.pwS3Row6Free, "\u2713"),
             )

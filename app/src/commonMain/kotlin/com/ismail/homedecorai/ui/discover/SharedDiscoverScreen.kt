@@ -330,7 +330,7 @@ fun DiscoverSectionRow(
                         sectionTitle = sectionTitle,
                         isFavorite = item.id in favoriteSources,
                         isDesktop = false,
-                        modifier = Modifier.width(164.dp),
+                        modifier = Modifier.width(164.dp).aspectRatio(4f / 3f),
                         onClick = { onUseStyle(item) },
                         onPreview = { onPreview(item) },
                         onFavorite = { onFavorite(item) },
@@ -372,7 +372,7 @@ fun DiscoverSectionGrid(
                         sectionTitle = sectionTitle,
                         isFavorite = item.id in favoriteSources,
                         isDesktop = true,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).aspectRatio(4f / 3f),
                         onClick = { onUseStyle(item) },
                         onPreview = { onPreview(item) },
                         onFavorite = { onFavorite(item) },
@@ -596,7 +596,7 @@ fun HoverOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f))
+            .background(Color.Black.copy(alpha = 0.4f))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

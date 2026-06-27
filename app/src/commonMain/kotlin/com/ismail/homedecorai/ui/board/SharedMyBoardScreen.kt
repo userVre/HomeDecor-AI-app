@@ -498,7 +498,7 @@ private fun BoardDesignPreviewCard(
     val cardWidth = if (isDesktop) 200.dp else 170.dp
     Surface(
         shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         modifier = modifier.width(cardWidth),
@@ -965,7 +965,7 @@ private fun LockedPreviewCard(
     Surface(
         onClick = onClick,
         shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         modifier = modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardLockedCard, name)),

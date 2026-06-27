@@ -823,7 +823,7 @@ private fun ProfileBenefitChip(
 private fun ProfileDesignPreviewCard(name: String, style: String) {
     Surface(
         shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surface,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
         modifier = Modifier.width(160.dp),

@@ -201,7 +201,6 @@ object HomeDecorColors {
 // Core palette
 val StudioInk            = HomeDecorColors.Ink
 val StudioAccent         = HomeDecorColors.Accent
-val StudioBlue           = HomeDecorColors.Accent
 val StudioGreen          = HomeDecorColors.Success
 val StudioMoss           = HomeDecorColors.SecondaryColor
 val StudioRose           = HomeDecorColors.ErrorColor
