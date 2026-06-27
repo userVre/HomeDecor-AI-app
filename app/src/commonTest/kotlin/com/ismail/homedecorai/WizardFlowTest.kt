@@ -33,16 +33,22 @@ class WizardFlowTest {
         assertNotNull(Strings.TestTags.wizardNextStepButton)
         assertNotNull(Strings.TestTags.wizardReviewEditRoom)
         assertNotNull(Strings.TestTags.wizardReviewEditStyle)
+        assertNotNull(Strings.TestTags.wizardStepContent)
     }
 
     @Test
     fun testWizardOptionCardTagFormat() {
-        assertEquals("wizard_option_card_Living Room", Strings.TestTags.wizardOptionCard.format("Living Room"))
+        assertEquals("wizard_option_card_Living Room", Strings.formatTestTag(Strings.TestTags.wizardOptionCard, "Living Room"))
     }
 
     @Test
     fun testWizardStyleCardTagFormat() {
-        assertEquals("wizard_style_card_modern", Strings.TestTags.wizardStyleCard.format("modern"))
+        assertEquals("wizard_style_card_modern", Strings.formatTestTag(Strings.TestTags.wizardStyleCard, "modern"))
+    }
+
+    @Test
+    fun testWizardStepContentTagFormat() {
+        assertEquals("wizard_step_content_Upload", Strings.formatTestTag(Strings.TestTags.wizardStepContent, "Upload"))
     }
 
     @Test

@@ -18,12 +18,12 @@ class BottomNavTest {
 
     @Test
     fun testBottomNavItemTagFormat() {
-        assertEquals("bottom_nav_item_tools", Strings.TestTags.bottomNavItem.format("tools"))
+        assertEquals("bottom_nav_item_tools", Strings.formatTestTag(Strings.TestTags.bottomNavItem, "tools"))
     }
 
     @Test
     fun testTopNavItemTagFormat() {
-        assertEquals("top_nav_item_discover", Strings.TestTags.topNavItem.format("discover"))
+        assertEquals("top_nav_item_discover", Strings.formatTestTag(Strings.TestTags.topNavItem, "discover"))
     }
 
     @Test
@@ -49,7 +49,7 @@ class BottomNavTest {
     fun testBottomNavItemLabels() {
         assertEquals("Tools", Strings.navTools)
         assertEquals("Discover", Strings.navDiscover)
-        assertEquals("Board", Strings.navBoard)
+        assertEquals("My Board", Strings.navMyBoard)
         assertEquals("Profile", Strings.navProfile)
     }
 
@@ -57,8 +57,8 @@ class BottomNavTest {
     fun testTopNavItemLabels() {
         assertEquals("Tools", Strings.navTools)
         assertEquals("Discover", Strings.navDiscover)
-        assertEquals("Board", Strings.navBoard)
-        assertEquals("Upgrade", Strings.navUpgrade)
+        assertEquals("My Board", Strings.navMyBoard)
+        assertEquals("Pro", Strings.navUpgrade)
         assertEquals("Profile", Strings.navProfile)
     }
 

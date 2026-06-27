@@ -255,9 +255,11 @@ private fun stepTitle(step: WizardStep, toolId: String?): String = when (step) {
     WizardStep.RoomType -> when (toolId) {
         "facade", "exterior" -> "Exterior Type"
         "garden" -> "Outdoor Area"
+        "paint" -> "Wall Type"
         "floor" -> "Floor Area"
         "replace" -> "Furniture Type"
         "layout" -> "Layout Type"
+        "reference" -> "Room Type"
         else -> Strings.wizardStepRoom
     }
     WizardStep.Style -> Strings.wizardStepStyle
@@ -267,37 +269,67 @@ private fun stepTitle(step: WizardStep, toolId: String?): String = when (step) {
 private fun roomStepTitle(toolId: String?): String = when (toolId) {
     "facade", "exterior" -> "What type of exterior is this?"
     "garden" -> "What outdoor area are you redesigning?"
+    "paint" -> "What room are you painting?"
     "floor" -> "Where should the new flooring go?"
     "replace" -> "What furniture do you want to replace?"
     "layout" -> "What layout are you improving?"
+    "reference" -> Strings.wizardRoomTitle
     else -> Strings.wizardRoomTitle
 }
 
 private fun roomStepSubtitle(toolId: String?): String = when (toolId) {
     "facade", "exterior" -> "Select the building type that best matches the facade"
     "garden" -> "Select the outdoor area that best matches your project"
+    "paint" -> "Select the room where you want to change wall colors"
     "floor" -> "Select the room or area that needs new flooring"
     "replace" -> "Select the furniture category to swap in your design"
     "layout" -> "Select the floor plan type that needs a better flow"
+    "reference" -> Strings.wizardRoomSubtitle
     else -> Strings.wizardRoomSubtitle
 }
 
 private fun roomReviewLabel(toolId: String?): String = when (toolId) {
     "facade", "exterior" -> "Exterior"
     "garden" -> "Outdoor Area"
+    "paint" -> "Room"
     "floor" -> "Floor Area"
     "replace" -> "Furniture"
     "layout" -> "Layout"
+    "reference" -> "Room"
     else -> Strings.wizardReviewRoom
 }
 
 private fun roomRequiredMessage(toolId: String?): String = when (toolId) {
+    "interior" -> "Select a room type to continue"
     "facade", "exterior" -> "Select an exterior type to continue"
     "garden" -> "Select an outdoor area to continue"
+    "paint" -> "Select a wall type to continue"
     "floor" -> "Select a floor area to continue"
     "replace" -> "Select a furniture type to continue"
     "layout" -> "Select a layout type to continue"
+    "reference" -> "Select a room type to continue"
     else -> "Select a room type to continue"
+}
+
+private fun uploadTitleForTool(toolId: String?): String = when (toolId) {
+    "facade", "exterior" -> "Upload a photo of your exterior"
+    "garden" -> "Upload a photo of your outdoor area"
+    "paint" -> "Upload a photo of your wall"
+    "floor" -> "Upload a photo of your floor"
+    "replace" -> "Upload a photo of your furniture"
+    "layout" -> "Upload a photo of your floor plan"
+    "reference" -> "Upload a photo of your space"
+    else -> Strings.wizardUploadTitle
+}
+
+private fun uploadSubtitleForTool(toolId: String?): String = when (toolId) {
+    "facade", "exterior" -> "Drag and drop an exterior photo, or click to browse"
+    "garden" -> "Drag and drop a garden photo, or click to browse"
+    "paint" -> "Drag and drop a wall photo, or click to browse"
+    "floor" -> "Drag and drop a floor photo, or click to browse"
+    "replace" -> "Drag and drop a furniture photo, or click to browse"
+    "layout" -> "Drag and drop a floor plan photo, or click to browse"
+    else -> Strings.wizardUploadSubtitle
 }
 
 // ---------------------------------------------------------------------------
@@ -379,7 +411,8 @@ fun WebWizardScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .focusRequester(stepFocusRequester),
+                .focusRequester(stepFocusRequester)
+                .testTag(Strings.formatTestTag(Strings.TestTags.wizardStepContent, state.step.name)),
         ) {
             AnimatedContent(
                 targetState = state.step,
@@ -661,9 +694,9 @@ private fun UploadStep(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth(if (isWide) 0.85f else 1f)
+            .fillMaxWidth(if (isWide) 0.92f else 1f)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = if (isWide) 48.dp else HomeDecorSpacing.Base)
+            .padding(horizontal = if (isWide) 24.dp else HomeDecorSpacing.Base)
             .padding(vertical = HomeDecorSpacing.Lg),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -678,7 +711,7 @@ private fun UploadStep(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        Strings.wizardUploadTitle,
+                        uploadTitleForTool(state.tool?.id),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
@@ -686,12 +719,12 @@ private fun UploadStep(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        Strings.wizardUploadSubtitle,
+                        uploadSubtitleForTool(state.tool?.id),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(20.dp))
                     if (state.photo != null) {
                         PhotoPreview(
                             photo = state.photo,
@@ -727,13 +760,13 @@ private fun UploadStep(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Text(
-                        Strings.wizardUploadTitle,
+                        uploadTitleForTool(state.tool?.id),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        Strings.wizardUploadSubtitle,
+                        uploadSubtitleForTool(state.tool?.id),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -745,7 +778,7 @@ private fun UploadStep(
             }
         } else {
             Text(
-                Strings.wizardUploadTitle,
+                uploadTitleForTool(state.tool?.id),
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
@@ -753,12 +786,12 @@ private fun UploadStep(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                Strings.wizardUploadSubtitle,
+                uploadSubtitleForTool(state.tool?.id),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(20.dp))
             if (state.photo != null) {
                 PhotoPreview(
                     photo = state.photo,
@@ -829,7 +862,7 @@ private fun UploadDropZone(
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (isWide) 280.dp else 220.dp)
+            .height(if (isWide) 280.dp else 200.dp)
             .testTag(Strings.TestTags.wizardUploadDropZone)
             .semantics {
                 role = Role.Button
@@ -911,24 +944,54 @@ private fun UploadDropZone(
 
 @Composable
 private fun TryExampleButton(onTryExample: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+        label = "tryExampleScale",
+    )
+
     Surface(
         onClick = onTryExample,
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
+        color = if (isHovered)
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+        else
+            Color.Transparent,
+        interactionSource = interactionSource,
         modifier = Modifier
             .testTag(Strings.TestTags.wizardTryExample)
+            .scale(scale)
+            .border(
+                width = 1.5.dp,
+                color = MaterialTheme.colorScheme.secondary,
+                shape = RoundedCornerShape(12.dp),
+            )
             .semantics {
                 role = Role.Button
                 contentDescription = Strings.wizardTryExample
             },
     ) {
-        Text(
-            Strings.wizardTryExample,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(
+                Icons.Rounded.Star,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.secondary,
+            )
+            Text(
+                Strings.wizardTryExample,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 
@@ -1122,9 +1185,9 @@ private fun RoomTypeStep(
 
     Column(
         modifier = modifier
-            .fillMaxWidth(if (isWide) 0.85f else 1f)
+            .fillMaxWidth(if (isWide) 0.92f else 1f)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = if (isWide) 48.dp else HomeDecorSpacing.Base)
+            .padding(horizontal = if (isWide) 40.dp else HomeDecorSpacing.Base)
             .padding(vertical = HomeDecorSpacing.Lg),
     ) {
         Text(
@@ -1188,9 +1251,9 @@ private fun StyleStep(
 
     Column(
         modifier = modifier
-            .fillMaxWidth(if (isWide) 0.85f else 1f)
+            .fillMaxWidth(if (isWide) 0.92f else 1f)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = if (isWide) 48.dp else HomeDecorSpacing.Base)
+            .padding(horizontal = if (isWide) 40.dp else HomeDecorSpacing.Base)
             .padding(vertical = HomeDecorSpacing.Lg),
     ) {
         Text(
@@ -1254,9 +1317,9 @@ private fun ReviewStep(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth(if (isWide) 0.85f else 1f)
+            .fillMaxWidth(if (isWide) 0.92f else 1f)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = if (isWide) 48.dp else HomeDecorSpacing.Base)
+            .padding(horizontal = if (isWide) 40.dp else HomeDecorSpacing.Base)
             .padding(vertical = HomeDecorSpacing.Lg),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -2273,7 +2336,7 @@ private fun WizardBottomBar(
                         Spacer(Modifier.height(4.dp))
                         Text(
                             when (state.step) {
-                                WizardStep.Upload -> "Upload a photo to continue"
+                                WizardStep.Upload -> "Upload a photo or try an example to continue"
                                 WizardStep.RoomType -> roomRequiredMessage(state.tool?.id)
                                 WizardStep.Style -> "Choose a style to continue"
                                 else -> ""

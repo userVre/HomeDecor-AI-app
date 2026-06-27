@@ -4,29 +4,40 @@
 //
 // CMP webpack.config.d files are concatenated into the generated webpack.config.js
 // BEFORE `module.exports = config`, so we must modify the `config` variable directly.
-// Using `module.exports = { ... }` would be overwritten by the generated export.
 
 (function ensureSpaRouting() {
-    // Guard: if `config` is not defined yet, nothing to patch
     if (typeof config === 'undefined') return;
 
-    // Ensure devServer object exists
-    if (!config.devServer) {
-        config.devServer = {};
-    }
+    var oldDevServer = config.devServer || {};
+    config.devServer = {};
 
-    // Set individual properties so we never blow away other plugin-set keys
-    config.devServer.historyApiFallback = {
-        rewrites: [
-            { from: /\.(js|css|png|jpg|jpeg|gif|webp|svg|ico|json|wasm|woff|woff2|ttf|eot)$/, to: function(context) { return context.parsedUrl.pathname; } }
-        ]
-    };
+    // Copy over CMP settings we want to keep
+    if (oldDevServer.client) config.devServer.client = oldDevServer.client;
+    if (oldDevServer.open !== undefined) config.devServer.open = oldDevServer.open;
+    if (oldDevServer.host) config.devServer.host = oldDevServer.host;
+    config.devServer.static = oldDevServer.static || false;
     config.devServer.allowedHosts = 'all';
-    if (!config.devServer.port) {
-        config.devServer.port = 8081;
-    }
-    // Ensure static directory serves from dist
-    if (!config.devServer.static) {
-        config.devServer.static = false;
-    }
+    config.devServer.port = oldDevServer.port || 8081;
+
+    // Use setupMiddlewares to inject SPA fallback at the very front of the
+    // middleware stack. This runs BEFORE any static-file or historyApiFallback
+    // middleware, so it catches every request that doesn't match a real file.
+    config.devServer.setupMiddlewares = function(middlewares, devServer) {
+        // Add SPA fallback as the FIRST middleware
+        middlewares.unshift({
+            name: 'spa-fallback',
+            middleware: function(req, res, next) {
+                // Skip requests for actual files (contain a dot in the last path segment)
+                var pathname = req.url.split('?')[0];
+                var lastSegment = pathname.split('/').pop();
+                if (lastSegment && lastSegment.includes('.')) {
+                    return next();
+                }
+                // Rewrite to index.html
+                req.url = '/index.html';
+                next();
+            }
+        });
+        return middlewares;
+    };
 })();

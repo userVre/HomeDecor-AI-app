@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Save
@@ -158,7 +159,7 @@ fun SharedDiscoverScreen(
                 start = if (isDesktop) HomeDecorSpacing.ScreenHorizontal else 0.dp,
                 end = if (isDesktop) HomeDecorSpacing.ScreenHorizontal else 0.dp,
                 top = HomeDecorSpacing.Xs,
-                bottom = HomeDecorSpacing.NavBarReservation + HomeDecorSpacing.Base,
+                bottom = HomeDecorSpacing.Lg,
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
         ) {
@@ -214,50 +215,43 @@ fun ScreenHeaderPills(title: String, trailing: (@Composable () -> Unit)?) {
 
 @Composable
 fun DiscoverClusterTabs(clusters: List<String>, selected: String, onSelect: (String) -> Unit) {
-    val isDesktop = rememberIsDesktop()
-    val containerHorizontalPadding = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Base
-
-    Row(
+    Surface(
+        shape = HomeDecorShape.Full,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = containerHorizontalPadding)
-            .padding(vertical = HomeDecorSpacing.Sm),
-        horizontalArrangement = if (isDesktop) Arrangement.Center else Arrangement.Start,
+            .padding(horizontal = HomeDecorSpacing.Base)
+            .padding(vertical = HomeDecorSpacing.Xs)
+            .fillMaxWidth(),
     ) {
-        clusters.forEach { cluster ->
-            val clusterLabel = Strings.discoverCluster(cluster)
-            val isSelected = selected == cluster
+        Row(
+            modifier = Modifier.padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            clusters.forEach { cluster ->
+                val clusterLabel = Strings.discoverCluster(cluster)
+                val isSelected = selected == cluster
 
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = HomeDecorSpacing.Sm)
-                    .clickable { onSelect(cluster) }
-                    .testTag(Strings.formatTestTag(Strings.TestTags.discoverClusterTab, cluster))
-                    .semantics {
-                        this.selected = isSelected
-                        contentDescription = Strings.a11yDiscoverCluster(clusterLabel)
-                        role = Role.Tab
-                    }
-                    .padding(bottom = 2.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Surface(
+                    onClick = { onSelect(cluster) },
+                    shape = HomeDecorShape.Full,
+                    color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    shadowElevation = if (isSelected) 1.dp else 0.dp,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(Strings.formatTestTag(Strings.TestTags.discoverClusterTab, cluster))
+                        .semantics {
+                            this.selected = isSelected
+                            contentDescription = Strings.a11yDiscoverCluster(clusterLabel)
+                            role = Role.Tab
+                        },
+                ) {
                     Text(
                         text = clusterLabel,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                         color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .height(2.dp)
-                            .width(24.dp)
-                            .clip(RoundedCornerShape(1.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primary
-                                else Color.Transparent,
-                            ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 10.dp),
                     )
                 }
             }
@@ -279,13 +273,13 @@ fun DiscoverSectionRow(
     val isDesktop = rememberIsDesktop()
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
-        modifier = Modifier
-            .padding(horizontal = if (isDesktop) 0.dp else HomeDecorSpacing.Base)
-            .testTag(Strings.formatTestTag(Strings.TestTags.discoverSectionRow, section.id)),
+        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.discoverSectionRow, section.id)),
     ) {
         Row(
-            Modifier.fillMaxWidth(),
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = if (isDesktop) 0.dp else HomeDecorSpacing.Base),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -293,6 +287,7 @@ fun DiscoverSectionRow(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.3).sp,
+                modifier = Modifier.semantics { heading() },
             )
             Spacer(Modifier.width(HomeDecorSpacing.Xs))
             TextButton(
@@ -304,6 +299,13 @@ fun DiscoverSectionRow(
                     .semantics { contentDescription = Strings.a11ySeeAll(sectionTitle) },
             ) {
                 Text(Strings.seeAll, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(HomeDecorSpacing.Xxs))
+                Icon(
+                    Icons.AutoMirrored.Rounded.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
             }
         }
 
@@ -419,7 +421,7 @@ fun DiscoverDetailScreen(
         val columns = if (isDesktop) GridCells.Fixed(3) else GridCells.Fixed(2)
         LazyVerticalGrid(
             columns = columns,
-            contentPadding = PaddingValues(start = HomeDecorSpacing.ScreenHorizontal, end = HomeDecorSpacing.ScreenHorizontal, top = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.NavBarReservation + HomeDecorSpacing.Base),
+            contentPadding = PaddingValues(start = HomeDecorSpacing.ScreenHorizontal, end = HomeDecorSpacing.ScreenHorizontal, top = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.Lg),
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
@@ -481,7 +483,7 @@ fun DiscoverPreviewDialog(
                     item = item,
                     sectionTitle = sectionTitle,
                     isDesktop = false,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(0.92f),
+                    modifier = Modifier.fillMaxWidth().aspectRatio(4f / 3f),
                 )
                 Text(sectionTitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             }
@@ -521,7 +523,7 @@ fun GalleryCard(
                 role = Role.Button
             },
     ) {
-        Box(Modifier.fillMaxWidth().aspectRatio(3f / 4f)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(4f / 3f)) {
             GalleryImageCard(
                 item = item,
                 sectionTitle = sectionTitle,
@@ -556,7 +558,7 @@ fun GalleryImageCard(
         modifier = modifier
             .clip(HomeDecorShape.Card)
             .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.BottomStart,
+        contentAlignment = Alignment.Center,
     ) {
         if (item.imageUrl.isNotEmpty()) {
             NetworkImage(
@@ -569,7 +571,8 @@ fun GalleryImageCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f))))
+                .align(Alignment.BottomCenter)
+                .background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.4f))))
                 .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
         ) {
             Text(

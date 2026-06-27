@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -78,6 +80,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.openUrl
+import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
 import homedecorai.app.generated.resources.Res
 import homedecorai.app.generated.resources.assets_media_paywall_carouseljapandibedroom
@@ -98,23 +101,13 @@ fun SharedPaywallSheet(
     onPlanSelected: (String) -> Unit,
     onContinue: () -> Unit,
     onRestore: () -> Unit,
-    ctaLabel: String = Strings.paywallV3Cta,
-    showRestore: Boolean = true,
 ) {
     val proColors = rememberSheetPalette()
     val modalTapBlocker = remember { MutableInteractionSource() }
     var currentStep by remember { mutableIntStateOf(1) }
     var selectedReminder by remember { mutableIntStateOf(2) }
     var selectedPlan by remember { mutableStateOf("yearly") }
-
-    fun goNext() {
-        if (currentStep < TOTAL_STEPS) currentStep++
-    }
-
-    fun goCheckout() {
-        onPlanSelected(selectedPlan)
-        currentStep = TOTAL_STEPS
-    }
+    val isDesktop = rememberIsDesktop()
 
     fun goBack() {
         if (currentStep > 1) currentStep-- else onClose()
@@ -129,7 +122,18 @@ fun SharedPaywallSheet(
     ) {
         Box(
             Modifier
-                .fillMaxSize()
+                .then(
+                    if (isDesktop) {
+                        Modifier
+                            .align(Alignment.Center)
+                            .widthIn(max = 480.dp)
+                            .fillMaxHeight(0.9f)
+                            .padding(horizontal = 16.dp)
+                    } else {
+                        Modifier.fillMaxSize()
+                    }
+                )
+                .clip(RoundedCornerShape(if (isDesktop) 24.dp else 0.dp))
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(proColors.gradientStart, proColors.gradientMid, proColors.gradientEnd),
@@ -150,7 +154,8 @@ fun SharedPaywallSheet(
                     Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp),
+                        .padding(horizontal = 20.dp)
+                        .testTag(Strings.formatTestTag(Strings.TestTags.paywallStepContent, currentStep)),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     when (currentStep) {
@@ -175,27 +180,30 @@ fun SharedPaywallSheet(
                     Spacer(Modifier.height(24.dp))
                 }
 
-                if (currentStep < 5) {
-                    PaywallBottomCta(
-                        colors = proColors,
-                        label = when (currentStep) {
-                            1 -> Strings.pwS1Cta
-                            2 -> Strings.pwS2Cta
-                            3 -> Strings.pwS3Cta
-                            4 -> Strings.pwS4Cta
-                            else -> ""
-                        },
-                        onClick = if (currentStep == 4) ::goCheckout else ::goNext,
-                        onRestore = onRestore,
-                    )
-                } else {
-                    PaywallBottomCta(
-                        colors = proColors,
-                        label = Strings.pwS5Cta,
-                        onClick = onContinue,
-                        onRestore = onRestore,
-                    )
+                val ctaLabel = when (currentStep) {
+                    1 -> Strings.pwS1Cta
+                    2 -> Strings.pwS2Cta
+                    3 -> Strings.pwS3Cta
+                    4 -> Strings.pwS4Cta
+                    5 -> Strings.pwS5Cta
+                    else -> ""
                 }
+
+                PaywallBottomCta(
+                    colors = proColors,
+                    label = ctaLabel,
+                    onClick = {
+                        when (currentStep) {
+                            1, 2, 3 -> currentStep++
+                            4 -> {
+                                onPlanSelected(selectedPlan)
+                                currentStep = 5
+                            }
+                            5 -> onContinue()
+                        }
+                    },
+                    onRestore = onRestore,
+                )
             }
         }
     }

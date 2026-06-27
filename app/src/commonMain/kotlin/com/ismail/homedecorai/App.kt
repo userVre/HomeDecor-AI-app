@@ -101,12 +101,12 @@ fun App() {
         val initialTab = remember {
             val path = getCurrentPathname().removePrefix("/")
             when {
+                path.startsWith("create/") -> WebTab.Tools
                 path.startsWith("tools") -> WebTab.Tools
                 path.startsWith("discover") -> WebTab.Discover
                 path.startsWith("board") -> WebTab.Board
                 path.startsWith("profile") -> WebTab.Profile
                 path.startsWith("pro") -> WebTab.Upgrade
-                path.startsWith("create/") -> WebTab.Tools
                 else -> WebTab.Tools
             }
         }
@@ -308,16 +308,16 @@ fun App() {
             val unsubscribe = subscribeToNavigationChanges { path ->
                 val cleanPath = path.removePrefix("/")
                 when {
-                    cleanPath.startsWith("tools") -> { selectedTab = WebTab.Tools; activeWizard = null }
-                    cleanPath.startsWith("discover") -> { selectedTab = WebTab.Discover; activeWizard = null }
-                    cleanPath.startsWith("board") -> { selectedTab = WebTab.Board; activeWizard = null }
-                    cleanPath.startsWith("profile") -> { selectedTab = WebTab.Profile; activeWizard = null }
-                    cleanPath.startsWith("pro") -> { selectedTab = WebTab.Upgrade; activeWizard = null }
                     cleanPath.startsWith("create/") -> {
                         val toolId = cleanPath.removePrefix("create/")
                         val tool = toolsState.tools.find { it.id == toolId }
                         if (tool != null) { activeWizard = tool } else { selectedTab = WebTab.Tools; activeWizard = null }
                     }
+                    cleanPath.startsWith("tools") -> { selectedTab = WebTab.Tools; activeWizard = null }
+                    cleanPath.startsWith("discover") -> { selectedTab = WebTab.Discover; activeWizard = null }
+                    cleanPath.startsWith("board") -> { selectedTab = WebTab.Board; activeWizard = null }
+                    cleanPath.startsWith("profile") -> { selectedTab = WebTab.Profile; activeWizard = null }
+                    cleanPath.startsWith("pro") -> { selectedTab = WebTab.Upgrade; activeWizard = null }
                 }
             }
             onDispose { unsubscribe() }
@@ -491,8 +491,6 @@ fun App() {
                                         onPlanSelected = { selectedPlan = it },
                                         onContinue = { openUrl("https://homedecor-ai.com/waitlist") },
                                         onRestore = { openUrl("https://homedecor-ai.com/support") },
-                                        ctaLabel = Strings.paywallV3JoinWaitlist,
-                                        showRestore = false,
                                     )
                                 }
                             }
@@ -576,7 +574,7 @@ private fun DesktopAppLayout(
             onSelectTab = onSelectTab,
             diamonds = toolsState.diamonds,
             isPro = toolsState.isPro,
-            onCredits = onOpenPaywall,
+            onCredits = { },
         )
 
         Box(
@@ -714,8 +712,6 @@ private fun DesktopAppLayout(
                         onPlanSelected = { selectedPlan = it },
                         onContinue = { openUrl("https://homedecor-ai.com/waitlist") },
                         onRestore = { openUrl("https://homedecor-ai.com/support") },
-                        ctaLabel = Strings.paywallV3JoinWaitlist,
-                        showRestore = false,
                     )
                 }
             }

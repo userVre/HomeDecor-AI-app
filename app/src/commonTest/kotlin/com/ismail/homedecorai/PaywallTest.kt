@@ -22,7 +22,12 @@ class PaywallTest {
 
     @Test
     fun testPaywallPlanCardTagFormat() {
-        assertEquals("paywall_plan_card_yearly", Strings.TestTags.paywallPlanCard.format("yearly"))
+        assertEquals("paywall_plan_card_yearly", Strings.formatTestTag(Strings.TestTags.paywallPlanCard, "yearly"))
+    }
+
+    @Test
+    fun testPaywallStepContentTagFormat() {
+        assertEquals("paywall_step_content_3", Strings.formatTestTag(Strings.TestTags.paywallStepContent, 3))
     }
 
     @Test
@@ -57,19 +62,19 @@ class PaywallTest {
 
     @Test
     fun testPaywallStepLabels() {
-        assertEquals("Create unlimited room", Strings.pwS1Heading)
-        assertEquals("When should we remind you before your trial ends?", Strings.pwS2Heading)
-        assertEquals("Why upgrade?", Strings.pwS3Heading)
-        assertEquals("Choose the plan after your 7-day free trial", Strings.pwS4Heading)
+        assertEquals("Redesign your room", Strings.pwS1Heading)
+        assertEquals("Get notified when we launch", Strings.pwS2Heading)
+        assertEquals("What's included in Pro", Strings.pwS3Heading)
+        assertEquals("Choose your plan", Strings.pwS4Heading)
         assertEquals("Your subscription is handled securely.", Strings.pwS5Heading)
     }
 
     @Test
     fun testPaywallCtaLabels() {
-        assertEquals("Try Premium for \$0.00", Strings.pwS1Cta)
-        assertEquals("Start free trial", Strings.pwS2Cta)
-        assertEquals("Try Premium for \$0.00", Strings.pwS3Cta)
-        assertEquals("Start 7-day free trial", Strings.pwS4Cta)
+        assertEquals("Join waitlist", Strings.pwS1Cta)
+        assertEquals("Join waitlist", Strings.pwS2Cta)
+        assertEquals("Join waitlist", Strings.pwS3Cta)
+        assertEquals("Join waitlist", Strings.pwS4Cta)
         assertEquals("Join waitlist", Strings.pwS5Cta)
     }
 
@@ -80,6 +85,12 @@ class PaywallTest {
         assertEquals("Close paywall", Strings.a11yPaywallClose)
         assertEquals("Go to previous step", Strings.a11yPaywallBack)
         assertEquals("Continue with selected plan", Strings.a11yPaywallCta)
+    }
+
+    @Test
+    fun testPaywallA11yStepLabel() {
+        val label = Strings.a11yPaywallStep(1, "Join waitlist")
+        assertEquals("Step 1: Join waitlist", label)
     }
 
     @Test
@@ -125,5 +136,18 @@ class PaywallTest {
         )
         assertEquals(false, state.isPro)
         assertEquals("yearly", state.selectedPlanId)
+    }
+
+    @Test
+    fun testPaywallComparisonRows() {
+        assertEquals("AI room redesigns", Strings.pwS3Row1Feature)
+        assertEquals("3/day", Strings.pwS3Row1Free)
+        assertEquals("Export quality", Strings.pwS3Row2Feature)
+    }
+
+    @Test
+    fun testPaywallNotificationOptions() {
+        assertEquals("Early access notification", Strings.pwS2Option1)
+        assertEquals("Launch day notification", Strings.pwS2Option2)
     }
 }

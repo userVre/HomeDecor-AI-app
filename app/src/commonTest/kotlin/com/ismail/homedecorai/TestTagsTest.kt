@@ -8,101 +8,134 @@ class TestTagsTest {
 
     @Test
     fun bottomNav_hasTestTag() {
-        assertNotNull(Strings.TestTags.bottomNav, "bottomNav test tag must not be null")
-        assertEquals("bottomNav", Strings.TestTags.bottomNav)
+        assertNotNull(Strings.TestTags.bottomNav)
+        assertEquals("bottom_nav", Strings.TestTags.bottomNav)
     }
 
     @Test
     fun topNav_hasTestTag() {
-        assertNotNull(Strings.TestTags.topNav, "topNav test tag must not be null")
-        assertEquals("topNav", Strings.TestTags.topNav)
+        assertNotNull(Strings.TestTags.topNav)
+        assertEquals("top_nav", Strings.TestTags.topNav)
     }
 
     @Test
     fun bottomNavItem_formatsCorrectly() {
-        val tag = Strings.TestTags.bottomNavItem.format("tools")
-        assertEquals("bottomNavItem_tools", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.bottomNavItem, "tools")
+        assertEquals("bottom_nav_item_tools", tag)
     }
 
     @Test
     fun topNavItem_formatsCorrectly() {
-        val tag = Strings.TestTags.topNavItem.format("discover")
-        assertEquals("topNavItem_discover", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.topNavItem, "discover")
+        assertEquals("top_nav_item_discover", tag)
     }
 
     @Test
     fun toolsScreen_hasTestTag() {
-        assertEquals("toolsScreen", Strings.TestTags.toolsScreen)
+        assertEquals("tools_screen", Strings.TestTags.toolsScreen)
     }
 
     @Test
     fun toolCard_formatsCorrectly() {
-        val tag = Strings.TestTags.toolCard.format("room-vision")
-        assertEquals("toolCard_room-vision", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.toolCard, "interior")
+        assertEquals("tool_card_interior", tag)
     }
 
     @Test
     fun discoverScreen_hasTestTag() {
-        assertEquals("discoverScreen", Strings.TestTags.discoverScreen)
+        assertEquals("discover_screen", Strings.TestTags.discoverScreen)
     }
 
     @Test
     fun discoverClusterTab_formatsCorrectly() {
-        val tag = Strings.TestTags.discoverClusterTab.format("All")
-        assertEquals("discoverClusterTab_All", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.discoverClusterTab, "interior")
+        assertEquals("discover_cluster_tab_interior", tag)
     }
 
     @Test
     fun discoverSectionCard_formatsCorrectly() {
-        val tag = Strings.TestTags.discoverSectionCard.format("living-room-001")
-        assertEquals("discoverSectionCard_living-room-001", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.discoverSectionCard, "living-room-001")
+        assertEquals("discover_section_card_living-room-001", tag)
     }
 
     @Test
     fun boardScreen_hasTestTag() {
-        assertEquals("boardScreen", Strings.TestTags.boardScreen)
+        assertEquals("board_screen", Strings.TestTags.boardScreen)
     }
 
     @Test
     fun boardTab_formatsCorrectly() {
-        val tag = Strings.TestTags.boardTab.format("Favorites")
-        assertEquals("boardTab_Favorites", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.boardTab, "Favorites")
+        assertEquals("board_tab_Favorites", tag)
     }
 
     @Test
     fun profileScreen_hasTestTag() {
-        assertEquals("profileScreen", Strings.TestTags.profileScreen)
+        assertEquals("profile_screen", Strings.TestTags.profileScreen)
     }
 
     @Test
     fun profileRow_formatsCorrectly() {
-        val tag = Strings.TestTags.profileRow.format("My Projects")
-        assertEquals("profileRow_My Projects", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.profileRow, "My Projects")
+        assertEquals("profile_row_My Projects", tag)
     }
 
     @Test
     fun wizardScreen_hasTestTag() {
-        assertEquals("wizardScreen", Strings.TestTags.wizardScreen)
+        assertEquals("wizard_screen", Strings.TestTags.wizardScreen)
     }
 
     @Test
     fun paywallSheet_hasTestTag() {
-        assertEquals("paywallSheet", Strings.TestTags.paywallSheet)
+        assertEquals("paywall_sheet", Strings.TestTags.paywallSheet)
     }
 
     @Test
     fun paywallCtaButton_hasTestTag() {
-        assertEquals("paywallCtaButton", Strings.TestTags.paywallCtaButton)
+        assertEquals("paywall_cta_button", Strings.TestTags.paywallCtaButton)
     }
 
     @Test
     fun upgradeCtaButton_hasTestTag() {
-        assertEquals("upgradeCtaButton", Strings.TestTags.upgradeCtaButton)
+        assertEquals("upgrade_cta_button", Strings.TestTags.upgradeCtaButton)
     }
 
     @Test
     fun upgradePlanCard_formatsCorrectly() {
-        val tag = Strings.TestTags.upgradePlanCard.format("diamond")
-        assertEquals("upgradePlanCard_diamond", tag)
+        val tag = Strings.formatTestTag(Strings.TestTags.upgradePlanCard, "yearly")
+        assertEquals("upgrade_plan_card_yearly", tag)
+    }
+
+    @Test
+    fun settingsScreen_hasTestTag() {
+        assertEquals("settings_screen", Strings.TestTags.settingsScreen)
+    }
+
+    @Test
+    fun discoverClusterTabRow_hasTestTag() {
+        assertEquals("discover_cluster_tab_row", Strings.TestTags.discoverClusterTabRow)
+    }
+
+    @Test
+    fun discoverSectionScroll_hasTestTag() {
+        assertEquals("discover_section_scroll", Strings.TestTags.discoverSectionScroll)
+    }
+
+    @Test
+    fun boardLockedCard_formatsCorrectly() {
+        val tag = Strings.formatTestTag(Strings.TestTags.boardLockedCard, "living-room")
+        assertEquals("board_locked_card_living-room", tag)
+    }
+
+    @Test
+    fun paywallStepContent_formatsCorrectly() {
+        val tag = Strings.formatTestTag(Strings.TestTags.paywallStepContent, 3)
+        assertEquals("paywall_step_content_3", tag)
+    }
+
+    @Test
+    fun wizardStepContent_formatsCorrectly() {
+        val tag = Strings.formatTestTag(Strings.TestTags.wizardStepContent, "Upload")
+        assertEquals("wizard_step_content_Upload", tag)
     }
 }

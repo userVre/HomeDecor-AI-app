@@ -155,6 +155,84 @@ fun SharedProfileScreen(
                 item("signin-hero") {
                     SignInHeroCard(onSignIn = onSignIn, isDesktop = isDesktop)
                 }
+
+                item("preferences-section-guest") {
+                    ProfileSectionLabel(Strings.preferencesSection)
+                    SettingsCard {
+                        ProfileRow(
+                            icon = Icons.Rounded.Language,
+                            iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            title = Strings.languageLabel,
+                            subtitle = Strings.languageBody,
+                            onClick = onSettings,
+                        )
+                        ProfileDivider()
+                        ProfileRow(
+                            icon = Icons.Rounded.Brightness6,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = Strings.themeLabel,
+                            subtitle = Strings.themeBody,
+                            onClick = onSettings,
+                        )
+                    }
+                }
+
+                item("support-section-guest") {
+                    ProfileSectionLabel(Strings.supportSection)
+                    SettingsCard {
+                        ProfileRow(
+                            icon = Icons.Rounded.Help,
+                            iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            title = Strings.helpCenter,
+                            subtitle = Strings.helpCenterBody,
+                            onClick = { onOpenUrl("https://homedecorai.com/help") },
+                        )
+                        ProfileDivider()
+                        ProfileRow(
+                            icon = Icons.Rounded.Mail,
+                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            title = Strings.contactUs,
+                            subtitle = Strings.contactUsBody,
+                            onClick = onSettings,
+                        )
+                        ProfileDivider()
+                        ProfileRow(
+                            icon = Icons.Rounded.StarRate,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = Strings.rateApp,
+                            subtitle = Strings.rateAppBody,
+                            onClick = { onOpenUrl("https://homedecorai.com/rate") },
+                        )
+                    }
+                }
+
+                item("legal-section-guest") {
+                    ProfileSectionLabel(Strings.legalSection)
+                    SettingsCard {
+                        ProfileRow(
+                            icon = Icons.Rounded.Description,
+                            iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            title = Strings.termsOfService,
+                            subtitle = Strings.termsOfServiceBody,
+                            onClick = { onOpenUrl("https://homedecorai.com/terms") },
+                        )
+                        ProfileDivider()
+                        ProfileRow(
+                            icon = Icons.Rounded.Shield,
+                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            title = Strings.privacyPolicyLabel,
+                            subtitle = Strings.privacyPolicyBody,
+                            onClick = { onOpenUrl("https://homedecorai.com/privacy") },
+                        )
+                    }
+                }
             } else {
                 item("profile-hero") {
                     SignedInProfileHero(state = state, isDesktop = isDesktop)

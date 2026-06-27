@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -64,8 +65,7 @@ fun SharedToolsScreen(
     val isTablet = screenWidth in 640..1023
     val columns = when {
         isDesktop -> 4
-        isTablet -> 2
-        else -> 1
+        else -> 2
     }
 
     if (state.isLoading) {
@@ -85,7 +85,6 @@ fun SharedToolsScreen(
             .testTag(Strings.TestTags.toolsScreen),
     ) {
         ToolsHeader(
-            state = state,
             isDesktop = isDesktop,
             isTablet = isTablet,
         )
@@ -98,16 +97,16 @@ fun SharedToolsScreen(
                 start = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.ScreenHorizontal,
                 end = if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Base,
-                bottom = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.NavBarReservation,
+                bottom = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.Lg,
             ),
-            verticalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Base),
+            verticalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Md),
         ) {
             itemsIndexed(
                 items = chunkedTools,
                 key = { _, row -> row.joinToString(",") { it.id } },
             ) { rowIndex, rowTools ->
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Lg else HomeDecorSpacing.Md),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     rowTools.forEach { tool ->
@@ -181,7 +180,6 @@ private fun ToolsErrorContent(message: String) {
 
 @Composable
 fun ToolsHeader(
-    state: ToolsScreenState,
     isDesktop: Boolean = false,
     isTablet: Boolean = false,
 ) {
@@ -249,24 +247,23 @@ fun ToolCard(
     val textGradient = Brush.verticalGradient(
         0.0f to Color.Transparent,
         0.70f to Color.Transparent,
-        0.88f to Color.Black.copy(alpha = 0.05f),
-        1.0f to Color.Black.copy(alpha = 0.14f),
+        1.0f to Color.Black.copy(alpha = 0.06f),
     )
 
     val cardHeight = when {
-        isDesktop -> 380.dp
+        isDesktop -> 440.dp
         isTablet -> 280.dp
-        else -> 240.dp
+        else -> 220.dp
     }
     val titleStyle = when {
-        isDesktop -> MaterialTheme.typography.headlineMedium
+        isDesktop -> MaterialTheme.typography.headlineLarge
         isTablet -> MaterialTheme.typography.headlineSmall
         else -> MaterialTheme.typography.titleMedium
     }
     val descStyle = when {
         isDesktop -> MaterialTheme.typography.titleMedium
         isTablet -> MaterialTheme.typography.bodyLarge
-        else -> MaterialTheme.typography.bodyMedium
+        else -> MaterialTheme.typography.bodySmall
     }
     val ctaStyle = when {
         isDesktop -> MaterialTheme.typography.titleLarge
@@ -274,34 +271,34 @@ fun ToolCard(
         else -> MaterialTheme.typography.labelLarge
     }
     val ctaHPadding = when {
-        isDesktop -> 36.dp
+        isDesktop -> 48.dp
         isTablet -> 20.dp
-        else -> 16.dp
+        else -> 14.dp
     }
     val ctaVPadding = when {
-        isDesktop -> 16.dp
+        isDesktop -> 22.dp
         isTablet -> 12.dp
         else -> 10.dp
     }
     val ctaMinWidth = when {
-        isDesktop -> 200.dp
+        isDesktop -> 260.dp
         isTablet -> 140.dp
-        else -> 120.dp
+        else -> 110.dp
     }
     val ctaIconSize = when {
-        isDesktop -> 20.dp
+        isDesktop -> 22.dp
         isTablet -> 16.dp
         else -> 14.dp
     }
     val contentHPadding = when {
         isDesktop -> 32.dp
         isTablet -> 20.dp
-        else -> 16.dp
+        else -> 14.dp
     }
     val contentVPadding = when {
         isDesktop -> 28.dp
         isTablet -> 20.dp
-        else -> 16.dp
+        else -> 14.dp
     }
 
     Surface(
@@ -359,11 +356,12 @@ fun ToolCard(
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.semantics { heading() },
                 )
-                Spacer(Modifier.height(if (isDesktop) 8.dp else if (isTablet) 4.dp else 2.dp))
+                Spacer(Modifier.height(if (isDesktop) 8.dp else 4.dp))
                 Text(
                     description,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = Color.White.copy(alpha = 0.92f),
                     style = descStyle,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -371,13 +369,13 @@ fun ToolCard(
                 Spacer(Modifier.height(if (isDesktop) 24.dp else if (isTablet) 14.dp else 10.dp))
                 Surface(
                     shape = CtaShape,
-                    color = Color.White.copy(alpha = 0.90f),
+                    color = Color.White.copy(alpha = 0.92f),
                     shadowElevation = 2.dp,
                     modifier = Modifier
                         .widthIn(min = ctaMinWidth)
                         .border(
                             width = 1.dp,
-                            color = Color.White.copy(alpha = 0.6f),
+                            color = Color.White.copy(alpha = 0.5f),
                             shape = CtaShape,
                         ),
                 ) {
@@ -391,7 +389,7 @@ fun ToolCard(
                             style = ctaStyle,
                             fontWeight = FontWeight.SemiBold,
                         )
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Icon(
                             Icons.AutoMirrored.Rounded.ArrowForward,
                             contentDescription = null,

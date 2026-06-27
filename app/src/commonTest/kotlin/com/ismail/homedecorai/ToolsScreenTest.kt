@@ -37,7 +37,7 @@ class ToolsScreenTest {
 
     @Test
     fun testToolCardTestTagFormat() {
-        assertEquals("tool_card_interior", Strings.TestTags.toolCard.format("interior"))
+        assertEquals("tool_card_interior", Strings.formatTestTag(Strings.TestTags.toolCard, "interior"))
     }
 
     @Test

@@ -62,8 +62,6 @@ fun WebPaywallWrapper(
         onRestore = {
             openUrl("https://homedecor-ai.com/support")
         },
-        ctaLabel = Strings.paywallV3JoinWaitlist,
-        showRestore = false,
     )
 }
 

@@ -128,6 +128,7 @@ fun SharedMyBoardScreen(
             BoardTab.Generated -> GeneratedSection(
                 items = state.generatedItems,
                 isGuest = isGuest,
+                isDesktop = isDesktop,
                 onSignIn = onSignIn,
                 onNavigateToTools = onNavigateToTools,
                 onNavigateToDiscover = onNavigateToDiscover,
@@ -277,7 +278,7 @@ private fun BoardGuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
                 }
 
                 // Right: realistic design preview grid
-                BoardSampleDesignsPreview()
+                BoardSampleDesignsPreview(isDesktop = isDesktop)
             }
         } else {
             // Mobile: stacked layout with preview row at top
@@ -439,11 +440,13 @@ private fun BoardBenefitChip(
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun BoardSampleDesignsPreview() {
+private fun BoardSampleDesignsPreview(isDesktop: Boolean) {
     val sampleDesigns = listOf(
         Triple(Strings.boardSampleLivingRoom, "Scandinavian", MaterialTheme.colorScheme.primaryContainer),
         Triple(Strings.boardSampleBedroom, "Bohemian", MaterialTheme.colorScheme.secondaryContainer),
         Triple(Strings.boardSampleKitchen, "Minimalist", MaterialTheme.colorScheme.tertiaryContainer),
+        Triple(Strings.boardSampleBathroom, "Modern", MaterialTheme.colorScheme.primaryContainer),
+        Triple(Strings.boardSampleOffice, "Industrial", MaterialTheme.colorScheme.secondaryContainer),
     )
 
     Column(
@@ -454,6 +457,7 @@ private fun BoardSampleDesignsPreview() {
                 name = name,
                 style = style,
                 containerColor = containerColor,
+                isDesktop = isDesktop,
             )
         }
     }
@@ -465,6 +469,8 @@ private fun BoardSampleDesignsRow() {
         Triple(Strings.boardSampleLivingRoom, "Scandinavian", MaterialTheme.colorScheme.primaryContainer),
         Triple(Strings.boardSampleBedroom, "Bohemian", MaterialTheme.colorScheme.secondaryContainer),
         Triple(Strings.boardSampleKitchen, "Minimalist", MaterialTheme.colorScheme.tertiaryContainer),
+        Triple(Strings.boardSampleBathroom, "Modern", MaterialTheme.colorScheme.primaryContainer),
+        Triple(Strings.boardSampleOffice, "Industrial", MaterialTheme.colorScheme.secondaryContainer),
     )
 
     LazyRow(
@@ -487,13 +493,15 @@ private fun BoardDesignPreviewCard(
     style: String,
     containerColor: Color,
     modifier: Modifier = Modifier,
+    isDesktop: Boolean = false,
 ) {
+    val cardWidth = if (isDesktop) 200.dp else 170.dp
     Surface(
         shape = HomeDecorShape.Card,
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = modifier.width(170.dp),
+        modifier = modifier.width(cardWidth),
     ) {
         Column {
             Box(
@@ -741,29 +749,32 @@ private fun BoardTabRow(
 private fun GeneratedSection(
     items: List<BoardItem>,
     isGuest: Boolean,
+    isDesktop: Boolean,
     onSignIn: () -> Unit,
     onNavigateToTools: () -> Unit,
     onNavigateToDiscover: () -> Unit,
 ) {
     Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Base),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                Strings.generatedImages,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
+        if (!isGuest) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HomeDecorSpacing.Base),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    Strings.generatedImages,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
         }
-        Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
         if (items.isEmpty()) {
             if (isGuest) {
-                LockedPreviewRow(onSignIn = onSignIn)
+                LockedPreviewRow(onSignIn = onSignIn, isDesktop = isDesktop)
             } else {
                 BoardEmptyState(
                     icon = Icons.Rounded.Diamond,
@@ -798,24 +809,26 @@ private fun FavoritesSection(
     onNavigateToDiscover: () -> Unit,
 ) {
     Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Base),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                Strings.favoritesSection,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
+        if (!isGuest) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HomeDecorSpacing.Base),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    Strings.favoritesSection,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
         }
-        Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
         if (items.isEmpty()) {
             if (isGuest) {
-                LockedPreviewRow(onSignIn = onSignIn)
+                LockedPreviewRow(onSignIn = onSignIn, isDesktop = isDesktop)
             } else {
                 BoardEmptyState(
                     icon = Icons.Rounded.Star,
@@ -859,24 +872,26 @@ private fun ProjectsSection(
     onNavigateToDiscover: () -> Unit,
 ) {
     Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Base),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                Strings.savedProjects,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
+        if (!isGuest) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HomeDecorSpacing.Base),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    Strings.savedProjects,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
         }
-        Spacer(Modifier.height(HomeDecorSpacing.Sm))
 
         if (items.isEmpty()) {
             if (isGuest) {
-                LockedPreviewRow(onSignIn = onSignIn)
+                LockedPreviewRow(onSignIn = onSignIn, isDesktop = isDesktop)
             } else {
                 BoardEmptyState(
                     icon = Icons.Rounded.AutoAwesome,
@@ -912,15 +927,19 @@ private fun ProjectsSection(
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun LockedPreviewRow(onSignIn: () -> Unit) {
+private fun LockedPreviewRow(onSignIn: () -> Unit, isDesktop: Boolean = false) {
     val previewData = listOf(
         Triple(Strings.boardSampleLivingRoom, "Scandinavian", MaterialTheme.colorScheme.primaryContainer),
         Triple(Strings.boardSampleBedroom, "Bohemian", MaterialTheme.colorScheme.secondaryContainer),
         Triple(Strings.boardSampleKitchen, "Minimalist", MaterialTheme.colorScheme.tertiaryContainer),
+        Triple(Strings.boardSampleBathroom, "Modern", MaterialTheme.colorScheme.primaryContainer),
+        Triple(Strings.boardSampleOffice, "Industrial", MaterialTheme.colorScheme.secondaryContainer),
     )
 
+    val cardWidth = if (isDesktop) 220.dp else 170.dp
+
     LazyRow(
-        contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
+        contentPadding = PaddingValues(horizontal = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.Base),
         horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
     ) {
         items(previewData.size) { index ->
@@ -929,6 +948,7 @@ private fun LockedPreviewRow(onSignIn: () -> Unit) {
                 style = previewData[index].second,
                 gradientColor = previewData[index].third,
                 onClick = onSignIn,
+                modifier = Modifier.width(cardWidth),
             )
         }
     }
@@ -940,6 +960,7 @@ private fun LockedPreviewCard(
     style: String,
     gradientColor: Color,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
@@ -947,7 +968,7 @@ private fun LockedPreviewCard(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = Modifier.width(170.dp),
+        modifier = modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardLockedCard, name)),
     ) {
         Column {
             Box(
@@ -1170,7 +1191,9 @@ private fun BoardGeneratedCard(item: BoardItem) {
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = Modifier.width(160.dp),
+        modifier = Modifier
+            .width(160.dp)
+            .testTag(Strings.formatTestTag(Strings.TestTags.boardGeneratedCard, item.id)),
     ) {
         Column {
             Box(
@@ -1234,6 +1257,7 @@ private fun BoardFavoriteCard(item: BoardItem) {
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardFavoriteCard, item.id)),
     ) {
         Column {
             Box(
@@ -1353,6 +1377,7 @@ private fun BoardProjectCard(item: BoardItem) {
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardProjectCard, item.id)),
     ) {
         Column {
             Box(
