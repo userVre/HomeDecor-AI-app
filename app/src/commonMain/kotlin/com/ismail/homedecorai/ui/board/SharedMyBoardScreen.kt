@@ -403,7 +403,7 @@ private fun BoardGuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
                     )
                     BoardBenefitChip(
                         icon = Icons.Rounded.PhoneAndroid,
-                        label = "Cross-device",
+                        label = Strings.boardGuestBenefitCrossDevice,
                         modifier = Modifier.weight(1f),
                     )
                 }

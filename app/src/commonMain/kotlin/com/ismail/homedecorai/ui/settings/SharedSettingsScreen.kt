@@ -335,7 +335,7 @@ private fun DesktopSettingsPage(
                         SettingsRow(
                             Icons.Rounded.DarkMode,
                             Strings.themeLabel,
-                            if (isDarkTheme) "Dark" else "Light",
+                            if (isDarkTheme) Strings.themeDark else Strings.themeLight,
                             iconTint = MaterialTheme.colorScheme.secondary,
                             onClick = onThemeToggle,
                         )
@@ -412,8 +412,8 @@ private fun DesktopSettingsPage(
 
                     if (state.isSignedIn) {
                         DesktopSettingsSection(
-                            title = "Account Actions",
-                            description = "Manage your account",
+                            title = Strings.settingsSectionAccountActions,
+                            description = Strings.settingsAccountActionsBody,
                         ) {
                             SettingsRow(
                                 Icons.AutoMirrored.Rounded.Logout,
@@ -580,7 +580,7 @@ private fun MobileSettingsScreen(
                     SettingsRow(
                         Icons.Rounded.DarkMode,
                         Strings.themeLabel,
-                        if (isDarkTheme) "Dark" else "Light",
+                        if (isDarkTheme) Strings.themeDark else Strings.themeLight,
                         iconTint = MaterialTheme.colorScheme.secondary,
                         onClick = onThemeToggle,
                     )
@@ -658,7 +658,7 @@ private fun MobileSettingsScreen(
 
             if (state.isSignedIn) {
                 item {
-                    SettingsSectionHeader("Account Actions")
+                    SettingsSectionHeader(Strings.settingsSectionAccountActions)
                 }
                 item {
                     SettingsCardSurface {

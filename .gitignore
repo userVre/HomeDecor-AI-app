@@ -10,5 +10,20 @@ captures/
 *.apk
 *.aab
 .env
+.env.local
 *.jks
 *.keystore
+
+# Node
+node_modules/
+package-lock.json
+
+# Kotlin
+.kotlin/errors/
+
+# Server
+server/build/
+
+# Logs
+*.log
+gradle-web.log

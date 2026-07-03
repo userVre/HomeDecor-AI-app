@@ -328,10 +328,11 @@ fun App() {
             authVisible = true
         }
 
-        val discoverState = remember(webFavoriteIds, webMoodboardIds) {
+        val discoverState = remember(webFavoriteIds, webMoodboardIds, webIsSignedIn) {
             DiscoverScreenState(
                 favoriteSourceIds = webFavoriteIds,
                 moodboardSourceIds = webMoodboardIds,
+                isSignedIn = webIsSignedIn,
                 selectedCluster = "interior",
                 sections = listOf(
                     DiscoverSectionItem("kitchen", "Kitchen", "interior", listOf(
@@ -730,9 +731,9 @@ fun App() {
                                             onLanguageSelected = { showToast("Language: English") },
                                             onRateUs = { openUrl("https://homedecor-ai.com/rate") },
                                             onContactSupport = { openUrl("https://homedecor-ai.com/support") },
-                                            onDeleteInformation = { showToast("Visit Settings to manage your data") },
-                                            onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
-                                            onConfirmDelete = { showToast("Contact support to delete your account") },
+                            onDeleteInformation = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Data") },
+                            onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
+                            onConfirmDelete = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Account") },
                                             onEditProfile = { openUrl("https://homedecor-ai.com/profile/edit") },
                                             onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
                                             onOpenPaywall = { paywallVisible = true },
@@ -1015,9 +1016,9 @@ private fun DesktopAppLayout(
                             onLanguageSelected = { showToast("Language: English") },
                             onRateUs = { openUrl("https://homedecor-ai.com/rate") },
                             onContactSupport = { openUrl("https://homedecor-ai.com/support") },
-                            onDeleteInformation = { showToast("Visit Settings to manage your data") },
+                            onDeleteInformation = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Data") },
                             onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
-                            onConfirmDelete = { showToast("Contact support to delete your account") },
+                            onConfirmDelete = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Account") },
                             onEditProfile = { openUrl("https://homedecor-ai.com/profile/edit") },
                             onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
                             onOpenPaywall = { onOpenPaywall() },

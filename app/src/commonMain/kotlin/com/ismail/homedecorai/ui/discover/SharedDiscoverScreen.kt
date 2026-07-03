@@ -156,17 +156,6 @@ fun SharedDiscoverScreen(
             onMoodboard = { addToMoodboard(activeDetailSection, it) },
             onUseStyle = { useStyle(activeDetailSection, it) },
         )
-        activePreviewPair?.let { (targetSection, targetItem) ->
-            DiscoverPreviewDialog(
-                section = targetSection,
-                item = targetItem,
-                onDismiss = { previewItem = null },
-                isFavorite = targetItem.id in state.favoriteSourceIds,
-                onFavorite = { toggleFavorite(targetSection, targetItem) },
-                onMoodboard = { addToMoodboard(targetSection, targetItem) },
-                onUseStyle = { useStyle(targetSection, targetItem) },
-            )
-        }
         return
     }
 
