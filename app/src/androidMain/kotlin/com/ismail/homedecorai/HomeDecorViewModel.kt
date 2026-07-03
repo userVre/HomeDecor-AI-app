@@ -8,6 +8,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.clerk.api.Clerk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +40,13 @@ class HomeDecorViewModel(
     private fun text(@StringRes resId: Int): String = appContext.getString(resId)
 
     init {
+        viewModelScope.launch {
+            Clerk.sessionFlow.collect { session ->
+                if (session != null) {
+                    _uiState.update { it.copy(authVisible = false) }
+                }
+            }
+        }
         viewModelScope.launch(Dispatchers.IO) {
             val workspace = workspaceStore.awaitState()
             _uiState.update { state ->

@@ -41,23 +41,6 @@ data class DiscoverSection(
     val items: List<GalleryItem>,
 )
 
-data class BoardItem(
-    val id: String,
-    val toolTitle: String,
-    val style: String,
-    val roomType: String,
-    val imageRes: Int,
-    val imageUri: String? = null,
-    val imageUrl: String? = null,
-    val sourceImageUri: String? = null,
-    val sourceImageUrl: String? = null,
-    val status: String = "ready",
-    val errorMessage: String? = null,
-    val prompt: String? = null,
-    val budgetLabel: String = "",
-    val createdAt: Double = 0.0,
-)
-
 fun BoardItem.isGeneratedResult(): Boolean =
     status == "ready" && (imageUrl?.isNotBlank() == true || imageRes != 0)
 

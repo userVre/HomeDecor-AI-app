@@ -19,6 +19,17 @@ private val toolGradients = mapOf(
     "reference" to (Color(0xFF9B7B5A) to Color(0xFF6B4F35)),
 )
 
+private val toolAccents = mapOf(
+    "interior" to Color(0xFFC1E4E7),
+    "facade" to Color(0xFFB8CCE8),
+    "garden" to Color(0xFFC8E3CE),
+    "paint" to Color(0xFFFDDDD0),
+    "floor" to Color(0xFFF5DFA0),
+    "layout" to Color(0xFFD0C4F8),
+    "replace" to Color(0xFFF5D0C0),
+    "reference" to Color(0xFFB0C8E0),
+)
+
 @Composable
 fun ToolsScreen(
     state: HomeDecorUiState,
@@ -29,12 +40,14 @@ fun ToolsScreen(
         .filter { it.id in requestedToolIds }
         .map { tool ->
             val (start, end) = toolGradients[tool.id] ?: (Color(0xFF2E6B6E) to Color(0xFF1A4A4C))
+            val accent = toolAccents[tool.id] ?: Color(0xFFC1E4E7)
             ToolItem(
                 id = tool.id,
                 title = tool.title,
                 description = tool.description,
                 gradientStart = start,
                 gradientEnd = end,
+                accentColor = accent,
             )
         }
 

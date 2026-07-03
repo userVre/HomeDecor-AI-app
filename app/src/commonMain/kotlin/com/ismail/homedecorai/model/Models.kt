@@ -10,6 +10,7 @@ data class ToolItem(
     val gradientStart: Color = HomeDecorColors.Primary,
     val gradientEnd: Color = HomeDecorColors.OnPrimaryContainer,
     val imageUrl: String = "",
+    val accentColor: Color = HomeDecorColors.PrimaryContainer,
 )
 
 data class ToolsScreenState(
@@ -36,10 +37,12 @@ data class DiscoverSectionItem(
 
 data class DiscoverScreenState(
     val favoriteSourceIds: Set<String> = emptySet(),
+    val moodboardSourceIds: Set<String> = emptySet(),
     val sections: List<DiscoverSectionItem> = emptyList(),
     val selectedCluster: String = "interior",
     val isLoading: Boolean = false,
     val error: String? = null,
+    val isSignedIn: Boolean = false,
 )
 
 data class BoardItem(
@@ -49,8 +52,15 @@ data class BoardItem(
     val roomType: String = "",
     val imageUrl: String? = null,
     val imageUri: String? = null,
+    val imageRes: Int = 0,
+    val sourceImageUri: String? = null,
+    val sourceImageUrl: String? = null,
     val status: String = "completed",
+    val errorMessage: String? = null,
+    val prompt: String? = null,
+    val budgetLabel: String = "",
     val createdAt: Double = 0.0,
+    val isFavorite: Boolean = false,
 )
 
 data class BoardScreenState(

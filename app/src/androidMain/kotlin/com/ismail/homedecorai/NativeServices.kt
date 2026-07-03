@@ -3,6 +3,7 @@ package com.ismail.homedecorai
 import android.content.Context
 import com.ismail.homedecorai.model.DecorTool
 import dev.convex.android.ConvexClient
+import dev.convex.android.ConvexClientWithAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -17,11 +18,9 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import java.net.HttpURLConnection
 import java.net.URL
 
-class NativeServices {
-    val convex: ConvexClient by lazy {
-        ConvexClient(BuildConfig.CONVEX_URL)
-    }
-}
+class NativeServices(
+    val convex: ConvexClientWithAuth<String>,
+)
 
 @Serializable
 data class ViewerSummary(
@@ -87,6 +86,7 @@ class HomeDecorRepository(
     context: Context,
 ) {
     private val appContext = context.applicationContext
+    val authState = services.convex.authState
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true

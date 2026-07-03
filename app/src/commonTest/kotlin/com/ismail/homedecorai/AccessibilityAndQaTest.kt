@@ -166,11 +166,16 @@ class AccessibilityAndQaTest {
     @Test
     fun testWizardStepOrder() {
         val steps = WizardStep.entries
-        assertEquals(4, steps.size)
+        assertEquals(9, steps.size)
         assertEquals(WizardStep.Upload, steps[0])
         assertEquals(WizardStep.RoomType, steps[1])
         assertEquals(WizardStep.Style, steps[2])
-        assertEquals(WizardStep.Review, steps[3])
+        assertEquals(WizardStep.Refine, steps[3])
+        assertEquals(WizardStep.Material, steps[4])
+        assertEquals(WizardStep.Goals, steps[5])
+        assertEquals(WizardStep.Mask, steps[6])
+        assertEquals(WizardStep.ReplacementPrompt, steps[7])
+        assertEquals(WizardStep.TransferStrength, steps[8])
     }
 
     @Test
@@ -234,18 +239,23 @@ class AccessibilityAndQaTest {
         currentStep = WizardStep.Style
         assertEquals(WizardStep.Style, currentStep)
 
-        currentStep = WizardStep.Review
-        assertEquals(WizardStep.Review, currentStep)
+        currentStep = WizardStep.Refine
+        assertEquals(WizardStep.Refine, currentStep)
     }
 
     @Test
     fun testWizardStepBackNavigation() {
-        var currentStep = WizardStep.Review
+        var currentStep = WizardStep.Refine
         currentStep = when (currentStep) {
             WizardStep.Upload -> WizardStep.Upload
             WizardStep.RoomType -> WizardStep.Upload
             WizardStep.Style -> WizardStep.RoomType
-            WizardStep.Review -> WizardStep.Style
+            WizardStep.Refine -> WizardStep.Style
+            WizardStep.Material -> WizardStep.Upload
+            WizardStep.Goals -> WizardStep.Upload
+            WizardStep.Mask -> WizardStep.Upload
+            WizardStep.ReplacementPrompt -> WizardStep.Mask
+            WizardStep.TransferStrength -> WizardStep.Upload
         }
         assertEquals(WizardStep.Style, currentStep)
     }
@@ -357,19 +367,19 @@ class AccessibilityAndQaTest {
     @Test
     fun testPaywallStepLabels_matchStrings() {
         assertEquals("Redesign your room", Strings.pwS1Heading)
-        assertEquals("Get notified when we launch", Strings.pwS2Heading)
+        assertEquals("Why go Pro?", Strings.pwS2Heading)
         assertEquals("What's included in Pro", Strings.pwS3Heading)
         assertEquals("Choose your plan", Strings.pwS4Heading)
         assertEquals("Your subscription is handled securely.", Strings.pwS5Heading)
     }
 
     @Test
-    fun testPaywallCtaLabels_allJoinWaitlist() {
-        assertEquals("Join waitlist", Strings.pwS1Cta)
-        assertEquals("Join waitlist", Strings.pwS2Cta)
-        assertEquals("Join waitlist", Strings.pwS3Cta)
-        assertEquals("Join waitlist", Strings.pwS4Cta)
-        assertEquals("Join waitlist", Strings.pwS5Cta)
+    fun testPaywallCtaLabels_productionReady() {
+        assertEquals("Continue", Strings.pwS1Cta)
+        assertEquals("Continue", Strings.pwS2Cta)
+        assertEquals("Continue", Strings.pwS3Cta)
+        assertEquals("Subscribe Now", Strings.pwS4Cta)
+        assertEquals("Subscribe Now", Strings.pwS5Cta)
     }
 
     @Test
@@ -542,6 +552,48 @@ class AccessibilityAndQaTest {
         assertNotNull(Strings.TestTags.upgradeCtaButton)
         assertNotNull(Strings.TestTags.upgradePlanCard)
         assertNotNull(Strings.TestTags.upgradeBeforeAfter)
+    }
+
+    // ── Settings Screen ──────────────────────────────────────────────────
+
+    @Test
+    fun testSettingsScreenTestTags() {
+        assertNotNull(Strings.TestTags.settingsRow)
+    }
+
+    @Test
+    fun testSettingsRowTestTagFormat() {
+        assertEquals("settings_row_account", Strings.formatTestTag(Strings.TestTags.settingsRow, "account"))
+        assertEquals("settings_row_language", Strings.formatTestTag(Strings.TestTags.settingsRow, "language"))
+    }
+
+    // ── Paywall A11y ─────────────────────────────────────────────────────
+
+    @Test
+    fun testPaywallPlanA11yLabel() {
+        assertEquals("Yearly plan, selected", Strings.a11yPaywallPlan("Yearly", true))
+        assertEquals("Monthly plan", Strings.a11yPaywallPlan("Monthly", false))
+    }
+
+    @Test
+    fun testPaywallA11yLabels() {
+        assertNotNull(Strings.a11yPaywallHeading)
+        assertNotNull(Strings.a11yPaywallClose)
+        assertNotNull(Strings.a11yPaywallBack)
+        assertNotNull(Strings.a11yPaywallCta)
+    }
+
+    @Test
+    fun testPaywallStepA11yLabel() {
+        assertEquals("Step 1: Choose Plan", Strings.a11yPaywallStep(1, "Choose Plan"))
+    }
+
+    // ── Bottom Nav A11y ──────────────────────────────────────────────────
+
+    @Test
+    fun testBottomNavItemA11yLabel() {
+        assertEquals("Navigate to Tools", Strings.a11yBottomNavItem("Tools"))
+        assertEquals("Navigate to Discover", Strings.a11yBottomNavItem("Discover"))
     }
 
     // ── Helper ──────────────────────────────────────────────────────────────

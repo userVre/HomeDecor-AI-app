@@ -42,7 +42,6 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
@@ -70,12 +69,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ismail.homedecorai.Strings
@@ -107,6 +108,9 @@ fun SharedPaywallSheet(
     var currentStep by remember { mutableIntStateOf(1) }
     var selectedReminder by remember { mutableIntStateOf(2) }
     var selectedPlan by remember { mutableStateOf("yearly") }
+    var checkoutLoading by remember { mutableStateOf(false) }
+    var checkoutError by remember { mutableStateOf<String?>(null) }
+    var checkoutSuccess by remember { mutableStateOf(false) }
     val isDesktop = rememberIsDesktop()
 
     fun goBack() {
@@ -120,90 +124,201 @@ fun SharedPaywallSheet(
             .clickable(interactionSource = modalTapBlocker, indication = null, onClick = {})
             .testTag(Strings.TestTags.paywallSheet),
     ) {
-        Box(
-            Modifier
-                .then(
-                    if (isDesktop) {
-                        Modifier
-                            .align(Alignment.Center)
-                            .widthIn(max = 480.dp)
-                            .fillMaxHeight(0.9f)
-                            .padding(horizontal = 16.dp)
-                    } else {
-                        Modifier.fillMaxSize()
-                    }
-                )
-                .clip(RoundedCornerShape(if (isDesktop) 24.dp else 0.dp))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(proColors.gradientStart, proColors.gradientMid, proColors.gradientEnd),
+        if (isDesktop) {
+            // Desktop: wide centered panel with gradient background
+            Box(
+                Modifier
+                    .align(Alignment.Center)
+                    .widthIn(max = 840.dp)
+                    .fillMaxHeight(0.94f)
+                    .padding(horizontal = 24.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(proColors.gradientStart, proColors.gradientMid, proColors.gradientEnd),
+                        ),
                     ),
-                )
-                .windowInsetsPadding(WindowInsets.statusBars),
-        ) {
-            Column(
-                Modifier.fillMaxSize(),
             ) {
-                PaywallTopBar(
-                    currentStep = currentStep,
-                    onClose = onClose,
-                    onBack = ::goBack,
+                // Subtle accent glow at top
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    proColors.accent.copy(alpha = 0.06f),
+                                    Color.Transparent,
+                                ),
+                                radius = 400f,
+                            ),
+                        ),
                 )
+                Column(Modifier.fillMaxSize()) {
+                    PaywallTopBar(
+                        currentStep = currentStep,
+                        onClose = onClose,
+                        onBack = ::goBack,
+                    )
 
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp)
-                        .testTag(Strings.formatTestTag(Strings.TestTags.paywallStepContent, currentStep)),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    when (currentStep) {
-                        1 -> PaywallStep1Unlimited(colors = proColors)
-                        2 -> PaywallStep2Reminder(
-                            colors = proColors,
-                            selectedReminder = selectedReminder,
-                            onReminderSelected = { selectedReminder = it },
-                        )
-                        3 -> PaywallStep3Comparison(colors = proColors)
-                        4 -> PaywallStep4Plans(
-                            colors = proColors,
-                            selectedPlan = selectedPlan,
-                            onPlanSelected = { selectedPlan = it },
-                        )
-                        5 -> PaywallStep5Checkout(
-                            colors = proColors,
-                            selectedPlan = selectedPlan,
-                        )
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = if (currentStep == 4) 32.dp else 40.dp)
+                            .testTag(Strings.formatTestTag(Strings.TestTags.paywallStepContent, currentStep)),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        when (currentStep) {
+                            1 -> PaywallStep1Unlimited(colors = proColors)
+                            2 -> PaywallStep2Reminder(
+                                colors = proColors,
+                                selectedReminder = selectedReminder,
+                                onReminderSelected = { selectedReminder = it },
+                            )
+                            3 -> PaywallStep3Comparison(colors = proColors)
+                            4 -> PaywallStep4Plans(
+                                colors = proColors,
+                                selectedPlan = selectedPlan,
+                                onPlanSelected = { selectedPlan = it },
+                            )
+                            5 -> PaywallStep5Checkout(
+                                colors = proColors,
+                                selectedPlan = selectedPlan,
+                                purchasing = state.purchasing || checkoutLoading,
+                                purchaseSuccess = state.purchaseSuccess || checkoutSuccess,
+                                errorMessage = checkoutError,
+                            )
+                        }
+
+                        Spacer(Modifier.height(24.dp))
                     }
 
-                    Spacer(Modifier.height(24.dp))
-                }
-
-                val ctaLabel = when (currentStep) {
-                    1 -> Strings.pwS1Cta
-                    2 -> Strings.pwS2Cta
-                    3 -> Strings.pwS3Cta
-                    4 -> Strings.pwS4Cta
-                    5 -> Strings.pwS5Cta
-                    else -> ""
-                }
-
-                PaywallBottomCta(
-                    colors = proColors,
-                    label = ctaLabel,
-                    onClick = {
-                        when (currentStep) {
-                            1, 2, 3 -> currentStep++
-                            4 -> {
-                                onPlanSelected(selectedPlan)
-                                currentStep = 5
-                            }
-                            5 -> onContinue()
+                    val ctaLabel = when {
+                        checkoutLoading -> "Processing..."
+                        checkoutSuccess -> "Subscribed!"
+                        currentStep == 5 -> Strings.pwS5Cta
+                        else -> when (currentStep) {
+                            1 -> Strings.pwS1Cta
+                            2 -> Strings.pwS2Cta
+                            3 -> Strings.pwS3Cta
+                            4 -> Strings.pwS4Cta
+                            else -> ""
                         }
-                    },
-                    onRestore = onRestore,
-                )
+                    }
+
+                    PaywallBottomCta(
+                        colors = proColors,
+                        label = ctaLabel,
+                        enabled = !checkoutLoading && !checkoutSuccess,
+                        processing = checkoutLoading,
+                        success = checkoutSuccess,
+                        onClick = {
+                            checkoutError = null
+                            when (currentStep) {
+                                1, 2, 3 -> currentStep++
+                                4 -> {
+                                    onPlanSelected(selectedPlan)
+                                    currentStep = 5
+                                }
+                                5 -> {
+                                    checkoutLoading = true
+                                    onContinue()
+                                }
+                            }
+                        },
+                        onRestore = onRestore,
+                    )
+                }
+            }
+        } else {
+            // Mobile: full-screen sheet
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(proColors.gradientStart, proColors.gradientMid, proColors.gradientEnd),
+                        ),
+                    )
+                    .windowInsetsPadding(WindowInsets.statusBars),
+            ) {
+                Column(Modifier.fillMaxSize()) {
+                    PaywallTopBar(
+                        currentStep = currentStep,
+                        onClose = onClose,
+                        onBack = ::goBack,
+                    )
+
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 20.dp)
+                            .testTag(Strings.formatTestTag(Strings.TestTags.paywallStepContent, currentStep)),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        when (currentStep) {
+                            1 -> PaywallStep1Unlimited(colors = proColors)
+                            2 -> PaywallStep2Reminder(
+                                colors = proColors,
+                                selectedReminder = selectedReminder,
+                                onReminderSelected = { selectedReminder = it },
+                            )
+                            3 -> PaywallStep3Comparison(colors = proColors)
+                            4 -> PaywallStep4Plans(
+                                colors = proColors,
+                                selectedPlan = selectedPlan,
+                                onPlanSelected = { selectedPlan = it },
+                            )
+                            5 -> PaywallStep5Checkout(
+                                colors = proColors,
+                                selectedPlan = selectedPlan,
+                                purchasing = state.purchasing || checkoutLoading,
+                                purchaseSuccess = state.purchaseSuccess || checkoutSuccess,
+                                errorMessage = checkoutError,
+                            )
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+                    }
+
+                    val ctaLabel = when {
+                        checkoutLoading -> "Processing..."
+                        checkoutSuccess -> "Subscribed!"
+                        currentStep == 5 -> Strings.pwS5Cta
+                        else -> when (currentStep) {
+                            1 -> Strings.pwS1Cta
+                            2 -> Strings.pwS2Cta
+                            3 -> Strings.pwS3Cta
+                            4 -> Strings.pwS4Cta
+                            else -> ""
+                        }
+                    }
+
+                    PaywallBottomCta(
+                        colors = proColors,
+                        label = ctaLabel,
+                        enabled = !checkoutLoading && !checkoutSuccess,
+                        processing = checkoutLoading,
+                        success = checkoutSuccess,
+                        onClick = {
+                            checkoutError = null
+                            when (currentStep) {
+                                1, 2, 3 -> currentStep++
+                                4 -> {
+                                    onPlanSelected(selectedPlan)
+                                    currentStep = 5
+                                }
+                                5 -> {
+                                    checkoutLoading = true
+                                    onContinue()
+                                }
+                            }
+                        },
+                        onRestore = onRestore,
+                    )
+                }
             }
         }
     }
@@ -215,6 +330,7 @@ private fun PaywallTopBar(
     onClose: () -> Unit,
     onBack: () -> Unit,
 ) {
+    val isDesktop = rememberIsDesktop()
     Row(
         Modifier
             .fillMaxWidth()
@@ -223,18 +339,18 @@ private fun PaywallTopBar(
             .testTag(Strings.TestTags.paywallTopBar),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (currentStep == 1) {
+        if (currentStep == 1 && !isDesktop) {
             Spacer(Modifier.size(48.dp))
         } else {
             IconButton(
-                onClick = onBack,
+                onClick = if (currentStep == 1) onClose else onBack,
                 modifier = Modifier
                     .size(48.dp)
                     .testTag(Strings.TestTags.paywallBackButton),
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.ArrowBack,
-                    contentDescription = Strings.paywallA11yBack,
+                    imageVector = if (currentStep == 1) Icons.Rounded.Close else Icons.Rounded.ArrowBack,
+                    contentDescription = if (currentStep == 1) Strings.proA11yClose else Strings.paywallA11yBack,
                     tint = ProTextSecondary,
                     modifier = Modifier.size(22.dp),
                 )
@@ -249,7 +365,8 @@ private fun PaywallTopBar(
             border = BorderStroke(1.dp, ProBorder),
             modifier = Modifier
                 .height(28.dp)
-                .testTag(Strings.TestTags.paywallStepIndicator),
+                .testTag(Strings.TestTags.paywallStepIndicator)
+                .semantics { contentDescription = "Step $currentStep of $TOTAL_STEPS" },
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -268,22 +385,18 @@ private fun PaywallTopBar(
 
         Spacer(Modifier.weight(1f))
 
-        if (currentStep == 1) {
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier
-                    .size(48.dp)
-                    .testTag(Strings.TestTags.paywallCloseButton),
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Close,
-                    contentDescription = Strings.proA11yClose,
-                    tint = ProTextSecondary,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-        } else {
-            Spacer(Modifier.size(48.dp))
+        IconButton(
+            onClick = onClose,
+            modifier = Modifier
+                .size(48.dp)
+                .testTag(Strings.TestTags.paywallCloseButton),
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Close,
+                contentDescription = Strings.proA11yClose,
+                tint = ProTextSecondary,
+                modifier = Modifier.size(22.dp),
+            )
         }
     }
 }
@@ -296,13 +409,22 @@ private fun PaywallStep1Unlimited(colors: SheetPalette) {
 
     val heading = Strings.pwS1Heading
     val highlight = Strings.pwS1HeadingHighlight
+    val parts = heading.split(highlight, limit = 2)
+    val annotatedHeading = if (parts.size == 2) {
+        buildAnnotatedString {
+            append(parts[0])
+            withStyle(SpanStyle(color = colors.accent)) { append(highlight) }
+            append(parts[1])
+        }
+    } else {
+        buildAnnotatedString { append(heading) }
+    }
     Text(
-        "$heading\n$highlight",
+        annotatedHeading,
         style = MaterialTheme.typography.headlineLarge.copy(
             fontWeight = FontWeight.Bold,
             lineHeight = 36.sp,
         ),
-        color = colors.textPrimary,
         textAlign = TextAlign.Center,
     )
 
@@ -329,8 +451,8 @@ private fun PaywallStep1Unlimited(colors: SheetPalette) {
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.1f),
-                            Color.Black.copy(alpha = 0.45f),
+                            HomeDecorExtra.scrimLight,
+                            HomeDecorExtra.scrimMedium,
                         ),
                     ),
                 ),
@@ -346,12 +468,12 @@ private fun PaywallStep1Unlimited(colors: SheetPalette) {
         ) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
-                color = Color.Black.copy(alpha = 0.55f),
+                color = HomeDecorExtra.scrimHeavy,
             ) {
                 Text(
                     "BEFORE",
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    color = Color.White,
+                    color = HomeDecorExtra.onGradientText,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 )
             }
@@ -362,7 +484,7 @@ private fun PaywallStep1Unlimited(colors: SheetPalette) {
                 Text(
                     "AFTER",
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    color = Color.White,
+                    color = HomeDecorExtra.onGradientText,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 )
             }
@@ -461,9 +583,9 @@ private fun PaywallStep2Reminder(
         modifier = Modifier.padding(vertical = 8.dp),
     ) {
         listOf(
-            Icons.Rounded.Notifications to colors.gold,
             Icons.Rounded.AutoAwesome to colors.accent,
-            Icons.Rounded.Lock to colors.mint,
+            Icons.Rounded.Star to colors.gold,
+            Icons.Rounded.Check to colors.mint,
         ).forEach { (icon, tint) ->
             Surface(
                 shape = RoundedCornerShape(12.dp),
@@ -503,6 +625,11 @@ private fun PaywallStep2Reminder(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
+                .semantics {
+                    role = Role.RadioButton
+                    this.selected = selected
+                    contentDescription = label
+                }
                 .clickable { onReminderSelected(value) },
         ) {
             Row(
@@ -511,7 +638,7 @@ private fun PaywallStep2Reminder(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Icon(
-                    Icons.Rounded.Notifications,
+                    Icons.Rounded.AutoAwesome,
                     contentDescription = null,
                     tint = if (selected) colors.accent else colors.textMuted,
                     modifier = Modifier.size(20.dp),
@@ -536,7 +663,7 @@ private fun PaywallStep2Reminder(
                         Icon(
                             Icons.Rounded.Check,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = HomeDecorExtra.onGradientText,
                             modifier = Modifier.size(14.dp),
                         )
                     }
@@ -562,7 +689,7 @@ private fun PaywallStep2Reminder(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Icon(
-                Icons.Rounded.Lock,
+                Icons.Rounded.Shield,
                 contentDescription = null,
                 tint = colors.accent,
                 modifier = Modifier.size(18.dp),
@@ -599,14 +726,26 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
         shape = RoundedCornerShape(16.dp),
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.border),
-        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 2.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = Strings.a11yComparisonTable
+            },
     ) {
         Column {
             // Header row
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .background(colors.accent.copy(alpha = 0.06f))
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                colors.accent.copy(alpha = 0.08f),
+                                colors.accent.copy(alpha = 0.04f),
+                            ),
+                        ),
+                    )
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -616,20 +755,33 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
                     color = colors.textSecondary,
                     modifier = Modifier.weight(1.2f),
                 )
-                Text(
-                    Strings.pwS3ColFree,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = colors.textSecondary,
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = colors.textMuted.copy(alpha = 0.1f),
                     modifier = Modifier.weight(0.8f),
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    Strings.pwS3ColPremium,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                ) {
+                    Text(
+                        Strings.pwS3ColFree,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = colors.textMuted,
+                        modifier = Modifier.padding(vertical = 3.dp),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                Spacer(Modifier.width(6.dp))
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
                     color = colors.accent,
                     modifier = Modifier.weight(0.8f),
-                    textAlign = TextAlign.Center,
-                )
+                ) {
+                    Text(
+                        Strings.pwS3ColPremium,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = HomeDecorExtra.onGradientText,
+                        modifier = Modifier.padding(vertical = 3.dp),
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
 
             val rows = listOf(
@@ -642,12 +794,14 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
             )
 
             rows.forEachIndexed { index, (feature, freeVal, proVal) ->
+                val isEven = index % 2 == 0
                 if (index > 0) {
                     HorizontalDivider(thickness = 0.5.dp, color = colors.border)
                 }
                 Row(
                     Modifier
                         .fillMaxWidth()
+                        .background(if (isEven) colors.accent.copy(alpha = 0.02f) else Color.Transparent)
                         .padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -678,7 +832,7 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
                                     Icon(
                                         Icons.Rounded.Check,
                                         contentDescription = null,
-                                        tint = Color.White,
+                                        tint = HomeDecorExtra.onGradientText,
                                         modifier = Modifier.size(14.dp),
                                     )
                                 }
@@ -704,7 +858,7 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
+        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -712,12 +866,20 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                Icons.Rounded.Star,
-                contentDescription = null,
-                tint = colors.gold,
-                modifier = Modifier.size(20.dp),
-            )
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = colors.gold.copy(alpha = 0.12f),
+                modifier = Modifier.size(32.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.Star,
+                        contentDescription = null,
+                        tint = colors.gold,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
             Text(
                 Strings.pwS3Recommendation,
                 style = MaterialTheme.typography.bodySmall,
@@ -817,11 +979,20 @@ private fun PaywallPlanCard(
 
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = if (selected) colors.accentSurface else colors.cardSurface,
+        color = when {
+            selected && badge != null -> colors.accentSurface
+            selected -> colors.accentSurface.copy(alpha = 0.5f)
+            else -> colors.cardSurface
+        },
         border = BorderStroke(if (selected) 2.dp else 1.dp, borderColor),
+        shadowElevation = if (selected && badge != null) 4.dp else 0.dp,
         modifier = Modifier
             .fillMaxWidth()
             .testTag(Strings.formatTestTag(Strings.TestTags.paywallPlanCard, title.lowercase()))
+            .semantics {
+                role = Role.RadioButton
+                contentDescription = Strings.a11yPaywallPlan(title, selected)
+            }
             .clickable(onClick = onClick),
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -839,15 +1010,26 @@ private fun PaywallPlanCard(
                             shape = RoundedCornerShape(6.dp),
                             color = colors.gold,
                         ) {
-                            Text(
-                                badge,
+                            Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                color = Color.White,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp,
-                                ),
-                            )
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    Icons.Rounded.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = HomeDecorExtra.onGradientText,
+                                    modifier = Modifier.size(10.dp),
+                                )
+                                Text(
+                                    badge,
+                                    color = HomeDecorExtra.onGradientText,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp,
+                                    ),
+                                )
+                            }
                         }
                     }
                     Text(
@@ -873,7 +1055,7 @@ private fun PaywallPlanCard(
                         Icon(
                             Icons.Rounded.Check,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = HomeDecorExtra.onGradientText,
                             modifier = Modifier.size(14.dp),
                         )
                     }
@@ -889,7 +1071,7 @@ private fun PaywallPlanCard(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.5).sp,
                     ),
-                    color = colors.textPrimary,
+                    color = if (selected && badge != null) colors.accent else colors.textPrimary,
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
@@ -913,12 +1095,12 @@ private fun PaywallPlanCard(
                 Spacer(Modifier.height(6.dp))
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = colors.accentSurface,
+                    color = colors.checkGreen.copy(alpha = 0.12f),
                 ) {
                     Text(
                         savings,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        color = colors.accent,
+                        color = colors.checkGreen,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     )
                 }
@@ -933,12 +1115,15 @@ private fun PaywallPlanCard(
 private fun PaywallStep5Checkout(
     colors: SheetPalette,
     selectedPlan: String,
+    purchasing: Boolean = false,
+    purchaseSuccess: Boolean = false,
+    errorMessage: String? = null,
 ) {
     // Badge
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = colors.accentSurface,
-        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.2f)),
+        color = if (purchaseSuccess) colors.checkGreen.copy(alpha = 0.15f) else colors.accentSurface,
+        border = BorderStroke(1.dp, (if (purchaseSuccess) colors.checkGreen else colors.accent).copy(alpha = 0.2f)),
     ) {
         Row(
             Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -946,15 +1131,15 @@ private fun PaywallStep5Checkout(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Icon(
-                Icons.Rounded.Shield,
+                if (purchaseSuccess) Icons.Rounded.Check else Icons.Rounded.Shield,
                 contentDescription = null,
-                tint = colors.accent,
+                tint = if (purchaseSuccess) colors.checkGreen else colors.accent,
                 modifier = Modifier.size(14.dp),
             )
             Text(
-                Strings.pwS5Badge,
+                if (purchaseSuccess) "Payment confirmed" else Strings.pwS5Badge,
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.accent,
+                color = if (purchaseSuccess) colors.checkGreen else colors.accent,
             )
         }
     }
@@ -962,7 +1147,7 @@ private fun PaywallStep5Checkout(
     Spacer(Modifier.height(12.dp))
 
     Text(
-        Strings.pwS5Heading,
+        if (purchaseSuccess) "Welcome to Pro!" else Strings.pwS5Heading,
         style = MaterialTheme.typography.headlineLarge.copy(
             fontWeight = FontWeight.Bold,
             lineHeight = 34.sp,
@@ -973,22 +1158,83 @@ private fun PaywallStep5Checkout(
 
     Spacer(Modifier.height(16.dp))
 
+    if (errorMessage != null) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFFFFF3F0),
+            border = BorderStroke(1.dp, Color(0xFFE57373).copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                Modifier.padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Text("\u26A0", style = MaterialTheme.typography.titleMedium, color = Color(0xFFD32F2F))
+                Text(
+                    errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFD32F2F),
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+    }
+
     // Shield hero visual
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = colors.accentSurface,
-        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
+        color = if (purchaseSuccess) colors.checkGreen.copy(alpha = 0.08f) else colors.accentSurface,
+        border = BorderStroke(1.dp, (if (purchaseSuccess) colors.checkGreen else colors.accent).copy(alpha = 0.15f)),
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(120.dp),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(
-                Icons.Rounded.Lock,
-                contentDescription = null,
-                tint = colors.accent.copy(alpha = 0.4f),
-                modifier = Modifier.size(48.dp),
-            )
+            if (purchasing) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                        color = colors.accent,
+                        strokeWidth = 3.dp,
+                    )
+                    Text(
+                        "Processing...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textSecondary,
+                    )
+                }
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = (if (purchaseSuccess) colors.checkGreen else colors.accent).copy(alpha = 0.12f),
+                        modifier = Modifier.size(56.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                if (purchaseSuccess) Icons.Rounded.Check else Icons.Rounded.Lock,
+                                contentDescription = null,
+                                tint = if (purchaseSuccess) colors.checkGreen else colors.accent,
+                                modifier = Modifier.size(28.dp),
+                            )
+                        }
+                    }
+                    if (purchaseSuccess) {
+                        Text(
+                            "Payment confirmed",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = colors.checkGreen,
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -999,16 +1245,29 @@ private fun PaywallStep5Checkout(
         shape = RoundedCornerShape(16.dp),
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.border),
+        shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp)) {
+            val planTitle = when (selectedPlan) {
+                "yearly" -> Strings.pwS4PlanYearlyTitle
+                "monthly" -> Strings.pwS4PlanMonthlyTitle
+                "family" -> Strings.pwS4PlanFamilyTitle
+                else -> Strings.pwS4PlanYearlyTitle
+            }
+            val planSubtitle = when (selectedPlan) {
+                "yearly" -> "Annual subscription"
+                "monthly" -> "Monthly subscription"
+                "family" -> "Family annual subscription"
+                else -> "Annual subscription"
+            }
             Text(
-                Strings.pwS5PlanTitle,
+                planTitle,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = colors.textPrimary,
             )
             Text(
-                Strings.pwS5PlanSubtitle,
+                planSubtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textMuted,
             )
@@ -1018,14 +1277,24 @@ private fun PaywallStep5Checkout(
             Spacer(Modifier.height(14.dp))
 
             val summaryRows = listOf(
-                Strings.pwS5TrialPeriod to Strings.pwS5TrialValue,
+                Strings.pwS5TrialPeriod to when (selectedPlan) {
+                    "yearly" -> "Yearly billing"
+                    "monthly" -> "Monthly billing"
+                    "family" -> "Family yearly billing"
+                    else -> "Yearly billing"
+                },
                 Strings.pwS5Then to when (selectedPlan) {
                     "yearly" -> "\$39.99 / year"
                     "monthly" -> "\$7.99 / month"
                     "family" -> "\$59.99 / year"
                     else -> "\$39.99 / year"
                 },
-                Strings.pwS5RenewalDate to Clock.System.now().plus(7, DateTimeUnit.DAY, TimeZone.currentSystemDefault()).toLocalDateTime(TimeZone.currentSystemDefault()).let { "${it.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${it.dayOfMonth}, ${it.year}" },
+                Strings.pwS5RenewalDate to run {
+                    val now = kotlinx.datetime.Clock.System.now()
+                    val renewal = now.plus(7, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
+                    val dt = renewal.toLocalDateTime(TimeZone.currentSystemDefault())
+                    "${dt.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${dt.dayOfMonth}, ${dt.year}"
+                },
                 Strings.pwS5Payment to Strings.pwS5PaymentValue,
             )
 
@@ -1076,23 +1345,23 @@ private fun PaywallStep5Checkout(
                 Strings.pwS5Benefit4,
                 Strings.pwS5Benefit5,
                 Strings.pwS5Benefit6,
-            ).forEach { benefit ->
+            ).forEachIndexed { index, benefit ->
                 Row(
-                    Modifier.padding(vertical = 3.dp),
+                    Modifier.padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = colors.accent,
-                        modifier = Modifier.size(18.dp),
+                        color = colors.checkGreen.copy(alpha = 0.12f),
+                        modifier = Modifier.size(22.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Rounded.Check,
                                 contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(12.dp),
+                                tint = colors.checkGreen,
+                                modifier = Modifier.size(14.dp),
                             )
                         }
                     }
@@ -1112,7 +1381,7 @@ private fun PaywallStep5Checkout(
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
+        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.12f)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -1120,12 +1389,20 @@ private fun PaywallStep5Checkout(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                Icons.Rounded.Lock,
-                contentDescription = null,
-                tint = colors.accent,
-                modifier = Modifier.size(18.dp),
-            )
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = colors.accent.copy(alpha = 0.10f),
+                modifier = Modifier.size(32.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.Lock,
+                        contentDescription = null,
+                        tint = colors.accent,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
             Text(
                 Strings.pwS5Trust,
                 style = MaterialTheme.typography.bodySmall,
@@ -1152,17 +1429,20 @@ private fun PaywallBottomCta(
     label: String,
     onClick: () -> Unit,
     onRestore: () -> Unit,
+    enabled: Boolean = true,
+    processing: Boolean = false,
+    success: Boolean = false,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, colors.gradientMid, colors.gradientMid),
+                    colors = listOf(Color.Transparent, colors.gradientMid.copy(alpha = 0.95f), colors.gradientMid),
                 ),
             )
             .padding(horizontal = 20.dp)
-            .padding(bottom = 16.dp)
+            .padding(top = 16.dp, bottom = 16.dp)
             .windowInsetsPadding(WindowInsets.navigationBars),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -1170,13 +1450,18 @@ private fun PaywallBottomCta(
             colors = colors,
             label = label,
             onClick = onClick,
+            enabled = enabled,
+            processing = processing,
+            success = success,
         )
-        Text(
-            Strings.pwS5Trust,
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.textMuted,
-            textAlign = TextAlign.Center,
-        )
+        if (!success) {
+            Text(
+                Strings.pwS5Trust,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textMuted,
+                textAlign = TextAlign.Center,
+            )
+        }
         PaywallBottomLinks(onRestore = onRestore)
     }
 }
@@ -1186,28 +1471,43 @@ private fun PaywallCtaButton(
     colors: SheetPalette,
     label: String,
     onClick: () -> Unit,
+    enabled: Boolean = true,
+    processing: Boolean = false,
+    success: Boolean = false,
 ) {
+    val buttonEnabled = enabled && !processing
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
+        targetValue = if (isPressed && buttonEnabled) 0.97f else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessHigh),
         label = "cta_scale",
     )
 
     Button(
-        onClick = onClick,
+        onClick = { if (buttonEnabled) onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = colors.accent,
-            contentColor = Color.White,
+            containerColor = when {
+                success -> colors.checkGreen
+                !buttonEnabled -> colors.ctaDisabled
+                else -> colors.accent
+            },
+            contentColor = HomeDecorExtra.onGradientText,
+            disabledContainerColor = colors.ctaDisabled,
+            disabledContentColor = colors.textMuted,
         ),
         contentPadding = PaddingValues(),
+        enabled = buttonEnabled,
         interactionSource = interactionSource,
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
             .testTag(Strings.TestTags.paywallCtaButton)
+            .semantics {
+                role = Role.Button
+                contentDescription = Strings.a11yPaywallCta
+            }
             .scale(scale),
     ) {
         Row(
@@ -1215,13 +1515,44 @@ private fun PaywallCtaButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            Icon(
-                Icons.Rounded.AutoAwesome,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(label, style = MaterialTheme.typography.titleSmall)
+            if (processing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = HomeDecorExtra.onGradientText,
+                    strokeWidth = 2.dp,
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    label,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            } else if (success) {
+                Icon(
+                    Icons.Rounded.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    tint = HomeDecorExtra.onGradientText,
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    label,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            } else {
+                Icon(
+                    Icons.Rounded.AutoAwesome,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    label,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
     }
 }
@@ -1324,6 +1655,7 @@ private class SheetPalette(
     val ctaDisabled: Color,
     val surface: Color,
     val overlayBg: Color,
+    val scrimAccent: Color,
 ) {
     companion object {
         val Light = SheetPalette(
@@ -1343,7 +1675,8 @@ private class SheetPalette(
             border = ProBorder,
             ctaDisabled = ProCtaDisabled,
             surface = ProSurface,
-            overlayBg = HomeDecorColors.Scrim.copy(alpha = 0.5f),
+            overlayBg = Color.Black.copy(alpha = 0.6f),
+            scrimAccent = ProCtaAccent.copy(alpha = 0.08f),
         )
         val Dark = SheetPalette(
             gradientStart = ProDarkGradientStart,
@@ -1358,11 +1691,12 @@ private class SheetPalette(
             textMuted = ProDarkTextMuted,
             gold = ProDarkGold,
             mint = ProDarkMint,
-            checkGreen = HomeDecorColors.DarkCheckGreen,
+            checkGreen = ProCheckGreen,
             border = ProDarkBorder,
             ctaDisabled = ProDarkCtaDisabled,
             surface = ProDarkSurface,
-            overlayBg = HomeDecorColors.Scrim.copy(alpha = 0.7f),
+            overlayBg = Color.Black.copy(alpha = 0.75f),
+            scrimAccent = ProDarkAccent.copy(alpha = 0.06f),
         )
     }
 }

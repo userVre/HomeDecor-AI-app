@@ -63,7 +63,7 @@ class PaywallTest {
     @Test
     fun testPaywallStepLabels() {
         assertEquals("Redesign your room", Strings.pwS1Heading)
-        assertEquals("Get notified when we launch", Strings.pwS2Heading)
+        assertEquals("Why go Pro?", Strings.pwS2Heading)
         assertEquals("What's included in Pro", Strings.pwS3Heading)
         assertEquals("Choose your plan", Strings.pwS4Heading)
         assertEquals("Your subscription is handled securely.", Strings.pwS5Heading)
@@ -71,11 +71,11 @@ class PaywallTest {
 
     @Test
     fun testPaywallCtaLabels() {
-        assertEquals("Join waitlist", Strings.pwS1Cta)
-        assertEquals("Join waitlist", Strings.pwS2Cta)
-        assertEquals("Join waitlist", Strings.pwS3Cta)
-        assertEquals("Join waitlist", Strings.pwS4Cta)
-        assertEquals("Join waitlist", Strings.pwS5Cta)
+        assertEquals("Continue", Strings.pwS1Cta)
+        assertEquals("Continue", Strings.pwS2Cta)
+        assertEquals("Continue", Strings.pwS3Cta)
+        assertEquals("Subscribe Now", Strings.pwS4Cta)
+        assertEquals("Subscribe Now", Strings.pwS5Cta)
     }
 
     @Test
@@ -89,8 +89,9 @@ class PaywallTest {
 
     @Test
     fun testPaywallA11yStepLabel() {
-        val label = Strings.a11yPaywallStep(1, "Join waitlist")
-        assertEquals("Step 1: Join waitlist", label)
+        val cta = "Continue"
+        val label = Strings.a11yPaywallStep(1, cta)
+        assertEquals("Step 1: $cta", label)
     }
 
     @Test
@@ -147,7 +148,7 @@ class PaywallTest {
 
     @Test
     fun testPaywallNotificationOptions() {
-        assertEquals("Early access notification", Strings.pwS2Option1)
-        assertEquals("Launch day notification", Strings.pwS2Option2)
+        assertEquals("Unlimited AI generations", Strings.pwS2Option1)
+        assertEquals("All premium styles", Strings.pwS2Option2)
     }
 }

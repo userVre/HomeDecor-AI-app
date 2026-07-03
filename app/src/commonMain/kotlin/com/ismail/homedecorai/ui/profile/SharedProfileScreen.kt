@@ -25,27 +25,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Brightness6
 import androidx.compose.material.icons.rounded.Code
-import androidx.compose.material.icons.rounded.Dashboard
-import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Feedback
 import androidx.compose.material.icons.rounded.Help
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Mail
-import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarRate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,6 +68,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
@@ -84,6 +80,7 @@ data class ProfileScreenState(
     val diamonds: Int = 0,
     val isPro: Boolean = false,
     val favoritesCount: Int = 0,
+    val savedDesigns: List<BoardItem> = emptyList(),
 )
 
 @Composable
@@ -108,9 +105,9 @@ fun SharedProfileScreen(
     ) {
         LazyColumn(
             contentPadding = PaddingValues(
-                start = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.Base,
-                end = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.Base,
-                top = HomeDecorSpacing.Sm,
+                start = if (isDesktop) HomeDecorSpacing.Xxl else HomeDecorSpacing.ScreenHorizontal,
+                end = if (isDesktop) HomeDecorSpacing.Xxl else HomeDecorSpacing.ScreenHorizontal,
+                top = HomeDecorSpacing.Lg,
                 bottom = navBarBottomPadding(additionalContentPadding = if (isDesktop) 0.dp else 24.dp),
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
@@ -126,7 +123,9 @@ fun SharedProfileScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             Strings.myProfileTitle,
-                            style = MaterialTheme.typography.headlineMedium,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.semantics { heading() },
                         )
                         Spacer(Modifier.height(HomeDecorSpacing.Xs))
@@ -167,15 +166,6 @@ fun SharedProfileScreen(
                             subtitle = Strings.languageBody,
                             onClick = onSettings,
                         )
-                        ProfileDivider()
-                        ProfileRow(
-                            icon = Icons.Rounded.Brightness6,
-                            iconBg = MaterialTheme.colorScheme.primaryContainer,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            title = Strings.themeLabel,
-                            subtitle = Strings.themeBody,
-                            onClick = onSettings,
-                        )
                     }
                 }
 
@@ -188,7 +178,7 @@ fun SharedProfileScreen(
                             iconTint = MaterialTheme.colorScheme.tertiary,
                             title = Strings.helpCenter,
                             subtitle = Strings.helpCenterBody,
-                            onClick = { onOpenUrl("https://homedecorai.com/help") },
+                            onClick = { onOpenUrl("https://homedecorai.com/faq") },
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -197,16 +187,16 @@ fun SharedProfileScreen(
                             iconTint = MaterialTheme.colorScheme.secondary,
                             title = Strings.contactUs,
                             subtitle = Strings.contactUsBody,
-                            onClick = onSettings,
+                            onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Support%20Request") },
                         )
                         ProfileDivider()
                         ProfileRow(
-                            icon = Icons.Rounded.StarRate,
+                            icon = Icons.Rounded.Feedback,
                             iconBg = MaterialTheme.colorScheme.primaryContainer,
                             iconTint = MaterialTheme.colorScheme.primary,
                             title = Strings.rateApp,
                             subtitle = Strings.rateAppBody,
-                            onClick = { onOpenUrl("https://homedecorai.com/rate") },
+                            onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Feedback") },
                         )
                     }
                 }
@@ -215,7 +205,7 @@ fun SharedProfileScreen(
                     ProfileSectionLabel(Strings.legalSection)
                     SettingsCard {
                         ProfileRow(
-                            icon = Icons.Rounded.Description,
+                            icon = Icons.Rounded.Shield,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
                             iconTint = MaterialTheme.colorScheme.tertiary,
                             title = Strings.termsOfService,
@@ -254,7 +244,7 @@ fun SharedProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                         ) {
-                            // Left: Account + Subscription Sections
+                            // Left: Account + Subscription
                             Column(modifier = Modifier.weight(1f)) {
                                 ProfileSectionLabel(Strings.accountSection)
                                 SettingsCard {
@@ -292,45 +282,13 @@ fun SharedProfileScreen(
                                 }
                             }
 
-                            // Right: Saved Designs + Preferences + Support + Legal
+                            // Right: Saved + Support + Legal
                             Column(modifier = Modifier.weight(1f)) {
                                 ProfileSectionLabel(Strings.profileSavedDesigns)
                                 ProfileSavedDesignsPreview(
                                     state = state,
                                     onViewAll = onOpenBoard,
                                 )
-
-                                Spacer(Modifier.height(HomeDecorSpacing.Base))
-
-                                ProfileSectionLabel(Strings.preferencesSection)
-                                SettingsCard {
-                                    ProfileRow(
-                                        icon = Icons.Rounded.Language,
-                                        iconBg = MaterialTheme.colorScheme.tertiaryContainer,
-                                        iconTint = MaterialTheme.colorScheme.tertiary,
-                                        title = Strings.languageLabel,
-                                        subtitle = Strings.languageBody,
-                                        onClick = onSettings,
-                                    )
-                                    ProfileDivider()
-                                    ProfileRow(
-                                        icon = Icons.Rounded.Notifications,
-                                        iconBg = MaterialTheme.colorScheme.secondaryContainer,
-                                        iconTint = MaterialTheme.colorScheme.secondary,
-                                        title = Strings.notificationsLabel,
-                                        subtitle = Strings.notificationsBody,
-                                        onClick = onSettings,
-                                    )
-                                    ProfileDivider()
-                                    ProfileRow(
-                                        icon = Icons.Rounded.Brightness6,
-                                        iconBg = MaterialTheme.colorScheme.primaryContainer,
-                                        iconTint = MaterialTheme.colorScheme.primary,
-                                        title = Strings.themeLabel,
-                                        subtitle = Strings.themeBody,
-                                        onClick = onSettings,
-                                    )
-                                }
 
                                 Spacer(Modifier.height(HomeDecorSpacing.Base))
 
@@ -342,7 +300,7 @@ fun SharedProfileScreen(
                                         iconTint = MaterialTheme.colorScheme.tertiary,
                                         title = Strings.helpCenter,
                                         subtitle = Strings.helpCenterBody,
-                                        onClick = { onOpenUrl("https://homedecorai.com/help") },
+                                        onClick = { onOpenUrl("https://homedecorai.com/faq") },
                                     )
                                     ProfileDivider()
                                     ProfileRow(
@@ -351,16 +309,16 @@ fun SharedProfileScreen(
                                         iconTint = MaterialTheme.colorScheme.secondary,
                                         title = Strings.contactUs,
                                         subtitle = Strings.contactUsBody,
-                                        onClick = onSettings,
+                                        onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Support%20Request") },
                                     )
                                     ProfileDivider()
                                     ProfileRow(
-                                        icon = Icons.Rounded.StarRate,
+                                        icon = Icons.Rounded.Feedback,
                                         iconBg = MaterialTheme.colorScheme.primaryContainer,
                                         iconTint = MaterialTheme.colorScheme.primary,
                                         title = Strings.rateApp,
                                         subtitle = Strings.rateAppBody,
-                                        onClick = { onOpenUrl("https://homedecorai.com/rate") },
+                                        onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Feedback") },
                                     )
                                 }
 
@@ -369,7 +327,7 @@ fun SharedProfileScreen(
                                 ProfileSectionLabel(Strings.legalSection)
                                 SettingsCard {
                                     ProfileRow(
-                                        icon = Icons.Rounded.Description,
+                                        icon = Icons.Rounded.Shield,
                                         iconBg = MaterialTheme.colorScheme.tertiaryContainer,
                                         iconTint = MaterialTheme.colorScheme.tertiary,
                                         title = Strings.termsOfService,
@@ -444,38 +402,6 @@ fun SharedProfileScreen(
                         }
                     }
 
-                    item("preferences-section") {
-                        ProfileSectionLabel(Strings.preferencesSection)
-                        SettingsCard {
-                            ProfileRow(
-                                icon = Icons.Rounded.Language,
-                                iconBg = MaterialTheme.colorScheme.tertiaryContainer,
-                                iconTint = MaterialTheme.colorScheme.tertiary,
-                                title = Strings.languageLabel,
-                                subtitle = Strings.languageBody,
-                                onClick = onSettings,
-                            )
-                            ProfileDivider()
-                            ProfileRow(
-                                icon = Icons.Rounded.Notifications,
-                                iconBg = MaterialTheme.colorScheme.secondaryContainer,
-                                iconTint = MaterialTheme.colorScheme.secondary,
-                                title = Strings.notificationsLabel,
-                                subtitle = Strings.notificationsBody,
-                                onClick = onSettings,
-                            )
-                            ProfileDivider()
-                            ProfileRow(
-                                icon = Icons.Rounded.Brightness6,
-                                iconBg = MaterialTheme.colorScheme.primaryContainer,
-                                iconTint = MaterialTheme.colorScheme.primary,
-                                title = Strings.themeLabel,
-                                subtitle = Strings.themeBody,
-                                onClick = onSettings,
-                            )
-                        }
-                    }
-
                     item("support-section") {
                         ProfileSectionLabel(Strings.supportSection)
                         SettingsCard {
@@ -485,7 +411,7 @@ fun SharedProfileScreen(
                                 iconTint = MaterialTheme.colorScheme.tertiary,
                                 title = Strings.helpCenter,
                                 subtitle = Strings.helpCenterBody,
-                                onClick = { onOpenUrl("https://homedecorai.com/help") },
+                                onClick = { onOpenUrl("https://homedecorai.com/faq") },
                             )
                             ProfileDivider()
                             ProfileRow(
@@ -494,16 +420,16 @@ fun SharedProfileScreen(
                                 iconTint = MaterialTheme.colorScheme.secondary,
                                 title = Strings.contactUs,
                                 subtitle = Strings.contactUsBody,
-                                onClick = onSettings,
+                                onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Support%20Request") },
                             )
                             ProfileDivider()
                             ProfileRow(
-                                icon = Icons.Rounded.StarRate,
+                                icon = Icons.Rounded.Feedback,
                                 iconBg = MaterialTheme.colorScheme.primaryContainer,
                                 iconTint = MaterialTheme.colorScheme.primary,
                                 title = Strings.rateApp,
                                 subtitle = Strings.rateAppBody,
-                                onClick = { onOpenUrl("https://homedecorai.com/rate") },
+                                onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Feedback") },
                             )
                         }
                     }
@@ -512,7 +438,7 @@ fun SharedProfileScreen(
                         ProfileSectionLabel(Strings.legalSection)
                         SettingsCard {
                             ProfileRow(
-                                icon = Icons.Rounded.Description,
+                                icon = Icons.Rounded.Shield,
                                 iconBg = MaterialTheme.colorScheme.tertiaryContainer,
                                 iconTint = MaterialTheme.colorScheme.tertiary,
                                 title = Strings.termsOfService,
@@ -549,16 +475,14 @@ fun SharedProfileScreen(
                                 iconTint = MaterialTheme.colorScheme.tertiary,
                                 title = Strings.appVersion,
                                 subtitle = "1.0.0",
-                                onClick = {},
                             )
                             ProfileDivider()
                             ProfileRow(
-                                icon = Icons.Rounded.Dashboard,
+                                icon = Icons.Rounded.Info,
                                 iconBg = MaterialTheme.colorScheme.secondaryContainer,
                                 iconTint = MaterialTheme.colorScheme.secondary,
                                 title = Strings.appBuildNumber,
                                 subtitle = "1",
-                                onClick = {},
                             )
                         }
                     }
@@ -578,13 +502,11 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         if (isDesktop) {
-            // Desktop: 2-column — headline + benefit grid | preview cards
             Row(
-                Modifier.padding(HomeDecorSpacing.CardInternal),
+                Modifier.padding(HomeDecorSpacing.Xl),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xl),
             ) {
-                // Left column: headline + benefits + CTA
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
@@ -600,7 +522,6 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                         style = MaterialTheme.typography.bodyLarge,
                     )
 
-                    // 2x2 benefit grid
                     Column(
                         verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                     ) {
@@ -656,7 +577,6 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                     }
                 }
 
-                // Right column: design preview cards
                 Column(
                     verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
@@ -666,13 +586,11 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                 }
             }
         } else {
-            // Mobile: stacked — preview row, headline, benefits, CTA
             Column(
-                Modifier.padding(HomeDecorSpacing.CardInternal),
+                Modifier.padding(HomeDecorSpacing.Xl),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
             ) {
-                // Preview designs row
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
@@ -694,7 +612,6 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                     lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
                 )
 
-                // Compact benefit chips
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                     modifier = Modifier.fillMaxWidth(),
@@ -706,12 +623,12 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                     )
                     ProfileBenefitChip(
                         icon = Icons.Rounded.PhoneAndroid,
-                        label = "Cross-device",
+                        label = Strings.profileGuestBenefit2Title,
                         modifier = Modifier.weight(1f),
                     )
                     ProfileBenefitChip(
                         icon = Icons.Rounded.Star,
-                        label = "History",
+                        label = Strings.profileGuestBenefit3Title,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -737,7 +654,7 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
 
 @Composable
 private fun ProfileBenefitCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     body: String,
     modifier: Modifier = Modifier,
@@ -787,7 +704,7 @@ private fun ProfileBenefitCard(
 
 @Composable
 private fun ProfileBenefitChip(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     modifier: Modifier = Modifier,
 ) {
@@ -837,44 +754,42 @@ private fun ProfileDesignPreviewCard(name: String, style: String) {
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f),
-                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f),
                             ),
                         ),
                     ),
             ) {
-                // Room silhouette shapes
                 Box(
                     modifier = Modifier
-                        .padding(start = 12.dp, top = 40.dp)
+                        .padding(start = 12.dp, top = 35.dp)
                         .size(50.dp, 24.dp)
-                        .clip(RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
+                        .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)),
                 )
                 Box(
                     modifier = Modifier
-                        .padding(start = 68.dp, top = 44.dp)
+                        .padding(start = 68.dp, top = 40.dp)
                         .size(34.dp, 18.dp)
                         .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)),
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(start = 112.dp, top = 20.dp)
+                        .size(18.dp, 34.dp)
+                        .clip(RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp))
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.25f)),
                 )
                 Box(
                     modifier = Modifier
-                        .padding(start = 112.dp, top = 24.dp)
-                        .size(18.dp, 34.dp)
-                        .clip(RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)),
-                )
-                Box(
-                    modifier = Modifier
-                        .padding(start = 12.dp, top = 66.dp)
+                        .padding(start = 12.dp, top = 62.dp)
                         .size(110.dp, 10.dp)
                         .clip(RoundedCornerShape(5.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)),
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)),
                 )
 
-                // AI sparkle badge
                 Surface(
                     shape = HomeDecorShape.Badge,
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
@@ -921,80 +836,41 @@ private fun ProfileStatusCards(
     onSavedClick: () -> Unit,
     isDesktop: Boolean = false,
 ) {
-    if (isDesktop) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
-        ) {
-            StatusCard(
-                icon = Icons.Rounded.Diamond,
-                label = Strings.profileStatusDiamonds,
-                value = state.diamonds.toString(),
-                iconTint = HomeDecorExtra.diamondAccent,
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                modifier = Modifier.weight(1f),
-                onClick = onDiamondsClick,
-            )
-            StatusCard(
-                icon = Icons.Rounded.Star,
-                label = Strings.profileStatusPlan,
-                value = if (state.isPro) "Pro" else Strings.freePlan,
-                iconTint = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
-                containerColor = if (state.isPro) {
-                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                } else {
-                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
-                },
-                modifier = Modifier.weight(1f),
-                onClick = onPlanClick,
-            )
-            StatusCard(
-                icon = Icons.Rounded.FavoriteBorder,
-                label = Strings.profileStatusSaved,
-                value = state.favoritesCount.toString(),
-                iconTint = MaterialTheme.colorScheme.error,
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
-                modifier = Modifier.weight(1f),
-                onClick = onSavedClick,
-            )
-        }
-    } else {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-        ) {
-            StatusCard(
-                icon = Icons.Rounded.Diamond,
-                label = Strings.profileStatusDiamonds,
-                value = state.diamonds.toString(),
-                iconTint = HomeDecorExtra.diamondAccent,
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                modifier = Modifier.weight(1f),
-                onClick = onDiamondsClick,
-            )
-            StatusCard(
-                icon = Icons.Rounded.Star,
-                label = Strings.profileStatusPlan,
-                value = if (state.isPro) "Pro" else Strings.freePlan,
-                iconTint = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
-                containerColor = if (state.isPro) {
-                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-                } else {
-                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
-                },
-                modifier = Modifier.weight(1f),
-                onClick = onPlanClick,
-            )
-            StatusCard(
-                icon = Icons.Rounded.FavoriteBorder,
-                label = Strings.profileStatusSaved,
-                value = state.favoritesCount.toString(),
-                iconTint = MaterialTheme.colorScheme.error,
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
-                modifier = Modifier.weight(1f),
-                onClick = onSavedClick,
-            )
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Md else HomeDecorSpacing.Sm),
+    ) {
+        StatusCard(
+            icon = Icons.Rounded.Diamond,
+            label = Strings.profileStatusDiamonds,
+            value = state.diamonds.toString(),
+            iconTint = HomeDecorExtra.diamondAccent,
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+            modifier = Modifier.weight(1f),
+            onClick = onDiamondsClick,
+        )
+        StatusCard(
+            icon = Icons.Rounded.Star,
+            label = Strings.profileStatusPlan,
+            value = if (state.isPro) "Pro" else Strings.freePlan,
+            iconTint = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
+            containerColor = if (state.isPro) {
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+            } else {
+                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+            },
+            modifier = Modifier.weight(1f),
+            onClick = onPlanClick,
+        )
+        StatusCard(
+            icon = Icons.Rounded.FavoriteBorder,
+            label = Strings.profileStatusSaved,
+            value = state.favoritesCount.toString(),
+            iconTint = MaterialTheme.colorScheme.error,
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+            modifier = Modifier.weight(1f),
+            onClick = onSavedClick,
+        )
     }
 }
 
@@ -1012,7 +888,7 @@ private fun StatusCard(
     val isHovered by interactionSource.collectIsHoveredAsState()
 
     Surface(
-        shape = HomeDecorShape.Card,
+        shape = HomeDecorShape.CardLarge,
         color = if (isHovered) containerColor.copy(alpha = 0.8f) else containerColor,
         modifier = modifier
             .minimumTouchTarget()
@@ -1030,6 +906,7 @@ private fun StatusCard(
                 modifier = Modifier.size(20.dp),
                 tint = iconTint,
             )
+            Spacer(Modifier.height(HomeDecorSpacing.Xxs))
             Text(
                 value,
                 style = MaterialTheme.typography.titleMedium,
@@ -1056,9 +933,12 @@ private fun SignedInProfileHero(state: ProfileScreenState, isDesktop: Boolean = 
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            Modifier.padding(HomeDecorSpacing.CardInternal),
+            Modifier.padding(
+                horizontal = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.CardInternal,
+                vertical = HomeDecorSpacing.Xl,
+            ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xl),
         ) {
             Box {
                 Surface(
@@ -1088,11 +968,11 @@ private fun SignedInProfileHero(state: ProfileScreenState, isDesktop: Boolean = 
                         if (state.isPro) "PRO" else Strings.freeBadge,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
+                        color = HomeDecorExtra.onGradientText,
                     )
                 }
             }
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     state.signedInName ?: Strings.accountConnected,
                     style = MaterialTheme.typography.titleMedium,
@@ -1106,7 +986,7 @@ private fun SignedInProfileHero(state: ProfileScreenState, isDesktop: Boolean = 
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(HomeDecorSpacing.Xs))
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
                 Surface(
                     shape = HomeDecorShape.Badge,
                     color = if (state.isPro) {
@@ -1155,7 +1035,6 @@ private fun ProfileSavedDesignsPreview(
     ) {
         Column {
             if (state.favoritesCount == 0) {
-                // Empty state
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1209,20 +1088,20 @@ private fun ProfileSavedDesignsPreview(
                     }
                 }
             } else {
-                // Design preview grid
                 LazyRow(
                     contentPadding = PaddingValues(HomeDecorSpacing.Md),
                     horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
-                    items(3.coerceAtMost(state.favoritesCount)) { index ->
+                    val displayItems = state.savedDesigns.take(3)
+                    items(displayItems.size) { index ->
+                        val item = displayItems[index]
                         ProfileDesignPreviewCard(
-                            name = "Design ${index + 1}",
-                            style = "Saved",
+                            name = item.roomType.ifBlank { item.style }.ifBlank { item.toolTitle }.ifBlank { "Design ${index + 1}" },
+                            style = item.style.ifBlank { item.roomType }.ifBlank { "Saved" },
                         )
                     }
                 }
 
-                // View all button
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1245,8 +1124,11 @@ private fun ProfileSavedDesignsPreview(
 private fun ProfileSectionLabel(label: String) {
     Text(
         label,
-        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Xs),
+        modifier = Modifier
+            .padding(horizontal = HomeDecorSpacing.Xs)
+            .semantics { heading() },
         style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
@@ -1260,7 +1142,7 @@ private fun SettingsCard(content: @Composable () -> Unit) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(vertical = HomeDecorSpacing.CardInternal)) {
+        Column(Modifier.padding(vertical = HomeDecorSpacing.Sm)) {
             content()
         }
     }
@@ -1273,10 +1155,16 @@ private fun ProfileRow(
     iconTint: Color,
     title: String,
     subtitle: String,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)? = null,
 ) {
     ListItem(
-        headlineContent = { Text(title) },
+        headlineContent = {
+            Text(
+                title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
         supportingContent = if (subtitle.isNotBlank()) {
             {
                 Text(
@@ -1303,28 +1191,36 @@ private fun ProfileRow(
                 }
             }
         },
-        trailingContent = {
-            Icon(
-                Icons.AutoMirrored.Rounded.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(16.dp),
-            )
-        },
+        trailingContent = if (onClick != null) {
+            {
+                Icon(
+                    Icons.AutoMirrored.Rounded.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        } else null,
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier
             .fillMaxWidth()
             .minimumTouchTarget()
             .testTag(Strings.formatTestTag(Strings.TestTags.profileRow, title))
-            .semantics { role = Role.Button }
-            .clickable(onClick = onClick),
+            .then(
+                if (onClick != null) {
+                    Modifier.semantics { role = Role.Button }
+                        .clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            ),
     )
 }
 
 @Composable
 private fun ProfileDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Base),
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg),
         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
     )
 }

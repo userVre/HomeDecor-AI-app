@@ -50,7 +50,6 @@ kotlin {
             implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
         }
@@ -69,7 +68,8 @@ kotlin {
             implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
             implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
 
-            implementation("com.clerk:clerk-convex-kotlin:0.11.0")
+            implementation("com.clerk:clerk-convex-kotlin:0.12.0")
+            implementation("com.clerk:clerk-android-ui:1.0.30")
             implementation("dev.convex:android-convexmobile:0.8.0@aar") {
                 isTransitive = true
             }

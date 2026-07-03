@@ -1,6 +1,8 @@
 package com.ismail.homedecorai
 
 import android.app.Application
+import com.clerk.api.Clerk
+import com.clerk.convex.createClerkConvexClient
 import com.revenuecat.purchases.LogLevel
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.PurchasesConfiguration
@@ -17,7 +19,18 @@ class HomeDecorApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        services = NativeServices()
+
+        Clerk.initialize(
+            context = this,
+            publishableKey = BuildConfig.CLERK_PUBLISHABLE_KEY,
+        )
+
+        val convexClient = createClerkConvexClient(
+            deploymentUrl = BuildConfig.CONVEX_URL,
+            context = applicationContext,
+        )
+
+        services = NativeServices(convexClient)
 
         initRevenueCatAsync()
     }

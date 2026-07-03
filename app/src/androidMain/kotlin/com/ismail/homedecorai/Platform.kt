@@ -72,6 +72,30 @@ actual fun getCurrentPathname(): String = ""
 
 actual fun subscribeToNavigationChanges(onNavigate: (String) -> Unit): () -> Unit = { }
 
+actual fun goBack() {
+    // No-op on Android: navigation is handled by Compose Navigation
+}
+
+actual fun browserDownloadFile(url: String, filename: String) {
+    val context = getApplicationContext() ?: return
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
+    } catch (_: Exception) {}
+}
+
+actual fun browserShareContent(title: String, url: String) {
+    val context = getApplicationContext() ?: return
+    try {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, url)
+            putExtra(Intent.EXTRA_SUBJECT, title)
+        }
+        context.startActivity(Intent.createChooser(intent, title))
+    } catch (_: Exception) {}
+}
+
 private fun getApplicationContext(): Context? {
     return try {
         val activityThread = Class.forName("android.app.ActivityThread")

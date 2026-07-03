@@ -19,3 +19,5 @@ expect fun announceToScreenReader(message: String)
 expect fun getCurrentPathname(): String
 
 expect fun subscribeToNavigationChanges(onNavigate: (String) -> Unit): () -> Unit
+
+expect fun goBack()

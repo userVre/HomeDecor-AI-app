@@ -63,6 +63,11 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardScreenState
+import com.ismail.homedecorai.model.BoardItem
+import com.ismail.homedecorai.ui.theme.HomeDecorElevation
+import com.ismail.homedecorai.ui.theme.HomeDecorExtra
+import com.ismail.homedecorai.ui.theme.HomeDecorShape
+import com.ismail.homedecorai.ui.theme.HomeDecorSpacing
 import com.ismail.homedecorai.model.DiscoverScreenState
 import com.ismail.homedecorai.model.DiscoverSectionItem
 import com.ismail.homedecorai.model.GalleryCardItem
@@ -80,11 +85,14 @@ import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.settings.SettingsLanguage
 import com.ismail.homedecorai.ui.settings.SettingsScreenState
 import com.ismail.homedecorai.ui.settings.SharedSettingsScreen
+import com.ismail.homedecorai.ui.auth.SharedAuthScreen
 import com.ismail.homedecorai.ui.tools.SharedToolsScreen
 import com.ismail.homedecorai.ui.tools.WebWizardScreen
 import com.ismail.homedecorai.ui.upgrade.SharedUpgradeScreen
 import com.ismail.homedecorai.ui.theme.HomeDecorColors
 import com.ismail.homedecorai.ui.theme.HomeDecorTheme
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 private enum class WebTab(val label: String, val icon: ImageVector, val route: String, val pageTitle: String) {
     Tools("Tools", Icons.Rounded.Widgets, "/tools", "Tools - HomeDecor AI"),
@@ -96,7 +104,8 @@ private enum class WebTab(val label: String, val icon: ImageVector, val route: S
 
 @Composable
 fun App() {
-    HomeDecorTheme(darkTheme = false, dynamicColor = false) {
+    var isDarkTheme by remember { mutableStateOf(false) }
+    HomeDecorTheme(darkTheme = isDarkTheme, dynamicColor = false) {
         val initialTab = remember {
             val path = getCurrentPathname().removePrefix("/")
             when {
@@ -112,11 +121,21 @@ fun App() {
         var selectedTab by remember { mutableStateOf(initialTab) }
         var paywallVisible by remember { mutableStateOf(false) }
         var settingsVisible by remember { mutableStateOf(false) }
+
+        // Announce modal state changes to screen readers
+        LaunchedEffect(paywallVisible) {
+            if (paywallVisible) announceToScreenReader(Strings.a11yPaywallHeading)
+        }
+        LaunchedEffect(settingsVisible) {
+            if (settingsVisible) announceToScreenReader(Strings.a11ySettingsHeading)
+        }
+
         var activeWizard by remember {
             val path = getCurrentPathname()
             val match = Regex("/create/(\\w+)").find(path)
             mutableStateOf(match?.groupValues?.get(1)?.let { toolId ->
-                ToolItem(toolId, "", "", Color(0xFF2E6B6E), Color(0xFF1A4A4C), "images/tool_${toolId}.webp")
+                ToolItem(toolId, "", "", Color(0xFF2E6B6E), Color(0xFF1A4A4C), "images/tool_${toolId}.webp",
+                    accentColor = Color(0xFFC1E4E7))
             })
         }
 
@@ -139,7 +158,12 @@ fun App() {
                 // its correct path but gets a history entry for back/forward.
                 replaceHistoryState(path, title)
             } else {
-                pushHistoryState(path, title)
+                // Only push history if the path actually changed to prevent
+                // duplicate entries when tab state changes from back/forward.
+                val currentPath = getCurrentPathname()
+                if (path != currentPath) {
+                    pushHistoryState(path, title)
+                }
             }
             announceToScreenReader(title)
         }
@@ -151,35 +175,163 @@ fun App() {
                 tools = listOf(
                     ToolItem("interior", "Interior Design", "Redesign any room with AI-powered interior concepts",
                         gradientStart = Color(0xFF2E6B6E), gradientEnd = Color(0xFF1A4A4C),
-                        imageUrl = "images/tool_interior.webp"),
+                        imageUrl = "images/tool_interior.webp",
+                        accentColor = Color(0xFFC1E4E7)),
                     ToolItem("facade", "Exterior Design", "Transform your home's exterior with modern facade styles",
                         gradientStart = Color(0xFF3B5998), gradientEnd = Color(0xFF1E3A5F),
-                        imageUrl = "images/tool_exterior.webp"),
+                        imageUrl = "images/tool_exterior.webp",
+                        accentColor = Color(0xFFB8CCE8)),
                     ToolItem("garden", "Garden Design", "Plan and visualize your dream garden landscape",
                         gradientStart = Color(0xFF2D6A4F), gradientEnd = Color(0xFF1B4332),
-                        imageUrl = "images/tool_garden.webp"),
+                        imageUrl = "images/tool_garden.webp",
+                        accentColor = Color(0xFFC8E3CE)),
                     ToolItem("paint", "Smart Wall Paint", "Preview smart paint colors on your walls instantly",
                         gradientStart = Color(0xFFC45B3F), gradientEnd = Color(0xFF8B2E1A),
-                        imageUrl = "images/tool_paint.webp"),
+                        imageUrl = "images/tool_paint.webp",
+                        accentColor = Color(0xFFFDDDD0)),
                     ToolItem("floor", "Floor Design", "Explore premium flooring from hardwood to marble tile",
                         gradientStart = Color(0xFF8B6914), gradientEnd = Color(0xFF5C4510),
-                        imageUrl = "images/tool_floor.webp"),
+                        imageUrl = "images/tool_floor.webp",
+                        accentColor = Color(0xFFF5DFA0)),
                     ToolItem("layout", "Layout Makeover", "Optimize room layout for better flow and functionality",
                         gradientStart = Color(0xFF5B4FCF), gradientEnd = Color(0xFF3A2D8F),
-                        imageUrl = "images/tool_layout.webp"),
+                        imageUrl = "images/tool_layout.webp",
+                        accentColor = Color(0xFFD0C4F8)),
                     ToolItem("replace", "Replace Furniture", "Swap furniture and decor with AI-generated alternatives",
                         gradientStart = Color(0xFFB85C38), gradientEnd = Color(0xFF7A3520),
-                        imageUrl = "images/tool_replace.webp"),
+                        imageUrl = "images/tool_replace.webp",
+                        accentColor = Color(0xFFF5D0C0)),
                     ToolItem("reference", "Reference Style", "Use any reference image to guide your design direction",
                         gradientStart = Color(0xFF1A3A5C), gradientEnd = Color(0xFF0D2240),
-                        imageUrl = "images/tool_reference.webp"),
+                        imageUrl = "images/tool_reference.webp",
+                        accentColor = Color(0xFFB0C8E0)),
                 ),
             )
         }
 
-        val discoverState = remember {
+        var webFavoriteIds by remember { mutableStateOf(emptySet<String>()) }
+        var webMoodboardIds by remember { mutableStateOf(emptySet<String>()) }
+        var webIsSignedIn by remember { mutableStateOf(false) }
+        var webSignedInName by remember { mutableStateOf<String?>(null) }
+        var webSignedInEmail by remember { mutableStateOf<String?>(null) }
+        var authVisible by remember { mutableStateOf(false) }
+        var authLoading by remember { mutableStateOf(false) }
+        var authError by remember { mutableStateOf<String?>(null) }
+
+        fun doSignIn(email: String, password: String) {
+            authLoading = true
+            authError = null
+            kotlinx.coroutines.MainScope().launch {
+                val initResult = clerkInit()
+                if (initResult != "ok") {
+                    authLoading = false
+                    authError = Strings.authErrorNetwork
+                    return@launch
+                }
+                val signInResult = clerkSignIn()
+                if (signInResult.startsWith("error")) {
+                    authLoading = false
+                    authError = if (signInResult.contains("invalid") || signInResult.contains("credential")) {
+                        Strings.authErrorInvalidCredentials
+                    } else {
+                        Strings.authErrorGeneric
+                    }
+                    return@launch
+                }
+                val user = clerkGetUser()
+                if (user != null) {
+                    webIsSignedIn = true
+                    webSignedInName = user.fullName
+                    webSignedInEmail = user.email
+                    authVisible = false
+                    authLoading = false
+                } else {
+                    authLoading = false
+                    authError = Strings.authErrorGeneric
+                }
+            }
+        }
+
+        fun doSignUp(email: String, password: String) {
+            authLoading = true
+            authError = null
+            kotlinx.coroutines.MainScope().launch {
+                val initResult = clerkInit()
+                if (initResult != "ok") {
+                    authLoading = false
+                    authError = Strings.authErrorNetwork
+                    return@launch
+                }
+                val signUpResult = clerkSignUp()
+                if (signUpResult.startsWith("error")) {
+                    authLoading = false
+                    authError = Strings.authErrorGeneric
+                    return@launch
+                }
+                val user = clerkGetUser()
+                if (user != null) {
+                    webIsSignedIn = true
+                    webSignedInName = user.fullName
+                    webSignedInEmail = user.email
+                    authVisible = false
+                    authLoading = false
+                } else {
+                    authLoading = false
+                    authError = Strings.authErrorGeneric
+                }
+            }
+        }
+
+        fun doGoogleSignIn() {
+            authLoading = true
+            authError = null
+            kotlinx.coroutines.MainScope().launch {
+                val initResult = clerkInit()
+                if (initResult != "ok") {
+                    authLoading = false
+                    authError = Strings.authErrorNetwork
+                    return@launch
+                }
+                val signInResult = clerkSignIn()
+                if (signInResult.startsWith("error")) {
+                    authLoading = false
+                    authError = Strings.authErrorGeneric
+                    return@launch
+                }
+                val user = clerkGetUser()
+                if (user != null) {
+                    webIsSignedIn = true
+                    webSignedInName = user.fullName
+                    webSignedInEmail = user.email
+                    authVisible = false
+                    authLoading = false
+                } else {
+                    authLoading = false
+                    authError = Strings.authErrorGeneric
+                }
+            }
+        }
+
+        fun doLogout() {
+            kotlinx.coroutines.MainScope().launch {
+                clerkSignOut()
+                webIsSignedIn = false
+                webSignedInName = null
+                webSignedInEmail = null
+                settingsVisible = false
+            }
+        }
+
+        fun openAuth() {
+            authError = null
+            authLoading = false
+            authVisible = true
+        }
+
+        val discoverState = remember(webFavoriteIds, webMoodboardIds) {
             DiscoverScreenState(
-                favoriteSourceIds = emptySet(),
+                favoriteSourceIds = webFavoriteIds,
+                moodboardSourceIds = webMoodboardIds,
                 selectedCluster = "interior",
                 sections = listOf(
                     DiscoverSectionItem("kitchen", "Kitchen", "interior", listOf(
@@ -273,14 +425,14 @@ fun App() {
             )
         }
 
-        val profileState = remember {
+        val profileState = remember(webIsSignedIn, webSignedInName, webSignedInEmail) {
             ProfileScreenState(
-                isGuest = true,
-                signedInName = null,
-                signedInEmail = null,
+                isGuest = !webIsSignedIn,
+                signedInName = webSignedInName,
+                signedInEmail = webSignedInEmail,
                 diamonds = 150,
                 isPro = false,
-                favoritesCount = 0,
+                favoritesCount = webFavoriteIds.size,
             )
         }
 
@@ -292,13 +444,13 @@ fun App() {
             )
         }
 
-        val settingsState = remember {
+        val settingsState = remember(webIsSignedIn, webSignedInName, webSignedInEmail) {
             SettingsScreenState(
                 versionName = "1.0.0-web",
                 settingsBusy = false,
-                isSignedIn = !profileState.isGuest,
-                signedInName = profileState.signedInName,
-                signedInEmail = profileState.signedInEmail,
+                isSignedIn = webIsSignedIn,
+                signedInName = webSignedInName,
+                signedInEmail = webSignedInEmail,
                 diamonds = profileState.diamonds,
             )
         }
@@ -346,6 +498,58 @@ fun App() {
                     profileState = profileState,
                     boardState = boardState,
                     settingsState = settingsState,
+                    onToggleFavorite = { _, item ->
+                        webFavoriteIds = if (item.id in webFavoriteIds) {
+                            webFavoriteIds - item.id
+                        } else {
+                            webFavoriteIds + item.id
+                        }
+                        showToast(
+                            if (item.id in webFavoriteIds) Strings.toastFavoriteRemoved
+                            else Strings.toastFavoriteAdded
+                        )
+                    },
+                    onAddToMoodboard = { _, item ->
+                        webMoodboardIds = webMoodboardIds + item.id
+                        showToast(Strings.toastMoodboardAdded)
+                    },
+                    onUseStyle = { _, item ->
+                        val refTool = toolsState.tools.find { it.id == "reference" }
+                        if (refTool != null) {
+                            activeWizard = refTool
+                        } else {
+                            selectedTab = WebTab.Tools
+                        }
+                    },
+                    onSignIn = { openAuth() },
+                    onLogout = { doLogout() },
+                    authVisible = authVisible,
+                    onAuthDismiss = { authVisible = false },
+                    onAuthSignIn = { email, password -> doSignIn(email, password) },
+                    onAuthSignUp = { email, password -> doSignUp(email, password) },
+                    onAuthGoogleSignIn = { doGoogleSignIn() },
+                    authIsLoading = authLoading,
+                    authError = authError,
+                    onAuthDismissError = { authError = null },
+                    onBoardItemClick = { item ->
+                        val url = item.imageUrl
+                        if (!url.isNullOrBlank()) {
+                            openUrl(url)
+                        }
+                    },
+                    onBoardToggleFavorite = { item ->
+                        webFavoriteIds = if (item.id in webFavoriteIds) {
+                            webFavoriteIds - item.id
+                        } else {
+                            webFavoriteIds + item.id
+                        }
+                        showToast(
+                            if (item.id in webFavoriteIds) Strings.toastFavoriteRemoved
+                            else Strings.toastFavoriteAdded
+                        )
+                    },
+                    isDarkTheme = isDarkTheme,
+                    onThemeToggle = { isDarkTheme = !isDarkTheme },
                 )
             } else {
                 ResponsiveLayout {
@@ -390,9 +594,30 @@ fun App() {
                                         WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
                                             SharedDiscoverScreen(
                                                 state = discoverState,
-                                                onToggleFavorite = { _, _ -> },
-                                                onAddToMoodboard = { _, _ -> },
-                                                onUseStyle = { _, _ -> },
+                                                onToggleFavorite = { _, item ->
+                                                    webFavoriteIds = if (item.id in webFavoriteIds) {
+                                                        webFavoriteIds - item.id
+                                                    } else {
+                                                        webFavoriteIds + item.id
+                                                    }
+                                                    showToast(
+                                                        if (item.id in webFavoriteIds) Strings.toastFavoriteRemoved
+                                                        else Strings.toastFavoriteAdded
+                                                    )
+                                                },
+                                                onAddToMoodboard = { _, item ->
+                                                    webMoodboardIds = webMoodboardIds + item.id
+                                                    showToast(Strings.toastMoodboardAdded)
+                                                },
+                                                onUseStyle = { _, _ ->
+                                                    val refTool = toolsState.tools.find { it.id == "reference" }
+                                                    if (refTool != null) {
+                                                        activeWizard = refTool
+                                                    } else {
+                                                        selectedTab = WebTab.Tools
+                                                    }
+                                                },
+                                                onSignIn = { openAuth() },
                                             )
                                         }
                                         WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
@@ -400,10 +625,27 @@ fun App() {
                                                 state = boardState,
                                                 isGuest = profileState.isGuest,
                                                 isPro = toolsState.isPro,
-                                                onSignIn = { },
+                                                onSignIn = { openAuth() },
                                                 onNavigateToTools = { selectedTab = WebTab.Tools },
                                                 onNavigateToDiscover = { selectedTab = WebTab.Discover },
                                                 onOpenUpgrade = { paywallVisible = true },
+                                                onItemClick = { item ->
+                                                    val url = item.imageUrl
+                                                    if (!url.isNullOrBlank()) {
+                                                        openUrl(url)
+                                                    }
+                                                },
+                                                onToggleFavorite = { item ->
+                                                    webFavoriteIds = if (item.id in webFavoriteIds) {
+                                                        webFavoriteIds - item.id
+                                                    } else {
+                                                        webFavoriteIds + item.id
+                                                    }
+                                                    showToast(
+                                                        if (item.id in webFavoriteIds) Strings.toastFavoriteRemoved
+                                                        else Strings.toastFavoriteAdded
+                                                    )
+                                                },
                                             )
                                         }
                                         WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
@@ -416,47 +658,101 @@ fun App() {
                                             SharedProfileScreen(
                                                 state = profileState,
                                                 onSettings = { settingsVisible = true },
-                                                onSignIn = { },
-                                                onOpenDiamonds = { },
+                                                onSignIn = { openAuth() },
+                                                onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
                                                 onOpenPaywall = { paywallVisible = true },
                                                 onOpenBoard = { selectedTab = WebTab.Board },
-                                            )
-                                        }
-                                    }
+                                    )
+                                }
+                            }
+
+                            if (authVisible) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                                        .onPreviewKeyEvent { event ->
+                                            if (event.key == Key.Escape) {
+                                                authVisible = false
+                                                true
+                                            } else false
+                                        },
+                                    contentAlignment = Alignment.TopCenter,
+                                ) {
+                                    SharedAuthScreen(
+                                        onSignIn = { email, password -> doSignIn(email, password) },
+                                        onSignUp = { email, password -> doSignUp(email, password) },
+                                        onGoogleSignIn = { doGoogleSignIn() },
+                                        onForgotPassword = {
+                                            openUrl("https://homedecor-ai.com/forgot-password")
+                                        },
+                                        onClose = { authVisible = false },
+                                        isLoading = authLoading,
+                                        errorMessage = authError,
+                                        onDismissError = { authError = null },
+                                    )
+                                }
+                            }
                                 }
                             }
 
                             if (settingsVisible) {
                                 Box(
-                                    modifier = Modifier.onPreviewKeyEvent { event ->
-                                        if (event.key == Key.Escape) {
-                                            settingsVisible = false
-                                            true
-                                        } else false
-                                    }
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                                        .clickable(
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() },
+                                        ) { settingsVisible = false }
+                                        .onPreviewKeyEvent { event ->
+                                            if (event.key == Key.Escape) {
+                                                settingsVisible = false
+                                                true
+                                            } else false
+                                        },
+                                    contentAlignment = Alignment.TopCenter,
                                 ) {
-                                    SharedSettingsScreen(
-                                    state = settingsState,
-                                    currentLanguageTag = "en",
-                                    supportedLanguages = listOf(
-                                        SettingsLanguage("en", "English"),
-                                    ),
-                                    onLanguageSelected = { },
-                                    onRateUs = { openUrl("https://homedecor-ai.com/rate") },
-                                    onContactSupport = { openUrl("https://homedecor-ai.com/support") },
-                                    onDeleteInformation = { },
-                                    onSubmitFeedback = { },
-                                    onConfirmDelete = { },
-                                    onEditProfile = { },
-                                    onOpenDiamonds = { },
-                                    onOpenPaywall = { paywallVisible = true },
-                                    onFaq = { openUrl("https://homedecor-ai.com/faq") },
-                                    onShareApp = { openUrl("https://homedecor-ai.com") },
-                                    onTerms = { openUrl("https://homedecor-ai.com/terms") },
-                                    onPrivacy = { openUrl("https://homedecor-ai.com/privacy") },
-                                    onLogout = { },
-                                    onClose = { settingsVisible = false },
-                                )
+                                    Surface(
+                                        modifier = Modifier.fillMaxSize()
+                                            .clickable(
+                                                indication = null,
+                                                interactionSource = remember { MutableInteractionSource() },
+                                            ) { /* absorb clicks */ },
+                                        color = MaterialTheme.colorScheme.surface,
+                                    ) {
+                                        SharedSettingsScreen(
+                                            state = settingsState,
+                                            currentLanguageTag = "en",
+                                            supportedLanguages = listOf(
+                                                SettingsLanguage("en", "English"),
+                                            ),
+                                            onLanguageSelected = { showToast("Language: English") },
+                                            onRateUs = { openUrl("https://homedecor-ai.com/rate") },
+                                            onContactSupport = { openUrl("https://homedecor-ai.com/support") },
+                                            onDeleteInformation = { showToast("Visit Settings to manage your data") },
+                                            onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
+                                            onConfirmDelete = { showToast("Contact support to delete your account") },
+                                            onEditProfile = { openUrl("https://homedecor-ai.com/profile/edit") },
+                                            onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
+                                            onOpenPaywall = { paywallVisible = true },
+                                            onFaq = { openUrl("https://homedecor-ai.com/faq") },
+                                            onShareApp = { openUrl("https://homedecor-ai.com") },
+                                            onTerms = { openUrl("https://homedecor-ai.com/terms") },
+                                            onPrivacy = { openUrl("https://homedecor-ai.com/privacy") },
+                                            onManageBilling = {
+                                                if (Strings.PAYMENTS_ENABLED) {
+                                                    openUrl(Strings.CUSTOMER_PORTAL_URL)
+                                                } else {
+                                                    openUrl(Strings.BILLING_SUPPORT_URL)
+                                                }
+                                            },
+                                            onLogout = { doLogout() },
+                                            onClose = { settingsVisible = false },
+                                            isDarkTheme = isDarkTheme,
+                                            onThemeToggle = { isDarkTheme = !isDarkTheme },
+                                        )
+                                    }
                                 }
                             }
 
@@ -488,8 +784,20 @@ fun App() {
                                         state = paywallState.copy(selectedPlanId = selectedPlan),
                                         onClose = { paywallVisible = false },
                                         onPlanSelected = { selectedPlan = it },
-                                        onContinue = { openUrl("https://homedecor-ai.com/waitlist") },
-                                        onRestore = { openUrl("https://homedecor-ai.com/support") },
+                                        onContinue = {
+                                            if (Strings.PAYMENTS_ENABLED) {
+                                                openUrl(Strings.checkoutUrlForPlan(selectedPlan))
+                                            } else {
+                                                openUrl(Strings.BILLING_SUPPORT_URL)
+                                            }
+                                        },
+                                        onRestore = {
+                                            if (Strings.PAYMENTS_ENABLED) {
+                                                openUrl(Strings.CUSTOMER_PORTAL_URL)
+                                            } else {
+                                                openUrl(Strings.BILLING_SUPPORT_URL)
+                                            }
+                                        },
                                     )
                                 }
                             }
@@ -507,8 +815,8 @@ private fun WebBottomBar(
     onSelectTab: (WebTab) -> Unit,
 ) {
     NavigationBar(
-        containerColor = HomeDecorColors.Paper,
-        contentColor = HomeDecorColors.Ink,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.testTag(Strings.TestTags.bottomNav),
     ) {
         WebTab.entries.forEach { tab ->
@@ -523,7 +831,7 @@ private fun WebBottomBar(
                     Icon(
                         imageVector = tab.icon,
                         contentDescription = tab.label,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(HomeDecorSpacing.Lg),
                     )
                 },
                 label = {
@@ -533,11 +841,11 @@ private fun WebBottomBar(
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = HomeDecorColors.Accent,
-                    selectedTextColor = HomeDecorColors.Accent,
-                    unselectedIconColor = HomeDecorColors.InkSoft,
-                    unselectedTextColor = HomeDecorColors.InkSoft,
-                    indicatorColor = HomeDecorColors.Accent.copy(alpha = 0.12f),
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                 ),
             )
         }
@@ -562,6 +870,23 @@ private fun DesktopAppLayout(
     profileState: ProfileScreenState,
     boardState: BoardScreenState,
     settingsState: SettingsScreenState,
+    onToggleFavorite: (DiscoverSectionItem, GalleryCardItem) -> Unit,
+    onAddToMoodboard: (DiscoverSectionItem, GalleryCardItem) -> Unit,
+    onUseStyle: (DiscoverSectionItem, GalleryCardItem) -> Unit,
+    onSignIn: () -> Unit,
+    onLogout: () -> Unit,
+    authVisible: Boolean = false,
+    onAuthDismiss: () -> Unit = {},
+    onAuthSignIn: (String, String) -> Unit = { _, _ -> },
+    onAuthSignUp: (String, String) -> Unit = { _, _ -> },
+    onAuthGoogleSignIn: () -> Unit = {},
+    authIsLoading: Boolean = false,
+    authError: String? = null,
+    onAuthDismissError: () -> Unit = {},
+    onBoardItemClick: (BoardItem) -> Unit = {},
+    onBoardToggleFavorite: (BoardItem) -> Unit = {},
+    isDarkTheme: Boolean = false,
+    onThemeToggle: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -573,7 +898,7 @@ private fun DesktopAppLayout(
             onSelectTab = onSelectTab,
             diamonds = toolsState.diamonds,
             isPro = toolsState.isPro,
-            onCredits = { },
+            onCredits = { openUrl("https://homedecor-ai.com/diamonds") },
         )
 
         Box(
@@ -610,9 +935,10 @@ private fun DesktopAppLayout(
                             WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
                                 SharedDiscoverScreen(
                                     state = discoverState,
-                                    onToggleFavorite = { _, _ -> },
-                                    onAddToMoodboard = { _, _ -> },
-                                    onUseStyle = { _, _ -> },
+                                    onToggleFavorite = { section, item -> onToggleFavorite(section, item) },
+                                    onAddToMoodboard = { section, item -> onAddToMoodboard(section, item) },
+                                    onUseStyle = { section, item -> onUseStyle(section, item) },
+                                    onSignIn = { onSignIn() },
                                 )
                             }
                             WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
@@ -620,10 +946,12 @@ private fun DesktopAppLayout(
                                     state = boardState,
                                     isGuest = profileState.isGuest,
                                     isPro = toolsState.isPro,
-                                    onSignIn = { },
+                                    onSignIn = { onSignIn() },
                                     onNavigateToTools = { onSelectTab(WebTab.Tools) },
                                     onNavigateToDiscover = { onSelectTab(WebTab.Discover) },
                                     onOpenUpgrade = onOpenPaywall,
+                                    onItemClick = onBoardItemClick,
+                                    onToggleFavorite = onBoardToggleFavorite,
                                 )
                             }
                             WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
@@ -636,8 +964,8 @@ private fun DesktopAppLayout(
                                 SharedProfileScreen(
                                     state = profileState,
                                     onSettings = { onSettingsOpen() },
-                                    onSignIn = { },
-                                    onOpenDiamonds = { },
+                                    onSignIn = { onSignIn() },
+                                    onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
                                     onOpenPaywall = onOpenPaywall,
                                     onOpenBoard = { onSelectTab(WebTab.Board) },
                                 )
@@ -649,35 +977,67 @@ private fun DesktopAppLayout(
 
             if (settingsVisible) {
                 Box(
-                    modifier = Modifier.onPreviewKeyEvent { event ->
-                        if (event.key == Key.Escape) {
-                            onSettingsDismiss()
-                            true
-                        } else false
-                    }
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                        ) { onSettingsDismiss() }
+                        .onPreviewKeyEvent { event ->
+                            if (event.key == Key.Escape) {
+                                onSettingsDismiss()
+                                true
+                            } else false
+                        },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    SharedSettingsScreen(
-                        state = settingsState,
-                        currentLanguageTag = "en",
-                        supportedLanguages = listOf(
-                            SettingsLanguage("en", "English"),
-                        ),
-                        onLanguageSelected = { },
-                        onRateUs = { openUrl("https://homedecor-ai.com/rate") },
-                        onContactSupport = { openUrl("https://homedecor-ai.com/support") },
-                        onDeleteInformation = { },
-                        onSubmitFeedback = { },
-                        onConfirmDelete = { },
-                        onEditProfile = { },
-                        onOpenDiamonds = { },
-                        onOpenPaywall = { },
-                        onFaq = { openUrl("https://homedecor-ai.com/faq") },
-                        onShareApp = { openUrl("https://homedecor-ai.com") },
-                        onTerms = { openUrl("https://homedecor-ai.com/terms") },
-                        onPrivacy = { openUrl("https://homedecor-ai.com/privacy") },
-                        onLogout = { },
-                        onClose = onSettingsDismiss,
-                    )
+                    Surface(
+                        modifier = Modifier
+                            .then(
+                                Modifier.widthIn(max = 800.dp)
+                                    .fillMaxHeight(0.92f)
+                            )
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                            ) { /* absorb clicks */ },
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        shadowElevation = 8.dp,
+                    ) {
+                        SharedSettingsScreen(
+                            state = settingsState,
+                            currentLanguageTag = "en",
+                            supportedLanguages = listOf(
+                                SettingsLanguage("en", "English"),
+                            ),
+                            onLanguageSelected = { showToast("Language: English") },
+                            onRateUs = { openUrl("https://homedecor-ai.com/rate") },
+                            onContactSupport = { openUrl("https://homedecor-ai.com/support") },
+                            onDeleteInformation = { showToast("Visit Settings to manage your data") },
+                            onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
+                            onConfirmDelete = { showToast("Contact support to delete your account") },
+                            onEditProfile = { openUrl("https://homedecor-ai.com/profile/edit") },
+                            onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
+                            onOpenPaywall = { onOpenPaywall() },
+                            onFaq = { openUrl("https://homedecor-ai.com/faq") },
+                            onShareApp = { openUrl("https://homedecor-ai.com") },
+                            onTerms = { openUrl("https://homedecor-ai.com/terms") },
+                            onPrivacy = { openUrl("https://homedecor-ai.com/privacy") },
+                            onManageBilling = {
+                                if (Strings.PAYMENTS_ENABLED) {
+                                    openUrl(Strings.CUSTOMER_PORTAL_URL)
+                                } else {
+                                    openUrl(Strings.BILLING_SUPPORT_URL)
+                                }
+                            },
+                            onLogout = { onLogout() },
+                            onClose = onSettingsDismiss,
+                            isDarkTheme = isDarkTheme,
+                            onThemeToggle = onThemeToggle,
+                        )
+                    }
                 }
             }
 
@@ -709,8 +1069,48 @@ private fun DesktopAppLayout(
                         state = paywallState.copy(selectedPlanId = selectedPlan),
                         onClose = onPaywallDismiss,
                         onPlanSelected = { selectedPlan = it },
-                        onContinue = { openUrl("https://homedecor-ai.com/waitlist") },
-                        onRestore = { openUrl("https://homedecor-ai.com/support") },
+                        onContinue = {
+                            if (Strings.PAYMENTS_ENABLED) {
+                                openUrl(Strings.checkoutUrlForPlan(selectedPlan))
+                            } else {
+                                openUrl(Strings.BILLING_SUPPORT_URL)
+                            }
+                        },
+                        onRestore = {
+                            if (Strings.PAYMENTS_ENABLED) {
+                                openUrl(Strings.CUSTOMER_PORTAL_URL)
+                            } else {
+                                openUrl(Strings.BILLING_SUPPORT_URL)
+                            }
+                        },
+                    )
+                }
+            }
+
+            if (authVisible) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f))
+                        .onPreviewKeyEvent { event ->
+                            if (event.key == Key.Escape) {
+                                onAuthDismiss()
+                                true
+                            } else false
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    SharedAuthScreen(
+                        onSignIn = { email, password -> onAuthSignIn(email, password) },
+                        onSignUp = { email, password -> onAuthSignUp(email, password) },
+                        onGoogleSignIn = { onAuthGoogleSignIn() },
+                        onForgotPassword = {
+                            openUrl("https://homedecor-ai.com/forgot-password")
+                        },
+                        onClose = { onAuthDismiss() },
+                        isLoading = authIsLoading,
+                        errorMessage = authError,
+                        onDismissError = { onAuthDismissError() },
                     )
                 }
             }
@@ -727,15 +1127,14 @@ private fun DesktopTopNav(
     onCredits: () -> Unit = {},
 ) {
     Surface(
-        color = HomeDecorColors.Paper,
-        tonalElevation = 1.dp,
-        shadowElevation = 1.dp,
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = HomeDecorElevation.NavElevation,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 24.dp)
+                .height(HomeDecorSpacing.DesktopTopNavHeight)
+                .padding(horizontal = HomeDecorSpacing.Xl)
                 .testTag(Strings.TestTags.topNav),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -743,11 +1142,11 @@ private fun DesktopTopNav(
                 "HomeDecor AI",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = HomeDecorColors.Accent,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.semantics { heading() },
             )
 
-            Spacer(Modifier.width(32.dp))
+            Spacer(Modifier.width(HomeDecorSpacing.Xxl))
 
             WebTab.entries.forEach { tab ->
                 val isSelected = tab == selectedTab
@@ -764,29 +1163,29 @@ private fun DesktopTopNav(
 
             Surface(
                 onClick = onCredits,
-                shape = RoundedCornerShape(20.dp),
-                color = HomeDecorColors.SurfaceContainerHigh,
+                shape = HomeDecorShape.Pill,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 modifier = Modifier.semantics {
                     contentDescription = Strings.a11yOpenDiamondStore
                     role = Role.Button
                 },
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Stars,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = HomeDecorColors.DiamondAccent,
+                        modifier = Modifier.size(HomeDecorSpacing.Base),
+                        tint = HomeDecorExtra.diamondAccent,
                     )
                     Text(
                         if (isPro) "PRO" else "$diamonds",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = HomeDecorColors.Ink,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -802,12 +1201,12 @@ private fun DesktopTopNavItem(
     onClick: () -> Unit,
     testTag: String = "",
 ) {
-    val contentColor = if (isSelected) HomeDecorColors.Accent else HomeDecorColors.InkSoft
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) HomeDecorColors.Accent.copy(alpha = 0.08f) else Color.Transparent,
+        shape = HomeDecorShape.Medium,
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent,
         modifier = Modifier
             .testTag(testTag)
             .semantics {
@@ -817,14 +1216,14 @@ private fun DesktopTopNavItem(
             },
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = HomeDecorSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(HomeDecorSpacing.Lg),
                 tint = contentColor,
             )
             Text(

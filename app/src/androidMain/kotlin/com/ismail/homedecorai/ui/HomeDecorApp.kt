@@ -63,6 +63,7 @@ import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.model.MainTab
 import com.ismail.homedecorai.ui.auth.AuthSheet
+import com.clerk.ui.auth.AuthView
 import com.ismail.homedecorai.ui.board.MyBoardScreen
 import com.ismail.homedecorai.ui.designviewer.DesignViewerSheet
 import com.ismail.homedecorai.ui.dialogs.FirstLaunchDisclosure
@@ -75,7 +76,6 @@ import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.tools.CreateScreen
 import com.ismail.homedecorai.ui.tools.ToolsScreen
 import com.ismail.homedecorai.ui.upgrade.UpgradeScreen
-import com.ismail.homedecorai.ui.utility.openAuth
 import com.ismail.homedecorai.ui.utility.openGooglePlayReview
 import com.ismail.homedecorai.ui.utility.tabLabelRes
 
@@ -231,13 +231,7 @@ private fun AppScaffold(
                     )
                 }
                 state.authVisible -> {
-                    AuthSheet(
-                        onClose = viewModel::closeAuth,
-                        onAuth = {
-                            openAuth(context)
-                            viewModel.closeAuth()
-                        },
-                    )
+                    AuthView()
                 }
                 state.settingsVisible -> {
                     SettingsSheet(

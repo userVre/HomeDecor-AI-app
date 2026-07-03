@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 
 @Immutable
 data class HomeDecorExtraColors(
+    // Core semantic
     val success: Color,
     val successContainer: Color,
     val warning: Color,
@@ -34,6 +35,21 @@ data class HomeDecorExtraColors(
     val card: Color,
     val elevatedCard: Color,
     val scrim: Color,
+    // Extended semantic tokens for gradients, overlays, and on-gradient text
+    val scrimLight: Color,
+    val scrimMedium: Color,
+    val scrimHeavy: Color,
+    val onGradientText: Color,
+    val onGradientTextSubtle: Color,
+    // Quaternary / Terracotta
+    val quaternary: Color,
+    val onQuaternary: Color,
+    val quaternaryContainer: Color,
+    val onQuaternaryContainer: Color,
+    // Interactive state helpers
+    val surfaceHover: Color,
+    val surfacePressed: Color,
+    val focusRing: Color,
 )
 
 val LocalDarkTheme = staticCompositionLocalOf { false }
@@ -52,6 +68,18 @@ val LocalHomeDecorExtraColors = staticCompositionLocalOf {
         card = Color.Unspecified,
         elevatedCard = Color.Unspecified,
         scrim = Color.Unspecified,
+        scrimLight = Color.Unspecified,
+        scrimMedium = Color.Unspecified,
+        scrimHeavy = Color.Unspecified,
+        onGradientText = Color.Unspecified,
+        onGradientTextSubtle = Color.Unspecified,
+        quaternary = Color.Unspecified,
+        onQuaternary = Color.Unspecified,
+        quaternaryContainer = Color.Unspecified,
+        onQuaternaryContainer = Color.Unspecified,
+        surfaceHover = Color.Unspecified,
+        surfacePressed = Color.Unspecified,
+        focusRing = Color.Unspecified,
     )
 }
 
@@ -80,7 +108,7 @@ internal val LightColorScheme = lightColorScheme(
     onError = HomeDecorColors.OnError,
     errorContainer = HomeDecorColors.ErrorContainerColor,
     onErrorContainer = HomeDecorColors.OnErrorContainer,
-    background = HomeDecorColors.Paper,
+    background = HomeDecorColors.Canvas,
     onBackground = HomeDecorColors.OnBackground,
     surface = HomeDecorColors.Paper,
     onSurface = HomeDecorColors.OnSurface,
@@ -134,7 +162,7 @@ internal val DarkColorScheme = darkColorScheme(
 )
 
 // ---------------------------------------------------------------------------
-// Extra semantic tokens
+// Extra semantic tokens — light vs dark
 // ---------------------------------------------------------------------------
 
 internal val LightExtra = HomeDecorExtraColors(
@@ -150,6 +178,18 @@ internal val LightExtra = HomeDecorExtraColors(
     card = HomeDecorColors.Paper,
     elevatedCard = HomeDecorColors.SurfaceContainerLow,
     scrim = HomeDecorColors.Scrim,
+    scrimLight = HomeDecorColors.ScrimLight,
+    scrimMedium = HomeDecorColors.ScrimMedium,
+    scrimHeavy = HomeDecorColors.ScrimHeavy,
+    onGradientText = HomeDecorColors.OnGradientText,
+    onGradientTextSubtle = HomeDecorColors.OnGradientTextSubtle,
+    quaternary = HomeDecorColors.Quaternary,
+    onQuaternary = HomeDecorColors.OnQuaternary,
+    quaternaryContainer = HomeDecorColors.QuaternaryContainer,
+    onQuaternaryContainer = HomeDecorColors.OnQuaternaryContainer,
+    surfaceHover = Color(0x0D000000),   // 5% black for hover on light
+    surfacePressed = Color(0x14000000),  // 8% black for pressed on light
+    focusRing = HomeDecorColors.Primary,
 )
 
 internal val DarkExtra = HomeDecorExtraColors(
@@ -165,6 +205,18 @@ internal val DarkExtra = HomeDecorExtraColors(
     card = HomeDecorColors.DarkSurface,
     elevatedCard = HomeDecorColors.DarkOverlay,
     scrim = HomeDecorColors.DarkScrim,
+    scrimLight = HomeDecorColors.DarkScrimLight,
+    scrimMedium = HomeDecorColors.DarkScrimMedium,
+    scrimHeavy = HomeDecorColors.DarkScrimHeavy,
+    onGradientText = HomeDecorColors.DarkOnGradientText,
+    onGradientTextSubtle = HomeDecorColors.DarkOnGradientTextSubtle,
+    quaternary = HomeDecorColors.DarkQuaternary,
+    onQuaternary = HomeDecorColors.DarkOnQuaternary,
+    quaternaryContainer = HomeDecorColors.DarkQuaternaryContainer,
+    onQuaternaryContainer = HomeDecorColors.DarkOnQuaternaryContainer,
+    surfaceHover = Color(0x14FFFFFF),   // 8% white for hover on dark
+    surfacePressed = Color(0x1FFFFFFF), // 12% white for pressed on dark
+    focusRing = HomeDecorColors.DarkPrimary,
 )
 
 // ---------------------------------------------------------------------------
@@ -203,21 +255,23 @@ fun Modifier.disabledSemantics(enabled: Boolean): Modifier =
     if (enabled) this else semantics { disabled() }
 
 @Composable
-fun studioStateContainer(selected: Boolean): Color =
-    if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
+fun studioStateContainer(selected: Boolean) =
+    if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
 
 @Composable
-fun studioStateBorder(selected: Boolean): Color =
+fun studioStateElevation(selected: Boolean) =
+    if (selected) 2.dp else 0.dp
+
+@Composable
+fun studioStateBorder(selected: Boolean) =
     if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
 
-fun studioStateElevation(selected: Boolean): Dp = if (selected) 2.dp else 0.dp
-
 @Composable
-fun studioStateIconContainer(selected: Boolean): Color =
+fun studioStateIconContainer(selected: Boolean) =
     if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerLow
 
 @Composable
-fun studioStateIconContent(selected: Boolean): Color =
+fun studioStateIconContent(selected: Boolean) =
     if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
 
 @Composable

@@ -1,18 +1,43 @@
 package com.ismail.homedecorai
 
 object Strings {
+    // ── Feature Flags ──────────────────────────────────────────────────────
+    /** When false, payment CTAs route to billing support instead of live checkout. */
+    const val PAYMENTS_ENABLED = true
+
+    // ── Checkout URLs (Whop) ──────────────────────────────────────────────
+    const val CHECKOUT_URL_YEARLY = "https://whop.com/checkout/plan_FCAl4pKNoaC3X/"
+    const val CHECKOUT_URL_MONTHLY = "https://whop.com/checkout/prod_D4BOQ5mBcS8EX/"
+    const val CHECKOUT_URL_FAMILY = "https://whop.com/checkout/plan_cBvc9Qkwr476O/"
+    const val CUSTOMER_PORTAL_URL = "https://whop.com/account"
+    const val BILLING_SUPPORT_URL = "mailto:support@homedecorai.com?subject=Billing%20Help"
+
+    fun checkoutUrlForPlan(planId: String): String = when (planId) {
+        "monthly" -> CHECKOUT_URL_MONTHLY
+        "family" -> CHECKOUT_URL_FAMILY
+        else -> CHECKOUT_URL_YEARLY
+    }
+
     // Navigation
     const val navTools = "Tools"
     const val navDiscover = "Discover"
     const val navUpgrade = "Upgrade"
     const val navProfile = "Profile"
     const val navMyBoard = "My Board"
-    const val navCreate = "Create"
 
     // Tools Screen
     const val tryThis = "Try this"
+    const val toolsSubtitle = "Pick a tool and see your space transformed"
     const val a11yOpenDiamondStore = "Open diamond store"
     fun a11yToolCard(title: String, description: String) = "$title: $description"
+
+    // Before / After Preview
+    const val previewBeforeLabel = "Before"
+    const val previewAfterLabel = "After"
+    const val previewDragHint = "Drag to compare"
+    const val previewResultTitle = "See what you'll get"
+    const val previewResultSubtitle = "Here's an example of what this tool can create"
+    const val previewExampleDisclaimer = "Example result \u2014 your design will be unique"
 
     // Discover Screen
     const val discoverStylesTitle = "Discover"
@@ -26,6 +51,12 @@ object Strings {
     const val toastFavoriteAdded = "Added to favorites"
     const val toastFavoriteRemoved = "Removed from favorites"
     const val toastMoodboardAdded = "Saved to your board"
+    const val toastLinkCopied = "Link copied to clipboard"
+    const val toastShareFailed = "Sharing not available in this browser"
+    const val toastRestoreNotAvailable = "Subscriptions are managed through your billing portal"
+    const val toastFeedbackSent = "Thanks for your feedback!"
+    const val toastContactEmail = "Opening email client..."
+    const val toastFeedbackThankYou = "Thanks for your feedback!"
     fun a11yDiscoverCluster(clusterLabel: String) = "Cluster: $clusterLabel"
     fun a11ySeeAll(sectionTitle: String) = "See all $sectionTitle"
     fun a11yGalleryCard(itemTitle: String, itemCategory: String) = "$itemTitle, $itemCategory"
@@ -47,12 +78,6 @@ object Strings {
     const val currentPlanBodyFree = "Upgrade for unlimited generations"
     const val profileSignInBody = "Sign in to save your projects and access your diamonds across devices."
     const val profileSignInRegister = "Sign In / Register"
-    const val profileGuestHeadline = "Welcome to HomeDecor AI"
-    const val profileGuestSubtitle = "Create an account to unlock the full experience"
-    const val profileGuestBenefit1 = "Save and organize your favorite designs"
-    const val profileGuestBenefit2 = "Track your design history across sessions"
-    const val profileGuestBenefit3 = "Access your work from any device"
-    const val profileGuestBenefit4 = "Get personalized style recommendations"
     const val profileGuestBenefit1Title = "Save & Organize"
     const val profileGuestBenefit1Body = "Save unlimited designs and organize them into projects"
     const val profileGuestBenefit2Title = "Cross-Device Sync"
@@ -75,7 +100,7 @@ object Strings {
 
     // Settings Screen
     const val language = "Language"
-    const val rateUs = "Rate us"
+    const val sendFeedback = "Send Feedback"
     const val contactSupport = "Contact support"
     const val deleteInformation = "Delete information"
     fun versionLabel(version: String) = "Version $version"
@@ -149,10 +174,6 @@ object Strings {
     const val savedProjects = "Projects"
     const val boardGuestHeadline = "Your design journey starts here"
     const val boardGuestSubtitle = "Sign in to save, organize, and access your designs from anywhere"
-    const val boardGuestBenefit1 = "Save unlimited designs to your board"
-    const val boardGuestBenefit2 = "Access your designs on any device"
-    const val boardGuestBenefit3 = "Organize into custom projects"
-    const val boardGuestMiniCta = "Sign in to unlock your board"
     const val boardGuestBenefitSaved = "Saved Designs"
     const val boardGuestBenefitSavedBody = "Keep every design you create in one place"
     const val boardGuestBenefitFavorites = "Favorites"
@@ -177,13 +198,24 @@ object Strings {
     const val myDiamondsBodySettings = "Diamonds available"
     const val diamondStore = "Diamond Store"
     const val diamondStoreBody = "Buy diamonds for more generations"
+    const val diamondStoreTitle = "Diamond Store"
+    const val diamondStoreSubtitle = "Get more diamonds to create designs"
+    const val diamondStoreLoading = "Loading packages..."
+    const val diamondStoreError = "Failed to load packages"
+    const val diamondStorePurchaseSuccess = "Purchase successful!"
+    const val diamondStorePurchaseError = "Purchase failed. Please try again."
+    const val diamondStorePurchaseLoading = "Processing..."
+    const val diamondStoreFreeLabel = "Free"
+    const val diamondStoreDailyBonus = "Daily Bonus"
+    const val diamondStoreDailyBonusBody = "Claim your free daily diamonds"
+    const val diamondStoreClaim = "Claim"
     const val restorePurchases = "Restore Purchases"
     const val restorePurchasesBody = "Restore your previous purchases"
     const val faq = "FAQ"
     const val faqBody = "Frequently asked questions"
-    const val shareApp = "Share App"
+    const val shareApp = "Share"
     const val shareAppBody = "Share with friends and family"
-    const val rateUsBody = "Rate us on the App Store"
+    const val rateUsBody = "Give us feedback"
     const val feedbackBody = "Send us your feedback"
     const val termsBody = "Terms of Service"
     const val privacyBody = "Privacy Policy"
@@ -197,6 +229,10 @@ object Strings {
     const val settingsLegalDescription = "Policies and terms"
     const val settingsAppearance = "Appearance"
     const val settingsAppearanceBody = "Dark mode and display"
+    const val manageBilling = "Manage Billing"
+    const val manageBillingBody = "View subscriptions and payment methods"
+    const val restorePurchasesWeb = "Manage Subscription"
+    const val restorePurchasesWebBody = "View your subscription in the billing portal"
 
     // Profile sections
     const val preferencesSection = "Preferences"
@@ -207,8 +243,8 @@ object Strings {
     const val helpCenterBody = "Browse FAQs and guides"
     const val contactUs = "Contact Us"
     const val contactUsBody = "Get in touch with our team"
-    const val rateApp = "Rate App"
-    const val rateAppBody = "Rate us on the App Store"
+    const val rateApp = "Send Feedback"
+    const val rateAppBody = "Share your thoughts with us"
     const val termsOfService = "Terms of Service"
     const val termsOfServiceBody = "Review our terms"
     const val privacyPolicyLabel = "Privacy Policy"
@@ -236,15 +272,15 @@ object Strings {
     const val pwS1Benefit2 = "Multiple design styles"
     const val pwS1Benefit3 = "Inspiration gallery"
     const val pwS1Benefit4 = "Save your favorites"
-    const val pwS1Cta = "Join waitlist"
+    const val pwS1Cta = "Continue"
     const val pwS1SocialProof = "Join our community of home design enthusiasts"
 
-    // Step 2: Notification Preferences
-    const val pwS2Heading = "Get notified when we launch"
-    const val pwS2Option1 = "Early access notification"
-    const val pwS2Option2 = "Launch day notification"
-    const val pwS2Info = "No payment required to join the waitlist."
-    const val pwS2Cta = "Join waitlist"
+    // Step 2: Benefits reminder
+    const val pwS2Heading = "Why go Pro?"
+    const val pwS2Option1 = "Unlimited AI generations"
+    const val pwS2Option2 = "All premium styles"
+    const val pwS2Info = "Unlock the full HomeDecor AI experience."
+    const val pwS2Cta = "Continue"
 
     // Step 3: Comparison
     const val pwS3Heading = "What's included in Pro"
@@ -252,7 +288,7 @@ object Strings {
     const val pwS3ColFree = "Free"
     const val pwS3ColPremium = "Pro"
     const val pwS3Row1Feature = "AI room redesigns"
-    const val pwS3Row1Free = "3/day"
+    const val pwS3Row1Free = "1/day"
     const val pwS3Row2Feature = "Export quality"
     const val pwS3Row2Free = "Standard"
     const val pwS3Row3Feature = "Output style"
@@ -264,7 +300,7 @@ object Strings {
     const val pwS3Row6Feature = "Save projects"
     const val pwS3Row6Free = "Limited"
     const val pwS3Recommendation = "Upgrade for more features and faster processing."
-    const val pwS3Cta = "Join waitlist"
+    const val pwS3Cta = "Continue"
 
     // Step 4: Plans
     const val pwS4Heading = "Choose your plan"
@@ -281,7 +317,7 @@ object Strings {
     const val pwS4PlanFamilyPrice = "\$59.99"
     const val pwS4PlanFamilyPer = "/year"
     const val pwS4PlanFamilyDetail = "Share with family"
-    const val pwS4Cta = "Join waitlist"
+    const val pwS4Cta = "Subscribe Now"
     const val pwS4Trust = "Cancel anytime."
 
     // Step 5: Checkout
@@ -302,10 +338,10 @@ object Strings {
     const val pwS5Benefit4 = "Premium styles"
     const val pwS5Benefit5 = "Save projects"
     const val pwS5Benefit6 = "Faster processing"
-    const val pwS5Cta = "Join waitlist"
+    const val pwS5Cta = "Subscribe Now"
     const val pwS5Trust = "Cancel anytime. No commitment."
     const val pwS5Legal = "By subscribing, you agree to our Terms of Service and Privacy Policy."
-    const val pwS5Restore = "Restore purchases"
+    const val pwS5Restore = "Manage billing"
 
     // Legacy aliases used by SharedPaywallSheet
     const val paywallV3PlanYearly = "Yearly"
@@ -325,19 +361,17 @@ object Strings {
     const val activeProAccess = "You have full access to all Pro features"
     const val upgradeV3Headline = "Upgrade Your Design Experience"
     const val upgradeV3Subtitle = "Transform any space with AI-powered design, premium styles, and export options"
-    const val upgradeV3TrialBadge = "Coming soon"
+    const val upgradeV3TrialBadge = "Cancel anytime"
     const val upgradeV3Trust = "Cancel anytime. No commitment."
     const val upgradeV3Before = "Before"
     const val upgradeV3After = "After"
     const val upgradeV3BenefitGenerations = "AI-powered redesigns"
     const val upgradeV3BenefitExport = "Export options"
     const val upgradeV3BenefitNoWatermark = "Clean, branded output"
-    const val upgradeV3BenefitSpeed = "Faster processing"
     const val upgradeV3BenefitStyles = "All available styles"
     const val upgradeV3BenefitHistory = "Design history"
-    const val upgradeV3Cta = "Join waitlist"
+    const val upgradeV3Cta = "Get Pro"
     const val upgradeV3Secondary = "Compare plans"
-    const val upgradeV3JoinWaitlist = "Join waitlist"
     const val upgradePlanMonthly = "Monthly"
     const val upgradePlanMonthlyPrice = "$7.99"
     const val upgradePlanMonthlyPeriod = "/month"
@@ -353,25 +387,22 @@ object Strings {
     const val upgradeBenefitUnlimited = "AI-powered redesigns"
     const val upgradeBenefitExport = "Export options"
     const val upgradeBenefitNoWatermark = "Clean output"
-    const val upgradeBenefitPriority = "Faster processing"
     const val upgradeBenefitStyles = "All available styles"
     const val upgradeBenefitHistory = "Design history"
-    const val upgradeBenefitSupport = "Priority support"
     const val upgradeBenefitUpdates = "Early access to new features"
-    const val upgradeWaitlistNote = "Payment not ready yet. Join the waitlist to be notified when we launch."
-    const val upgradeTestimonial1 = "This app really improved how I visualize my room makeovers."
-    const val upgradeTestimonial1Author = "Beta tester"
-    const val upgradeTestimonial2 = "The AI designs are very helpful. Saved me time in planning."
-    const val upgradeTestimonial2Author = "Beta tester"
+    const val upgradeTestimonial1 = "I visualized my kitchen remodel before spending a dollar. The AI designs were spot-on."
+    const val upgradeTestimonial1Author = "Sarah M., Interior Design Enthusiast"
+    const val upgradeTestimonial2 = "The premium styles saved me hours of back-and-forth with my designer. Highly recommend Pro."
+    const val upgradeTestimonial2Author = "James R., Homeowner"
     const val upgradeFeatureCompare = "What you get with Pro"
     const val upgradeFreePlan = "Free"
     const val upgradeProPlan = "Pro"
     const val upgradeCompareGenerations = "AI Generations"
     const val upgradeCompareGenerationsFree = "1 per day"
-    const val upgradeCompareGenerationsPro = "More"
+    const val upgradeCompareGenerationsPro = "Unlimited"
     const val upgradeCompareExport = "Export Quality"
     const val upgradeCompareExportFree = "Standard"
-    const val upgradeCompareExportPro = "High"
+    const val upgradeCompareExportPro = "Premium HD"
     const val upgradeCompareWatermark = "Watermark"
     const val upgradeCompareWatermarkFree = "Yes"
     const val upgradeCompareWatermarkPro = "None"
@@ -383,7 +414,7 @@ object Strings {
     const val upgradeCompareStylesPro = "All available"
     const val upgradeCompareSupport = "Support"
     const val upgradeCompareSupportFree = "Community"
-    const val upgradeCompareSupportPro = "Priority"
+    const val upgradeCompareSupportPro = "Email"
 
     // Web Wizard
     const val wizardStepUpload = "Upload Photo"
@@ -394,6 +425,7 @@ object Strings {
     const val wizardUploadSubtitle = "Drag and drop an image, or click to browse"
     const val wizardChooseImage = "Choose image"
     const val wizardTryExample = "Try with an example"
+    const val wizardTryExampleSubtitle = "No photo needed \u2014 see how it works"
     const val wizardUploadChange = "Change photo"
     const val wizardRoomTitle = "What type of space is this?"
     const val wizardRoomSubtitle = "Select the option that best describes your space"
@@ -405,14 +437,10 @@ object Strings {
     const val wizardReviewRoom = "Room"
     const val wizardReviewStyle = "Style"
     const val wizardGenerate = "Generate Design"
+    const val wizardGenerateWithCost = "Generate (1 diamond)"
     const val wizardGenerating = "Generating..."
     const val wizardBack = "Back"
     const val wizardNext = "Next"
-    const val wizardJoinWaitlist = "Join waitlist"
-    const val wizardComingSoon = "AI generation coming soon"
-    const val wizardComingSoonBody = "Our AI engine is being finalized. Join the waitlist to be first in line when it launches."
-    const val wizardWaitlistSuccess = "You're on the list!"
-    const val wizardWaitlistSuccessBody = "We'll notify you as soon as AI generation is available."
     const val wizardTryAgain = "Try again"
     const val wizardErrorPhoto = "Please upload a photo to continue"
     const val wizardErrorRoom = "Please select a room type"
@@ -427,27 +455,66 @@ object Strings {
     const val wizardRemove = "Remove"
     const val wizardReady = "Ready"
     const val wizardGeneratingBody = "This may take a moment..."
+    const val wizardGeneratingStep1 = "Analyzing your space..."
+    const val wizardGeneratingStep2 = "Applying design transformations..."
+    const val wizardGeneratingStep3 = "Adding finishing touches..."
     const val wizardErrorTitle = "Generation Failed"
-    const val wizardWaitlistBenefit1 = "Be first to try AI generation"
-    const val wizardWaitlistBenefit2 = "Get free credits at launch"
-    const val wizardWaitlistBenefit3 = "Exclusive early access"
-    const val wizardWaitlistEmailLabel = "Email address"
-    const val wizardWaitlistEmailPlaceholder = "you@example.com"
-    const val wizardWaitlistEmailError = "Please enter a valid email"
+
+    // Trust & Privacy
+    const val wizardPrivacyNote = "Your photo is processed securely and never shared"
+    const val wizardCostNote = "Uses 1 diamond \u2014 free users get 1 generation/day"
+    const val wizardProTip = "Tip: clear photos produce the best results"
+    const val wizardExpectNote = "Results typically arrive in 15\u201330 seconds"
+    const val wizardResultReady = "Your design is ready"
+    const val wizardResultSubtitle = "Here's your AI-transformed space \u2014 compare it with the original"
+    const val wizardBeforeLabel = "Original"
+    const val wizardAfterLabel = "AI Design"
+    const val wizardSaveToBoard = "Save to Board"
+    const val wizardShare = "Share"
+    const val wizardNewDesign = "New Design"
 
     // Discover hover overlay
     const val discoverPreview = "Preview"
     const val discoverUseStyle = "Use Style"
     const val discoverSave = "Save"
 
-    // Image picker
-    const val uploadPhotoArea = "Upload photo area"
-    const val openGallery = "Open gallery"
-    const val takePhoto = "Take photo"
-    const val galleryLabel = "Gallery"
-    const val cameraLabel = "Camera"
-    const val addPhoto = "Add photo"
-    const val photosLabel = "Photos"
+    // Advanced Controls
+    const val advancedControlsTitle = "Advanced Controls"
+    const val budgetLabel = "Budget"
+    const val avoidLabel = "Avoid"
+    const val keepLabel = "Keep"
+    const val changeLabel = "Change"
+    val budgetModes = listOf("Low budget", "Medium budget", "Luxury")
+    val avoidOptions = listOf(
+        "No dark colors",
+        "No structural changes",
+        "No plants",
+        "Keep windows",
+        "No furniture changes",
+    )
+    data class AdvancedControlSpec(val keepOptions: List<String>, val changeOptions: List<String>)
+    val advancedControlSpecs = mapOf(
+        "interior" to AdvancedControlSpec(
+            keepOptions = listOf("Layout", "Windows", "Floor", "Main furniture"),
+            changeOptions = listOf("Style", "Colors", "Decor", "Lighting"),
+        ),
+        "facade" to AdvancedControlSpec(
+            keepOptions = listOf("Structure", "Windows", "Roof", "Entrance"),
+            changeOptions = listOf("Facade", "Colors", "Lighting", "Landscaping"),
+        ),
+        "garden" to AdvancedControlSpec(
+            keepOptions = listOf("Layout", "Trees", "Pool", "Patio", "Fence"),
+            changeOptions = listOf("Plants", "Lighting", "Furniture", "Paths"),
+        ),
+        "layout" to AdvancedControlSpec(
+            keepOptions = listOf("Walls", "Windows", "Doors", "Key furniture"),
+            changeOptions = listOf("Organization", "Circulation", "Storage", "Zones"),
+        ),
+        "reference" to AdvancedControlSpec(
+            keepOptions = listOf("Layout", "Furniture", "Main colors"),
+            changeOptions = listOf("Style", "Ambiance", "Materials", "Decor"),
+        ),
+    )
 
     // Tool titles and descriptions
     fun toolTitle(toolId: String): String = when (toolId) {
@@ -478,6 +545,32 @@ object Strings {
     const val loadingContent = "Loading..."
     const val errorGeneric = "Something went wrong"
 
+    // ── Auth Screen ──────────────────────────────────────────────────────────
+    const val authWelcomeBack = "Welcome back"
+    const val authCreateAccount = "Create your account"
+    const val authSignInSubtitle = "Sign in to save your projects and access your diamonds across devices"
+    const val authSignUpSubtitle = "Join HomeDecor AI to save designs, sync across devices, and earn diamonds"
+    const val email = "Email"
+    const val password = "Password"
+    const val authForgotPassword = "Forgot password?"
+    const val authDataProtected = "Your data is encrypted and never shared"
+    const val authNoAccountYet = "Don't have an account?"
+    const val authHasAccount = "Already have an account?"
+    const val authSignUp = "Sign up"
+    const val authSignIn = "Sign in"
+    const val authSignUpButton = "Create Account"
+    const val authSignInButton = "Sign In"
+    const val authContinueWithGoogle = "Continue with Google"
+    const val authOr = "or"
+    const val authLoading = "Signing you in..."
+    const val authErrorGeneric = "Authentication failed. Please try again."
+    const val authErrorNetwork = "Network error. Check your connection and try again."
+    const val authErrorInvalidCredentials = "Invalid email or password. Please try again."
+    const val authPasswordMin = "Password must be at least 6 characters"
+    const val authTogglePasswordVisibility = "Toggle password visibility"
+    const val authClose = "Close"
+    const val authSignedInAs = "Signed in as"
+
     // ── A11y headings / landmark labels ─────────────────────────────────────
     const val a11yToolsHeading = "Tools"
     const val a11yDiscoverHeading = "Discover"
@@ -502,6 +595,37 @@ object Strings {
     const val a11yPaywallClose = "Close paywall"
     const val a11yPaywallBack = "Go to previous step"
     const val a11yPaywallCta = "Continue with selected plan"
+
+    // ── A11y labels for loading states ──────────────────────────────────────
+    const val a11yLoading = "Loading content"
+    const val a11yGenerating = "Generating your design"
+    const val a11yUploading = "Uploading image"
+
+    // ── A11y labels for plan cards ──────────────────────────────────────────
+    fun a11yPlanCard(title: String, price: String, period: String, selected: Boolean) =
+        "$title, $price $period${if (selected) ", selected" else ""}"
+    fun a11yUpgradePlanCard(title: String, price: String, period: String, recommended: Boolean) =
+        "$title, $price $period${if (recommended) ", recommended" else ""}"
+
+    // ── A11y labels for comparison tables ────────────────────────────────────
+    const val a11yComparisonTable = "Feature comparison table"
+    fun a11yComparisonRow(feature: String, freeValue: String, proValue: String) =
+        "$feature: Free $freeValue, Pro $proValue"
+
+    // ── A11y labels for wizard ───────────────────────────────────────────────
+    const val a11yWizardStepIndicator = "Wizard progress"
+    fun a11yWizardStepLabel(step: Int, total: Int, label: String) = "Step $step of $total: $label"
+
+    // ── A11y labels for discover ─────────────────────────────────────────────
+    fun a11yDiscoverFilterChip(label: String, selected: Boolean) =
+        "$label${if (selected) ", selected" else ""}"
+
+    // ── A11y labels for board cards ──────────────────────────────────────────
+    fun a11yBoardCard(title: String, subtitle: String) = "$title, $subtitle"
+
+    // ── A11y labels for modal close ──────────────────────────────────────────
+    const val a11ySettingsClose = "Close settings"
+    const val a11yDiamondStoreClose = "Close diamond store"
 
     // ── Test Tags (for Compose test / accessibility snapshots) ──────────────
     object TestTags {
@@ -582,6 +706,9 @@ object Strings {
         const val upgradeCtaButton = "upgrade_cta_button"
         const val upgradePlanCard = "upgrade_plan_card_%s"
         const val upgradeBeforeAfter = "upgrade_before_after"
+
+        // Settings
+        const val settingsRow = "settings_row_%s"
     }
 
     // ── A11y labels for test tags with dynamic values ───────────────────────

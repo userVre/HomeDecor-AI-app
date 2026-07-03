@@ -14,3 +14,4 @@ pluginManagement {
 
 rootProject.name = "HomeDecorAI"
 include(":app")
+include(":server")

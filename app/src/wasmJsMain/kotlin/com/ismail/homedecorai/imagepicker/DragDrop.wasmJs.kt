@@ -3,7 +3,6 @@ package com.ismail.homedecorai.imagepicker
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -11,7 +10,6 @@ import androidx.compose.runtime.setValue
 import kotlinx.browser.document
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.w3c.dom.events.Event
 
 @JsFun("""(el, onDragEnter, onDragLeave, onDrop) => {
     el.addEventListener('dragenter', function(e) {

@@ -74,12 +74,36 @@ import homedecorai.app.generated.resources.assets_media_discover_generated_livin
 import homedecorai.app.generated.resources.assets_media_discover_home_homediningroom
 import homedecorai.app.generated.resources.assets_media_discover_home_homehomeoffice
 import homedecorai.app.generated.resources.assets_media_discover_home_homebathroom
+import homedecorai.app.generated.resources.assets_media_discover_home_homekitchen
+import homedecorai.app.generated.resources.assets_media_discover_home_homelivingroom
+import homedecorai.app.generated.resources.assets_media_discover_home_homemastersuite
+import homedecorai.app.generated.resources.assets_media_discover_home_homelibrary
 import homedecorai.app.generated.resources.assets_media_discover_home_homestudy
 import homedecorai.app.generated.resources.assets_media_discover_wallscenes_lavendermistbath
+import homedecorai.app.generated.resources.assets_media_discover_wallscenes_midnightnavybedroom
+import homedecorai.app.generated.resources.assets_media_discover_wallscenes_dustyroseretreat
+import homedecorai.app.generated.resources.assets_media_discover_wallscenes_pearlgraysalon
+import homedecorai.app.generated.resources.assets_media_discover_wallscenes_sagegreensuite
+import homedecorai.app.generated.resources.assets_media_discover_wallscenes_softivorykitchen
+import homedecorai.app.generated.resources.assets_media_discover_wallscenes_terracottadining
+import homedecorai.app.generated.resources.assets_media_discover_wallscenes_gallerycharcoallounge
+import homedecorai.app.generated.resources.assets_media_discover_generated_exterior_exterior5
 import homedecorai.app.generated.resources.assets_media_styles_styleartdeco
+import homedecorai.app.generated.resources.assets_media_styles_stylebohemian
+import homedecorai.app.generated.resources.assets_media_styles_stylecoastal
+import homedecorai.app.generated.resources.assets_media_styles_stylecyberpunk
+import homedecorai.app.generated.resources.assets_media_styles_stylefrenchcountry
+import homedecorai.app.generated.resources.assets_media_styles_styleglam
+import homedecorai.app.generated.resources.assets_media_styles_stylejapandi
 import homedecorai.app.generated.resources.assets_media_styles_styleluxury
 import homedecorai.app.generated.resources.assets_media_styles_stylemediterranean
 import homedecorai.app.generated.resources.assets_media_styles_stylemidcentury
+import homedecorai.app.generated.resources.assets_media_styles_styleminimalist
+import homedecorai.app.generated.resources.assets_media_styles_stylemodern
+import homedecorai.app.generated.resources.assets_media_styles_stylerustic
+import homedecorai.app.generated.resources.assets_media_styles_stylescandinavian
+import homedecorai.app.generated.resources.assets_media_styles_styletropical
+import homedecorai.app.generated.resources.assets_media_styles_stylevintage
 import homedecorai.app.generated.resources.tool_exterior
 import homedecorai.app.generated.resources.tool_floor
 import homedecorai.app.generated.resources.tool_garden
@@ -167,13 +191,37 @@ private fun urlToPainter(url: String): Painter? {
         "assets_media_discover_generated_bedroom_bedroom7" -> painterResource(Res.drawable.assets_media_discover_generated_bedroom_bedroom7)
         "assets_media_discover_home_homebathroom" -> painterResource(Res.drawable.assets_media_discover_home_homebathroom)
         "assets_media_discover_wallscenes_lavendermistbath" -> painterResource(Res.drawable.assets_media_discover_wallscenes_lavendermistbath)
-        "assets_media_styles_styleluxury" -> painterResource(Res.drawable.assets_media_styles_styleluxury)
         "assets_media_discover_home_homehomeoffice" -> painterResource(Res.drawable.assets_media_discover_home_homehomeoffice)
         "assets_media_discover_home_homestudy" -> painterResource(Res.drawable.assets_media_discover_home_homestudy)
-        "assets_media_styles_stylemidcentury" -> painterResource(Res.drawable.assets_media_styles_stylemidcentury)
         "assets_media_discover_home_homediningroom" -> painterResource(Res.drawable.assets_media_discover_home_homediningroom)
+        "assets_media_discover_home_homekitchen" -> painterResource(Res.drawable.assets_media_discover_home_homekitchen)
+        "assets_media_discover_home_homelivingroom" -> painterResource(Res.drawable.assets_media_discover_home_homelivingroom)
+        "assets_media_discover_home_homemastersuite" -> painterResource(Res.drawable.assets_media_discover_home_homemastersuite)
+        "assets_media_discover_home_homelibrary" -> painterResource(Res.drawable.assets_media_discover_home_homelibrary)
+        "assets_media_discover_wallscenes_midnightnavybedroom" -> painterResource(Res.drawable.assets_media_discover_wallscenes_midnightnavybedroom)
+        "assets_media_discover_wallscenes_dustyroseretreat" -> painterResource(Res.drawable.assets_media_discover_wallscenes_dustyroseretreat)
+        "assets_media_discover_wallscenes_pearlgraysalon" -> painterResource(Res.drawable.assets_media_discover_wallscenes_pearlgraysalon)
+        "assets_media_discover_wallscenes_sagegreensuite" -> painterResource(Res.drawable.assets_media_discover_wallscenes_sagegreensuite)
+        "assets_media_discover_wallscenes_softivorykitchen" -> painterResource(Res.drawable.assets_media_discover_wallscenes_softivorykitchen)
+        "assets_media_discover_wallscenes_terracottadining" -> painterResource(Res.drawable.assets_media_discover_wallscenes_terracottadining)
+        "assets_media_discover_wallscenes_gallerycharcoallounge" -> painterResource(Res.drawable.assets_media_discover_wallscenes_gallerycharcoallounge)
+        "assets_media_discover_generated_exterior_exterior5" -> painterResource(Res.drawable.assets_media_discover_generated_exterior_exterior5)
         "assets_media_styles_styleartdeco" -> painterResource(Res.drawable.assets_media_styles_styleartdeco)
+        "assets_media_styles_stylebohemian" -> painterResource(Res.drawable.assets_media_styles_stylebohemian)
+        "assets_media_styles_stylecoastal" -> painterResource(Res.drawable.assets_media_styles_stylecoastal)
+        "assets_media_styles_stylecyberpunk" -> painterResource(Res.drawable.assets_media_styles_stylecyberpunk)
+        "assets_media_styles_stylefrenchcountry" -> painterResource(Res.drawable.assets_media_styles_stylefrenchcountry)
+        "assets_media_styles_styleglam" -> painterResource(Res.drawable.assets_media_styles_styleglam)
+        "assets_media_styles_stylejapandi" -> painterResource(Res.drawable.assets_media_styles_stylejapandi)
+        "assets_media_styles_styleluxury" -> painterResource(Res.drawable.assets_media_styles_styleluxury)
         "assets_media_styles_stylemediterranean" -> painterResource(Res.drawable.assets_media_styles_stylemediterranean)
+        "assets_media_styles_stylemidcentury" -> painterResource(Res.drawable.assets_media_styles_stylemidcentury)
+        "assets_media_styles_styleminimalist" -> painterResource(Res.drawable.assets_media_styles_styleminimalist)
+        "assets_media_styles_stylemodern" -> painterResource(Res.drawable.assets_media_styles_stylemodern)
+        "assets_media_styles_stylerustic" -> painterResource(Res.drawable.assets_media_styles_stylerustic)
+        "assets_media_styles_stylescandinavian" -> painterResource(Res.drawable.assets_media_styles_stylescandinavian)
+        "assets_media_styles_styletropical" -> painterResource(Res.drawable.assets_media_styles_styletropical)
+        "assets_media_styles_stylevintage" -> painterResource(Res.drawable.assets_media_styles_stylevintage)
         "assets_media_discover_exterior_exteriormodernvilla" -> painterResource(Res.drawable.assets_media_discover_exterior_exteriormodernvilla)
         "assets_media_discover_generated_exterior_exterior1" -> painterResource(Res.drawable.assets_media_discover_generated_exterior_exterior1)
         "assets_media_discover_generated_exterior_exterior2" -> painterResource(Res.drawable.assets_media_discover_generated_exterior_exterior2)
@@ -196,6 +244,7 @@ private fun urlToPainter(url: String): Painter? {
         "assets_media_discover_garden_gardendeck" -> painterResource(Res.drawable.assets_media_discover_garden_gardendeck)
         "assets_media_discover_garden_gardenfrontyard" -> painterResource(Res.drawable.assets_media_discover_garden_gardenfrontyard)
         "assets_media_discover_garden_gardenvillaentry" -> painterResource(Res.drawable.assets_media_discover_garden_gardenvillaentry)
+        "assets_media_discover_garden_gardenbackyard" -> painterResource(Res.drawable.assets_media_discover_garden_gardenbackyard)
         "assets_media_discover_floorscenes_heritagewalnutplank" -> painterResource(Res.drawable.assets_media_discover_floorscenes_heritagewalnutplank)
         "assets_media_discover_floorscenes_industrialgrayconcrete" -> painterResource(Res.drawable.assets_media_discover_floorscenes_industrialgrayconcrete)
         "assets_media_discover_floorscenes_modernslatetile" -> painterResource(Res.drawable.assets_media_discover_floorscenes_modernslatetile)
@@ -206,7 +255,6 @@ private fun urlToPainter(url: String): Painter? {
         "assets_media_discover_floorscenes_walnutchevron" -> painterResource(Res.drawable.assets_media_discover_floorscenes_walnutchevron)
         "assets_media_discover_floorscenes_weatheredoakstudio" -> painterResource(Res.drawable.assets_media_discover_floorscenes_weatheredoakstudio)
         "assets_media_discover_exterior_exteriorretailstorefront" -> painterResource(Res.drawable.assets_media_discover_exterior_exteriorretailstorefront)
-        "assets_media_discover_garden_gardenbackyard" -> painterResource(Res.drawable.assets_media_discover_garden_gardenbackyard)
         else -> null
     }
 }

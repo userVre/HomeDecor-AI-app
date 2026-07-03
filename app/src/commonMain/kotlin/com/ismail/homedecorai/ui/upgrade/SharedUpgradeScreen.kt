@@ -1,5 +1,6 @@
 package com.ismail.homedecorai.ui.upgrade
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -12,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -77,6 +79,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -134,7 +137,7 @@ private class SharedUpgradeColors(
             textSecondary = ProDarkTextSecondary,
             textMuted = ProDarkTextMuted,
             border = ProDarkBorder,
-            checkGreen = HomeDecorColors.DarkCheckGreen,
+            checkGreen = ProCheckGreen,
             ctaDisabled = ProDarkCtaDisabled,
             heroDivider = ProDarkHeroDivider,
         )
@@ -212,6 +215,7 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
     )
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
+    var selectedPlan by remember { mutableStateOf("yearly") }
 
     Column(
         modifier = Modifier
@@ -244,9 +248,19 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
 
             // ── Plan Cards ────────────────────────────────────────────────
             if (isDesktop) {
-                UpgradePlanCardsDesktop(colors = colors, onSelectPlan = { scope.launch { scrollState.animateScrollTo(scrollState.maxValue) } })
+                UpgradePlanCardsDesktop(
+                    colors = colors,
+                    selectedPlan = selectedPlan,
+                    onPlanSelected = { selectedPlan = it },
+                    onSelectPlan = { scope.launch { scrollState.animateScrollTo(scrollState.maxValue) } },
+                )
             } else {
-                UpgradePlanCardsMobile(colors = colors, onSelectPlan = { scope.launch { scrollState.animateScrollTo(scrollState.maxValue) } })
+                UpgradePlanCardsMobile(
+                    colors = colors,
+                    selectedPlan = selectedPlan,
+                    onPlanSelected = { selectedPlan = it },
+                    onSelectPlan = { scope.launch { scrollState.animateScrollTo(scrollState.maxValue) } },
+                )
             }
 
             Spacer(Modifier.height(HomeDecorSpacing.Xl))
@@ -267,59 +281,66 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
             Spacer(Modifier.height(HomeDecorSpacing.Xl))
 
             // ── Bottom CTA ────────────────────────────────────────────────
-            UpgradeBottomCta(colors = colors, onJoinWaitlist = onOpenPaywall)
+            UpgradeBottomCta(colors = colors, onGetPro = onOpenPaywall)
 
             Spacer(Modifier.height(120.dp))
         }
 
         // ── Sticky CTA Bar ──────────────────────────────────────────────
-        Surface(
-            color = colors.surface,
-            shadowElevation = 8.dp,
-        ) {
-            Column(
+        Column {
+            // Gradient scrim at top of sticky bar
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.Base)
-                    .padding(bottom = 16.dp)
-                    .windowInsetsPadding(WindowInsets.navigationBars),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Button(
-                    onClick = onOpenPaywall,
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.accent,
-                        contentColor = Color.White,
+                    .height(24.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, colors.surface),
+                        ),
                     ),
-                    contentPadding = PaddingValues(),
-                    interactionSource = interactionSource,
+            )
+            Surface(
+                color = colors.surface,
+                shadowElevation = 8.dp,
+            ) {
+                Column(
                     modifier = Modifier
-                        .widthIn(max = 480.dp)
                         .fillMaxWidth()
-                        .height(HomeDecorSpacing.ButtonHeight)
-                        .testTag(Strings.TestTags.upgradeCtaButton)
-                        .scale(ctaScale),
+                        .padding(horizontal = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.Base)
+                        .padding(bottom = 16.dp)
+                        .windowInsetsPadding(WindowInsets.navigationBars),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Icon(
-                        Icons.Rounded.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
-                    Text(
-                        text = Strings.upgradeV3Cta,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Button(
+                        onClick = onOpenPaywall,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.accent,
+                            contentColor = HomeDecorExtra.onGradientText,
+                        ),
+                        contentPadding = PaddingValues(),
+                        interactionSource = interactionSource,
+                        modifier = Modifier
+                            .widthIn(max = 480.dp)
+                            .fillMaxWidth()
+                            .height(HomeDecorSpacing.ButtonHeight)
+                            .testTag(Strings.TestTags.upgradeCtaButton)
+                            .scale(ctaScale),
+                    ) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                        Text(
+                            text = Strings.upgradeV3Cta,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
-                Text(
-                    text = Strings.upgradeWaitlistNote,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.textMuted,
-                    textAlign = TextAlign.Center,
-                )
             }
         }
     }
@@ -427,6 +448,8 @@ private fun UpgradeMobileHero(colors: SharedUpgradeColors) {
 @Composable
 private fun UpgradePlanCardsDesktop(
     colors: SharedUpgradeColors,
+    selectedPlan: String,
+    onPlanSelected: (String) -> Unit,
     onSelectPlan: () -> Unit,
 ) {
     Row(
@@ -441,7 +464,8 @@ private fun UpgradePlanCardsDesktop(
             period = Strings.upgradePlanMonthlyPeriod,
             subtitle = null,
             isRecommended = false,
-            onSelect = onSelectPlan,
+            isSelected = selectedPlan == "monthly",
+            onSelect = { onPlanSelected("monthly"); onSelectPlan() },
             modifier = Modifier.weight(1f),
         )
 
@@ -453,7 +477,8 @@ private fun UpgradePlanCardsDesktop(
             period = Strings.upgradePlanYearlyPeriod,
             subtitle = Strings.upgradePlanYearlySave,
             isRecommended = true,
-            onSelect = onSelectPlan,
+            isSelected = selectedPlan == "yearly",
+            onSelect = { onPlanSelected("yearly"); onSelectPlan() },
             modifier = Modifier.weight(1f),
         )
 
@@ -465,7 +490,8 @@ private fun UpgradePlanCardsDesktop(
             period = Strings.upgradePlanFamilyPeriod,
             subtitle = Strings.upgradePlanFamilySubtitle,
             isRecommended = false,
-            onSelect = onSelectPlan,
+            isSelected = selectedPlan == "family",
+            onSelect = { onPlanSelected("family"); onSelectPlan() },
             modifier = Modifier.weight(1f),
         )
     }
@@ -474,6 +500,8 @@ private fun UpgradePlanCardsDesktop(
 @Composable
 private fun UpgradePlanCardsMobile(
     colors: SharedUpgradeColors,
+    selectedPlan: String,
+    onPlanSelected: (String) -> Unit,
     onSelectPlan: () -> Unit,
 ) {
     Column(
@@ -486,7 +514,8 @@ private fun UpgradePlanCardsMobile(
             period = Strings.upgradePlanMonthlyPeriod,
             subtitle = null,
             isRecommended = false,
-            onSelect = onSelectPlan,
+            isSelected = selectedPlan == "monthly",
+            onSelect = { onPlanSelected("monthly"); onSelectPlan() },
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -497,7 +526,8 @@ private fun UpgradePlanCardsMobile(
             period = Strings.upgradePlanYearlyPeriod,
             subtitle = Strings.upgradePlanYearlySave,
             isRecommended = true,
-            onSelect = onSelectPlan,
+            isSelected = selectedPlan == "yearly",
+            onSelect = { onPlanSelected("yearly"); onSelectPlan() },
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -508,7 +538,8 @@ private fun UpgradePlanCardsMobile(
             period = Strings.upgradePlanFamilyPeriod,
             subtitle = Strings.upgradePlanFamilySubtitle,
             isRecommended = false,
-            onSelect = onSelectPlan,
+            isSelected = selectedPlan == "family",
+            onSelect = { onPlanSelected("family"); onSelectPlan() },
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -522,25 +553,49 @@ private fun PlanCard(
     period: String,
     subtitle: String?,
     isRecommended: Boolean,
+    isSelected: Boolean,
     onSelect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
 
-    val borderColor = when {
-        isRecommended -> colors.gold
-        isHovered -> colors.accent.copy(alpha = 0.5f)
-        else -> colors.border
+    val borderColor by animateColorAsState(
+        targetValue = when {
+            isSelected && isRecommended -> colors.gold
+            isSelected -> colors.accent
+            isRecommended -> colors.gold.copy(alpha = 0.6f)
+            isHovered -> colors.accent.copy(alpha = 0.5f)
+            else -> colors.border
+        },
+        animationSpec = tween(200),
+        label = "plan_border",
+    )
+    val borderWidth = when {
+        isSelected -> 2.5.dp
+        isRecommended -> 2.dp
+        else -> 1.dp
     }
-    val borderWidth = if (isRecommended) 2.dp else 1.dp
 
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = if (isHovered) colors.accentSurface else colors.cardSurface,
+        color = when {
+            isSelected && isRecommended -> colors.accentSurface
+            isSelected -> colors.accentSurface.copy(alpha = 0.7f)
+            isRecommended -> colors.accentSurface.copy(alpha = 0.3f)
+            isHovered -> colors.accentSurface.copy(alpha = 0.2f)
+            else -> colors.cardSurface
+        },
         border = BorderStroke(borderWidth, borderColor),
+        shadowElevation = if (isSelected || isRecommended) 6.dp else 0.dp,
         modifier = modifier
-            .testTag(Strings.formatTestTag(Strings.TestTags.upgradePlanCard, title.lowercase())),
+            .testTag(Strings.formatTestTag(Strings.TestTags.upgradePlanCard, title.lowercase()))
+            .semantics {
+                role = Role.RadioButton
+                this.selected = isSelected
+                contentDescription = Strings.a11yUpgradePlanCard(title, price, period, isRecommended)
+            }
+            .clickable { onSelect() },
     ) {
         Box {
             if (isRecommended) {
@@ -549,13 +604,24 @@ private fun PlanCard(
                     color = colors.gold,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        Strings.upgradePlanBestValue,
-                        modifier = Modifier.padding(vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                    )
+                    Row(
+                        modifier = Modifier.padding(vertical = 7.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            tint = HomeDecorExtra.onGradientText,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            Strings.upgradePlanBestValue,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = HomeDecorExtra.onGradientText,
+                        )
+                    }
                 }
             }
 
@@ -564,7 +630,38 @@ private fun PlanCard(
                 verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
             ) {
                 if (isRecommended) {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = colors.textPrimary,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(if (isSelected) colors.accent else Color.Transparent)
+                            .then(
+                                if (!isSelected) Modifier.border(2.dp, colors.textMuted.copy(alpha = 0.4f), CircleShape) else Modifier
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = HomeDecorExtra.onGradientText,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
                 }
 
                 Row(
@@ -574,7 +671,7 @@ private fun PlanCard(
                     Text(
                         price,
                         style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textPrimary,
+                        color = if (isSelected) colors.accent else colors.textPrimary,
                     )
                     Text(
                         period,
@@ -597,12 +694,6 @@ private fun PlanCard(
                         )
                     }
                 }
-
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = colors.textPrimary,
-                )
             }
         }
     }
@@ -651,7 +742,7 @@ private fun UpgradeBenefitsSection(
                 BenefitCard(
                     colors = colors,
                     icon = Icons.Rounded.AutoAwesome,
-                    title = Strings.upgradeBenefitPriority,
+                    title = Strings.upgradeBenefitStyles,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -689,7 +780,7 @@ private fun UpgradeBenefitsSection(
                     BenefitCard(
                         colors = colors,
                         icon = Icons.Rounded.AutoAwesome,
-                        title = Strings.upgradeBenefitPriority,
+                        title = Strings.upgradeBenefitStyles,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -705,27 +796,35 @@ private fun BenefitCard(
     title: String,
     modifier: Modifier = Modifier,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val containerColor by animateColorAsState(
+        targetValue = if (isHovered) colors.accentSurface.copy(alpha = 0.4f) else colors.cardSurface,
+        animationSpec = tween(200),
+        label = "benefit_bg",
+    )
+
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
+        color = containerColor,
+        border = BorderStroke(1.dp, if (isHovered) colors.accent.copy(alpha = 0.2f) else colors.border),
         modifier = modifier,
     ) {
         Column(
-            modifier = Modifier.padding(HomeDecorSpacing.Md),
+            modifier = Modifier.padding(HomeDecorSpacing.Base),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             Surface(
-                shape = CircleShape,
-                color = colors.accent.copy(alpha = 0.12f),
-                modifier = Modifier.size(36.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = colors.accent.copy(alpha = 0.10f),
+                modifier = Modifier.size(40.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         icon,
                         contentDescription = null,
                         tint = colors.accent,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -744,6 +843,7 @@ private fun UpgradeComparisonTable(colors: SharedUpgradeColors) {
         shape = RoundedCornerShape(20.dp),
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.border),
+        shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column {
@@ -751,110 +851,120 @@ private fun UpgradeComparisonTable(colors: SharedUpgradeColors) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(colors.accent.copy(alpha = 0.06f))
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                colors.accent.copy(alpha = 0.08f),
+                                colors.accent.copy(alpha = 0.04f),
+                            ),
+                        ),
+                    )
                     .padding(horizontal = 20.dp, vertical = 16.dp),
             ) {
                 Text(
                     "",
                     modifier = Modifier.weight(1f),
                 )
-                Text(
-                    Strings.upgradeFreePlan,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = colors.textMuted,
-                    textAlign = TextAlign.Center,
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = colors.textMuted.copy(alpha = 0.1f),
                     modifier = Modifier.width(80.dp),
-                )
-                Text(
-                    Strings.upgradeProPlan,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                ) {
+                    Text(
+                        Strings.upgradeFreePlan,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = colors.textMuted,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
                     color = colors.accent,
-                    textAlign = TextAlign.Center,
                     modifier = Modifier.width(80.dp),
-                )
+                ) {
+                    Text(
+                        Strings.upgradeProPlan,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = HomeDecorExtra.onGradientText,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    )
+                }
             }
 
-            HorizontalDivider(color = colors.border)
+            HorizontalDivider(color = colors.border, thickness = 1.dp)
 
             // Rows
-            ComparisonRow(
-                colors = colors,
-                feature = Strings.upgradeCompareGenerations,
-                free = Strings.upgradeCompareGenerationsFree,
-                pro = Strings.upgradeCompareGenerationsPro,
+            val rows = listOf(
+                Strings.upgradeCompareGenerations to (Strings.upgradeCompareGenerationsFree to Strings.upgradeCompareGenerationsPro),
+                Strings.upgradeCompareExport to (Strings.upgradeCompareExportFree to Strings.upgradeCompareExportPro),
+                Strings.upgradeCompareWatermark to (Strings.upgradeCompareWatermarkFree to Strings.upgradeCompareWatermarkPro),
+                Strings.upgradeCompareSpeed to (Strings.upgradeCompareSpeedFree to Strings.upgradeCompareSpeedPro),
+                Strings.upgradeCompareStyles to (Strings.upgradeCompareStylesFree to Strings.upgradeCompareStylesPro),
+                Strings.upgradeCompareSupport to (Strings.upgradeCompareSupportFree to Strings.upgradeCompareSupportPro),
             )
-            ComparisonRow(
-                colors = colors,
-                feature = Strings.upgradeCompareExport,
-                free = Strings.upgradeCompareExportFree,
-                pro = Strings.upgradeCompareExportPro,
-            )
-            ComparisonRow(
-                colors = colors,
-                feature = Strings.upgradeCompareWatermark,
-                free = Strings.upgradeCompareWatermarkFree,
-                pro = Strings.upgradeCompareWatermarkPro,
-                isProGood = true,
-            )
-            ComparisonRow(
-                colors = colors,
-                feature = Strings.upgradeCompareSpeed,
-                free = Strings.upgradeCompareSpeedFree,
-                pro = Strings.upgradeCompareSpeedPro,
-            )
-            ComparisonRow(
-                colors = colors,
-                feature = Strings.upgradeCompareStyles,
-                free = Strings.upgradeCompareStylesFree,
-                pro = Strings.upgradeCompareStylesPro,
-            )
-            ComparisonRow(
-                colors = colors,
-                feature = Strings.upgradeCompareSupport,
-                free = Strings.upgradeCompareSupportFree,
-                pro = Strings.upgradeCompareSupportPro,
-            )
+
+            rows.forEachIndexed { index, (feature, values) ->
+                val isEven = index % 2 == 0
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(if (isEven) colors.accent.copy(alpha = 0.02f) else Color.Transparent)
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        feature,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = colors.textPrimary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        values.first,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textMuted,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.width(80.dp),
+                    )
+                    if (values.second == Strings.upgradeCompareWatermarkPro) {
+                        Box(
+                            modifier = Modifier.width(80.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = colors.checkGreen,
+                                modifier = Modifier.size(22.dp),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        tint = HomeDecorExtra.onGradientText,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Text(
+                            values.second,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = colors.accent,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.width(80.dp),
+                        )
+                    }
+                }
+
+                if (index < rows.lastIndex) {
+                    HorizontalDivider(color = colors.border.copy(alpha = 0.5f), thickness = 0.5.dp)
+                }
+            }
         }
     }
-}
-
-@Composable
-private fun ComparisonRow(
-    colors: SharedUpgradeColors,
-    feature: String,
-    free: String,
-    pro: String,
-    isProGood: Boolean = false,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            feature,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-            color = colors.textPrimary,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            free,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.textMuted,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(80.dp),
-        )
-        Text(
-            pro,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = if (isProGood) colors.checkGreen else colors.accent,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(80.dp),
-        )
-    }
-
-    HorizontalDivider(color = colors.border.copy(alpha = 0.5f))
 }
 
 @Composable
@@ -947,25 +1057,34 @@ private fun TestimonialCard(
 @Composable
 private fun UpgradeBottomCta(
     colors: SharedUpgradeColors,
-    onJoinWaitlist: () -> Unit,
+    onGetPro: () -> Unit,
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = colors.accent.copy(alpha = 0.06f),
         border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
+        shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
-            modifier = Modifier.padding(HomeDecorSpacing.Lg),
+            modifier = Modifier.padding(HomeDecorSpacing.Xl),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
-            Icon(
-                Icons.Rounded.AutoAwesome,
-                contentDescription = null,
-                tint = colors.accent,
-                modifier = Modifier.size(32.dp),
-            )
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = colors.accent.copy(alpha = 0.10f),
+                modifier = Modifier.size(56.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        tint = colors.accent,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+            }
             Text(
                 Strings.upgradeV3Headline,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
@@ -973,8 +1092,8 @@ private fun UpgradeBottomCta(
                 textAlign = TextAlign.Center,
             )
             Text(
-                Strings.upgradeWaitlistNote,
-                style = MaterialTheme.typography.bodyMedium,
+                Strings.upgradeV3Subtitle,
+                style = MaterialTheme.typography.bodyLarge,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
             )
@@ -1142,7 +1261,7 @@ private fun SharedUpgradeBeforeAfterHero(colors: SharedUpgradeColors) {
                     Icon(
                         Icons.Rounded.AutoAwesome,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = HomeDecorExtra.onGradientText,
                         modifier = Modifier.size(16.dp),
                     )
                 }

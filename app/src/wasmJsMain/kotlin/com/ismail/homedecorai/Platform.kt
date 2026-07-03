@@ -30,7 +30,7 @@ actual fun setpageTitle(title: String) {
     setPageTitleJs(title)
 }
 
-@JsFun("(path, title) => { if (window.location.pathname !== path) { history.pushState({ path: path }, title, path); document.title = title; } }")
+@JsFun("(path, title) => { history.pushState({ path: path }, title, path); document.title = title; }")
 private external fun pushHistoryStateJs(path: String, title: String)
 
 actual fun pushHistoryState(path: String, title: String) {
@@ -63,13 +63,19 @@ actual fun getCurrentPathname(): String = getCurrentPathnameJs()
 
 @JsFun("""(callback) => {
     var handler = function(event) {
-        var path = (event.detail && event.detail.path) ? event.detail.path : '';
-        callback(path);
+        callback(window.location.pathname);
     };
-    window.addEventListener('navigation-change', handler);
-    return function() { window.removeEventListener('navigation-change', handler); };
+    window.addEventListener('popstate', handler);
+    return function() { window.removeEventListener('popstate', handler); };
 }""")
 private external fun subscribeToNavigationChangesJs(callback: (String) -> Unit): () -> Unit
 
 actual fun subscribeToNavigationChanges(onNavigate: (String) -> Unit): () -> Unit =
     subscribeToNavigationChangesJs(onNavigate)
+
+@JsFun("() => { history.back(); }")
+private external fun goBackJs()
+
+actual fun goBack() {
+    goBackJs()
+}

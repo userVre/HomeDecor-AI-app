@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -24,10 +25,12 @@ import androidx.compose.material.icons.automirrored.rounded.Help
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Feedback
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.Refresh
@@ -64,14 +67,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.Strings
-import com.ismail.homedecorai.showToast
+import com.ismail.homedecorai.ToastState
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
 import kotlinx.coroutines.launch
@@ -111,6 +116,9 @@ fun SharedSettingsScreen(
     onPrivacy: () -> Unit = {},
     onLogout: () -> Unit = {},
     onClose: () -> Unit = {},
+    onManageBilling: () -> Unit = {},
+    isDarkTheme: Boolean = false,
+    onThemeToggle: () -> Unit = {},
 ) {
     val isDesktop = rememberIsDesktop()
     val scope = rememberCoroutineScope()
@@ -131,7 +139,7 @@ fun SharedSettingsScreen(
                 supportedLanguages = supportedLanguages,
                 onLanguageSelected = { languageTag ->
                     onLanguageSelected(languageTag)
-                    showToast(Strings.toastLanguageSelected)
+                    ToastState.show(Strings.toastLanguageSelected)
                     scope.launch {
                         sheetState.hide()
                         languageSheetVisible = false
@@ -148,13 +156,15 @@ fun SharedSettingsScreen(
             onLanguageClick = { languageSheetVisible = true },
             onFaq = onFaq,
             onShareApp = onShareApp,
-            onRateUs = onRateUs,
             onFeedback = { feedbackDialogVisible = true },
             onTerms = onTerms,
             onPrivacy = onPrivacy,
             onLogout = { logoutDialogVisible = true },
             onDeleteAccount = { deleteDialogVisible = true },
             onClose = onClose,
+            onManageBilling = onManageBilling,
+            isDarkTheme = isDarkTheme,
+            onThemeToggle = onThemeToggle,
         )
     } else {
         MobileSettingsScreen(
@@ -165,12 +175,15 @@ fun SharedSettingsScreen(
             onLanguageClick = { languageSheetVisible = true },
             onFaq = onFaq,
             onShareApp = onShareApp,
-            onRateUs = onRateUs,
             onFeedback = { feedbackDialogVisible = true },
             onTerms = onTerms,
             onPrivacy = onPrivacy,
             onLogout = { logoutDialogVisible = true },
             onDeleteAccount = { deleteDialogVisible = true },
+            onManageBilling = onManageBilling,
+            onClose = onClose,
+            isDarkTheme = isDarkTheme,
+            onThemeToggle = onThemeToggle,
         )
     }
 
@@ -218,13 +231,15 @@ private fun DesktopSettingsPage(
     onLanguageClick: () -> Unit,
     onFaq: () -> Unit,
     onShareApp: () -> Unit,
-    onRateUs: () -> Unit,
     onFeedback: () -> Unit,
     onTerms: () -> Unit,
     onPrivacy: () -> Unit,
     onLogout: () -> Unit,
     onDeleteAccount: () -> Unit,
     onClose: () -> Unit,
+    onManageBilling: () -> Unit,
+    isDarkTheme: Boolean = false,
+    onThemeToggle: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
@@ -234,14 +249,13 @@ private fun DesktopSettingsPage(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 80.dp)
-                .padding(top = 40.dp),
+                .padding(horizontal = HomeDecorSpacing.DesktopContentHorizontalPadding)
+                .padding(top = HomeDecorSpacing.Xl),
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 32.dp),
+                    .padding(bottom = HomeDecorSpacing.Xl),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -266,15 +280,14 @@ private fun DesktopSettingsPage(
                 }
             }
 
-            // Content: 2-column grid
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(32.dp),
+                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
             ) {
                 // Left column
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
                 ) {
                     if (state.isSignedIn) {
                         DesktopSettingsSection(
@@ -296,6 +309,14 @@ private fun DesktopSettingsPage(
                                 iconTint = HomeDecorExtra.diamondAccent,
                                 onClick = onOpenDiamonds,
                             )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Refresh,
+                                Strings.manageBilling,
+                                Strings.manageBillingBody,
+                                iconTint = MaterialTheme.colorScheme.tertiary,
+                                onClick = onManageBilling,
+                            )
                         }
                     }
 
@@ -312,32 +333,11 @@ private fun DesktopSettingsPage(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            Icons.Rounded.Star,
-                            Strings.settingsAppearance,
-                            Strings.settingsAppearanceBody,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            onClick = {},
-                        )
-                    }
-
-                    DesktopSettingsSection(
-                        title = Strings.settingsSectionLegal,
-                        description = Strings.settingsLegalDescription,
-                    ) {
-                        SettingsRow(
-                            Icons.Rounded.Policy,
-                            Strings.terms,
-                            Strings.termsBody,
-                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            onClick = onTerms,
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            Icons.Rounded.Policy,
-                            Strings.privacyPolicy,
-                            Strings.privacyBody,
-                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            onClick = onPrivacy,
+                            Icons.Rounded.DarkMode,
+                            Strings.themeLabel,
+                            if (isDarkTheme) "Dark" else "Light",
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            onClick = onThemeToggle,
                         )
                     }
                 }
@@ -345,7 +345,7 @@ private fun DesktopSettingsPage(
                 // Right column
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
                 ) {
                     DesktopSettingsSection(
                         title = Strings.settingsSectionPurchases,
@@ -357,14 +357,6 @@ private fun DesktopSettingsPage(
                             Strings.diamondStoreBody,
                             iconTint = HomeDecorExtra.diamondAccent,
                             onClick = onOpenDiamonds,
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            Icons.Rounded.Refresh,
-                            Strings.restorePurchases,
-                            Strings.restorePurchasesBody,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            onClick = {},
                         )
                     }
 
@@ -389,26 +381,39 @@ private fun DesktopSettingsPage(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            Icons.Rounded.Star,
-                            Strings.rateUs,
-                            Strings.rateUsBody,
+                            Icons.Rounded.Feedback,
+                            Strings.sendFeedback,
+                            Strings.feedbackBody,
                             iconTint = MaterialTheme.colorScheme.primary,
-                            onClick = onRateUs,
+                            onClick = onFeedback,
+                        )
+                    }
+
+                    DesktopSettingsSection(
+                        title = Strings.settingsSectionLegal,
+                        description = Strings.settingsLegalDescription,
+                    ) {
+                        SettingsRow(
+                            Icons.Rounded.Policy,
+                            Strings.terms,
+                            Strings.termsBody,
+                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            onClick = onTerms,
                         )
                         SettingsDivider()
                         SettingsRow(
-                            Icons.Rounded.Feedback,
-                            Strings.contactSupport,
-                            Strings.feedbackBody,
+                            Icons.Rounded.Policy,
+                            Strings.privacyPolicy,
+                            Strings.privacyBody,
                             iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            onClick = onFeedback,
+                            onClick = onPrivacy,
                         )
                     }
 
                     if (state.isSignedIn) {
                         DesktopSettingsSection(
-                            title = Strings.settingsSectionAccount,
-                            description = Strings.settingsAccountDescription,
+                            title = "Account Actions",
+                            description = "Manage your account",
                         ) {
                             SettingsRow(
                                 Icons.AutoMirrored.Rounded.Logout,
@@ -430,12 +435,11 @@ private fun DesktopSettingsPage(
                 }
             }
 
-            // Version at bottom
             Text(
                 Strings.versionLabel(state.versionName),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 48.dp),
+                    .padding(top = 24.dp),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             )
@@ -456,18 +460,19 @@ private fun DesktopSettingsSection(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(24.dp)) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
             Text(
                 title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
+            Spacer(Modifier.height(2.dp))
             Text(
                 description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
             content()
         }
     }
@@ -485,12 +490,15 @@ private fun MobileSettingsScreen(
     onLanguageClick: () -> Unit,
     onFaq: () -> Unit,
     onShareApp: () -> Unit,
-    onRateUs: () -> Unit,
     onFeedback: () -> Unit,
     onTerms: () -> Unit,
     onPrivacy: () -> Unit,
     onLogout: () -> Unit,
     onDeleteAccount: () -> Unit,
+    onManageBilling: () -> Unit,
+    onClose: () -> Unit,
+    isDarkTheme: Boolean = false,
+    onThemeToggle: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -501,6 +509,15 @@ private fun MobileSettingsScreen(
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onClose) {
+                        Icon(
+                            Icons.Rounded.Close,
+                            contentDescription = Strings.close,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -535,6 +552,14 @@ private fun MobileSettingsScreen(
                             iconTint = HomeDecorExtra.diamondAccent,
                             onClick = onOpenDiamonds,
                         )
+                        SettingsDivider()
+                        SettingsRow(
+                            Icons.Rounded.Refresh,
+                            Strings.manageBilling,
+                            Strings.manageBillingBody,
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            onClick = onManageBilling,
+                        )
                     }
                 }
             }
@@ -551,6 +576,14 @@ private fun MobileSettingsScreen(
                         iconTint = MaterialTheme.colorScheme.tertiary,
                         onClick = onLanguageClick,
                     )
+                    SettingsDivider()
+                    SettingsRow(
+                        Icons.Rounded.DarkMode,
+                        Strings.themeLabel,
+                        if (isDarkTheme) "Dark" else "Light",
+                        iconTint = MaterialTheme.colorScheme.secondary,
+                        onClick = onThemeToggle,
+                    )
                 }
             }
 
@@ -565,14 +598,6 @@ private fun MobileSettingsScreen(
                         Strings.diamondStoreBody,
                         iconTint = HomeDecorExtra.diamondAccent,
                         onClick = onOpenDiamonds,
-                    )
-                    SettingsDivider()
-                    SettingsRow(
-                        Icons.Rounded.Refresh,
-                        Strings.restorePurchases,
-                        Strings.restorePurchasesBody,
-                        iconTint = MaterialTheme.colorScheme.primary,
-                        onClick = {},
                     )
                 }
             }
@@ -599,18 +624,10 @@ private fun MobileSettingsScreen(
                     )
                     SettingsDivider()
                     SettingsRow(
-                        Icons.Rounded.Star,
-                        Strings.rateUs,
-                        Strings.rateUsBody,
-                        iconTint = MaterialTheme.colorScheme.primary,
-                        onClick = onRateUs,
-                    )
-                    SettingsDivider()
-                    SettingsRow(
                         Icons.Rounded.Feedback,
-                        Strings.contactSupport,
+                        Strings.sendFeedback,
                         Strings.feedbackBody,
-                        iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        iconTint = MaterialTheme.colorScheme.primary,
                         onClick = onFeedback,
                     )
                 }
@@ -641,7 +658,7 @@ private fun MobileSettingsScreen(
 
             if (state.isSignedIn) {
                 item {
-                    SettingsSectionHeader(Strings.settingsSectionAccount)
+                    SettingsSectionHeader("Account Actions")
                 }
                 item {
                     SettingsCardSurface {
@@ -669,8 +686,8 @@ private fun MobileSettingsScreen(
                     Strings.versionLabel(state.versionName),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 32.dp),
+                        .padding(horizontal = HomeDecorSpacing.Md)
+                        .padding(top = HomeDecorSpacing.Xxl, bottom = HomeDecorSpacing.Xxl),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 )
@@ -685,7 +702,8 @@ private fun MobileSettingsScreen(
 private fun SettingsSectionHeader(title: String) {
     Text(
         title,
-        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Xs),
+        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Xs)
+            .semantics { heading() },
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -701,14 +719,14 @@ private fun SettingsCardSurface(content: @Composable () -> Unit) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(vertical = 6.dp)) {
+        Column(Modifier.padding(vertical = 4.dp)) {
             content()
         }
     }
 }
 
 @Composable
-private fun SettingsRow(
+internal fun SettingsRow(
     icon: ImageVector,
     title: String,
     subtitle: String,
@@ -722,6 +740,8 @@ private fun SettingsRow(
             Text(
                 title,
                 color = if (enabled) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         },
         supportingContent = {
@@ -730,6 +750,7 @@ private fun SettingsRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall,
             )
         },
         leadingContent = {
@@ -768,13 +789,18 @@ private fun SettingsRow(
             .fillMaxWidth()
             .minimumTouchTarget()
             .clip(RoundedCornerShape(18.dp))
+            .testTag(Strings.formatTestTag(Strings.TestTags.settingsRow, title.lowercase()))
+            .semantics {
+                contentDescription = "$title. $subtitle"
+                role = Role.Button
+            }
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
     )
 }
 
 @Composable
 private fun SettingsDivider() {
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 }
 
 // ── Language Picker ──────────────────────────────────────────────────────────

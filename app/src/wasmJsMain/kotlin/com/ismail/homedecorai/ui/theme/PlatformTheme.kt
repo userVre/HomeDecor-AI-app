@@ -14,4 +14,4 @@ actual fun HomeDecorTheme(
 }
 
 @Composable
-actual fun isReducedMotionEnabled(): Boolean = isReducedMotionEnabled()
+actual fun isReducedMotionEnabled(): Boolean = com.ismail.homedecorai.isReducedMotionEnabled()

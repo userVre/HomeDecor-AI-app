@@ -1,0 +1,18 @@
+{
+  "name": "homedecor-ai",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev:web": "cd web && npm run dev",
+    "build:web": "cd web && npm run build"
+  },
+  "dependencies": {
+    "ai": "^4.3.16",
+    "@ai-sdk/azure": "^1.2.24",
+    "convex": "^1.21.0",
+    "jimp": "^1.6.0",
+    "jimp-compact": "^0.16.0",
+    "sharp": "^0.33.5"
+  }
+}

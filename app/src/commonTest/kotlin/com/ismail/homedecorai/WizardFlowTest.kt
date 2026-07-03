@@ -11,11 +11,16 @@ class WizardFlowTest {
     @Test
     fun testWizardStepOrder() {
         val steps = WizardStep.entries
-        assertEquals(4, steps.size)
+        assertEquals(9, steps.size)
         assertEquals(WizardStep.Upload, steps[0])
         assertEquals(WizardStep.RoomType, steps[1])
         assertEquals(WizardStep.Style, steps[2])
-        assertEquals(WizardStep.Review, steps[3])
+        assertEquals(WizardStep.Refine, steps[3])
+        assertEquals(WizardStep.Material, steps[4])
+        assertEquals(WizardStep.Goals, steps[5])
+        assertEquals(WizardStep.Mask, steps[6])
+        assertEquals(WizardStep.ReplacementPrompt, steps[7])
+        assertEquals(WizardStep.TransferStrength, steps[8])
     }
 
     @Test
@@ -126,19 +131,24 @@ class WizardFlowTest {
         currentStep = WizardStep.Style
         assertEquals(WizardStep.Style, currentStep)
 
-        currentStep = WizardStep.Review
-        assertEquals(WizardStep.Review, currentStep)
+        currentStep = WizardStep.Refine
+        assertEquals(WizardStep.Refine, currentStep)
     }
 
     @Test
     fun testWizardStepBackNavigation() {
-        var currentStep = WizardStep.Review
+        var currentStep = WizardStep.Refine
 
         currentStep = when (currentStep) {
             WizardStep.Upload -> WizardStep.Upload
             WizardStep.RoomType -> WizardStep.Upload
             WizardStep.Style -> WizardStep.RoomType
-            WizardStep.Review -> WizardStep.Style
+            WizardStep.Refine -> WizardStep.Style
+            WizardStep.Material -> WizardStep.Upload
+            WizardStep.Goals -> WizardStep.Upload
+            WizardStep.Mask -> WizardStep.Upload
+            WizardStep.ReplacementPrompt -> WizardStep.Mask
+            WizardStep.TransferStrength -> WizardStep.Upload
         }
         assertEquals(WizardStep.Style, currentStep)
     }
