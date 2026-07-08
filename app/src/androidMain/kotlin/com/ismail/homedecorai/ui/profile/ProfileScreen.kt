@@ -17,6 +17,17 @@ fun ProfileScreen(
             diamonds = state.diamonds,
             isPro = state.isPro,
             favoritesCount = state.workspace.favorites.size,
+            savedDesigns = state.workspace.favorites.map {
+                com.ismail.homedecorai.model.BoardItem(
+                    id = it.id,
+                    toolTitle = it.toolId,
+                    style = it.style,
+                    roomType = it.roomType,
+                    imageUrl = it.imageUrl,
+                    status = "completed",
+                    createdAt = it.createdAt.toDouble(),
+                )
+            },
         ),
         onSettings = viewModel::openSettings,
         onSignIn = viewModel::openAuth,

@@ -88,6 +88,7 @@ fun SharedMyBoardScreen(
     onOpenUpgrade: () -> Unit,
     onItemClick: (BoardItem) -> Unit = {},
     onToggleFavorite: (BoardItem) -> Unit = {},
+    signedInName: String? = null,
 ) {
     if (state.isLoading) {
         BoardLoadingContent()
@@ -101,6 +102,7 @@ fun SharedMyBoardScreen(
 
     val isDesktop = rememberIsDesktop()
     var selectedTab by remember { mutableStateOf(BoardTab.Generated) }
+    val isAuthenticated = !isGuest || signedInName != null
 
     if (isDesktop) {
         Row(
@@ -116,11 +118,11 @@ fun SharedMyBoardScreen(
             ) {
                 BoardHeader(isDesktop = true)
 
-                if (isGuest) {
+                if (!isAuthenticated) {
                     BoardGuestHero(onSignIn = onSignIn, isDesktop = true)
                 }
 
-                if (!isPro && !isGuest) {
+                if (!isPro && isAuthenticated) {
                     CompactProBanner(onUpgrade = onOpenUpgrade)
                 }
 
@@ -129,13 +131,13 @@ fun SharedMyBoardScreen(
                 BoardTabRow(
                     selectedTab = selectedTab,
                     onTabSelected = { selectedTab = it },
-                    isGuest = isGuest,
+                    isGuest = !isAuthenticated,
                 )
 
                 when (selectedTab) {
                     BoardTab.Generated -> GeneratedSection(
                         items = state.generatedItems,
-                        isGuest = isGuest,
+                        isGuest = !isAuthenticated,
                         isDesktop = true,
                         onSignIn = onSignIn,
                         onNavigateToTools = onNavigateToTools,
@@ -144,7 +146,7 @@ fun SharedMyBoardScreen(
                     )
                     BoardTab.Favorites -> FavoritesSection(
                         items = state.favoriteItems,
-                        isGuest = isGuest,
+                        isGuest = !isAuthenticated,
                         isDesktop = true,
                         onSignIn = onSignIn,
                         onNavigateToTools = onNavigateToTools,
@@ -154,7 +156,7 @@ fun SharedMyBoardScreen(
                     )
                     BoardTab.Projects -> ProjectsSection(
                         items = state.projectItems,
-                        isGuest = isGuest,
+                        isGuest = !isAuthenticated,
                         isDesktop = true,
                         onSignIn = onSignIn,
                         onNavigateToTools = onNavigateToTools,
@@ -166,7 +168,7 @@ fun SharedMyBoardScreen(
 
             BoardPreviewSidebar(
                 state = state,
-                isGuest = isGuest,
+                isGuest = !isAuthenticated,
                 onSignIn = onSignIn,
                 onNavigateToTools = onNavigateToTools,
                 onItemClick = onItemClick,
@@ -183,11 +185,11 @@ fun SharedMyBoardScreen(
 
             BoardHeader(isDesktop = false)
 
-            if (isGuest) {
+            if (!isAuthenticated) {
                 BoardGuestHero(onSignIn = onSignIn, isDesktop = false)
             }
 
-            if (!isPro && !isGuest) {
+            if (!isPro && isAuthenticated) {
                 CompactProBanner(onUpgrade = onOpenUpgrade)
             }
 
@@ -196,13 +198,13 @@ fun SharedMyBoardScreen(
             BoardTabRow(
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
-                isGuest = isGuest,
+                isGuest = !isAuthenticated,
             )
 
             when (selectedTab) {
                 BoardTab.Generated -> GeneratedSection(
                     items = state.generatedItems,
-                    isGuest = isGuest,
+                    isGuest = !isAuthenticated,
                     isDesktop = false,
                     onSignIn = onSignIn,
                     onNavigateToTools = onNavigateToTools,
@@ -211,7 +213,7 @@ fun SharedMyBoardScreen(
                 )
                 BoardTab.Favorites -> FavoritesSection(
                     items = state.favoriteItems,
-                    isGuest = isGuest,
+                    isGuest = !isAuthenticated,
                     isDesktop = false,
                     onSignIn = onSignIn,
                     onNavigateToTools = onNavigateToTools,
@@ -221,7 +223,7 @@ fun SharedMyBoardScreen(
                 )
                 BoardTab.Projects -> ProjectsSection(
                     items = state.projectItems,
-                    isGuest = isGuest,
+                    isGuest = !isAuthenticated,
                     isDesktop = false,
                     onSignIn = onSignIn,
                     onNavigateToTools = onNavigateToTools,

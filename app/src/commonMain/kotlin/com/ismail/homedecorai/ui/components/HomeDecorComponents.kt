@@ -319,37 +319,37 @@ fun HomeDecorCard(
     val containerColor = MaterialTheme.colorScheme.surface
 
     if (onClick != null) {
-        Surface(
-            onClick = onClick,
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(HomeDecorShape.Card)
-                .hoverable(interactionSource = interactionSource),
-            shape = HomeDecorShape.Card,
-            color = containerColor,
-            shadowElevation = animatedElevation,
-            border = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-            ),
-            interactionSource = interactionSource,
-            content = content,
-        )
-    } else {
-        Surface(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(HomeDecorShape.Card),
-            shape = HomeDecorShape.Card,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            shadowElevation = animatedElevation,
-            border = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-            ),
-            content = content,
-        )
-    }
+    Surface(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(HomeDecorShape.CardLarge)
+            .hoverable(interactionSource = interactionSource),
+        shape = HomeDecorShape.CardLarge,
+        color = containerColor,
+        shadowElevation = animatedElevation,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        ),
+        interactionSource = interactionSource,
+        content = content,
+    )
+} else {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(HomeDecorShape.CardLarge),
+        shape = HomeDecorShape.CardLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shadowElevation = animatedElevation,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+        ),
+        content = content,
+    )
+}
 }
 
 // ---------------------------------------------------------------------------

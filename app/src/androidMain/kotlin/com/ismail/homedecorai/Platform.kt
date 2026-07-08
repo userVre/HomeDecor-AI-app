@@ -76,6 +76,24 @@ actual fun goBack() {
     // No-op on Android: navigation is handled by Compose Navigation
 }
 
+actual fun getPersistedDarkTheme(): Boolean {
+    val context = getApplicationContext() ?: return false
+    return try {
+        val prefs = context.getSharedPreferences("hd_theme_prefs", Context.MODE_PRIVATE)
+        prefs.getBoolean("dark_theme", false)
+    } catch (_: Exception) {
+        false
+    }
+}
+
+actual fun persistDarkTheme(isDark: Boolean) {
+    val context = getApplicationContext() ?: return
+    try {
+        val prefs = context.getSharedPreferences("hd_theme_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("dark_theme", isDark).apply()
+    } catch (_: Exception) {}
+}
+
 actual fun browserDownloadFile(url: String, filename: String) {
     val context = getApplicationContext() ?: return
     try {

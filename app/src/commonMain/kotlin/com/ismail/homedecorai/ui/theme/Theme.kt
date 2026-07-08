@@ -50,6 +50,13 @@ data class HomeDecorExtraColors(
     val surfaceHover: Color,
     val surfacePressed: Color,
     val focusRing: Color,
+    // M3 Expressive: contextual accents (reduce teal overuse)
+    val boardAccent: Color,
+    val discoverAccent: Color,
+    val profileAccent: Color,
+    val settingsAccent: Color,
+    val storeAccent: Color,
+    val toolsAccent: Color,
 )
 
 val LocalDarkTheme = staticCompositionLocalOf { false }
@@ -80,6 +87,12 @@ val LocalHomeDecorExtraColors = staticCompositionLocalOf {
         surfaceHover = Color.Unspecified,
         surfacePressed = Color.Unspecified,
         focusRing = Color.Unspecified,
+        boardAccent = Color.Unspecified,
+        discoverAccent = Color.Unspecified,
+        profileAccent = Color.Unspecified,
+        settingsAccent = Color.Unspecified,
+        storeAccent = Color.Unspecified,
+        toolsAccent = Color.Unspecified,
     )
 }
 
@@ -190,6 +203,12 @@ internal val LightExtra = HomeDecorExtraColors(
     surfaceHover = Color(0x0D000000),   // 5% black for hover on light
     surfacePressed = Color(0x14000000),  // 8% black for pressed on light
     focusRing = HomeDecorColors.Primary,
+    boardAccent = HomeDecorColors.BoardAccent,
+    discoverAccent = HomeDecorColors.DiscoverAccent,
+    profileAccent = HomeDecorColors.ProfileAccent,
+    settingsAccent = HomeDecorColors.SettingsAccent,
+    storeAccent = HomeDecorColors.StoreAccent,
+    toolsAccent = HomeDecorColors.ToolsAccent,
 )
 
 internal val DarkExtra = HomeDecorExtraColors(
@@ -217,6 +236,12 @@ internal val DarkExtra = HomeDecorExtraColors(
     surfaceHover = Color(0x14FFFFFF),   // 8% white for hover on dark
     surfacePressed = Color(0x1FFFFFFF), // 12% white for pressed on dark
     focusRing = HomeDecorColors.DarkPrimary,
+    boardAccent = HomeDecorColors.DarkBoardAccent,
+    discoverAccent = HomeDecorColors.DarkDiscoverAccent,
+    profileAccent = HomeDecorColors.DarkProfileAccent,
+    settingsAccent = HomeDecorColors.DarkSettingsAccent,
+    storeAccent = HomeDecorColors.DarkStoreAccent,
+    toolsAccent = HomeDecorColors.DarkToolsAccent,
 )
 
 // ---------------------------------------------------------------------------

@@ -104,7 +104,8 @@ private enum class WebTab(val label: String, val icon: ImageVector, val route: S
 
 @Composable
 fun App() {
-    var isDarkTheme by remember { mutableStateOf(false) }
+    var isDarkTheme by remember { mutableStateOf(getPersistedDarkTheme()) }
+    LaunchedEffect(isDarkTheme) { persistDarkTheme(isDarkTheme) }
     HomeDecorTheme(darkTheme = isDarkTheme, dynamicColor = false) {
         val initialTab = remember {
             val path = getCurrentPathname().removePrefix("/")
@@ -437,12 +438,30 @@ fun App() {
             )
         }
 
-        val boardState = remember {
-            BoardScreenState(
+        var boardState by remember {
+            mutableStateOf(BoardScreenState(
                 generatedItems = emptyList(),
                 favoriteItems = emptyList(),
                 projectItems = emptyList(),
-            )
+            ))
+        }
+
+        LaunchedEffect(webIsSignedIn) {
+            try {
+                val anonId = getAnonymousIdFromPlatform()
+                val response = convexQueryAuth(
+                    "generations:getUserArchive",
+                    mapOf("anonymousId" to anonId),
+                )
+                val items = extractTopLevelArray(response, "result")
+                val generated = items.mapNotNull { parseBoardItem(it) }
+                val favorites = generated.filter { it.isFavorite }
+                boardState = BoardScreenState(
+                    generatedItems = generated,
+                    favoriteItems = favorites,
+                    projectItems = emptyList(),
+                )
+            } catch (_: Exception) {}
         }
 
         val settingsState = remember(webIsSignedIn, webSignedInName, webSignedInEmail) {
@@ -590,6 +609,7 @@ fun App() {
                                             SharedToolsScreen(
                                                 state = toolsState,
                                                 onToolClick = { tool -> activeWizard = tool },
+                                                onCredits = { paywallVisible = true },
                                             )
                                         }
                                         WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
@@ -647,6 +667,7 @@ fun App() {
                                                         else Strings.toastFavoriteAdded
                                                     )
                                                 },
+                                                signedInName = profileState.signedInName,
                                             )
                                         }
                                         WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
@@ -660,7 +681,7 @@ fun App() {
                                                 state = profileState,
                                                 onSettings = { settingsVisible = true },
                                                 onSignIn = { openAuth() },
-                                                onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
+                                    onOpenDiamonds = { paywallVisible = true },
                                                 onOpenPaywall = { paywallVisible = true },
                                                 onOpenBoard = { selectedTab = WebTab.Board },
                                     )
@@ -685,7 +706,7 @@ fun App() {
                                         onSignUp = { email, password -> doSignUp(email, password) },
                                         onGoogleSignIn = { doGoogleSignIn() },
                                         onForgotPassword = {
-                                            openUrl("https://homedecor-ai.com/forgot-password")
+                                            showToast(Strings.toastComingSoon)
                                         },
                                         onClose = { authVisible = false },
                                         isLoading = authLoading,
@@ -729,18 +750,17 @@ fun App() {
                                                 SettingsLanguage("en", "English"),
                                             ),
                                             onLanguageSelected = { showToast("Language: English") },
-                                            onRateUs = { openUrl("https://homedecor-ai.com/rate") },
-                                            onContactSupport = { openUrl("https://homedecor-ai.com/support") },
+                                            onRateUs = { showToast(Strings.toastRateUs) },
+                                            onContactSupport = { openUrl("mailto:support@homedecorai.com?subject=Support%20Request") },
                             onDeleteInformation = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Data") },
                             onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
                             onConfirmDelete = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Account") },
-                                            onEditProfile = { openUrl("https://homedecor-ai.com/profile/edit") },
-                                            onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
-                                            onOpenPaywall = { paywallVisible = true },
-                                            onFaq = { openUrl("https://homedecor-ai.com/faq") },
-                                            onShareApp = { openUrl("https://homedecor-ai.com") },
-                                            onTerms = { openUrl("https://homedecor-ai.com/terms") },
-                                            onPrivacy = { openUrl("https://homedecor-ai.com/privacy") },
+                                            onEditProfile = { showToast(Strings.toastComingSoon) },
+                                    onOpenDiamonds = { paywallVisible = true },
+                                                onOpenPaywall = { paywallVisible = true },
+                                            onFaq = { showToast(Strings.toastComingSoon) },
+                                            onTerms = { showToast(Strings.toastComingSoon) },
+                                            onPrivacy = { showToast(Strings.toastComingSoon) },
                                             onManageBilling = {
                                                 if (Strings.PAYMENTS_ENABLED) {
                                                     openUrl(Strings.CUSTOMER_PORTAL_URL)
@@ -899,7 +919,7 @@ private fun DesktopAppLayout(
             onSelectTab = onSelectTab,
             diamonds = toolsState.diamonds,
             isPro = toolsState.isPro,
-            onCredits = { openUrl("https://homedecor-ai.com/diamonds") },
+            onCredits = { onOpenPaywall() },
         )
 
         Box(
@@ -931,6 +951,7 @@ private fun DesktopAppLayout(
                                 SharedToolsScreen(
                                     state = toolsState,
                                     onToolClick = { tool -> onToolClick(tool) },
+                                    onCredits = { onOpenPaywall() },
                                 )
                             }
                             WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
@@ -953,6 +974,7 @@ private fun DesktopAppLayout(
                                     onOpenUpgrade = onOpenPaywall,
                                     onItemClick = onBoardItemClick,
                                     onToggleFavorite = onBoardToggleFavorite,
+                                    signedInName = profileState.signedInName,
                                 )
                             }
                             WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
@@ -966,7 +988,7 @@ private fun DesktopAppLayout(
                                     state = profileState,
                                     onSettings = { onSettingsOpen() },
                                     onSignIn = { onSignIn() },
-                                    onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
+                                    onOpenDiamonds = { onOpenPaywall() },
                                     onOpenPaywall = onOpenPaywall,
                                     onOpenBoard = { onSelectTab(WebTab.Board) },
                                 )
@@ -1014,18 +1036,17 @@ private fun DesktopAppLayout(
                                 SettingsLanguage("en", "English"),
                             ),
                             onLanguageSelected = { showToast("Language: English") },
-                            onRateUs = { openUrl("https://homedecor-ai.com/rate") },
-                            onContactSupport = { openUrl("https://homedecor-ai.com/support") },
+                            onRateUs = { showToast(Strings.toastRateUs) },
+                            onContactSupport = { openUrl("mailto:support@homedecorai.com?subject=Support%20Request") },
                             onDeleteInformation = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Data") },
                             onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
                             onConfirmDelete = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Account") },
-                            onEditProfile = { openUrl("https://homedecor-ai.com/profile/edit") },
-                            onOpenDiamonds = { openUrl("https://homedecor-ai.com/diamonds") },
+                            onEditProfile = { showToast(Strings.toastComingSoon) },
+                            onOpenDiamonds = { onOpenPaywall() },
                             onOpenPaywall = { onOpenPaywall() },
-                            onFaq = { openUrl("https://homedecor-ai.com/faq") },
-                            onShareApp = { openUrl("https://homedecor-ai.com") },
-                            onTerms = { openUrl("https://homedecor-ai.com/terms") },
-                            onPrivacy = { openUrl("https://homedecor-ai.com/privacy") },
+                            onFaq = { showToast(Strings.toastComingSoon) },
+                            onTerms = { showToast(Strings.toastComingSoon) },
+                            onPrivacy = { showToast(Strings.toastComingSoon) },
                             onManageBilling = {
                                 if (Strings.PAYMENTS_ENABLED) {
                                     openUrl(Strings.CUSTOMER_PORTAL_URL)
@@ -1106,7 +1127,7 @@ private fun DesktopAppLayout(
                         onSignUp = { email, password -> onAuthSignUp(email, password) },
                         onGoogleSignIn = { onAuthGoogleSignIn() },
                         onForgotPassword = {
-                            openUrl("https://homedecor-ai.com/forgot-password")
+                            showToast(Strings.toastComingSoon)
                         },
                         onClose = { onAuthDismiss() },
                         isLoading = authIsLoading,
@@ -1235,4 +1256,92 @@ private fun DesktopTopNavItem(
             )
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Board JSON helpers (mirrors WebViewModel extraction logic)
+// ---------------------------------------------------------------------------
+
+private fun extractTopLevelArray(json: String, key: String): List<String> {
+    val searchKey = "\"$key\"\\s*:\\s*\\["
+    val match = Regex(searchKey).find(json) ?: return emptyList()
+    val startIdx = match.range.last
+    var depth = 0
+    var inString = false
+    var escape = false
+    for (i in startIdx until json.length) {
+        when {
+            escape -> escape = false
+            json[i] == '\\' && inString -> escape = true
+            json[i] == '"' -> inString = !inString
+            !inString && json[i] == '[' -> depth++
+            !inString && json[i] == ']' -> {
+                depth--
+                if (depth == 0) {
+                    val content = json.substring(startIdx + 1, i).trim()
+                    if (content.isBlank()) return emptyList()
+                    return splitTopLevelObjects(content)
+                }
+            }
+        }
+    }
+    return emptyList()
+}
+
+private fun splitTopLevelObjects(content: String): List<String> {
+    val objects = mutableListOf<String>()
+    var depth = 0
+    var inString = false
+    var escape = false
+    var start = -1
+    for (i in content.indices) {
+        when {
+            escape -> escape = false
+            content[i] == '\\' && inString -> escape = true
+            content[i] == '"' -> inString = !inString
+            !inString && content[i] == '{' -> {
+                if (depth == 0) start = i
+                depth++
+            }
+            !inString && content[i] == '}' -> {
+                depth--
+                if (depth == 0 && start >= 0) {
+                    objects.add(content.substring(start, i + 1))
+                    start = -1
+                }
+            }
+        }
+    }
+    return objects
+}
+
+private fun extractBoardString(json: String, key: String, default: String = ""): String {
+    val match = Regex("\"$key\"\\s*:\\s*\"([^\"]*?)\"").find(json) ?: return default
+    return match.groupValues[1]
+}
+
+private fun extractBoardDouble(json: String, key: String, default: Double = 0.0): Double {
+    val match = Regex("\"$key\"\\s*:\\s*(-?\\d+\\.?\\d*)").find(json) ?: return default
+    return match.groupValues[1].toDoubleOrNull() ?: default
+}
+
+private fun extractBoardBool(json: String, key: String, default: Boolean = false): Boolean {
+    val match = Regex("\"$key\"\\s*:\\s*(true|false)").find(json) ?: return default
+    return match.groupValues[1] == "true"
+}
+
+private fun parseBoardItem(json: String): BoardItem? {
+    val id = extractBoardString(json, "_id")
+    if (id.isBlank()) return null
+    return BoardItem(
+        id = id,
+        toolTitle = extractBoardString(json, "serviceType"),
+        style = extractBoardString(json, "style"),
+        roomType = extractBoardString(json, "roomType"),
+        imageUrl = extractBoardString(json, "imageUrl"),
+        sourceImageUrl = extractBoardString(json, "sourceImageUrl"),
+        status = extractBoardString(json, "status"),
+        createdAt = extractBoardDouble(json, "createdAt"),
+        isFavorite = extractBoardBool(json, "isFavorite"),
+    )
 }

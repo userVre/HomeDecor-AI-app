@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
@@ -392,7 +396,9 @@ private fun MobileAuthLayout(
             Spacer(Modifier.height(24.dp))
 
             Row(
-                modifier = Modifier.padding(bottom = 32.dp),
+                modifier = Modifier
+                    .padding(bottom = 32.dp)
+                    .windowInsetsPadding(WindowInsets.systemBars),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -487,14 +493,15 @@ private fun DesktopAuthLayout(
                 .fillMaxSize(),
             color = MaterialTheme.colorScheme.surface,
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 48.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 48.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
                 Text(
                     text = if (mode == AuthMode.SignIn) Strings.authWelcomeBack else Strings.authCreateAccount,
                     style = MaterialTheme.typography.headlineLarge,
@@ -675,6 +682,21 @@ private fun DesktopAuthLayout(
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable { onSwitchMode() },
+                    )
+                }
+            }
+
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .size(40.dp),
+                ) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = Strings.authClose,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

@@ -100,6 +100,17 @@ object HomeDecorMotion {
     const val EasingDecelerate = 0.0f
     /** Easing: accelerate (exiting) */
     const val EasingAccelerate = 0.3f
+
+    // M3 Expressive emphasis patterns
+    /** Spring: bouncy for playful interactions */
+    const val SpringBouncyDamping = 0.6f
+    const val SpringBouncyStiffness = 300f
+    /** Spring: snappy for responsive feedback */
+    const val SpringSnappyDamping = 0.8f
+    const val SpringSnappyStiffness = 500f
+    /** Spring: gentle for smooth transitions */
+    const val SpringGentleDamping = 0.7f
+    const val SpringGentleStiffness = 200f
 }
 
 // ---------------------------------------------------------------------------

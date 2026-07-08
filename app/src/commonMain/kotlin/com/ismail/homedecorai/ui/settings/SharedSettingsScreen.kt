@@ -27,14 +27,17 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Feedback
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Mail
 import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -111,7 +114,6 @@ fun SharedSettingsScreen(
     onOpenDiamonds: () -> Unit = {},
     onOpenPaywall: () -> Unit = {},
     onFaq: () -> Unit = {},
-    onShareApp: () -> Unit = {},
     onTerms: () -> Unit = {},
     onPrivacy: () -> Unit = {},
     onLogout: () -> Unit = {},
@@ -155,7 +157,7 @@ fun SharedSettingsScreen(
             onOpenDiamonds = onOpenDiamonds,
             onLanguageClick = { languageSheetVisible = true },
             onFaq = onFaq,
-            onShareApp = onShareApp,
+            onContactSupport = onContactSupport,
             onFeedback = { feedbackDialogVisible = true },
             onTerms = onTerms,
             onPrivacy = onPrivacy,
@@ -174,7 +176,7 @@ fun SharedSettingsScreen(
             onOpenDiamonds = onOpenDiamonds,
             onLanguageClick = { languageSheetVisible = true },
             onFaq = onFaq,
-            onShareApp = onShareApp,
+            onContactSupport = onContactSupport,
             onFeedback = { feedbackDialogVisible = true },
             onTerms = onTerms,
             onPrivacy = onPrivacy,
@@ -230,7 +232,7 @@ private fun DesktopSettingsPage(
     onOpenDiamonds: () -> Unit,
     onLanguageClick: () -> Unit,
     onFaq: () -> Unit,
-    onShareApp: () -> Unit,
+    onContactSupport: () -> Unit,
     onFeedback: () -> Unit,
     onTerms: () -> Unit,
     onPrivacy: () -> Unit,
@@ -366,18 +368,18 @@ private fun DesktopSettingsPage(
                     ) {
                         SettingsRow(
                             Icons.AutoMirrored.Rounded.Help,
-                            Strings.faq,
-                            Strings.faqBody,
+                            Strings.helpCenter,
+                            Strings.helpCenterBody,
                             iconTint = MaterialTheme.colorScheme.tertiary,
                             onClick = onFaq,
                         )
                         SettingsDivider()
                         SettingsRow(
-                            Icons.Rounded.Share,
-                            Strings.shareApp,
-                            Strings.shareAppBody,
+                            Icons.Rounded.Mail,
+                            Strings.contactUs,
+                            Strings.contactUsBody,
                             iconTint = MaterialTheme.colorScheme.secondary,
-                            onClick = onShareApp,
+                            onClick = onContactSupport,
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -394,7 +396,7 @@ private fun DesktopSettingsPage(
                         description = Strings.settingsLegalDescription,
                     ) {
                         SettingsRow(
-                            Icons.Rounded.Policy,
+                            Icons.Rounded.Description,
                             Strings.terms,
                             Strings.termsBody,
                             iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -402,7 +404,7 @@ private fun DesktopSettingsPage(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            Icons.Rounded.Policy,
+                            Icons.Rounded.Shield,
                             Strings.privacyPolicy,
                             Strings.privacyBody,
                             iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -489,7 +491,7 @@ private fun MobileSettingsScreen(
     onOpenDiamonds: () -> Unit,
     onLanguageClick: () -> Unit,
     onFaq: () -> Unit,
-    onShareApp: () -> Unit,
+    onContactSupport: () -> Unit,
     onFeedback: () -> Unit,
     onTerms: () -> Unit,
     onPrivacy: () -> Unit,
@@ -609,18 +611,18 @@ private fun MobileSettingsScreen(
                 SettingsCardSurface {
                     SettingsRow(
                         Icons.AutoMirrored.Rounded.Help,
-                        Strings.faq,
-                        Strings.faqBody,
+                        Strings.helpCenter,
+                        Strings.helpCenterBody,
                         iconTint = MaterialTheme.colorScheme.tertiary,
                         onClick = onFaq,
                     )
                     SettingsDivider()
                     SettingsRow(
-                        Icons.Rounded.Share,
-                        Strings.shareApp,
-                        Strings.shareAppBody,
+                        Icons.Rounded.Mail,
+                        Strings.contactUs,
+                        Strings.contactUsBody,
                         iconTint = MaterialTheme.colorScheme.secondary,
-                        onClick = onShareApp,
+                        onClick = onContactSupport,
                     )
                     SettingsDivider()
                     SettingsRow(
@@ -639,7 +641,7 @@ private fun MobileSettingsScreen(
             item {
                 SettingsCardSurface {
                     SettingsRow(
-                        Icons.Rounded.Policy,
+                        Icons.Rounded.Description,
                         Strings.terms,
                         Strings.termsBody,
                         iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -647,7 +649,7 @@ private fun MobileSettingsScreen(
                     )
                     SettingsDivider()
                     SettingsRow(
-                        Icons.Rounded.Policy,
+                        Icons.Rounded.Shield,
                         Strings.privacyPolicy,
                         Strings.privacyBody,
                         iconTint = MaterialTheme.colorScheme.onSurfaceVariant,

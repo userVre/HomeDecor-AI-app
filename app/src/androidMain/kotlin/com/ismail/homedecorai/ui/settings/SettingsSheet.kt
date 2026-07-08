@@ -67,6 +67,7 @@ import com.ismail.homedecorai.AppLocale
 import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.R
 import com.ismail.homedecorai.rawServiceMessageToKind
+import com.ismail.homedecorai.showToast
 import com.ismail.homedecorai.storeMessageRes
 import com.ismail.homedecorai.ui.components.*
 import com.ismail.homedecorai.ui.dialogs.*
@@ -284,7 +285,7 @@ fun SettingsSheet(
                             stringResource(R.string.faq),
                             stringResource(R.string.settings_faq_body),
                             iconTint = MaterialTheme.colorScheme.tertiary,
-                            onClick = { setLinkFailureMessage(openUrlSafely(context, appUrl("/faq"))) },
+                            onClick = { showToast(stringResource(R.string.settings_faq_body)) },
                         )
                         SettingsDivider()
                         SettingsRow(

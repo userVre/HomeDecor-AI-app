@@ -80,7 +80,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ismail.homedecorai.Strings
-import com.ismail.homedecorai.openUrl
+import com.ismail.homedecorai.showToast
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
 import homedecorai.app.generated.resources.Res
@@ -107,7 +107,6 @@ fun SharedPaywallSheet(
     val modalTapBlocker = remember { MutableInteractionSource() }
     var currentStep by remember { mutableIntStateOf(1) }
     var selectedReminder by remember { mutableIntStateOf(2) }
-    var selectedPlan by remember { mutableStateOf("yearly") }
     var checkoutLoading by remember { mutableStateOf(false) }
     var checkoutError by remember { mutableStateOf<String?>(null) }
     var checkoutSuccess by remember { mutableStateOf(false) }
@@ -132,7 +131,7 @@ fun SharedPaywallSheet(
                     .widthIn(max = 840.dp)
                     .fillMaxHeight(0.94f)
                     .padding(horizontal = 24.dp)
-                    .clip(RoundedCornerShape(28.dp))
+                    .clip(RoundedCornerShape(32.dp))
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(proColors.gradientStart, proColors.gradientMid, proColors.gradientEnd),
@@ -179,12 +178,12 @@ fun SharedPaywallSheet(
                             3 -> PaywallStep3Comparison(colors = proColors)
                             4 -> PaywallStep4Plans(
                                 colors = proColors,
-                                selectedPlan = selectedPlan,
-                                onPlanSelected = { selectedPlan = it },
+                                selectedPlan = state.selectedPlanId,
+                                onPlanSelected = { onPlanSelected(it) },
                             )
                             5 -> PaywallStep5Checkout(
                                 colors = proColors,
-                                selectedPlan = selectedPlan,
+                                selectedPlan = state.selectedPlanId,
                                 purchasing = state.purchasing || checkoutLoading,
                                 purchaseSuccess = state.purchaseSuccess || checkoutSuccess,
                                 errorMessage = checkoutError,
@@ -218,7 +217,7 @@ fun SharedPaywallSheet(
                             when (currentStep) {
                                 1, 2, 3 -> currentStep++
                                 4 -> {
-                                    onPlanSelected(selectedPlan)
+                                    onPlanSelected(state.selectedPlanId)
                                     currentStep = 5
                                 }
                                 5 -> {
@@ -268,12 +267,12 @@ fun SharedPaywallSheet(
                             3 -> PaywallStep3Comparison(colors = proColors)
                             4 -> PaywallStep4Plans(
                                 colors = proColors,
-                                selectedPlan = selectedPlan,
-                                onPlanSelected = { selectedPlan = it },
+                                selectedPlan = state.selectedPlanId,
+                                onPlanSelected = { onPlanSelected(it) },
                             )
                             5 -> PaywallStep5Checkout(
                                 colors = proColors,
-                                selectedPlan = selectedPlan,
+                                selectedPlan = state.selectedPlanId,
                                 purchasing = state.purchasing || checkoutLoading,
                                 purchaseSuccess = state.purchaseSuccess || checkoutSuccess,
                                 errorMessage = checkoutError,
@@ -307,7 +306,7 @@ fun SharedPaywallSheet(
                             when (currentStep) {
                                 1, 2, 3 -> currentStep++
                                 4 -> {
-                                    onPlanSelected(selectedPlan)
+                                    onPlanSelected(state.selectedPlanId)
                                     currentStep = 5
                                 }
                                 5 -> {
@@ -678,7 +677,7 @@ private fun PaywallStep2Reminder(
 
     // Info card
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = HomeDecorShape.Card,
         color = colors.accentSurface.copy(alpha = 0.5f),
         border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
         modifier = Modifier.fillMaxWidth(),
@@ -723,7 +722,7 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
 
     // Comparison table card
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = HomeDecorShape.CardLarge,
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.border),
         shadowElevation = 2.dp,
@@ -785,12 +784,12 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
             }
 
             val rows = listOf(
-                Triple(Strings.pwS3Row1Feature, Strings.pwS3Row1Free, "\u2713"),
-                Triple(Strings.pwS3Row2Feature, Strings.pwS3Row2Free, "\u2713"),
-                Triple(Strings.pwS3Row3Feature, Strings.pwS3Row3Free, "\u2713"),
-                Triple(Strings.pwS3Row4Feature, Strings.pwS3Row4Free, "\u2713"),
-                Triple(Strings.pwS3Row5Feature, Strings.pwS3Row5Free, "\u2713"),
-                Triple(Strings.pwS3Row6Feature, Strings.pwS3Row6Free, "\u2713"),
+                Triple(Strings.pwS3Row1Feature, Strings.pwS3Row1Free, Strings.pwS3Row1Pro),
+                Triple(Strings.pwS3Row2Feature, Strings.pwS3Row2Free, Strings.pwS3Row2Pro),
+                Triple(Strings.pwS3Row3Feature, Strings.pwS3Row3Free, Strings.pwS3Row3Pro),
+                Triple(Strings.pwS3Row4Feature, Strings.pwS3Row4Free, Strings.pwS3Row4Pro),
+                Triple(Strings.pwS3Row5Feature, Strings.pwS3Row5Free, Strings.pwS3Row5Pro),
+                Triple(Strings.pwS3Row6Feature, Strings.pwS3Row6Free, Strings.pwS3Row6Pro),
             )
 
             rows.forEachIndexed { index, (feature, freeVal, proVal) ->
@@ -856,7 +855,7 @@ private fun PaywallStep3Comparison(colors: SheetPalette) {
 
     // Recommendation card
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = HomeDecorShape.Card,
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
         modifier = Modifier.fillMaxWidth(),
@@ -978,7 +977,7 @@ private fun PaywallPlanCard(
     )
 
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = HomeDecorShape.Card,
         color = when {
             selected && badge != null -> colors.accentSurface
             selected -> colors.accentSurface.copy(alpha = 0.5f)
@@ -1183,7 +1182,7 @@ private fun PaywallStep5Checkout(
 
     // Shield hero visual
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = HomeDecorShape.HeroCard,
         color = if (purchaseSuccess) colors.checkGreen.copy(alpha = 0.08f) else colors.accentSurface,
         border = BorderStroke(1.dp, (if (purchaseSuccess) colors.checkGreen else colors.accent).copy(alpha = 0.15f)),
         modifier = Modifier
@@ -1242,7 +1241,7 @@ private fun PaywallStep5Checkout(
 
     // Subscription summary
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = HomeDecorShape.CardLarge,
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.border),
         shadowElevation = 1.dp,
@@ -1324,7 +1323,7 @@ private fun PaywallStep5Checkout(
 
     // Included benefits
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = HomeDecorShape.Card,
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.border),
         modifier = Modifier.fillMaxWidth(),
@@ -1379,7 +1378,7 @@ private fun PaywallStep5Checkout(
 
     // Trust row
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = HomeDecorShape.Card,
         color = colors.cardSurface,
         border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.12f)),
         modifier = Modifier.fillMaxWidth(),
@@ -1486,7 +1485,7 @@ private fun PaywallCtaButton(
 
     Button(
         onClick = { if (buttonEnabled) onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = HomeDecorShape.ButtonLarge,
         colors = ButtonDefaults.buttonColors(
             containerColor = when {
                 success -> colors.checkGreen
@@ -1588,7 +1587,7 @@ private fun PaywallBottomLinks(onRestore: () -> Unit) {
         )
         Box(
             modifier = Modifier
-                .clickable { openUrl("https://homedecor-ai.com/terms") }
+                .clickable { showToast(Strings.toastComingSoon) }
                 .semantics {
                     role = Role.Button
                     contentDescription = Strings.terms
@@ -1610,7 +1609,7 @@ private fun PaywallBottomLinks(onRestore: () -> Unit) {
         )
         Box(
             modifier = Modifier
-                .clickable { openUrl("https://homedecor-ai.com/privacy") }
+                .clickable { showToast(Strings.toastComingSoon) }
                 .semantics {
                     role = Role.Button
                     contentDescription = Strings.privacyPolicy

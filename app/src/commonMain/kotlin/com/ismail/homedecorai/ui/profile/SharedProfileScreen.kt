@@ -25,7 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Code
+import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.FavoriteBorder
@@ -70,6 +70,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.Strings
+import com.ismail.homedecorai.showToast
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
 
@@ -94,7 +95,7 @@ fun SharedProfileScreen(
     onNavigateToDiscover: () -> Unit = {},
     onOpenUrl: (String) -> Unit = {},
 ) {
-    val signedIn = !state.isGuest || state.signedInName != null
+    val signedIn = !state.isGuest || state.signedInName != null || state.diamonds > 0 || state.savedDesigns.isNotEmpty()
     val isDesktop = rememberIsDesktop()
 
     Column(
@@ -178,7 +179,7 @@ fun SharedProfileScreen(
                             iconTint = MaterialTheme.colorScheme.tertiary,
                             title = Strings.helpCenter,
                             subtitle = Strings.helpCenterBody,
-                            onClick = { onOpenUrl("https://homedecorai.com/faq") },
+                            onClick = { showToast(Strings.toastComingSoon) },
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -210,7 +211,7 @@ fun SharedProfileScreen(
                             iconTint = MaterialTheme.colorScheme.tertiary,
                             title = Strings.termsOfService,
                             subtitle = Strings.termsOfServiceBody,
-                            onClick = { onOpenUrl("https://homedecorai.com/terms") },
+                            onClick = { showToast(Strings.toastComingSoon) },
                         )
                         ProfileDivider()
                         ProfileRow(
@@ -219,7 +220,7 @@ fun SharedProfileScreen(
                             iconTint = MaterialTheme.colorScheme.secondary,
                             title = Strings.privacyPolicyLabel,
                             subtitle = Strings.privacyPolicyBody,
-                            onClick = { onOpenUrl("https://homedecorai.com/privacy") },
+                            onClick = { showToast(Strings.toastComingSoon) },
                         )
                     }
                 }
@@ -300,7 +301,7 @@ fun SharedProfileScreen(
                                         iconTint = MaterialTheme.colorScheme.tertiary,
                                         title = Strings.helpCenter,
                                         subtitle = Strings.helpCenterBody,
-                                        onClick = { onOpenUrl("https://homedecorai.com/faq") },
+                            onClick = { showToast(Strings.toastComingSoon) },
                                     )
                                     ProfileDivider()
                                     ProfileRow(
@@ -327,12 +328,12 @@ fun SharedProfileScreen(
                                 ProfileSectionLabel(Strings.legalSection)
                                 SettingsCard {
                                     ProfileRow(
-                                        icon = Icons.Rounded.Shield,
+                                        icon = Icons.Rounded.Description,
                                         iconBg = MaterialTheme.colorScheme.tertiaryContainer,
                                         iconTint = MaterialTheme.colorScheme.tertiary,
                                         title = Strings.termsOfService,
                                         subtitle = Strings.termsOfServiceBody,
-                                        onClick = { onOpenUrl("https://homedecorai.com/terms") },
+                            onClick = { showToast(Strings.toastComingSoon) },
                                     )
                                     ProfileDivider()
                                     ProfileRow(
@@ -341,16 +342,7 @@ fun SharedProfileScreen(
                                         iconTint = MaterialTheme.colorScheme.secondary,
                                         title = Strings.privacyPolicyLabel,
                                         subtitle = Strings.privacyPolicyBody,
-                                        onClick = { onOpenUrl("https://homedecorai.com/privacy") },
-                                    )
-                                    ProfileDivider()
-                                    ProfileRow(
-                                        icon = Icons.Rounded.Code,
-                                        iconBg = MaterialTheme.colorScheme.primaryContainer,
-                                        iconTint = MaterialTheme.colorScheme.primary,
-                                        title = Strings.openSourceLicenses,
-                                        subtitle = Strings.openSourceLicensesBody,
-                                        onClick = { onOpenUrl("https://homedecorai.com/licenses") },
+                            onClick = { showToast(Strings.toastComingSoon) },
                                     )
                                 }
                             }
@@ -411,7 +403,7 @@ fun SharedProfileScreen(
                                 iconTint = MaterialTheme.colorScheme.tertiary,
                                 title = Strings.helpCenter,
                                 subtitle = Strings.helpCenterBody,
-                                onClick = { onOpenUrl("https://homedecorai.com/faq") },
+                            onClick = { showToast(Strings.toastComingSoon) },
                             )
                             ProfileDivider()
                             ProfileRow(
@@ -438,35 +430,26 @@ fun SharedProfileScreen(
                         ProfileSectionLabel(Strings.legalSection)
                         SettingsCard {
                             ProfileRow(
-                                icon = Icons.Rounded.Shield,
+                                icon = Icons.Rounded.Description,
                                 iconBg = MaterialTheme.colorScheme.tertiaryContainer,
                                 iconTint = MaterialTheme.colorScheme.tertiary,
                                 title = Strings.termsOfService,
                                 subtitle = Strings.termsOfServiceBody,
-                                onClick = { onOpenUrl("https://homedecorai.com/terms") },
+                                onClick = { showToast(Strings.toastComingSoon) },
                             )
                             ProfileDivider()
                             ProfileRow(
                                 icon = Icons.Rounded.Shield,
-                                iconBg = MaterialTheme.colorScheme.secondaryContainer,
-                                iconTint = MaterialTheme.colorScheme.secondary,
-                                title = Strings.privacyPolicyLabel,
-                                subtitle = Strings.privacyPolicyBody,
-                                onClick = { onOpenUrl("https://homedecorai.com/privacy") },
-                            )
-                            ProfileDivider()
-                            ProfileRow(
-                                icon = Icons.Rounded.Code,
-                                iconBg = MaterialTheme.colorScheme.primaryContainer,
-                                iconTint = MaterialTheme.colorScheme.primary,
-                                title = Strings.openSourceLicenses,
-                                subtitle = Strings.openSourceLicensesBody,
-                                onClick = { onOpenUrl("https://homedecorai.com/licenses") },
-                            )
-                        }
+                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            title = Strings.privacyPolicyLabel,
+                            subtitle = Strings.privacyPolicyBody,
+                            onClick = { showToast(Strings.toastComingSoon) },
+                        )
                     }
+                }
 
-                    item("app-info-section") {
+                item("app-info-section") {
                         ProfileSectionLabel(Strings.appInfoSection)
                         SettingsCard {
                             ProfileRow(

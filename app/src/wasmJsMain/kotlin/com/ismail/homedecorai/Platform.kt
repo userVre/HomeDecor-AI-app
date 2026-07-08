@@ -79,3 +79,17 @@ private external fun goBackJs()
 actual fun goBack() {
     goBackJs()
 }
+
+@JsFun("() => { try { return localStorage.getItem('hd_dark_theme') || ''; } catch(e) { return ''; } }")
+private external fun getDarkThemeJs(): String
+
+actual fun getPersistedDarkTheme(): Boolean {
+    return getDarkThemeJs() == "true"
+}
+
+@JsFun("(value) => { try { localStorage.setItem('hd_dark_theme', value); } catch(e) {} }")
+private external fun setDarkThemeJs(value: String)
+
+actual fun persistDarkTheme(isDark: Boolean) {
+    setDarkThemeJs(if (isDark) "true" else "false")
+}

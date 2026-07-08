@@ -5,16 +5,24 @@ import androidx.compose.ui.graphics.Color
 // ---------------------------------------------------------------------------
 // HomeDecor AI  –  Material 3 Expressive Design Foundation
 // ---------------------------------------------------------------------------
-// Palette philosophy
+// Palette philosophy (v2 — intentional contrast & role diversity)
 //   Light  → warm ivory surfaces, deep charcoal text, rich teal creative
 //            accents, terracotta/clay warmth, muted gold premium highlights.
 //            Premium, grounded, trustworthy.
+//            Each color role (primary/secondary/tertiary/quaternary) is used
+//            intentionally across different UI contexts so no single accent
+//            dominates every screen.
 //   Dark   → warm charcoal / deep green-gray surfaces, calm muted accents.
 //            Never pure black. Premium & calm.
 //
 // Key principle: Every surface level must be visually distinct.
 //   Canvas ≠ SurfaceContainerLow ≠ SurfaceContainer ≠ SurfaceContainerHigh
 //   Cards on Canvas must "pop" — not blend into the background.
+//
+// M3 Expressive additions:
+//   - Expanded shape system (larger radii for hero surfaces)
+//   - More varied component styling
+//   - Motion/emphasis patterns via state layers
 // ---------------------------------------------------------------------------
 
 object HomeDecorColors {
@@ -36,7 +44,7 @@ object HomeDecorColors {
     val SurfaceContainerHighest = Color(0xFFDBD5CC)  // clearly darker
 
     // -- Text (deep charcoal family — high contrast on ivory) --
-    val Ink            = Color(0xFF1A1714)  // primary headings
+    val Ink            = Color(0xFF1A1714)  // primary headings — highest contrast
     val InkSoft        = Color(0xFF4A4540)  // secondary body text — bumped contrast
     val OnSurface      = Color(0xFF1C1B18)  // MD3 primary text
     val OnSurfaceVariant = Color(0xFF3D3833) // MD3 secondary text — strong contrast
@@ -85,13 +93,21 @@ object HomeDecorColors {
     val Warning           = Color(0xFF9A6B00)  // deeper gold warning
     val WarningContainer  = Color(0xFFFFF3D6)
 
-    // -- Semantic / brand tokens --
-    val Accent            = Color(0xFF1D5C5F)   // creative teal accent
+    // -- Semantic / brand tokens (diversified — not all teal) --
+    val Accent            = Color(0xFF1D5C5F)   // creative teal accent (primary only)
     val AccentContainer   = Color(0xFFC1E4E7)
     val DiamondAccent     = Color(0xFF2EC4B6)   // teal diamond sparkle
     val ProAccent         = Color(0xFF1D5C5F)   // subscription teal
     val PremiumGold       = Color(0xFFA07E2E)   // premium badge gold — richer
     val GoldDeep          = Color(0xFF7A5B10)
+
+    // -- Contextual accents (reduce teal overuse) --
+    val BoardAccent       = Color(0xFF3D6B45)   // sage green for My Board
+    val DiscoverAccent    = Color(0xFF4A3FBF)   // indigo for Discover
+    val ProfileAccent     = Color(0xFFB85C38)   // terracotta for Profile
+    val SettingsAccent    = Color(0xFF6B6459)   // warm neutral for Settings
+    val StoreAccent       = Color(0xFF7A5B10)   // gold for Store
+    val ToolsAccent       = Color(0xFF1D5C5F)   // teal for Tools (creative hub)
 
     // -- Scrim & overlays --
     val Scrim              = Color(0xFF000000)   // standard MD3 scrim
@@ -196,13 +212,21 @@ object HomeDecorColors {
     val DarkWarning          = Color(0xFFFFD166)
     val DarkWarningContainer = Color(0xFF3D3100)
 
-    // -- Dark accent tokens --
+    // -- Dark accent tokens (diversified) --
     val DarkAccent        = Color(0xFF7ECDD0)
     val DarkAccentContainer = Color(0xFF1A4A4C)
     val DarkDiamondAccent = Color(0xFF4DD9D0)
     val DarkProAccent     = Color(0xFF6ACFC7)
     val DarkPremiumGold   = Color(0xFFC8A040)
     val DarkGoldDeep      = Color(0xFFA07E2E)
+
+    // -- Dark contextual accents --
+    val DarkBoardAccent    = Color(0xFF9CC8A3)
+    val DarkDiscoverAccent = Color(0xFF8B83D4)
+    val DarkProfileAccent  = Color(0xFFD4896A)
+    val DarkSettingsAccent = Color(0xFF9A9A90)
+    val DarkStoreAccent    = Color(0xFFDAB660)
+    val DarkToolsAccent    = Color(0xFF7ECDD0)
 
     // -- Dark scrim --
     val DarkScrim         = Color(0xFF000000)

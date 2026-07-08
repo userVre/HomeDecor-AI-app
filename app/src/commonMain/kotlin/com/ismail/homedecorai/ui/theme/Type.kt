@@ -7,67 +7,68 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // ---------------------------------------------------------------------------
-// HomeDecor AI Typography
+// HomeDecor AI Typography  –  MD3 Expressive (v2)
 // ---------------------------------------------------------------------------
 // Premium, modern, readable.
 // Uses system default font family for fast rendering.
-// Strong weight hierarchy: Bold headlines → Medium titles → Regular body.
+// M3 Expressive: stronger weight hierarchy, wider letter-spacing range,
+// larger display sizes for hero moments.
 // ---------------------------------------------------------------------------
 
 object HomeDecorType {
 
-    // -- Display: hero / splash / onboarding --
+    // -- Display: hero / splash / onboarding (M3 Expressive — larger, bolder) --
     val DisplayLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
-        lineHeight = 46.sp,
-        letterSpacing = (-0.5).sp,
+        fontSize = 44.sp,        // 40→44: more expressive hero
+        lineHeight = 50.sp,
+        letterSpacing = (-0.8).sp,  // tighter for display
     )
     val DisplayMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
-        lineHeight = 38.sp,
-        letterSpacing = (-0.25).sp,
+        fontSize = 36.sp,        // 32→36: expressive
+        lineHeight = 42.sp,
+        letterSpacing = (-0.5).sp,
     )
     val DisplaySmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = 0.sp,
+        fontWeight = FontWeight.Bold,  // SemiBold→Bold: stronger hierarchy
+        fontSize = 30.sp,        // 28→30: expressive
+        lineHeight = 36.sp,
+        letterSpacing = (-0.25).sp,
     )
 
     // -- Headline: section headers --
     val HeadlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 30.sp,
-        letterSpacing = 0.sp,
+        fontWeight = FontWeight.Bold,    // SemiBold→Bold: stronger emphasis
+        fontSize = 26.sp,              // 24→26: expressive
+        lineHeight = 32.sp,
+        letterSpacing = (-0.25).sp,
     )
     val HeadlineMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 26.sp,
+        fontSize = 22.sp,              // 20→22: expressive
+        lineHeight = 28.sp,
         letterSpacing = 0.sp,
     )
     val HeadlineSmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        fontWeight = FontWeight.SemiBold,  // Medium→SemiBold: stronger
+        fontSize = 19.sp,               // 18→19
+        lineHeight = 25.sp,
         letterSpacing = 0.sp,
     )
 
     // -- Title: card headings, list item titles --
     val TitleLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
+        fontWeight = FontWeight.SemiBold,  // Medium→SemiBold: expressive
+        fontSize = 19.sp,               // 18→19
+        lineHeight = 25.sp,
         letterSpacing = 0.sp,
     )
     val TitleMedium = TextStyle(
@@ -111,7 +112,7 @@ object HomeDecorType {
     // -- Label: buttons, chips, badges --
     val LabelLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,  // Medium→SemiBold: expressive buttons
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp,

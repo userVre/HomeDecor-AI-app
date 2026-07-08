@@ -684,9 +684,12 @@ fun GalleryCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
+    var mobileActionsVisible by rememberSaveable { mutableStateOf(false) }
 
     ElevatedCard(
-        onClick = onClick,
+        onClick = {
+            if (isDesktop) onClick() else mobileActionsVisible = !mobileActionsVisible
+        },
         shape = HomeDecorShape.Card,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(
@@ -729,16 +732,66 @@ fun GalleryCard(
                 }
             }
             // Desktop hover overlay
-            Box(Modifier.fillMaxSize()) {
+            if (isDesktop) {
+                Box(Modifier.fillMaxSize()) {
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = isHovered,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        HoverOverlay(
+                            onFavorite = onFavorite,
+                            onUseStyle = onUseStyle,
+                            onMoodboard = onMoodboard,
+                        )
+                    }
+                }
+            }
+            // Mobile: compact action bar (tap card to reveal, tap action to use)
+            if (!isDesktop) {
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = isDesktop && isHovered,
-                    enter = fadeIn(),
+                    visible = mobileActionsVisible,
+                    enter = fadeIn(spring()),
                     exit = fadeOut(),
+                    modifier = Modifier.fillMaxSize(),
                 ) {
-                    HoverOverlay(
-                        onFavorite = onFavorite,
-                        onUseStyle = onUseStyle,
-                        onMoodboard = onMoodboard,
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        HomeDecorExtra.scrimHeavy.copy(alpha = 0.3f),
+                                        HomeDecorExtra.scrimHeavy,
+                                    )
+                                )
+                            ),
+                    )
+                }
+                // Always-visible action row at bottom
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm, Alignment.CenterHorizontally),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
+                ) {
+                    MobileActionButton(
+                        icon = Icons.Rounded.Star,
+                        label = Strings.favorite,
+                        filled = isFavorite,
+                        onClick = { onFavorite() },
+                    )
+                    MobileActionButton(
+                        icon = Icons.Rounded.AutoAwesome,
+                        label = Strings.discoverUseStyle,
+                        onClick = { onUseStyle() },
+                    )
+                    MobileActionButton(
+                        icon = Icons.Rounded.Save,
+                        label = Strings.discoverSave,
+                        onClick = { onMoodboard() },
                     )
                 }
             }
@@ -788,6 +841,14 @@ fun GalleryImageCard(
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = HomeDecorExtra.onGradientText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = Strings.aiGeneratedBadge,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Normal,
+                color = HomeDecorExtra.onGradientText.copy(alpha = 0.7f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -885,6 +946,45 @@ fun HoverActionButton(
             color = HomeDecorExtra.onGradientText,
             textAlign = TextAlign.Center,
         )
+    }
+}
+
+@Composable
+fun MobileActionButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    filled: Boolean = false,
+) {
+    Surface(
+        shape = HomeDecorShape.Full,
+        color = if (filled)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
+        else
+            HomeDecorExtra.onGradientText.copy(alpha = 0.92f),
+        modifier = Modifier
+            .size(36.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .semantics {
+                role = Role.Button
+                contentDescription = label
+            },
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(16.dp),
+                tint = if (filled)
+                    MaterialTheme.colorScheme.onPrimary
+                else
+                    MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 

@@ -22,6 +22,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -58,19 +59,44 @@ import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material.icons.rounded.FormatPaint
-import androidx.compose.material.icons.rounded.GridOn
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Apartment
+import androidx.compose.material.icons.rounded.Bathtub
+import androidx.compose.material.icons.rounded.Bed
+import androidx.compose.material.icons.rounded.Book
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.Business
+import androidx.compose.material.icons.rounded.Cabin
+import androidx.compose.material.icons.rounded.Celebration
 import androidx.compose.material.icons.rounded.Chair
+import androidx.compose.material.icons.rounded.ChildCare
+import androidx.compose.material.icons.rounded.Desk
+import androidx.compose.material.icons.rounded.DoorFront
+import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material.icons.rounded.Fireplace
+import androidx.compose.material.icons.rounded.GridOn
 import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.LocalLaundryService
+import androidx.compose.material.icons.rounded.LunchDining
 import androidx.compose.material.icons.rounded.MailOutline
+import androidx.compose.material.icons.rounded.Minimize
+import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Park
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Restaurant
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Spa
+import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material.icons.rounded.Store
+import androidx.compose.material.icons.rounded.TableRestaurant
 import androidx.compose.material.icons.rounded.WbSunny
-import androidx.compose.material.icons.rounded.Bookmark
-import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Weekend
+import androidx.compose.material.icons.rounded.Yard
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -93,7 +119,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -135,6 +165,7 @@ import com.ismail.homedecorai.imagepicker.rememberImagePicker
 import com.ismail.homedecorai.model.ToolItem
 import com.ismail.homedecorai.ui.discover.NetworkImage
 import com.ismail.homedecorai.ui.theme.*
+import org.jetbrains.skia.Image
 
 // ---------------------------------------------------------------------------
 // State
@@ -184,6 +215,7 @@ data class WizardState(
     val keepElements: List<String> = emptyList(),
     val changeElements: List<String> = emptyList(),
     val generatedImageUrl: String? = null,
+    val objectSelectedOnImage: Boolean = false,
 )
 
 // ---------------------------------------------------------------------------
@@ -407,22 +439,68 @@ private fun roomOptions(toolId: String): List<WizardOption> = when (toolId) {
     )
 }
 
-// Room type icon mapping for interior
+// Room type icon mapping — each room gets a distinct semantic icon
 private fun roomTypeIcon(roomId: String): @Composable () -> Unit = {
     val icon = when (roomId) {
         "living-room" -> Icons.Rounded.Chair
         "bedroom" -> Icons.Rounded.WbSunny
-        "kitchen" -> Icons.Rounded.FormatPaint
-        "bathroom" -> Icons.Rounded.FormatPaint
-        "office" -> Icons.Rounded.GridOn
-        "dining" -> Icons.Rounded.FormatPaint
-        "child-room" -> Icons.Rounded.Star
-        "home-cinema" -> Icons.Rounded.Star
-        "game-room" -> Icons.Rounded.Star
-        "entry-hall" -> Icons.Rounded.CloudUpload
-        "library" -> Icons.Rounded.Description
-        "laundry" -> Icons.Rounded.FormatPaint
-        else -> Icons.Rounded.Star
+        "kitchen" -> Icons.Rounded.Restaurant
+        "bathroom" -> Icons.Rounded.Bathtub
+        "office" -> Icons.Rounded.Desk
+        "dining" -> Icons.Rounded.LunchDining
+        "child-room" -> Icons.Rounded.ChildCare
+        "home-cinema" -> Icons.Rounded.Movie
+        "game-room" -> Icons.Rounded.SportsEsports
+        "entry-hall" -> Icons.Rounded.DoorFront
+        "library" -> Icons.Rounded.Book
+        "laundry" -> Icons.Rounded.LocalLaundryService
+        // Facade / exterior building types
+        "apartment" -> Icons.Rounded.Apartment
+        "house" -> Icons.Rounded.Cabin
+        "office-building" -> Icons.Rounded.Business
+        "residential" -> Icons.Rounded.Cabin
+        "retail" -> Icons.Rounded.Store
+        "villa" -> Icons.Rounded.Cabin
+        // Garden styles
+        "ai-suggestion" -> Icons.Rounded.AutoAwesome
+        "modern" -> Icons.Rounded.Cabin
+        "tropical" -> Icons.Rounded.Park
+        "minimalist" -> Icons.Rounded.Minimize
+        "mediterranean" -> Icons.Rounded.WbSunny
+        "japandi" -> Icons.Rounded.Yard
+        "rustic" -> Icons.Rounded.Fireplace
+        "zen" -> Icons.Rounded.Spa
+        "english" -> Icons.Rounded.Yard
+        "landscape" -> Icons.Rounded.Yard
+        "bohemian" -> Icons.Rounded.Palette
+        "scandinavian" -> Icons.Rounded.Chair
+        "christmas" -> Icons.Rounded.Celebration
+        else -> Icons.Rounded.Image
+    }
+    Icon(
+        icon,
+        contentDescription = null,
+        modifier = Modifier.size(16.dp),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+// Furniture type icon mapping
+private fun furnitureTypeIcon(furnitureId: String): @Composable () -> Unit = {
+    val icon = when (furnitureId) {
+        "sofa" -> Icons.Rounded.Weekend
+        "chair" -> Icons.Rounded.Chair
+        "table" -> Icons.Rounded.TableRestaurant
+        "bed" -> Icons.Rounded.Bed
+        "cabinet" -> Icons.Rounded.Book
+        "shelf" -> Icons.Rounded.Book
+        "desk" -> Icons.Rounded.Desk
+        "lamp" -> Icons.Rounded.Lightbulb
+        "rug" -> Icons.Rounded.GridOn
+        "plant" -> Icons.Rounded.Yard
+        "art" -> Icons.Rounded.Palette
+        "curtain" -> Icons.Rounded.Style
+        else -> Icons.Rounded.Image
     }
     Icon(
         icon,
@@ -817,7 +895,7 @@ fun WebWizardScreen(
     tool: ToolItem,
     onBack: () -> Unit,
 ) {
-    var state by remember { mutableStateOf(WizardState(tool = tool)) }
+    var state by remember(tool.id) { mutableStateOf(WizardState(tool = tool)) }
     var previousStep by remember { mutableStateOf(state.step) }
     var showBackDialog by remember { mutableStateOf(false) }
     var showCloseDialog by remember { mutableStateOf(false) }
@@ -834,6 +912,12 @@ fun WebWizardScreen(
     LaunchedEffect(state.step) {
         if (state.step != previousStep) {
             previousStep = state.step
+        }
+    }
+
+    LaunchedEffect(state.step) {
+        if (state.step == WizardStep.Mask) {
+            state = state.copy(objectSelectedOnImage = false)
         }
     }
 
@@ -1107,6 +1191,7 @@ fun WebWizardScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .clipToBounds()
                 .focusRequester(stepFocusRequester)
                 .testTag(Strings.formatTestTag(Strings.TestTags.wizardStepContent, state.step.name)),
         ) {
@@ -1114,12 +1199,15 @@ fun WebWizardScreen(
                 targetState = state.step,
                 label = "wizardStep",
                 transitionSpec = {
-                    val isForward = targetState.ordinal > initialState.ordinal
+                    val steps = stepsForTool(state.tool?.id)
+                    val prevIdx = steps.indexOf(initialState)
+                    val nextIdx = steps.indexOf(targetState)
+                    val isForward = nextIdx > prevIdx
                     if (isForward) {
-                        slideInHorizontally { it / 3 } + fadeIn() togetherWith
+                        slideInHorizontally { it / 3 } togetherWith
                                 slideOutHorizontally { -it / 3 } + fadeOut()
                     } else {
-                        slideInHorizontally { -it / 3 } + fadeIn() togetherWith
+                        slideInHorizontally { -it / 3 } togetherWith
                                 slideOutHorizontally { it / 3 } + fadeOut()
                     }
                 },
@@ -1212,6 +1300,9 @@ fun WebWizardScreen(
                         isWide = isWide,
                         onMaskReady = {
                             state = state.copy(maskStrokes = listOf(MaskStroke()))
+                        },
+                        onObjectSelected = {
+                            state = state.copy(objectSelectedOnImage = true)
                         },
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -1597,8 +1688,6 @@ private fun UploadStep(
                 modifier = if (isWide) Modifier.fillMaxWidth(0.5f) else Modifier.fillMaxWidth(),
             ) {
                 TipRow(Strings.wizardProTip)
-                TipRow(Strings.wizardImageFormats)
-                TipRow(Strings.wizardTryExampleSubtitle)
             }
             Spacer(Modifier.height(16.dp))
             // Privacy note
@@ -1752,7 +1841,7 @@ private fun TryExampleButton(onTryExample: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
-                Icons.Rounded.Star,
+                Icons.Rounded.Lightbulb,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.secondary,
@@ -1828,7 +1917,7 @@ private fun PhotoPreview(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                Icons.Rounded.Star,
+                                Icons.Rounded.AutoAwesome,
                                 contentDescription = null,
                                 modifier = Modifier.size(12.dp),
                                 tint = HomeDecorExtra.onGradientText,
@@ -1843,32 +1932,48 @@ private fun PhotoPreview(
                         }
                     }
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                    val imageBitmap = remember(photo) {
+                        photo.imageBytes?.let { bytes ->
+                            try {
+                                Image.makeFromEncoded(bytes).toComposeImageBitmap()
+                            } catch (_: Exception) { null }
+                        }
+                    }
+                    if (imageBitmap != null) {
+                        Image(
+                            bitmap = imageBitmap,
+                            contentDescription = Strings.wizardPhotoSelected,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                                        )
                                     )
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Rounded.Image,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                                 )
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Rounded.Image,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                Strings.wizardPhotoSelected,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    Strings.wizardPhotoSelected,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
@@ -2242,7 +2347,7 @@ private fun StyleImageCard(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        Icons.Rounded.Star,
+                        Icons.Rounded.AutoAwesome,
                         contentDescription = null,
                         modifier = Modifier.size(32.dp),
                         tint = MaterialTheme.colorScheme.primary,
@@ -2644,6 +2749,7 @@ private fun MaskStep(
     state: WizardState,
     isWide: Boolean,
     onMaskReady: () -> Unit,
+    onObjectSelected: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -2675,7 +2781,15 @@ private fun MaskStep(
                 .fillMaxWidth()
                 .height(if (isWide) 320.dp else 240.dp),
         ) {
-            Box(contentAlignment = Alignment.Center) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { onObjectSelected() },
+            ) {
                 if (state.isUsingExample) {
                     val exampleImageUrl = when (state.tool?.id) {
                         "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
@@ -2690,37 +2804,53 @@ private fun MaskStep(
                         modifier = Modifier.fillMaxSize(),
                     )
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                    val imageBitmap = remember(state.photo) {
+                        state.photo?.imageBytes?.let { bytes ->
+                            try {
+                                Image.makeFromEncoded(bytes).toComposeImageBitmap()
+                            } catch (_: Exception) { null }
+                        }
+                    }
+                    if (imageBitmap != null) {
+                        Image(
+                            bitmap = imageBitmap,
+                            contentDescription = "Selected photo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                                        )
                                     )
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Rounded.Image,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                                 )
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Rounded.Image,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                Strings.wizardPhotoSelected,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    Strings.wizardPhotoSelected,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
 
-                if (state.maskStrokes.isNotEmpty()) {
+                if (state.maskStrokes.isNotEmpty() || state.objectSelectedOnImage) {
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopStart)
@@ -2754,23 +2884,35 @@ private fun MaskStep(
         Spacer(Modifier.height(16.dp))
 
         if (state.maskStrokes.isEmpty()) {
-            Text(
-                "Tap on the object in the photo to select it for replacement",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+            if (state.objectSelectedOnImage) {
+                Text(
+                    "Object tapped! Tap Next or confirm below to continue.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                )
+            } else {
+                Text(
+                    "Tap on the object in the photo to select it for replacement",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
             Spacer(Modifier.height(16.dp))
+            val buttonEnabled = state.objectSelectedOnImage
             Surface(
-                onClick = onMaskReady,
+                onClick = { if (buttonEnabled) onMaskReady() },
                 shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primary,
+                color = if (buttonEnabled) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 Text(
                     "I've selected the object",
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                     style = MaterialTheme.typography.labelLarge,
-                    color = HomeDecorExtra.onGradientText,
+                    color = if (buttonEnabled) HomeDecorExtra.onGradientText
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
@@ -3247,6 +3389,7 @@ private fun FurnitureTypeStep(
                     label = option.label,
                     isSelected = isSelected,
                     onClick = { onSelect(option.id) },
+                    icon = furnitureTypeIcon(option.id),
                     modifier = Modifier
                         .then(
                             if (isWide) Modifier.weight(1f).heightIn(min = 100.dp)
@@ -3472,32 +3615,48 @@ private fun ReviewStep(
                         modifier = Modifier.fillMaxSize(),
                     )
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                    val imageBitmap = remember(state.photo) {
+                        state.photo?.imageBytes?.let { bytes ->
+                            try {
+                                Image.makeFromEncoded(bytes).toComposeImageBitmap()
+                            } catch (_: Exception) { null }
+                        }
+                    }
+                    if (imageBitmap != null) {
+                        Image(
+                            bitmap = imageBitmap,
+                            contentDescription = Strings.wizardPhotoSelected,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                                        )
                                     )
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Rounded.Image,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                                 )
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Rounded.Image,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                Strings.wizardPhotoSelected,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    Strings.wizardPhotoSelected,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
@@ -4133,26 +4292,45 @@ private fun GeneratingState(
                                 .clip(RoundedCornerShape(24.dp)),
                         )
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(180.dp)
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                                        )
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Rounded.Image,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        val imageBitmap = remember(photo) {
+                            photo?.imageBytes?.let { bytes ->
+                                try {
+                                    Image.makeFromEncoded(bytes).toComposeImageBitmap()
+                                } catch (_: Exception) { null }
+                            }
+                        }
+                        if (imageBitmap != null) {
+                            Image(
+                                bitmap = imageBitmap,
+                                contentDescription = Strings.wizardPhotoSelected,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
+                                    .clip(RoundedCornerShape(24.dp)),
+                                contentScale = ContentScale.Crop,
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(180.dp)
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Image,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                )
+                            }
                         }
                     }
 
@@ -4888,8 +5066,6 @@ private fun OptionCard(
     else
         MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f)
 
-    val displayLabel = if (label.length > 14) label.take(12) + ".." else label
-
     Surface(
         onClick = onClick,
         shape = HomeDecorShape.Badge,
@@ -4941,7 +5117,7 @@ private fun OptionCard(
             Spacer(Modifier.width(10.dp))
 
             Text(
-                displayLabel,
+                label,
                 style = MaterialTheme.typography.titleSmall,
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
                         else MaterialTheme.colorScheme.onSurface,
@@ -5171,69 +5347,116 @@ private fun MaterialSwatchCard(
                 drawRect(color = baseColor)
                 when (patternType) {
                     "marble" -> {
-                        // Vein pattern
-                        val veinColor = Color(0xFFB0A89C).copy(alpha = 0.4f)
-                        drawLine(veinColor, start = Offset(size.width * 0.1f, size.height * 0.2f), end = Offset(size.width * 0.5f, size.height * 0.8f), strokeWidth = 2f)
-                        drawLine(veinColor, start = Offset(size.width * 0.3f, size.height * 0.1f), end = Offset(size.width * 0.7f, size.height * 0.6f), strokeWidth = 1.5f)
-                        drawLine(veinColor, start = Offset(size.width * 0.6f, size.height * 0.3f), end = Offset(size.width * 0.9f, size.height * 0.9f), strokeWidth = 2f)
-                        drawLine(veinColor.copy(alpha = 0.25f), start = Offset(size.width * 0.2f, size.height * 0.5f), end = Offset(size.width * 0.8f, size.height * 0.4f), strokeWidth = 1f)
+                        // Bold diagonal veins
+                        val veinDark = Color(0xFFB0A89C).copy(alpha = 0.7f)
+                        val veinLight = Color(0xFFD5CFC8).copy(alpha = 0.5f)
+                        drawLine(veinDark, start = Offset(0f, size.height * 0.15f), end = Offset(size.width * 0.6f, size.height), strokeWidth = 4f)
+                        drawLine(veinDark, start = Offset(size.width * 0.25f, 0f), end = Offset(size.width * 0.85f, size.height * 0.85f), strokeWidth = 3f)
+                        drawLine(veinLight, start = Offset(size.width * 0.5f, size.height * 0.05f), end = Offset(size.width, size.height * 0.65f), strokeWidth = 2.5f)
+                        drawLine(veinDark, start = Offset(size.width * 0.1f, size.height * 0.55f), end = Offset(size.width * 0.7f, size.height * 0.3f), strokeWidth = 2f)
+                        drawLine(veinLight, start = Offset(size.width * 0.4f, size.height * 0.7f), end = Offset(size.width * 0.95f, size.height * 0.15f), strokeWidth = 1.5f)
                     }
                     "wood" -> {
-                        // Wood grain lines
-                        val grainColor = baseColor.copy(alpha = 0.3f)
-                        for (i in 0..6) {
-                            val y = size.height * (0.1f + i * 0.12f)
-                            drawLine(grainColor, start = Offset(0f, y), end = Offset(size.width, y + 4f), strokeWidth = 1.5f)
+                        // Prominent grain lines
+                        val grainDark = baseColor.copy(alpha = 0.6f)
+                        val grainLight = baseColor.copy(alpha = 0.35f)
+                        for (i in 0..8) {
+                            val y = size.height * (0.08f + i * 0.1f)
+                            val sw = if (i % 3 == 0) 2.5f else 1.5f
+                            drawLine(grainDark, start = Offset(0f, y), end = Offset(size.width, y + 3f), strokeWidth = sw)
                         }
+                        // Knot accent
+                        drawCircle(grainDark, radius = 6f, center = Offset(size.width * 0.7f, size.height * 0.4f))
+                        drawCircle(grainLight, radius = 3f, center = Offset(size.width * 0.7f, size.height * 0.4f))
                     }
                     "concrete" -> {
-                        // Speckle pattern
-                        val speckColor = baseColor.copy(alpha = 0.5f)
-                        for (i in 0..20) {
-                            val cx = size.width * (0.05f + (i * 0.37f % 1f) * 0.9f)
-                            val cy = size.height * (0.08f + (i * 0.53f % 1f) * 0.84f)
-                            drawCircle(speckColor, radius = 2f, center = Offset(cx, cy))
+                        // Visible speckle + subtle cracks
+                        val speckDark = baseColor.copy(alpha = 0.7f)
+                        val speckLight = Color(0xFFB0B0B0).copy(alpha = 0.4f)
+                        for (i in 0..30) {
+                            val cx = size.width * (0.03f + (i * 0.31f % 1f) * 0.94f)
+                            val cy = size.height * (0.05f + (i * 0.47f % 1f) * 0.9f)
+                            val r = 1.5f + (i % 3).toFloat()
+                            drawCircle(if (i % 2 == 0) speckDark else speckLight, radius = r, center = Offset(cx, cy))
                         }
+                        // Hairline cracks
+                        val crackColor = baseColor.copy(alpha = 0.55f)
+                        drawLine(crackColor, start = Offset(size.width * 0.2f, 0f), end = Offset(size.width * 0.35f, size.height * 0.4f), strokeWidth = 1f)
+                        drawLine(crackColor, start = Offset(size.width * 0.6f, size.height * 0.6f), end = Offset(size.width * 0.8f, size.height), strokeWidth = 1f)
                     }
                     "limewash" -> {
-                        // Subtle texture dots
-                        val dotColor = baseColor.copy(alpha = 0.2f)
-                        for (i in 0..15) {
-                            val cx = size.width * (0.1f + (i * 0.41f % 1f) * 0.8f)
-                            val cy = size.height * (0.1f + (i * 0.67f % 1f) * 0.8f)
-                            drawCircle(dotColor, radius = 3f, center = Offset(cx, cy))
+                        // Mottled plaster texture
+                        val mottle1 = baseColor.copy(alpha = 0.45f)
+                        val mottle2 = Color(0xFFE8DFD2).copy(alpha = 0.35f)
+                        for (i in 0..20) {
+                            val cx = size.width * (0.05f + (i * 0.37f % 1f) * 0.9f)
+                            val cy = size.height * (0.05f + (i * 0.53f % 1f) * 0.9f)
+                            val r = 4f + (i % 4).toFloat() * 3f
+                            drawCircle(if (i % 3 == 0) mottle1 else mottle2, radius = r, center = Offset(cx, cy))
                         }
                     }
                     "terrazzo" -> {
-                        // Colored chips
+                        // Bold colored chips
                         val chipColors = listOf(
-                            Color(0xFFC49A6C).copy(alpha = 0.5f),
-                            Color(0xFF8B7355).copy(alpha = 0.4f),
-                            Color(0xFFA0522D).copy(alpha = 0.45f),
-                            Color(0xFF6B8E6B).copy(alpha = 0.35f),
+                            Color(0xFFC49A6C).copy(alpha = 0.7f),
+                            Color(0xFF8B7355).copy(alpha = 0.6f),
+                            Color(0xFFA0522D).copy(alpha = 0.65f),
+                            Color(0xFF6B8E6B).copy(alpha = 0.55f),
+                            Color(0xFF9E8B7E).copy(alpha = 0.5f),
                         )
-                        for (i in 0..12) {
-                            val cx = size.width * (0.08f + (i * 0.33f % 1f) * 0.84f)
-                            val cy = size.height * (0.1f + (i * 0.59f % 1f) * 0.8f)
-                            drawCircle(chipColors[i % chipColors.size], radius = 4f, center = Offset(cx, cy))
+                        for (i in 0..18) {
+                            val cx = size.width * (0.06f + (i * 0.29f % 1f) * 0.88f)
+                            val cy = size.height * (0.08f + (i * 0.43f % 1f) * 0.84f)
+                            val r = 3f + (i % 5).toFloat() * 2f
+                            drawCircle(chipColors[i % chipColors.size], radius = r, center = Offset(cx, cy))
                         }
                     }
                     "tile" -> {
-                        // Grid pattern
-                        val gridColor = baseColor.copy(alpha = 0.3f)
+                        // Grid with grout lines
+                        val gridColor = baseColor.copy(alpha = 0.55f)
                         val cols = 3
                         val rows = 4
                         val cellW = size.width / cols
                         val cellH = size.height / rows
                         for (c in 1 until cols) {
-                            drawLine(gridColor, start = Offset(c * cellW, 0f), end = Offset(c * cellW, size.height), strokeWidth = 1f)
+                            drawLine(gridColor, start = Offset(c * cellW, 0f), end = Offset(c * cellW, size.height), strokeWidth = 2f)
                         }
                         for (r in 1 until rows) {
-                            drawLine(gridColor, start = Offset(0f, r * cellH), end = Offset(size.width, r * cellH), strokeWidth = 1f)
+                            drawLine(gridColor, start = Offset(0f, r * cellH), end = Offset(size.width, r * cellH), strokeWidth = 2f)
                         }
+                        // Subtle tile shading
+                        val shadeColor = baseColor.copy(alpha = 0.15f)
+                        for (c in 0 until cols) {
+                            for (r in 0 until rows) {
+                                drawRect(shadeColor, topLeft = Offset(c * cellW + 2f, r * cellH + 2f), size = Size(cellW - 4f, cellH - 4f))
+                            }
+                        }
+                    }
+                    // "flat" -> subtle gradient overlay for warmth
+                    else -> {
+                        val gradient = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.08f),
+                                Color.Black.copy(alpha = 0.12f),
+                            )
+                        )
+                        drawRect(gradient, size = size)
                     }
                 }
             }
+
+            // Text scrim at bottom for readability
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .align(Alignment.BottomStart)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f)),
+                        ),
+                    ),
+            )
 
             Column(
                 modifier = Modifier
@@ -5539,7 +5762,7 @@ private fun WizardBottomBar(
         WizardStep.Refine -> false
         WizardStep.Material -> state.selectedMaterial != null
         WizardStep.Goals -> state.selectedGoals.isNotEmpty()
-        WizardStep.Mask -> state.maskStrokes.isNotEmpty()
+        WizardStep.Mask -> state.maskStrokes.isNotEmpty() && state.objectSelectedOnImage
         WizardStep.ReplacementPrompt -> state.replacementPrompt.length >= 3
         WizardStep.TransferStrength -> state.selectedTransferStrength != null
         WizardStep.PaintColor -> state.selectedPaintColor != null

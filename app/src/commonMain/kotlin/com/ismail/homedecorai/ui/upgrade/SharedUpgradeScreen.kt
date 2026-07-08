@@ -275,11 +275,6 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
 
             Spacer(Modifier.height(HomeDecorSpacing.Xl))
 
-            // ── Testimonials ──────────────────────────────────────────────
-            UpgradeTestimonials(colors = colors, isDesktop = isDesktop)
-
-            Spacer(Modifier.height(HomeDecorSpacing.Xl))
-
             // ── Bottom CTA ────────────────────────────────────────────────
             UpgradeBottomCta(colors = colors, onGetPro = onOpenPaywall)
 
@@ -314,7 +309,7 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
                 ) {
                     Button(
                         onClick = onOpenPaywall,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = HomeDecorShape.ButtonLarge,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colors.accent,
                             contentColor = HomeDecorExtra.onGradientText,
@@ -369,7 +364,7 @@ private fun UpgradeDesktopHero(colors: SharedUpgradeColors) {
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
-                    Strings.upgradeV3TrialBadge + ". " + Strings.upgradeV3Trust,
+                    Strings.upgradeV3Trust,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                     color = colors.accent,
                 )
@@ -403,7 +398,7 @@ private fun UpgradeMobileHero(colors: SharedUpgradeColors) {
         verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
     ) {
         Surface(
-            shape = RoundedCornerShape(24.dp),
+            shape = HomeDecorShape.PillMedium,
             color = colors.accent.copy(alpha = 0.08f),
         ) {
             Row(
@@ -418,7 +413,7 @@ private fun UpgradeMobileHero(colors: SharedUpgradeColors) {
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
-                    Strings.upgradeV3TrialBadge + ". " + Strings.upgradeV3Trust,
+                    Strings.upgradeV3Trust,
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                     color = colors.accent,
                 )
@@ -578,7 +573,7 @@ private fun PlanCard(
     }
 
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = HomeDecorShape.CardLarge,
         color = when {
             isSelected && isRecommended -> colors.accentSurface
             isSelected -> colors.accentSurface.copy(alpha = 0.7f)
@@ -600,7 +595,7 @@ private fun PlanCard(
         Box {
             if (isRecommended) {
                 Surface(
-                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+                    shape = HomeDecorShape.CardLarge,
                     color = colors.gold,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -805,7 +800,7 @@ private fun BenefitCard(
     )
 
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = HomeDecorShape.Card,
         color = containerColor,
         border = BorderStroke(1.dp, if (isHovered) colors.accent.copy(alpha = 0.2f) else colors.border),
         modifier = modifier,
@@ -815,7 +810,7 @@ private fun BenefitCard(
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = HomeDecorShape.Medium,
                 color = colors.accent.copy(alpha = 0.10f),
                 modifier = Modifier.size(40.dp),
             ) {
@@ -968,99 +963,12 @@ private fun UpgradeComparisonTable(colors: SharedUpgradeColors) {
 }
 
 @Composable
-private fun UpgradeTestimonials(
-    colors: SharedUpgradeColors,
-    isDesktop: Boolean,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-    ) {
-        if (isDesktop) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
-            ) {
-                TestimonialCard(
-                    colors = colors,
-                    quote = Strings.upgradeTestimonial1,
-                    author = Strings.upgradeTestimonial1Author,
-                    modifier = Modifier.weight(1f),
-                )
-                TestimonialCard(
-                    colors = colors,
-                    quote = Strings.upgradeTestimonial2,
-                    author = Strings.upgradeTestimonial2Author,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        } else {
-            TestimonialCard(
-                colors = colors,
-                quote = Strings.upgradeTestimonial1,
-                author = Strings.upgradeTestimonial1Author,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            TestimonialCard(
-                colors = colors,
-                quote = Strings.upgradeTestimonial2,
-                author = Strings.upgradeTestimonial2Author,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@Composable
-private fun TestimonialCard(
-    colors: SharedUpgradeColors,
-    quote: String,
-    author: String,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
-        modifier = modifier,
-    ) {
-        Column(
-            modifier = Modifier.padding(HomeDecorSpacing.Base),
-            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-        ) {
-            // Stars
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                repeat(5) {
-                    Icon(
-                        Icons.Rounded.Star,
-                        contentDescription = null,
-                        tint = colors.gold,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
-            Text(
-                "\"$quote\"",
-                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                color = colors.textSecondary,
-            )
-            Text(
-                author,
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.textMuted,
-            )
-        }
-    }
-}
-
-@Composable
 private fun UpgradeBottomCta(
     colors: SharedUpgradeColors,
     onGetPro: () -> Unit,
 ) {
-    Surface(
-        shape = RoundedCornerShape(24.dp),
+        Surface(
+            shape = HomeDecorShape.PillMedium,
         color = colors.accent.copy(alpha = 0.06f),
         border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
         shadowElevation = 2.dp,
@@ -1085,12 +993,6 @@ private fun UpgradeBottomCta(
                     )
                 }
             }
-            Text(
-                Strings.upgradeV3Headline,
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = colors.textPrimary,
-                textAlign = TextAlign.Center,
-            )
             Text(
                 Strings.upgradeV3Subtitle,
                 style = MaterialTheme.typography.bodyLarge,

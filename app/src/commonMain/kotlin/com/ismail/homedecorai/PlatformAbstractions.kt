@@ -21,3 +21,7 @@ expect fun getCurrentPathname(): String
 expect fun subscribeToNavigationChanges(onNavigate: (String) -> Unit): () -> Unit
 
 expect fun goBack()
+
+expect fun getPersistedDarkTheme(): Boolean
+
+expect fun persistDarkTheme(isDark: Boolean)

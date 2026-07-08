@@ -58,7 +58,6 @@ import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.getScreenWidthDp
 import com.ismail.homedecorai.model.ToolItem
 import com.ismail.homedecorai.model.ToolsScreenState
-import com.ismail.homedecorai.openUrl
 import com.ismail.homedecorai.ui.discover.NetworkImage
 import com.ismail.homedecorai.ui.theme.*
 
@@ -75,6 +74,7 @@ import com.ismail.homedecorai.ui.theme.*
 fun SharedToolsScreen(
     state: ToolsScreenState,
     onToolClick: (ToolItem) -> Unit,
+    onCredits: () -> Unit = {},
 ) {
     val screenWidth = getScreenWidthDp()
     val columns = when {
@@ -103,7 +103,7 @@ fun SharedToolsScreen(
         ToolsHeader(
             diamonds = state.diamonds,
             isPro = state.isPro,
-            onCredits = { openUrl("https://homedecor-ai.com/diamonds") },
+            onCredits = onCredits,
         )
 
         val horizontalPadding = when {
@@ -166,7 +166,7 @@ private fun ToolsHeader(
                 Text(
                     Strings.navTools,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.semantics { heading() },
                 )
@@ -178,7 +178,7 @@ private fun ToolsHeader(
                 )
             }
 
-            // Credits badge — matches native app header
+            // Credits badge — matches native app header, using contextual accent
             val creditsDescription = Strings.a11yOpenDiamondStore
             Surface(
                 onClick = onCredits,
@@ -202,7 +202,7 @@ private fun ToolsHeader(
                         Icons.Rounded.Diamond,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = HomeDecorExtra.diamondAccent,
+                        tint = HomeDecorExtra.toolsAccent,
                     )
                     Text(
                         if (isPro) "PRO" else "$diamonds",
