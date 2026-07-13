@@ -6,7 +6,7 @@ expect fun showToast(message: String)
 
 expect fun getScreenWidthDp(): Int
 
-expect fun setpageTitle(title: String)
+expect fun setPageTitle(title: String)
 
 expect fun pushHistoryState(path: String, title: String)
 

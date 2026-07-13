@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,7 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -89,6 +90,14 @@ data class SettingsLanguage(
     val label: String,
 )
 
+private sealed class SettingsDialog {
+    data object None : SettingsDialog()
+    data object Language : SettingsDialog()
+    data object Feedback : SettingsDialog()
+    data object DeleteAccount : SettingsDialog()
+    data object Logout : SettingsDialog()
+}
+
 data class SettingsScreenState(
     val versionName: String = "1.0.0",
     val settingsBusy: Boolean = false,
@@ -125,29 +134,48 @@ fun SharedSettingsScreen(
     val isDesktop = rememberIsDesktop()
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-    var languageSheetVisible by remember { mutableStateOf(false) }
-    var feedbackDialogVisible by remember { mutableStateOf(false) }
-    var deleteDialogVisible by remember { mutableStateOf(false) }
-    var logoutDialogVisible by remember { mutableStateOf(false) }
+    var activeDialog by remember { mutableStateOf<SettingsDialog>(SettingsDialog.None) }
 
-    if (languageSheetVisible) {
-        ModalBottomSheet(
-            onDismissRequest = { languageSheetVisible = false },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surface,
-        ) {
-            LanguagePickerContent(
-                currentLanguageTag = currentLanguageTag,
-                supportedLanguages = supportedLanguages,
-                onLanguageSelected = { languageTag ->
-                    onLanguageSelected(languageTag)
-                    ToastState.show(Strings.toastLanguageSelected)
-                    scope.launch {
-                        sheetState.hide()
-                        languageSheetVisible = false
-                    }
-                },
-            )
+    if (activeDialog is SettingsDialog.Language) {
+        if (isDesktop) {
+            AlertDialog(
+                onDismissRequest = { activeDialog = SettingsDialog.None },
+            ) {
+                Surface(
+                    shape = HomeDecorShape.ExtraExtraLarge,
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp,
+                ) {
+                    LanguagePickerContent(
+                        currentLanguageTag = currentLanguageTag,
+                        supportedLanguages = supportedLanguages,
+                        onLanguageSelected = { languageTag ->
+                            onLanguageSelected(languageTag)
+                            ToastState.show(Strings.toastLanguageSelected)
+                            activeDialog = SettingsDialog.None
+                        },
+                    )
+                }
+            }
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { activeDialog = SettingsDialog.None },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+            ) {
+                LanguagePickerContent(
+                    currentLanguageTag = currentLanguageTag,
+                    supportedLanguages = supportedLanguages,
+                    onLanguageSelected = { languageTag ->
+                        onLanguageSelected(languageTag)
+                        ToastState.show(Strings.toastLanguageSelected)
+                        scope.launch {
+                            sheetState.hide()
+                            activeDialog = SettingsDialog.None
+                        }
+                    },
+                )
+            }
         }
     } else if (isDesktop) {
         DesktopSettingsPage(
@@ -155,14 +183,14 @@ fun SharedSettingsScreen(
             currentLanguageTag = currentLanguageTag,
             onEditProfile = onEditProfile,
             onOpenDiamonds = onOpenDiamonds,
-            onLanguageClick = { languageSheetVisible = true },
+            onLanguageClick = { activeDialog = SettingsDialog.Language },
             onFaq = onFaq,
             onContactSupport = onContactSupport,
-            onFeedback = { feedbackDialogVisible = true },
+            onFeedback = { activeDialog = SettingsDialog.Feedback },
             onTerms = onTerms,
             onPrivacy = onPrivacy,
-            onLogout = { logoutDialogVisible = true },
-            onDeleteAccount = { deleteDialogVisible = true },
+            onLogout = { activeDialog = SettingsDialog.Logout },
+            onDeleteAccount = { activeDialog = SettingsDialog.DeleteAccount },
             onClose = onClose,
             onManageBilling = onManageBilling,
             isDarkTheme = isDarkTheme,
@@ -174,14 +202,14 @@ fun SharedSettingsScreen(
             currentLanguageTag = currentLanguageTag,
             onEditProfile = onEditProfile,
             onOpenDiamonds = onOpenDiamonds,
-            onLanguageClick = { languageSheetVisible = true },
+            onLanguageClick = { activeDialog = SettingsDialog.Language },
             onFaq = onFaq,
             onContactSupport = onContactSupport,
-            onFeedback = { feedbackDialogVisible = true },
+            onFeedback = { activeDialog = SettingsDialog.Feedback },
             onTerms = onTerms,
             onPrivacy = onPrivacy,
-            onLogout = { logoutDialogVisible = true },
-            onDeleteAccount = { deleteDialogVisible = true },
+            onLogout = { activeDialog = SettingsDialog.Logout },
+            onDeleteAccount = { activeDialog = SettingsDialog.DeleteAccount },
             onManageBilling = onManageBilling,
             onClose = onClose,
             isDarkTheme = isDarkTheme,
@@ -189,36 +217,31 @@ fun SharedSettingsScreen(
         )
     }
 
-    if (feedbackDialogVisible) {
-        FeedbackDialog(
+    when (activeDialog) {
+        is SettingsDialog.Feedback -> FeedbackDialog(
             busy = state.settingsBusy,
             onSubmit = { message ->
                 onSubmitFeedback(message)
-                feedbackDialogVisible = false
+                activeDialog = SettingsDialog.None
             },
-            onDismiss = { feedbackDialogVisible = false },
+            onDismiss = { activeDialog = SettingsDialog.None },
         )
-    }
-
-    if (deleteDialogVisible) {
-        DeleteAccountDialog(
+        is SettingsDialog.DeleteAccount -> DeleteAccountDialog(
             busy = state.settingsBusy,
             onConfirm = {
-                deleteDialogVisible = false
+                activeDialog = SettingsDialog.None
                 onConfirmDelete()
             },
-            onDismiss = { deleteDialogVisible = false },
+            onDismiss = { activeDialog = SettingsDialog.None },
         )
-    }
-
-    if (logoutDialogVisible) {
-        LogoutDialog(
+        is SettingsDialog.Logout -> LogoutDialog(
             onConfirm = {
-                logoutDialogVisible = false
+                activeDialog = SettingsDialog.None
                 onLogout()
             },
-            onDismiss = { logoutDialogVisible = false },
+            onDismiss = { activeDialog = SettingsDialog.None },
         )
+        else -> {}
     }
 }
 
@@ -243,21 +266,22 @@ private fun DesktopSettingsPage(
     isDarkTheme: Boolean = false,
     onThemeToggle: () -> Unit = {},
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = HomeDecorSpacing.DesktopContentHorizontalPadding)
-                .padding(top = HomeDecorSpacing.Xl),
+        // Sticky header — never scrolls away
+        Surface(
+            color = MaterialTheme.colorScheme.background,
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = HomeDecorSpacing.Xl),
+                    .padding(
+                        horizontal = HomeDecorSpacing.DesktopContentHorizontalPadding,
+                        vertical = HomeDecorSpacing.Lg,
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -281,170 +305,214 @@ private fun DesktopSettingsPage(
                     )
                 }
             }
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
-            ) {
-                // Left column
+        // Scrollable body — legal, account actions, and all sections stay reachable
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(
+                start = HomeDecorSpacing.DesktopContentHorizontalPadding,
+                end = HomeDecorSpacing.DesktopContentHorizontalPadding,
+                top = HomeDecorSpacing.Xl,
+                bottom = HomeDecorSpacing.Xxl,
+            ),
+        ) {
+            // ── Row 1: Account (left) + Purchases & Support (right) ──
+            item {
                 Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    if (state.isSignedIn) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
+                        ) {
+                            if (state.isSignedIn) {
+                                DesktopSettingsSection(
+                                    title = Strings.settingsSectionAccount,
+                                    description = Strings.settingsAccountDescription,
+                                ) {
+                                    SettingsRow(
+                                        Icons.Rounded.Person,
+                                        Strings.editProfile,
+                                        Strings.editProfileBody,
+                                        iconTint = MaterialTheme.colorScheme.secondary,
+                                        onClick = onEditProfile,
+                                    )
+                                    SettingsDivider()
+                                    SettingsRow(
+                                        Icons.Rounded.Diamond,
+                                    Strings.myDiamonds,
+                                    Strings.myDiamondsBody(state.diamonds),
+                                    iconTint = HomeDecorExtra.diamondAccent,
+                                    onClick = onOpenDiamonds,
+                                )
+                                SettingsDivider()
+                                SettingsRow(
+                                    Icons.Rounded.Refresh,
+                                    Strings.manageBilling,
+                                    Strings.manageBillingBody,
+                                    iconTint = MaterialTheme.colorScheme.tertiary,
+                                    onClick = onManageBilling,
+                                )
+                            }
+                        }
+
                         DesktopSettingsSection(
-                            title = Strings.settingsSectionAccount,
-                            description = Strings.settingsAccountDescription,
+                            title = Strings.settingsSectionApp,
+                            description = Strings.settingsAppDescription,
                         ) {
                             SettingsRow(
-                                Icons.Rounded.Person,
-                                Strings.editProfile,
-                                Strings.editProfileBody,
-                                iconTint = MaterialTheme.colorScheme.secondary,
-                                onClick = onEditProfile,
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Diamond,
-                                Strings.myDiamonds,
-                                Strings.myDiamondsBody(state.diamonds),
-                                iconTint = HomeDecorExtra.diamondAccent,
-                                onClick = onOpenDiamonds,
-                            )
-                            SettingsDivider()
-                            SettingsRow(
-                                Icons.Rounded.Refresh,
-                                Strings.manageBilling,
-                                Strings.manageBillingBody,
+                                Icons.Rounded.Language,
+                                Strings.language,
+                                currentLanguageTag.uppercase(),
                                 iconTint = MaterialTheme.colorScheme.tertiary,
-                                onClick = onManageBilling,
+                                onClick = onLanguageClick,
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.DarkMode,
+                                Strings.themeLabel,
+                                if (isDarkTheme) Strings.themeDark else Strings.themeLight,
+                                iconTint = MaterialTheme.colorScheme.secondary,
+                                onClick = onThemeToggle,
                             )
                         }
                     }
 
-                    DesktopSettingsSection(
-                        title = Strings.settingsSectionApp,
-                        description = Strings.settingsAppDescription,
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
                     ) {
-                        SettingsRow(
-                            Icons.Rounded.Language,
-                            Strings.language,
-                            currentLanguageTag.uppercase(),
-                            iconTint = MaterialTheme.colorScheme.tertiary,
-                            onClick = onLanguageClick,
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            Icons.Rounded.DarkMode,
-                            Strings.themeLabel,
-                            if (isDarkTheme) Strings.themeDark else Strings.themeLight,
-                            iconTint = MaterialTheme.colorScheme.secondary,
-                            onClick = onThemeToggle,
-                        )
-                    }
-                }
-
-                // Right column
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
-                ) {
-                    DesktopSettingsSection(
-                        title = Strings.settingsSectionPurchases,
-                        description = Strings.settingsPurchasesDescription,
-                    ) {
-                        SettingsRow(
-                            Icons.Rounded.Diamond,
-                            Strings.diamondStore,
-                            Strings.diamondStoreBody,
-                            iconTint = HomeDecorExtra.diamondAccent,
-                            onClick = onOpenDiamonds,
-                        )
-                    }
-
-                    DesktopSettingsSection(
-                        title = Strings.settingsSectionSupport,
-                        description = Strings.settingsSupportDescription,
-                    ) {
-                        SettingsRow(
-                            Icons.AutoMirrored.Rounded.Help,
-                            Strings.helpCenter,
-                            Strings.helpCenterBody,
-                            iconTint = MaterialTheme.colorScheme.tertiary,
-                            onClick = onFaq,
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            Icons.Rounded.Mail,
-                            Strings.contactUs,
-                            Strings.contactUsBody,
-                            iconTint = MaterialTheme.colorScheme.secondary,
-                            onClick = onContactSupport,
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            Icons.Rounded.Feedback,
-                            Strings.sendFeedback,
-                            Strings.feedbackBody,
-                            iconTint = MaterialTheme.colorScheme.primary,
-                            onClick = onFeedback,
-                        )
-                    }
-
-                    DesktopSettingsSection(
-                        title = Strings.settingsSectionLegal,
-                        description = Strings.settingsLegalDescription,
-                    ) {
-                        SettingsRow(
-                            Icons.Rounded.Description,
-                            Strings.terms,
-                            Strings.termsBody,
-                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            onClick = onTerms,
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            Icons.Rounded.Shield,
-                            Strings.privacyPolicy,
-                            Strings.privacyBody,
-                            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            onClick = onPrivacy,
-                        )
-                    }
-
-                    if (state.isSignedIn) {
                         DesktopSettingsSection(
-                            title = Strings.settingsSectionAccountActions,
-                            description = Strings.settingsAccountActionsBody,
+                            title = Strings.settingsSectionPurchases,
+                            description = Strings.settingsPurchasesDescription,
                         ) {
                             SettingsRow(
-                                Icons.AutoMirrored.Rounded.Logout,
-                                Strings.logOut,
-                                state.signedInEmail ?: Strings.logOutBody,
-                                iconTint = MaterialTheme.colorScheme.error,
-                                onClick = onLogout,
+                                Icons.Rounded.Diamond,
+                                Strings.diamondStore,
+                                Strings.diamondStoreBody,
+                                iconTint = HomeDecorExtra.diamondAccent,
+                                onClick = onOpenDiamonds,
+                            )
+                        }
+
+                        DesktopSettingsSection(
+                            title = Strings.settingsSectionSupport,
+                            description = Strings.settingsSupportDescription,
+                        ) {
+                            SettingsRow(
+                                Icons.AutoMirrored.Rounded.Help,
+                                Strings.helpCenter,
+                                Strings.helpCenterBody,
+                                iconTint = MaterialTheme.colorScheme.tertiary,
+                                onClick = onFaq,
                             )
                             SettingsDivider()
                             SettingsRow(
-                                Icons.Rounded.Delete,
-                                Strings.deleteAccountTitle,
-                                Strings.deleteAccountBody,
-                                iconTint = MaterialTheme.colorScheme.error,
-                                onClick = onDeleteAccount,
+                                Icons.Rounded.Mail,
+                                Strings.contactUs,
+                                Strings.contactUsBody,
+                                iconTint = MaterialTheme.colorScheme.secondary,
+                                onClick = onContactSupport,
                             )
+                            SettingsDivider()
+                            SettingsRow(
+                                Icons.Rounded.Feedback,
+                                Strings.sendFeedback,
+                                Strings.feedbackBody,
+                                iconTint = MaterialTheme.colorScheme.primary,
+                                onClick = onFeedback,
+                            )
+                        }
+                    }
+                    }
+                }
+                Spacer(Modifier.height(HomeDecorSpacing.Lg))
+            }
+
+            // ── Row 2: Legal (left) + Account Actions (right, signed-in only) ──
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
+                        ) {
+                            DesktopSettingsSection(
+                                title = Strings.settingsSectionLegal,
+                                description = Strings.settingsLegalDescription,
+                            ) {
+                                SettingsRow(
+                                    Icons.Rounded.Description,
+                                    Strings.terms,
+                                    Strings.termsBody,
+                                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    onClick = onTerms,
+                                )
+                                SettingsDivider()
+                                SettingsRow(
+                                    Icons.Rounded.Shield,
+                                    Strings.privacyPolicy,
+                                    Strings.privacyBody,
+                                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    onClick = onPrivacy,
+                                )
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Lg),
+                        ) {
+                            if (state.isSignedIn) {
+                                DesktopSettingsSection(
+                                    title = Strings.settingsSectionAccountActions,
+                                    description = Strings.settingsAccountActionsBody,
+                                ) {
+                                    SettingsRow(
+                                        Icons.AutoMirrored.Rounded.Logout,
+                                        Strings.logOut,
+                                        state.signedInEmail ?: Strings.logOutBody,
+                                        iconTint = MaterialTheme.colorScheme.error,
+                                        onClick = onLogout,
+                                    )
+                                    SettingsDivider()
+                                    SettingsRow(
+                                        Icons.Rounded.Delete,
+                                        Strings.deleteAccountTitle,
+                                        Strings.deleteAccountBody,
+                                        iconTint = MaterialTheme.colorScheme.error,
+                                        onClick = onDeleteAccount,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            Text(
-                Strings.versionLabel(state.versionName),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 24.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            )
+            // Version footer
+            item {
+                Text(
+                    Strings.versionLabel(state.versionName),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                )
+            }
         }
     }
 }
@@ -808,7 +876,7 @@ private fun SettingsDivider() {
 // ── Language Picker ──────────────────────────────────────────────────────────
 
 @Composable
-private fun LanguagePickerContent(
+internal fun LanguagePickerContent(
     currentLanguageTag: String,
     supportedLanguages: List<SettingsLanguage>,
     onLanguageSelected: (String) -> Unit,

@@ -25,7 +25,7 @@ object WhopConfig {
     val MONTHLY_PLAN_ID: String = dotenv["WHOP_MONTHLY_PLAN_ID"] ?: "plan_MONTHLY_PLAN_ID"
 
     // ── Checkout URLs ────────────────────────────────────────────────────
-    val CHECKOUT_URL_MONTHLY: String = "https://whop.com/checkout/$PRODUCT_ID/"
+    val CHECKOUT_URL_MONTHLY: String = "https://whop.com/checkout/$MONTHLY_PLAN_ID/"
     val CHECKOUT_URL_YEARLY: String = "https://whop.com/checkout/$YEARLY_PLAN_ID/"
     val CHECKOUT_URL_PRO: String = "https://whop.com/checkout/$PRO_PLAN_ID/"
 

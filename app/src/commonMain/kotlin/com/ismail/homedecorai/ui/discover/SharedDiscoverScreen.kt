@@ -2,8 +2,6 @@ package com.ismail.homedecorai.ui.discover
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,6 +31,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Save
@@ -61,7 +60,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -79,7 +77,6 @@ import com.ismail.homedecorai.getScreenWidthDp
 import com.ismail.homedecorai.model.DiscoverSectionItem
 import com.ismail.homedecorai.model.DiscoverScreenState
 import com.ismail.homedecorai.model.GalleryCardItem
-import com.ismail.homedecorai.showToast
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
 
@@ -124,7 +121,6 @@ fun SharedDiscoverScreen(
 
     fun toggleFavorite(section: DiscoverSectionItem, item: GalleryCardItem) {
         if (!state.isSignedIn) {
-            showToast(Strings.boardSignInCta)
             onSignIn()
             return
         }
@@ -133,7 +129,6 @@ fun SharedDiscoverScreen(
 
     fun addToMoodboard(section: DiscoverSectionItem, item: GalleryCardItem) {
         if (!state.isSignedIn) {
-            showToast(Strings.boardSignInCta)
             onSignIn()
             return
         }
@@ -153,8 +148,6 @@ fun SharedDiscoverScreen(
             onPreview = { previewItem = it.id },
             favoriteSources = state.favoriteSourceIds,
             onFavorite = { toggleFavorite(activeDetailSection, it) },
-            onMoodboard = { addToMoodboard(activeDetailSection, it) },
-            onUseStyle = { useStyle(activeDetailSection, it) },
         )
         return
     }
@@ -193,8 +186,6 @@ fun SharedDiscoverScreen(
                     onPreview = { previewItem = it.id },
                     favoriteSources = state.favoriteSourceIds,
                     onFavorite = { toggleFavorite(section, it) },
-                    onMoodboard = { addToMoodboard(section, it) },
-                    onUseStyle = { useStyle(section, it) },
                 )
             }
         }
@@ -327,8 +318,6 @@ fun DiscoverSectionRow(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
-    onMoodboard: (GalleryCardItem) -> Unit,
-    onUseStyle: (GalleryCardItem) -> Unit,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val isDesktop = rememberIsDesktop()
@@ -352,7 +341,7 @@ fun DiscoverSectionRow(
             )
             TextButton(
                 onClick = onSeeAll,
-                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Xs, vertical = HomeDecorSpacing.Xxs),
+                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
                 modifier = Modifier
                     .minimumTouchTarget()
                     .testTag(Strings.formatTestTag(Strings.TestTags.discoverSeeAll, section.id))
@@ -360,9 +349,16 @@ fun DiscoverSectionRow(
             ) {
                 Text(
                     Strings.seeAll,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.width(HomeDecorSpacing.Xs))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -373,8 +369,6 @@ fun DiscoverSectionRow(
                 onPreview = onPreview,
                 favoriteSources = favoriteSources,
                 onFavorite = onFavorite,
-                onMoodboard = onMoodboard,
-                onUseStyle = onUseStyle,
             )
         } else {
             DiscoverSectionMobileRow(
@@ -382,8 +376,6 @@ fun DiscoverSectionRow(
                 onPreview = onPreview,
                 favoriteSources = favoriteSources,
                 onFavorite = onFavorite,
-                onMoodboard = onMoodboard,
-                onUseStyle = onUseStyle,
             )
         }
     }
@@ -395,8 +387,6 @@ private fun DiscoverSectionMobileRow(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
-    onMoodboard: (GalleryCardItem) -> Unit,
-    onUseStyle: (GalleryCardItem) -> Unit,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val availableWidth = getScreenWidthDp().dp - HomeDecorSpacing.ScreenHorizontal * 2
@@ -418,9 +408,7 @@ private fun DiscoverSectionMobileRow(
                 isDesktop = false,
                 modifier = Modifier.width(cardWidth),
                 onClick = { onPreview(item) },
-                onUseStyle = { onUseStyle(item) },
                 onFavorite = { onFavorite(item) },
-                onMoodboard = { onMoodboard(item) },
             )
         }
     }
@@ -434,8 +422,6 @@ fun DiscoverSectionGrid(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
-    onMoodboard: (GalleryCardItem) -> Unit,
-    onUseStyle: (GalleryCardItem) -> Unit,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val screenWidthDp = getScreenWidthDp()
@@ -461,13 +447,8 @@ fun DiscoverSectionGrid(
                         isDesktop = true,
                         modifier = Modifier.weight(1f),
                         onClick = { onPreview(item) },
-                        onUseStyle = { onUseStyle(item) },
                         onFavorite = { onFavorite(item) },
-                        onMoodboard = { onMoodboard(item) },
                     )
-                }
-                repeat(columns - rowItems.size) {
-                    Spacer(Modifier.weight(1f))
                 }
             }
         }
@@ -483,8 +464,6 @@ fun DiscoverDetailScreen(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
-    onMoodboard: (GalleryCardItem) -> Unit,
-    onUseStyle: (GalleryCardItem) -> Unit,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val isDesktop = rememberIsDesktop()
@@ -550,9 +529,7 @@ fun DiscoverDetailScreen(
                     isDesktop = isDesktop,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { onPreview(item) },
-                    onUseStyle = { onUseStyle(item) },
                     onFavorite = { onFavorite(item) },
-                    onMoodboard = { onMoodboard(item) },
                 )
             }
         }
@@ -630,24 +607,33 @@ fun DiscoverPreviewDialog(
             }
         },
         title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(Modifier.weight(1f)) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(end = 48.dp),
+                ) {
                     Text(
                         itemTitle,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = (-0.3).sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                    Spacer(Modifier.height(HomeDecorSpacing.Xxs))
                     Text(
                         sectionTitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-                IconButton(onClick = onDismiss) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.TopEnd),
+                ) {
                     Icon(Icons.Rounded.Close, contentDescription = Strings.close)
                 }
             }
@@ -678,18 +664,13 @@ fun GalleryCard(
     isDesktop: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    onUseStyle: () -> Unit,
     onFavorite: () -> Unit,
-    onMoodboard: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
-    var mobileActionsVisible by rememberSaveable { mutableStateOf(false) }
 
     ElevatedCard(
-        onClick = {
-            if (isDesktop) onClick() else mobileActionsVisible = !mobileActionsVisible
-        },
+        onClick = onClick,
         shape = HomeDecorShape.Card,
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(
@@ -711,14 +692,14 @@ fun GalleryCard(
                 isDesktop = isDesktop,
                 modifier = Modifier.fillMaxSize(),
             )
-            // Favorite indicator badge (always visible when favorited)
+            // Favorite badge — minimal dot, top-end
             if (isFavorite) {
                 Surface(
                     shape = HomeDecorShape.Full,
                     color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.92f),
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(HomeDecorSpacing.Sm)
+                        .padding(HomeDecorSpacing.Md)
                         .size(28.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -731,69 +712,13 @@ fun GalleryCard(
                     }
                 }
             }
-            // Desktop hover overlay
-            if (isDesktop) {
-                Box(Modifier.fillMaxSize()) {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = isHovered,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                    ) {
-                        HoverOverlay(
-                            onFavorite = onFavorite,
-                            onUseStyle = onUseStyle,
-                            onMoodboard = onMoodboard,
-                        )
-                    }
-                }
-            }
-            // Mobile: compact action bar (tap card to reveal, tap action to use)
-            if (!isDesktop) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = mobileActionsVisible,
-                    enter = fadeIn(spring()),
-                    exit = fadeOut(),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        HomeDecorExtra.scrimHeavy.copy(alpha = 0.3f),
-                                        HomeDecorExtra.scrimHeavy,
-                                    )
-                                )
-                            ),
-                    )
-                }
-                // Always-visible action row at bottom
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm, Alignment.CenterHorizontally),
+            // Desktop hover — faint overlay to hint interactivity, no button
+            if (isDesktop && isHovered) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Sm),
-                ) {
-                    MobileActionButton(
-                        icon = Icons.Rounded.Star,
-                        label = Strings.favorite,
-                        filled = isFavorite,
-                        onClick = { onFavorite() },
-                    )
-                    MobileActionButton(
-                        icon = Icons.Rounded.AutoAwesome,
-                        label = Strings.discoverUseStyle,
-                        onClick = { onUseStyle() },
-                    )
-                    MobileActionButton(
-                        icon = Icons.Rounded.Save,
-                        label = Strings.discoverSave,
-                        onClick = { onMoodboard() },
-                    )
-                }
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.04f)),
+                )
             }
         }
     }
@@ -819,8 +744,8 @@ fun GalleryImageCard(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-        // Bottom label with gradient scrim
-        Box(
+        // Bottom label — minimal title only, generous padding
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
@@ -829,160 +754,20 @@ fun GalleryImageCard(
                         colors = listOf(
                             Color.Transparent,
                             Color.Transparent,
-                            HomeDecorExtra.scrimMedium,
-                            HomeDecorExtra.scrimHeavy,
+                            Color.Black.copy(alpha = 0.40f),
+                            Color.Black.copy(alpha = 0.70f),
                         )
                     )
                 )
-                .padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Lg),
         ) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = HomeDecorExtra.onGradientText,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = Strings.aiGeneratedBadge,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Normal,
-                color = HomeDecorExtra.onGradientText.copy(alpha = 0.7f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-// ─── Hover Overlay (Desktop) ───────────────────────────────────────────────
-
-@Composable
-fun HoverOverlay(
-    onFavorite: () -> Unit,
-    onUseStyle: () -> Unit,
-    onMoodboard: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        HomeDecorExtra.scrimHeavy.copy(alpha = 0.5f),
-                        HomeDecorExtra.scrimHeavy,
-                    )
-                )
-            )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {},
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
-        ) {
-            HoverActionButton(
-                icon = Icons.Rounded.Star,
-                label = Strings.favorite,
-                onClick = onFavorite,
-            )
-            HoverActionButton(
-                icon = Icons.Rounded.AutoAwesome,
-                label = Strings.discoverUseStyle,
-                onClick = onUseStyle,
-            )
-            HoverActionButton(
-                icon = Icons.Rounded.Save,
-                label = Strings.discoverSave,
-                onClick = onMoodboard,
-            )
-        }
-    }
-}
-
-@Composable
-fun HoverActionButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xxs),
-        modifier = Modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
-            .semantics {
-                role = Role.Button
-                contentDescription = label
-            }
-            .padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
-    ) {
-        Surface(
-            shape = HomeDecorShape.Full,
-            color = HomeDecorExtra.onGradientText.copy(alpha = 0.92f),
-            modifier = Modifier.size(40.dp),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = HomeDecorExtra.onGradientText,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-fun MobileActionButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    filled: Boolean = false,
-) {
-    Surface(
-        shape = HomeDecorShape.Full,
-        color = if (filled)
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
-        else
-            HomeDecorExtra.onGradientText.copy(alpha = 0.92f),
-        modifier = Modifier
-            .size(36.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            )
-            .semantics {
-                role = Role.Button
-                contentDescription = label
-            },
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                modifier = Modifier.size(16.dp),
-                tint = if (filled)
-                    MaterialTheme.colorScheme.onPrimary
-                else
-                    MaterialTheme.colorScheme.onSurface,
             )
         }
     }

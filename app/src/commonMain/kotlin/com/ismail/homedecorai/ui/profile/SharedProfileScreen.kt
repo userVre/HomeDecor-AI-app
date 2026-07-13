@@ -17,11 +17,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -35,26 +35,30 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Mail
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -67,11 +71,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.showToast
+import com.ismail.homedecorai.ui.rememberIsCompact
 import com.ismail.homedecorai.ui.rememberIsDesktop
+import com.ismail.homedecorai.ui.settings.LanguagePickerContent
+import com.ismail.homedecorai.ui.settings.SettingsLanguage
 import com.ismail.homedecorai.ui.theme.*
 
 data class ProfileScreenState(
@@ -95,8 +103,11 @@ fun SharedProfileScreen(
     onNavigateToDiscover: () -> Unit = {},
     onOpenUrl: (String) -> Unit = {},
 ) {
-    val signedIn = !state.isGuest || state.signedInName != null || state.diamonds > 0 || state.savedDesigns.isNotEmpty()
+    val signedIn = !state.isGuest && (state.signedInName != null || state.signedInEmail != null)
     val isDesktop = rememberIsDesktop()
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    val languageSheetState = rememberModalBottomSheetState()
+    val languageScope = rememberCoroutineScope()
 
     Column(
         Modifier
@@ -136,17 +147,32 @@ fun SharedProfileScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    IconButton(
+                    Surface(
                         onClick = onSettings,
+                        shape = HomeDecorShape.Medium,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier
-                            .size(48.dp)
+                            .height(40.dp)
                             .testTag(Strings.TestTags.profileSettingsButton),
                     ) {
-                        Icon(
-                            Icons.Rounded.Settings,
-                            contentDescription = Strings.settings,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Icon(
+                                Icons.Rounded.Settings,
+                                contentDescription = Strings.settings,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                Strings.settings,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
                 }
             }
@@ -157,22 +183,38 @@ fun SharedProfileScreen(
                 }
 
                 item("preferences-section-guest") {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = if (isDesktop) Alignment.TopCenter else Alignment.TopStart,
+                    ) {
+                    Column(
+                        modifier = if (isDesktop) Modifier.widthIn(max = 800.dp) else Modifier,
+                    ) {
                     ProfileSectionLabel(Strings.preferencesSection)
-                    SettingsCard {
+                    SettingsCard(maxWidth = if (isDesktop) 800.dp else null) {
                         ProfileRow(
                             icon = Icons.Rounded.Language,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
                             iconTint = MaterialTheme.colorScheme.tertiary,
                             title = Strings.languageLabel,
                             subtitle = Strings.languageBody,
-                            onClick = onSettings,
+                            onClick = { showLanguageDialog = true },
                         )
+                    }
+                    }
                     }
                 }
 
                 item("support-section-guest") {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = if (isDesktop) Alignment.TopCenter else Alignment.TopStart,
+                    ) {
+                    Column(
+                        modifier = if (isDesktop) Modifier.widthIn(max = 800.dp) else Modifier,
+                    ) {
                     ProfileSectionLabel(Strings.supportSection)
-                    SettingsCard {
+                    SettingsCard(maxWidth = if (isDesktop) 800.dp else null) {
                         ProfileRow(
                             icon = Icons.Rounded.Help,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
@@ -200,11 +242,20 @@ fun SharedProfileScreen(
                             onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Feedback") },
                         )
                     }
+                    }
+                    }
                 }
 
                 item("legal-section-guest") {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = if (isDesktop) Alignment.TopCenter else Alignment.TopStart,
+                    ) {
+                    Column(
+                        modifier = if (isDesktop) Modifier.widthIn(max = 800.dp) else Modifier,
+                    ) {
                     ProfileSectionLabel(Strings.legalSection)
-                    SettingsCard {
+                    SettingsCard(maxWidth = if (isDesktop) 800.dp else null) {
                         ProfileRow(
                             icon = Icons.Rounded.Shield,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
@@ -222,6 +273,8 @@ fun SharedProfileScreen(
                             subtitle = Strings.privacyPolicyBody,
                             onClick = { showToast(Strings.toastComingSoon) },
                         )
+                    }
+                    }
                     }
                 }
             } else {
@@ -241,6 +294,12 @@ fun SharedProfileScreen(
 
                 if (isDesktop) {
                     item("desktop-content") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .widthIn(max = 800.dp),
+                            contentAlignment = Alignment.TopCenter,
+                        ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
@@ -343,7 +402,7 @@ fun SharedProfileScreen(
                                         title = Strings.privacyPolicyLabel,
                                         subtitle = Strings.privacyPolicyBody,
                             onClick = { showToast(Strings.toastComingSoon) },
-                                    )
+                                     )
                                 }
                             }
                         }
@@ -473,6 +532,45 @@ fun SharedProfileScreen(
             }
         }
     }
+
+    if (showLanguageDialog) {
+        if (isDesktop) {
+            AlertDialog(
+                onDismissRequest = { showLanguageDialog = false },
+            ) {
+                Surface(
+                    shape = HomeDecorShape.ExtraExtraLarge,
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp,
+                ) {
+                    LanguagePickerContent(
+                        currentLanguageTag = "en",
+                        supportedLanguages = listOf(SettingsLanguage("en", "English")),
+                        onLanguageSelected = {
+                            showLanguageDialog = false
+                        },
+                    )
+                }
+            }
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showLanguageDialog = false },
+                sheetState = languageSheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+            ) {
+                LanguagePickerContent(
+                    currentLanguageTag = "en",
+                    supportedLanguages = listOf(SettingsLanguage("en", "English")),
+                    onLanguageSelected = {
+                        languageScope.launch {
+                            languageSheetState.hide()
+                            showLanguageDialog = false
+                        }
+                    },
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -484,237 +582,52 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        if (isDesktop) {
-            Row(
-                Modifier.padding(HomeDecorSpacing.Xl),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xl),
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
-                ) {
-                    Text(
-                        Strings.boardGuestHeadline,
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        Strings.profileSignInBody,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            ProfileBenefitCard(
-                                icon = Icons.Rounded.FavoriteBorder,
-                                title = Strings.profileGuestBenefit1Title,
-                                body = Strings.profileGuestBenefit1Body,
-                                modifier = Modifier.weight(1f),
-                            )
-                            ProfileBenefitCard(
-                                icon = Icons.Rounded.PhoneAndroid,
-                                title = Strings.profileGuestBenefit2Title,
-                                body = Strings.profileGuestBenefit2Body,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            ProfileBenefitCard(
-                                icon = Icons.Rounded.Diamond,
-                                title = Strings.profileGuestBenefit3Title,
-                                body = Strings.profileGuestBenefit3Body,
-                                modifier = Modifier.weight(1f),
-                            )
-                            ProfileBenefitCard(
-                                icon = Icons.Rounded.Star,
-                                title = Strings.profileGuestBenefit4Title,
-                                body = Strings.profileGuestBenefit4Body,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    }
-
-                    Button(
-                        onClick = onSignIn,
-                        shape = HomeDecorShape.Button,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier
-                            .width(220.dp)
-                            .height(HomeDecorSpacing.ButtonHeight)
-                            .testTag(Strings.TestTags.profileSignInButton),
-                    ) {
-                        Text(
-                            Strings.boardGuestCta,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                }
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                ) {
-                    ProfileDesignPreviewCard("Living Room", "Scandinavian")
-                    ProfileDesignPreviewCard("Bedroom", "Bohemian")
-                    ProfileDesignPreviewCard("Kitchen", "Minimalist")
-                }
-            }
-        } else {
-            Column(
-                Modifier.padding(HomeDecorSpacing.Xl),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
-            ) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                ) {
-                    item { ProfileDesignPreviewCard("Living Room", "Scandinavian") }
-                    item { ProfileDesignPreviewCard("Bedroom", "Bohemian") }
-                }
-
-                Text(
-                    Strings.boardGuestHeadline,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    Strings.profileSignInBody,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium,
-                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    ProfileBenefitChip(
-                        icon = Icons.Rounded.FavoriteBorder,
-                        label = Strings.profileGuestBenefit1Title,
-                        modifier = Modifier.weight(1f),
-                    )
-                    ProfileBenefitChip(
-                        icon = Icons.Rounded.PhoneAndroid,
-                        label = Strings.profileGuestBenefit2Title,
-                        modifier = Modifier.weight(1f),
-                    )
-                    ProfileBenefitChip(
-                        icon = Icons.Rounded.Star,
-                        label = Strings.profileGuestBenefit3Title,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-
-                Button(
-                    onClick = onSignIn,
-                    shape = HomeDecorShape.Button,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(HomeDecorSpacing.ButtonHeight)
-                        .testTag(Strings.TestTags.profileSignInButton),
-                ) {
-                    Text(
-                        Strings.boardGuestCta,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProfileBenefitCard(
-    icon: ImageVector,
-    title: String,
-    body: String,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = modifier,
-    ) {
-        Row(
-            modifier = Modifier.padding(HomeDecorSpacing.Md),
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
-            verticalAlignment = Alignment.Top,
+        Column(
+            modifier = Modifier.padding(if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.CardInternal),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             Surface(
-                shape = HomeDecorShape.Badge,
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                modifier = Modifier.size(36.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(64.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        icon,
+                        Icons.Rounded.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(32.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    body,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProfileBenefitChip(
-    icon: ImageVector,
-    label: String,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        shape = HomeDecorShape.Chip,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = modifier,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = MaterialTheme.colorScheme.primary,
+            Text(
+                Strings.boardGuestHeadline,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
+                Strings.profileSignInBody,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = if (isDesktop) HomeDecorSpacing.Xl else 0.dp),
             )
+            Button(
+                onClick = onSignIn,
+                shape = HomeDecorShape.Button,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(HomeDecorSpacing.ButtonHeight)
+                    .testTag(Strings.TestTags.profileSignInButton),
+            ) {
+                Text(
+                    Strings.profileSignInRegister,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
     }
 }
@@ -733,7 +646,6 @@ private fun ProfileDesignPreviewCard(name: String, style: String) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(90.dp)
-                    .clip(HomeDecorShape.Large)
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
@@ -744,35 +656,6 @@ private fun ProfileDesignPreviewCard(name: String, style: String) {
                         ),
                     ),
             ) {
-                Box(
-                    modifier = Modifier
-                        .padding(start = 12.dp, top = 35.dp)
-                        .size(50.dp, 24.dp)
-                        .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)),
-                )
-                Box(
-                    modifier = Modifier
-                        .padding(start = 68.dp, top = 40.dp)
-                        .size(34.dp, 18.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f)),
-                )
-                Box(
-                    modifier = Modifier
-                        .padding(start = 112.dp, top = 20.dp)
-                        .size(18.dp, 34.dp)
-                        .clip(RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.25f)),
-                )
-                Box(
-                    modifier = Modifier
-                        .padding(start = 12.dp, top = 62.dp)
-                        .size(110.dp, 10.dp)
-                        .clip(RoundedCornerShape(5.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)),
-                )
-
                 Surface(
                     shape = HomeDecorShape.Badge,
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
@@ -819,41 +702,82 @@ private fun ProfileStatusCards(
     onSavedClick: () -> Unit,
     isDesktop: Boolean = false,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Md else HomeDecorSpacing.Sm),
-    ) {
-        StatusCard(
-            icon = Icons.Rounded.Diamond,
-            label = Strings.profileStatusDiamonds,
-            value = state.diamonds.toString(),
-            iconTint = HomeDecorExtra.diamondAccent,
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-            modifier = Modifier.weight(1f),
-            onClick = onDiamondsClick,
-        )
-        StatusCard(
-            icon = Icons.Rounded.Star,
-            label = Strings.profileStatusPlan,
-            value = if (state.isPro) "Pro" else Strings.freePlan,
-            iconTint = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
-            containerColor = if (state.isPro) {
-                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-            } else {
-                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
-            },
-            modifier = Modifier.weight(1f),
-            onClick = onPlanClick,
-        )
-        StatusCard(
-            icon = Icons.Rounded.FavoriteBorder,
-            label = Strings.profileStatusSaved,
-            value = state.favoritesCount.toString(),
-            iconTint = MaterialTheme.colorScheme.error,
-            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
-            modifier = Modifier.weight(1f),
-            onClick = onSavedClick,
-        )
+    val isCompact = rememberIsCompact()
+
+    if (isCompact) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        ) {
+            StatusCard(
+                icon = Icons.Rounded.Diamond,
+                label = Strings.profileStatusDiamonds,
+                value = state.diamonds.toString(),
+                iconTint = HomeDecorExtra.diamondAccent,
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onDiamondsClick,
+            )
+            StatusCard(
+                icon = Icons.Rounded.Star,
+                label = Strings.profileStatusPlan,
+                value = if (state.isPro) "Pro" else Strings.freePlan,
+                iconTint = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
+                containerColor = if (state.isPro) {
+                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                } else {
+                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onPlanClick,
+            )
+            StatusCard(
+                icon = Icons.Rounded.FavoriteBorder,
+                label = Strings.profileStatusSaved,
+                value = state.favoritesCount.toString(),
+                iconTint = MaterialTheme.colorScheme.error,
+                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onSavedClick,
+            )
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(if (isDesktop) HomeDecorSpacing.Md else HomeDecorSpacing.Sm),
+        ) {
+            StatusCard(
+                icon = Icons.Rounded.Diamond,
+                label = Strings.profileStatusDiamonds,
+                value = state.diamonds.toString(),
+                iconTint = HomeDecorExtra.diamondAccent,
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                modifier = Modifier.weight(1f),
+                onClick = onDiamondsClick,
+            )
+            StatusCard(
+                icon = Icons.Rounded.Star,
+                label = Strings.profileStatusPlan,
+                value = if (state.isPro) "Pro" else Strings.freePlan,
+                iconTint = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
+                containerColor = if (state.isPro) {
+                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                } else {
+                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+                },
+                modifier = Modifier.weight(1f),
+                onClick = onPlanClick,
+            )
+            StatusCard(
+                icon = Icons.Rounded.FavoriteBorder,
+                label = Strings.profileStatusSaved,
+                value = state.favoritesCount.toString(),
+                iconTint = MaterialTheme.colorScheme.error,
+                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                modifier = Modifier.weight(1f),
+                onClick = onSavedClick,
+            )
+        }
     }
 }
 
@@ -929,7 +853,11 @@ private fun SignedInProfileHero(state: ProfileScreenState, isDesktop: Boolean = 
                     color = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier.size(72.dp),
                 ) {
-                    val initials = (state.signedInName ?: Strings.initialsFallback).take(2).uppercase()
+                    val displayName = state.signedInName
+                        ?.takeIf { it.isNotBlank() }
+                        ?: state.signedInEmail?.substringBefore('@')?.takeIf { it.isNotBlank() }
+                        ?: Strings.guestExplorer
+                    val initials = displayName.take(2).uppercase()
                     Text(
                         initials,
                         modifier = Modifier
@@ -940,24 +868,14 @@ private fun SignedInProfileHero(state: ProfileScreenState, isDesktop: Boolean = 
                         textAlign = TextAlign.Center,
                     )
                 }
-                Surface(
-                    shape = HomeDecorShape.Badge,
-                    color = if (state.isPro) HomeDecorExtra.premiumGold else MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 2.dp, bottom = 2.dp),
-                ) {
-                    Text(
-                        if (state.isPro) "PRO" else Strings.freeBadge,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = HomeDecorExtra.onGradientText,
-                    )
-                }
             }
             Column(modifier = Modifier.weight(1f)) {
+                val displayName = state.signedInName
+                    ?.takeIf { it.isNotBlank() }
+                    ?: state.signedInEmail?.substringBefore('@')?.takeIf { it.isNotBlank() }
+                    ?: Strings.guestExplorer
                 Text(
-                    state.signedInName ?: Strings.accountConnected,
+                    displayName,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1045,6 +963,12 @@ private fun ProfileSavedDesignsPreview(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
+                    Text(
+                        Strings.boardEmptyGeneratedBody,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
                     Spacer(Modifier.height(HomeDecorSpacing.Xs))
                     Surface(
                         shape = HomeDecorShape.Button,
@@ -1117,13 +1041,21 @@ private fun ProfileSectionLabel(label: String) {
 }
 
 @Composable
-private fun SettingsCard(content: @Composable () -> Unit) {
+private fun SettingsCard(
+    maxWidth: Dp? = null,
+    content: @Composable () -> Unit,
+) {
+    val cardModifier = if (maxWidth != null) {
+        Modifier.widthIn(max = maxWidth).fillMaxWidth()
+    } else {
+        Modifier.fillMaxWidth()
+    }
     Surface(
         shape = HomeDecorShape.CardLarge,
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = cardModifier,
     ) {
         Column(Modifier.padding(vertical = HomeDecorSpacing.Sm)) {
             content()

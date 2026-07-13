@@ -26,4 +26,8 @@ server/build/
 
 # Logs
 *.log
-gradle-web.log
+
+# Generated artifacts
+screenshots/
+qa-artifacts/
+.codex/

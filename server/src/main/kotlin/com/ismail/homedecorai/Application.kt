@@ -112,6 +112,7 @@ fun Application.module() {
                     mapOf(
                         "monthly" to WhopConfig.CHECKOUT_URL_MONTHLY,
                         "yearly" to WhopConfig.CHECKOUT_URL_YEARLY,
+                        "family" to WhopConfig.CHECKOUT_URL_PRO,
                         "pro" to WhopConfig.CHECKOUT_URL_PRO
                     )
                 )

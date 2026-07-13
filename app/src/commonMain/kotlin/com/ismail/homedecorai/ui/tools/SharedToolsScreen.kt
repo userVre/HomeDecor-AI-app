@@ -21,13 +21,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Diamond
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,8 +41,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -55,7 +56,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.Strings
-import com.ismail.homedecorai.getScreenWidthDp
 import com.ismail.homedecorai.model.ToolItem
 import com.ismail.homedecorai.model.ToolsScreenState
 import com.ismail.homedecorai.ui.discover.NetworkImage
@@ -65,7 +65,7 @@ import com.ismail.homedecorai.ui.theme.*
 // SharedToolsScreen  –  MD3 Expressive  |  Production Product Hub
 // ---------------------------------------------------------------------------
 // Full-bleed image cards matching native app density.
-// Responsive grid: 4 cols desktop, 3 medium, 2 tablet, 1 mobile.
+// Responsive grid: GridCells.Adaptive(280.dp) auto-wraps across viewports.
 // Each card: full-bleed image, gradient overlay, title, description, pill CTA.
 // All 8 tools route to /create/{toolId} via onToolClick callback.
 // ---------------------------------------------------------------------------
@@ -74,16 +74,7 @@ import com.ismail.homedecorai.ui.theme.*
 fun SharedToolsScreen(
     state: ToolsScreenState,
     onToolClick: (ToolItem) -> Unit,
-    onCredits: () -> Unit = {},
 ) {
-    val screenWidth = getScreenWidthDp()
-    val columns = when {
-        screenWidth >= 1440 -> 4
-        screenWidth >= 1024 -> 3
-        screenWidth >= 600  -> 2
-        else                -> 1
-    }
-
     if (state.isLoading) {
         ToolsLoadingContent()
         return
@@ -100,26 +91,16 @@ fun SharedToolsScreen(
             .background(MaterialTheme.colorScheme.background)
             .testTag(Strings.TestTags.toolsScreen),
     ) {
-        ToolsHeader(
-            diamonds = state.diamonds,
-            isPro = state.isPro,
-            onCredits = onCredits,
-        )
-
-        val horizontalPadding = when {
-            columns >= 4 -> HomeDecorSpacing.Xxl
-            columns >= 3 -> HomeDecorSpacing.Xl
-            else         -> HomeDecorSpacing.ScreenHorizontal
-        }
+        ToolsHeader()
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(columns),
+            columns = GridCells.Adaptive(minSize = 280.dp),
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(
-                start = horizontalPadding,
-                end = horizontalPadding,
+                start = HomeDecorSpacing.ScreenHorizontal,
+                end = HomeDecorSpacing.ScreenHorizontal,
                 top = HomeDecorSpacing.Sm,
-                bottom = if (columns >= 4) HomeDecorSpacing.Xxl else HomeDecorSpacing.NavBarReservation,
+                bottom = HomeDecorSpacing.NavBarReservation,
             ),
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
@@ -139,79 +120,37 @@ fun SharedToolsScreen(
 }
 
 // ---------------------------------------------------------------------------
-// Header  –  Title + subtitle row with credits badge
+// Header  –  Title + subtitle
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun ToolsHeader(
-    diamonds: Int,
-    isPro: Boolean,
-    onCredits: () -> Unit,
-) {
+private fun ToolsHeader() {
     Surface(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         modifier = Modifier.testTag(Strings.TestTags.toolsHeader),
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
                     horizontal = HomeDecorSpacing.ScreenHorizontal,
                     vertical = HomeDecorSpacing.Md,
                 ),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    Strings.navTools,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.semantics { heading() },
-                )
-                Spacer(Modifier.height(HomeDecorSpacing.Xxs))
-                Text(
-                    Strings.toolsSubtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            // Credits badge — matches native app header, using contextual accent
-            val creditsDescription = Strings.a11yOpenDiamondStore
-            Surface(
-                onClick = onCredits,
-                shape = HomeDecorShape.Pill,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                tonalElevation = 2.dp,
-                modifier = Modifier
-                    .semantics {
-                        contentDescription = creditsDescription
-                        role = Role.Button
-                    },
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
-                    modifier = Modifier
-                        .height(HomeDecorSpacing.TouchTarget)
-                        .padding(horizontal = HomeDecorSpacing.Md),
-                ) {
-                    Icon(
-                        Icons.Rounded.Diamond,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = HomeDecorExtra.toolsAccent,
-                    )
-                    Text(
-                        if (isPro) "PRO" else "$diamonds",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
+            Text(
+                Strings.navTools,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { heading() },
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Xxs))
+            Text(
+                Strings.toolsSubtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -267,14 +206,28 @@ fun ToolCard(
     )
 
     // Gradient overlay — text readability on image (matches native app)
-    val gradientOverlay = Brush.verticalGradient(
-        0.0f to Color.Transparent,
-        0.35f to Color.Transparent,
-        0.55f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.06f),
-        0.72f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.14f),
-        0.88f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.28f),
-        1.0f to MaterialTheme.colorScheme.scrim.copy(alpha = 0.42f),
-    )
+    // Cards with light photo backgrounds (paint, floor) need a stronger scrim.
+    val needsStrongerScrim = tool.id == "paint" || tool.id == "floor"
+    val gradientStops = if (needsStrongerScrim) {
+        arrayOf(
+            0.0f to Color.Transparent,
+            0.55f to Color.Transparent,
+            0.70f to Color.Black.copy(alpha = 0.25f),
+            0.82f to Color.Black.copy(alpha = 0.50f),
+            0.92f to Color.Black.copy(alpha = 0.72f),
+            1.0f to Color.Black.copy(alpha = 0.85f),
+        )
+    } else {
+        arrayOf(
+            0.0f to Color.Transparent,
+            0.55f to Color.Transparent,
+            0.70f to Color.Black.copy(alpha = 0.15f),
+            0.82f to Color.Black.copy(alpha = 0.35f),
+            0.92f to Color.Black.copy(alpha = 0.52f),
+            1.0f to Color.Black.copy(alpha = 0.65f),
+        )
+    }
+    val gradientOverlay = Brush.verticalGradient(*gradientStops)
 
     Surface(
         onClick = onClick,
@@ -345,38 +298,67 @@ fun ToolCard(
                     modifier = Modifier.semantics { heading() },
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    description,
-                    color = Color.White.copy(alpha = 0.88f),
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                // Subtitle with drop shadow for readability on any card background
+                Box {
+                    Text(
+                        description,
+                        color = Color.Black.copy(alpha = 0.55f),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            shadow = Shadow(
+                                color = Color.Black.copy(alpha = 0.7f),
+                                offset = Offset(0f, 1.5f),
+                                blurRadius = 4f,
+                            ),
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        description,
+                        color = Color(0xD9FFFFFF),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                val costNote = Strings.toolCostNote(tool.id)
+                if (costNote.isNotEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        costNote,
+                        color = Color(0xB3FFFFFF),
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 Spacer(Modifier.height(12.dp))
-                // Pill CTA — matches native app style
-                Surface(
+                // Slim ElevatedButton CTA
+                ElevatedButton(
+                    onClick = {},
                     shape = HomeDecorShape.Badge,
-                    color = tool.accentColor.copy(alpha = 0.65f),
-                    modifier = Modifier.widthIn(min = 120.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
+                        containerColor = Color(0xD9FFFFFF),
+                        contentColor = HomeDecorColors.Primary,
+                    ),
+                    elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation(
+                        defaultElevation = 0.dp,
+                    ),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+                    modifier = Modifier.height(32.dp),
                 ) {
-                    Row(
-                        Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Rounded.AutoAwesome,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            Strings.tryThis,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = HomeDecorColors.Primary,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        Strings.toolCta(tool.id),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
 

@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 // ---------------------------------------------------------------------------
@@ -34,6 +33,7 @@ data class HomeDecorExtraColors(
     val premiumGold: Color,
     val card: Color,
     val elevatedCard: Color,
+    val surfaceCard: Color,
     val scrim: Color,
     // Extended semantic tokens for gradients, overlays, and on-gradient text
     val scrimLight: Color,
@@ -74,6 +74,7 @@ val LocalHomeDecorExtraColors = staticCompositionLocalOf {
         premiumGold = Color.Unspecified,
         card = Color.Unspecified,
         elevatedCard = Color.Unspecified,
+        surfaceCard = Color.Unspecified,
         scrim = Color.Unspecified,
         scrimLight = Color.Unspecified,
         scrimMedium = Color.Unspecified,
@@ -189,7 +190,8 @@ internal val LightExtra = HomeDecorExtraColors(
     proAccent = HomeDecorColors.ProAccent,
     premiumGold = HomeDecorColors.PremiumGold,
     card = HomeDecorColors.Paper,
-    elevatedCard = HomeDecorColors.SurfaceContainerLow,
+    elevatedCard = HomeDecorColors.SurfaceContainerHigh,
+    surfaceCard = HomeDecorColors.SurfaceCard,
     scrim = HomeDecorColors.Scrim,
     scrimLight = HomeDecorColors.ScrimLight,
     scrimMedium = HomeDecorColors.ScrimMedium,
@@ -223,6 +225,7 @@ internal val DarkExtra = HomeDecorExtraColors(
     premiumGold = HomeDecorColors.DarkPremiumGold,
     card = HomeDecorColors.DarkSurface,
     elevatedCard = HomeDecorColors.DarkOverlay,
+    surfaceCard = HomeDecorColors.DarkSurfaceCard,
     scrim = HomeDecorColors.DarkScrim,
     scrimLight = HomeDecorColors.DarkScrimLight,
     scrimMedium = HomeDecorColors.DarkScrimMedium,
@@ -303,41 +306,8 @@ fun studioStateIconContent(selected: Boolean) =
 fun studioPrimaryButtonColors() = ButtonDefaults.buttonColors(
     containerColor = MaterialTheme.colorScheme.primary,
     contentColor = MaterialTheme.colorScheme.onPrimary,
-    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = HomeDecorStateLayers.DisabledContainer),
+    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = HomeDecorStateLayers.DisabledContent),
 )
 
-@Composable
-fun studioSecondaryButtonColors() = ButtonDefaults.buttonColors(
-    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-)
 
-@Composable
-fun studioDestructiveButtonColors() = ButtonDefaults.buttonColors(
-    containerColor = MaterialTheme.colorScheme.error,
-    contentColor = MaterialTheme.colorScheme.onError,
-    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-)
-
-@Composable
-fun studioProButtonColors() = ButtonDefaults.buttonColors(
-    containerColor = MaterialTheme.colorScheme.primary,
-    contentColor = MaterialTheme.colorScheme.onPrimary,
-    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-)
-
-@Composable
-fun studioTextButtonColors() = ButtonDefaults.textButtonColors(
-    contentColor = MaterialTheme.colorScheme.primary,
-    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-)
-
-@Composable
-fun studioIconButtonColors() = ButtonDefaults.textButtonColors(
-    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-)

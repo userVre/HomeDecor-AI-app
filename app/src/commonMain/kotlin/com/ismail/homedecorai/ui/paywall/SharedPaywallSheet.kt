@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,7 +42,6 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Shield
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -92,7 +90,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.painterResource
 
-private const val TOTAL_STEPS = 5
+private const val TOTAL_STEPS = 2
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -106,7 +104,6 @@ fun SharedPaywallSheet(
     val proColors = rememberSheetPalette()
     val modalTapBlocker = remember { MutableInteractionSource() }
     var currentStep by remember { mutableIntStateOf(1) }
-    var selectedReminder by remember { mutableIntStateOf(2) }
     var checkoutLoading by remember { mutableStateOf(false) }
     var checkoutError by remember { mutableStateOf<String?>(null) }
     var checkoutSuccess by remember { mutableStateOf(false) }
@@ -124,7 +121,6 @@ fun SharedPaywallSheet(
             .testTag(Strings.TestTags.paywallSheet),
     ) {
         if (isDesktop) {
-            // Desktop: wide centered panel with gradient background
             Box(
                 Modifier
                     .align(Alignment.Center)
@@ -138,7 +134,6 @@ fun SharedPaywallSheet(
                         ),
                     ),
             ) {
-                // Subtle accent glow at top
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -164,24 +159,17 @@ fun SharedPaywallSheet(
                         Modifier
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = if (currentStep == 4) 32.dp else 40.dp)
+                            .padding(horizontal = 32.dp)
                             .testTag(Strings.formatTestTag(Strings.TestTags.paywallStepContent, currentStep)),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         when (currentStep) {
-                            1 -> PaywallStep1Unlimited(colors = proColors)
-                            2 -> PaywallStep2Reminder(
-                                colors = proColors,
-                                selectedReminder = selectedReminder,
-                                onReminderSelected = { selectedReminder = it },
-                            )
-                            3 -> PaywallStep3Comparison(colors = proColors)
-                            4 -> PaywallStep4Plans(
+                            1 -> PaywallStep1ValueProp(
                                 colors = proColors,
                                 selectedPlan = state.selectedPlanId,
                                 onPlanSelected = { onPlanSelected(it) },
                             )
-                            5 -> PaywallStep5Checkout(
+                            2 -> PaywallStep5Checkout(
                                 colors = proColors,
                                 selectedPlan = state.selectedPlanId,
                                 purchasing = state.purchasing || checkoutLoading,
@@ -190,20 +178,14 @@ fun SharedPaywallSheet(
                             )
                         }
 
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(16.dp))
                     }
 
                     val ctaLabel = when {
                         checkoutLoading -> "Processing..."
                         checkoutSuccess -> "Subscribed!"
-                        currentStep == 5 -> Strings.pwS5Cta
-                        else -> when (currentStep) {
-                            1 -> Strings.pwS1Cta
-                            2 -> Strings.pwS2Cta
-                            3 -> Strings.pwS3Cta
-                            4 -> Strings.pwS4Cta
-                            else -> ""
-                        }
+                        currentStep == 2 -> Strings.pwS5Cta
+                        else -> Strings.pwS1Cta
                     }
 
                     PaywallBottomCta(
@@ -215,12 +197,8 @@ fun SharedPaywallSheet(
                         onClick = {
                             checkoutError = null
                             when (currentStep) {
-                                1, 2, 3 -> currentStep++
-                                4 -> {
-                                    onPlanSelected(state.selectedPlanId)
-                                    currentStep = 5
-                                }
-                                5 -> {
+                                1 -> currentStep = 2
+                                2 -> {
                                     checkoutLoading = true
                                     onContinue()
                                 }
@@ -231,7 +209,6 @@ fun SharedPaywallSheet(
                 }
             }
         } else {
-            // Mobile: full-screen sheet
             Box(
                 Modifier
                     .fillMaxSize()
@@ -258,19 +235,12 @@ fun SharedPaywallSheet(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         when (currentStep) {
-                            1 -> PaywallStep1Unlimited(colors = proColors)
-                            2 -> PaywallStep2Reminder(
-                                colors = proColors,
-                                selectedReminder = selectedReminder,
-                                onReminderSelected = { selectedReminder = it },
-                            )
-                            3 -> PaywallStep3Comparison(colors = proColors)
-                            4 -> PaywallStep4Plans(
+                            1 -> PaywallStep1ValueProp(
                                 colors = proColors,
                                 selectedPlan = state.selectedPlanId,
                                 onPlanSelected = { onPlanSelected(it) },
                             )
-                            5 -> PaywallStep5Checkout(
+                            2 -> PaywallStep5Checkout(
                                 colors = proColors,
                                 selectedPlan = state.selectedPlanId,
                                 purchasing = state.purchasing || checkoutLoading,
@@ -279,20 +249,14 @@ fun SharedPaywallSheet(
                             )
                         }
 
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(16.dp))
                     }
 
                     val ctaLabel = when {
                         checkoutLoading -> "Processing..."
                         checkoutSuccess -> "Subscribed!"
-                        currentStep == 5 -> Strings.pwS5Cta
-                        else -> when (currentStep) {
-                            1 -> Strings.pwS1Cta
-                            2 -> Strings.pwS2Cta
-                            3 -> Strings.pwS3Cta
-                            4 -> Strings.pwS4Cta
-                            else -> ""
-                        }
+                        currentStep == 2 -> Strings.pwS5Cta
+                        else -> Strings.pwS1Cta
                     }
 
                     PaywallBottomCta(
@@ -304,12 +268,8 @@ fun SharedPaywallSheet(
                         onClick = {
                             checkoutError = null
                             when (currentStep) {
-                                1, 2, 3 -> currentStep++
-                                4 -> {
-                                    onPlanSelected(state.selectedPlanId)
-                                    currentStep = 5
-                                }
-                                5 -> {
+                                1 -> currentStep = 2
+                                2 -> {
                                     checkoutLoading = true
                                     onContinue()
                                 }
@@ -400,41 +360,42 @@ private fun PaywallTopBar(
     }
 }
 
-// ── Step 1: Unlimited Room Makeovers ──────────────────────────────────────
+// ── Step 1: Plan Selection ─────────────────────────────────────────────────
 
 @Composable
-private fun PaywallStep1Unlimited(colors: SheetPalette) {
-    Spacer(Modifier.height(8.dp))
-
-    val heading = Strings.pwS1Heading
-    val highlight = Strings.pwS1HeadingHighlight
-    val parts = heading.split(highlight, limit = 2)
-    val annotatedHeading = if (parts.size == 2) {
-        buildAnnotatedString {
-            append(parts[0])
-            withStyle(SpanStyle(color = colors.accent)) { append(highlight) }
-            append(parts[1])
-        }
-    } else {
-        buildAnnotatedString { append(heading) }
-    }
+private fun PaywallStep1ValueProp(
+    colors: SheetPalette,
+    selectedPlan: String,
+    onPlanSelected: (String) -> Unit,
+) {
+    // Heading — brings the user to the decision immediately
     Text(
-        annotatedHeading,
-        style = MaterialTheme.typography.headlineLarge.copy(
+        Strings.pwS1Heading,
+        style = MaterialTheme.typography.headlineSmall.copy(
             fontWeight = FontWeight.Bold,
-            lineHeight = 36.sp,
+            lineHeight = 30.sp,
         ),
+        color = colors.textPrimary,
         textAlign = TextAlign.Center,
     )
 
-    Spacer(Modifier.height(20.dp))
+    Spacer(Modifier.height(4.dp))
 
-    // Room transformation hero visual
+    Text(
+        Strings.pwS1HeadingHighlight,
+        style = MaterialTheme.typography.bodyMedium,
+        color = colors.textMuted,
+        textAlign = TextAlign.Center,
+    )
+
+    Spacer(Modifier.height(10.dp))
+
+    // Compact hero — visual proof, not a wall of text
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clip(RoundedCornerShape(20.dp)),
+            .height(56.dp)
+            .clip(RoundedCornerShape(12.dp)),
     ) {
         Image(
             painter = painterResource(Res.drawable.assets_media_paywall_carouseljapandibedroom),
@@ -443,7 +404,6 @@ private fun PaywallStep1Unlimited(colors: SheetPalette) {
             contentScale = ContentScale.Crop,
         )
 
-        // Gradient overlay for text readability
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -457,32 +417,31 @@ private fun PaywallStep1Unlimited(colors: SheetPalette) {
                 ),
         )
 
-        // BEFORE / AFTER labels
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(6.dp),
                 color = HomeDecorExtra.scrimHeavy,
             ) {
                 Text(
                     "BEFORE",
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     color = HomeDecorExtra.onGradientText,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 )
             }
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(6.dp),
                 color = colors.accent.copy(alpha = 0.85f),
             ) {
                 Text(
                     "AFTER",
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     color = HomeDecorExtra.onGradientText,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 )
@@ -490,427 +449,9 @@ private fun PaywallStep1Unlimited(colors: SheetPalette) {
         }
     }
 
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(10.dp))
 
-    // Benefits card
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            listOf(
-                Strings.pwS1Benefit1,
-                Strings.pwS1Benefit2,
-                Strings.pwS1Benefit3,
-                Strings.pwS1Benefit4,
-            ).forEach { benefit ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Icon(
-                        Icons.Rounded.Check,
-                        contentDescription = null,
-                        tint = colors.accent,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Text(
-                        benefit,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.textPrimary,
-                    )
-                }
-            }
-        }
-    }
-
-    Spacer(Modifier.height(16.dp))
-
-    // Social proof
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-            listOf(colors.accent, colors.gold, colors.mint, colors.accent).forEach { color ->
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = color.copy(alpha = 0.15f),
-                    modifier = Modifier.size(32.dp),
-                ) {}
-            }
-        }
-        Text(
-            Strings.pwS1SocialProof,
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.textSecondary,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-// ── Step 2: Trial Reminder ────────────────────────────────────────────────
-
-@Composable
-private fun PaywallStep2Reminder(
-    colors: SheetPalette,
-    selectedReminder: Int,
-    onReminderSelected: (Int) -> Unit,
-) {
-    Spacer(Modifier.height(8.dp))
-
-    Text(
-        Strings.pwS2Heading,
-        style = MaterialTheme.typography.headlineLarge.copy(
-            fontWeight = FontWeight.Bold,
-            lineHeight = 34.sp,
-        ),
-        color = colors.textPrimary,
-        textAlign = TextAlign.Center,
-    )
-
-    Spacer(Modifier.height(24.dp))
-
-    // Reminder icons visual
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(vertical = 8.dp),
-    ) {
-        listOf(
-            Icons.Rounded.AutoAwesome to colors.accent,
-            Icons.Rounded.Star to colors.gold,
-            Icons.Rounded.Check to colors.mint,
-        ).forEach { (icon, tint) ->
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = tint.copy(alpha = 0.1f),
-                modifier = Modifier.size(48.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
-                }
-            }
-        }
-    }
-
-    Spacer(Modifier.height(24.dp))
-
-    // Option cards
-    listOf(
-        1 to Strings.pwS2Option1,
-        2 to Strings.pwS2Option2,
-    ).forEach { (value, label) ->
-        val selected = selectedReminder == value
-        val bgColor by animateColorAsState(
-            targetValue = if (selected) colors.accentSurface else colors.cardSurface,
-            animationSpec = tween(200),
-            label = "reminder_bg",
-        )
-        val borderColor by animateColorAsState(
-            targetValue = if (selected) colors.accent else colors.border,
-            animationSpec = tween(200),
-            label = "reminder_border",
-        )
-
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = bgColor,
-            border = BorderStroke(if (selected) 2.dp else 1.dp, borderColor),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp)
-                .semantics {
-                    role = Role.RadioButton
-                    this.selected = selected
-                    contentDescription = label
-                }
-                .clickable { onReminderSelected(value) },
-        ) {
-            Row(
-                Modifier.padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Icon(
-                    Icons.Rounded.AutoAwesome,
-                    contentDescription = null,
-                    tint = if (selected) colors.accent else colors.textMuted,
-                    modifier = Modifier.size(20.dp),
-                )
-                Text(
-                    label,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                    color = colors.textPrimary,
-                    modifier = Modifier.weight(1f),
-                )
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(if (selected) colors.accent else Color.Transparent)
-                        .then(
-                            if (!selected) Modifier.border(2.dp, colors.textMuted.copy(alpha = 0.4f), CircleShape) else Modifier
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (selected) {
-                        Icon(
-                            Icons.Rounded.Check,
-                            contentDescription = null,
-                            tint = HomeDecorExtra.onGradientText,
-                            modifier = Modifier.size(14.dp),
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(10.dp))
-    }
-
-    Spacer(Modifier.height(12.dp))
-
-    // Info card
-    Surface(
-        shape = HomeDecorShape.Card,
-        color = colors.accentSurface.copy(alpha = 0.5f),
-        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Icon(
-                Icons.Rounded.Shield,
-                contentDescription = null,
-                tint = colors.accent,
-                modifier = Modifier.size(18.dp),
-            )
-            Text(
-                Strings.pwS2Info,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
-            )
-        }
-    }
-}
-
-// ── Step 3: Free vs Premium Comparison ─────────────────────────────────────
-
-@Composable
-private fun PaywallStep3Comparison(colors: SheetPalette) {
-    Spacer(Modifier.height(8.dp))
-
-    Text(
-        Strings.pwS3Heading,
-        style = MaterialTheme.typography.headlineLarge.copy(
-            fontWeight = FontWeight.Bold,
-            lineHeight = 34.sp,
-        ),
-        color = colors.textPrimary,
-        textAlign = TextAlign.Center,
-    )
-
-    Spacer(Modifier.height(20.dp))
-
-    // Comparison table card
-    Surface(
-        shape = HomeDecorShape.CardLarge,
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
-        shadowElevation = 2.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .semantics {
-                contentDescription = Strings.a11yComparisonTable
-            },
-    ) {
-        Column {
-            // Header row
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                colors.accent.copy(alpha = 0.08f),
-                                colors.accent.copy(alpha = 0.04f),
-                            ),
-                        ),
-                    )
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    Strings.pwS3ColFeature,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = colors.textSecondary,
-                    modifier = Modifier.weight(1.2f),
-                )
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = colors.textMuted.copy(alpha = 0.1f),
-                    modifier = Modifier.weight(0.8f),
-                ) {
-                    Text(
-                        Strings.pwS3ColFree,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = colors.textMuted,
-                        modifier = Modifier.padding(vertical = 3.dp),
-                        textAlign = TextAlign.Center,
-                    )
-                }
-                Spacer(Modifier.width(6.dp))
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = colors.accent,
-                    modifier = Modifier.weight(0.8f),
-                ) {
-                    Text(
-                        Strings.pwS3ColPremium,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = HomeDecorExtra.onGradientText,
-                        modifier = Modifier.padding(vertical = 3.dp),
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-
-            val rows = listOf(
-                Triple(Strings.pwS3Row1Feature, Strings.pwS3Row1Free, Strings.pwS3Row1Pro),
-                Triple(Strings.pwS3Row2Feature, Strings.pwS3Row2Free, Strings.pwS3Row2Pro),
-                Triple(Strings.pwS3Row3Feature, Strings.pwS3Row3Free, Strings.pwS3Row3Pro),
-                Triple(Strings.pwS3Row4Feature, Strings.pwS3Row4Free, Strings.pwS3Row4Pro),
-                Triple(Strings.pwS3Row5Feature, Strings.pwS3Row5Free, Strings.pwS3Row5Pro),
-                Triple(Strings.pwS3Row6Feature, Strings.pwS3Row6Free, Strings.pwS3Row6Pro),
-            )
-
-            rows.forEachIndexed { index, (feature, freeVal, proVal) ->
-                val isEven = index % 2 == 0
-                if (index > 0) {
-                    HorizontalDivider(thickness = 0.5.dp, color = colors.border)
-                }
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(if (isEven) colors.accent.copy(alpha = 0.02f) else Color.Transparent)
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        feature,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.textPrimary,
-                        modifier = Modifier.weight(1.2f),
-                    )
-                    Text(
-                        freeVal,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.textMuted,
-                        modifier = Modifier.weight(0.8f),
-                        textAlign = TextAlign.Center,
-                    )
-                    if (proVal == "\u2713") {
-                        Box(
-                            modifier = Modifier.weight(0.8f),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = colors.accent,
-                                modifier = Modifier.size(22.dp),
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Rounded.Check,
-                                        contentDescription = null,
-                                        tint = HomeDecorExtra.onGradientText,
-                                        modifier = Modifier.size(14.dp),
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        Text(
-                            proVal,
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                            color = colors.accent,
-                            modifier = Modifier.weight(0.8f),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    Spacer(Modifier.height(16.dp))
-
-    // Recommendation card
-    Surface(
-        shape = HomeDecorShape.Card,
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = colors.gold.copy(alpha = 0.12f),
-                modifier = Modifier.size(32.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Rounded.Star,
-                        contentDescription = null,
-                        tint = colors.gold,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-            }
-            Text(
-                Strings.pwS3Recommendation,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
-            )
-        }
-    }
-}
-
-// ── Step 4: Plan Selection ────────────────────────────────────────────────
-
-@Composable
-private fun PaywallStep4Plans(
-    colors: SheetPalette,
-    selectedPlan: String,
-    onPlanSelected: (String) -> Unit,
-) {
-    Spacer(Modifier.height(8.dp))
-
-    Text(
-        Strings.pwS4Heading,
-        style = MaterialTheme.typography.headlineLarge.copy(
-            fontWeight = FontWeight.Bold,
-            lineHeight = 34.sp,
-        ),
-        color = colors.textPrimary,
-        textAlign = TextAlign.Center,
-    )
-
-    Spacer(Modifier.height(20.dp))
-
-    // Yearly Plan (Recommended)
+    // Plan cards — the decision point
     PaywallPlanCard(
         colors = colors,
         title = Strings.pwS4PlanYearlyTitle,
@@ -923,9 +464,8 @@ private fun PaywallStep4Plans(
         onClick = { onPlanSelected("yearly") },
     )
 
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(6.dp))
 
-    // Monthly Plan
     PaywallPlanCard(
         colors = colors,
         title = Strings.pwS4PlanMonthlyTitle,
@@ -938,9 +478,8 @@ private fun PaywallStep4Plans(
         onClick = { onPlanSelected("monthly") },
     )
 
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(6.dp))
 
-    // Family Plan
     PaywallPlanCard(
         colors = colors,
         title = Strings.pwS4PlanFamilyTitle,
@@ -951,6 +490,16 @@ private fun PaywallStep4Plans(
         savings = null,
         selected = selectedPlan == "family",
         onClick = { onPlanSelected("family") },
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    // Trust line — supporting, not leading
+    Text(
+        Strings.pwS4Trust,
+        style = MaterialTheme.typography.bodySmall,
+        color = colors.textMuted,
+        textAlign = TextAlign.Center,
     )
 }
 
@@ -994,7 +543,7 @@ private fun PaywallPlanCard(
             }
             .clickable(onClick = onClick),
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(14.dp)) {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1061,7 +610,7 @@ private fun PaywallPlanCard(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
@@ -1108,7 +657,7 @@ private fun PaywallPlanCard(
     }
 }
 
-// ── Step 5: Checkout ──────────────────────────────────────────────────────
+// ── Step 2: Checkout ──────────────────────────────────────────────────────
 
 @Composable
 private fun PaywallStep5Checkout(
@@ -1118,7 +667,7 @@ private fun PaywallStep5Checkout(
     purchaseSuccess: Boolean = false,
     errorMessage: String? = null,
 ) {
-    // Badge
+    // Compact trust badge
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = if (purchaseSuccess) colors.checkGreen.copy(alpha = 0.15f) else colors.accentSurface,
@@ -1143,19 +692,19 @@ private fun PaywallStep5Checkout(
         }
     }
 
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(8.dp))
 
     Text(
         if (purchaseSuccess) "Welcome to Pro!" else Strings.pwS5Heading,
-        style = MaterialTheme.typography.headlineLarge.copy(
+        style = MaterialTheme.typography.headlineSmall.copy(
             fontWeight = FontWeight.Bold,
-            lineHeight = 34.sp,
+            lineHeight = 28.sp,
         ),
         color = colors.textPrimary,
         textAlign = TextAlign.Center,
     )
 
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(10.dp))
 
     if (errorMessage != null) {
         Surface(
@@ -1177,28 +726,26 @@ private fun PaywallStep5Checkout(
                 )
             }
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
     }
 
-    // Shield hero visual
-    Surface(
-        shape = HomeDecorShape.HeroCard,
-        color = if (purchaseSuccess) colors.checkGreen.copy(alpha = 0.08f) else colors.accentSurface,
-        border = BorderStroke(1.dp, (if (purchaseSuccess) colors.checkGreen else colors.accent).copy(alpha = 0.15f)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            if (purchasing) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+    // Processing indicator
+    if (purchasing) {
+        Surface(
+            shape = HomeDecorShape.HeroCard,
+            color = colors.accentSurface,
+            border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.15f)),
+            modifier = Modifier.fillMaxWidth().height(64.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(20.dp),
                         color = colors.accent,
-                        strokeWidth = 3.dp,
+                        strokeWidth = 2.5.dp,
                     )
                     Text(
                         "Processing...",
@@ -1206,30 +753,83 @@ private fun PaywallStep5Checkout(
                         color = colors.textSecondary,
                     )
                 }
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = (if (purchaseSuccess) colors.checkGreen else colors.accent).copy(alpha = 0.12f),
-                        modifier = Modifier.size(56.dp),
+            }
+        }
+    } else {
+        // Subscription summary — compact, scannable
+        Surface(
+            shape = HomeDecorShape.CardLarge,
+            color = colors.cardSurface,
+            border = BorderStroke(1.dp, colors.border),
+            shadowElevation = 1.dp,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(Modifier.padding(14.dp)) {
+                val planTitle = when (selectedPlan) {
+                    "yearly" -> Strings.pwS4PlanYearlyTitle
+                    "monthly" -> Strings.pwS4PlanMonthlyTitle
+                    "family" -> Strings.pwS4PlanFamilyTitle
+                    else -> Strings.pwS4PlanYearlyTitle
+                }
+                val planSubtitle = when (selectedPlan) {
+                    "yearly" -> "Annual subscription"
+                    "monthly" -> "Monthly subscription"
+                    "family" -> "Family annual subscription"
+                    else -> "Annual subscription"
+                }
+                Text(
+                    planTitle,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.textPrimary,
+                )
+                Text(
+                    planSubtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textMuted,
+                )
+
+                Spacer(Modifier.height(10.dp))
+                HorizontalDivider(thickness = 0.5.dp, color = colors.border)
+                Spacer(Modifier.height(10.dp))
+
+                val summaryRows = listOf(
+                    Strings.pwS5TrialPeriod to when (selectedPlan) {
+                        "yearly" -> "Yearly billing"
+                        "monthly" -> "Monthly billing"
+                        "family" -> "Family yearly billing"
+                        else -> "Yearly billing"
+                    },
+                    Strings.pwS5Then to when (selectedPlan) {
+                        "yearly" -> "\$39.99 / year"
+                        "monthly" -> "\$7.99 / month"
+                        "family" -> "\$59.99 / year"
+                        else -> "\$39.99 / year"
+                    },
+                    Strings.pwS5RenewalDate to run {
+                        val now = kotlinx.datetime.Clock.System.now()
+                        val renewal = now.plus(7, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
+                        val dt = renewal.toLocalDateTime(TimeZone.currentSystemDefault())
+                        "${dt.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${dt.dayOfMonth}, ${dt.year}"
+                    },
+                    Strings.pwS5Payment to Strings.pwS5PaymentValue,
+                )
+
+                summaryRows.forEach { (label, value) ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                if (purchaseSuccess) Icons.Rounded.Check else Icons.Rounded.Lock,
-                                contentDescription = null,
-                                tint = if (purchaseSuccess) colors.checkGreen else colors.accent,
-                                modifier = Modifier.size(28.dp),
-                            )
-                        }
-                    }
-                    if (purchaseSuccess) {
                         Text(
-                            "Payment confirmed",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = colors.checkGreen,
+                            label,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textSecondary,
+                        )
+                        Text(
+                            value,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = colors.textPrimary,
                         )
                     }
                 }
@@ -1237,180 +837,7 @@ private fun PaywallStep5Checkout(
         }
     }
 
-    Spacer(Modifier.height(16.dp))
-
-    // Subscription summary
-    Surface(
-        shape = HomeDecorShape.CardLarge,
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
-        shadowElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            val planTitle = when (selectedPlan) {
-                "yearly" -> Strings.pwS4PlanYearlyTitle
-                "monthly" -> Strings.pwS4PlanMonthlyTitle
-                "family" -> Strings.pwS4PlanFamilyTitle
-                else -> Strings.pwS4PlanYearlyTitle
-            }
-            val planSubtitle = when (selectedPlan) {
-                "yearly" -> "Annual subscription"
-                "monthly" -> "Monthly subscription"
-                "family" -> "Family annual subscription"
-                else -> "Annual subscription"
-            }
-            Text(
-                planTitle,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.textPrimary,
-            )
-            Text(
-                planSubtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textMuted,
-            )
-
-            Spacer(Modifier.height(14.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = colors.border)
-            Spacer(Modifier.height(14.dp))
-
-            val summaryRows = listOf(
-                Strings.pwS5TrialPeriod to when (selectedPlan) {
-                    "yearly" -> "Yearly billing"
-                    "monthly" -> "Monthly billing"
-                    "family" -> "Family yearly billing"
-                    else -> "Yearly billing"
-                },
-                Strings.pwS5Then to when (selectedPlan) {
-                    "yearly" -> "\$39.99 / year"
-                    "monthly" -> "\$7.99 / month"
-                    "family" -> "\$59.99 / year"
-                    else -> "\$39.99 / year"
-                },
-                Strings.pwS5RenewalDate to run {
-                    val now = kotlinx.datetime.Clock.System.now()
-                    val renewal = now.plus(7, DateTimeUnit.DAY, TimeZone.currentSystemDefault())
-                    val dt = renewal.toLocalDateTime(TimeZone.currentSystemDefault())
-                    "${dt.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${dt.dayOfMonth}, ${dt.year}"
-                },
-                Strings.pwS5Payment to Strings.pwS5PaymentValue,
-            )
-
-            summaryRows.forEach { (label, value) ->
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        label,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.textSecondary,
-                    )
-                    Text(
-                        value,
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                        color = colors.textPrimary,
-                    )
-                }
-            }
-        }
-    }
-
-    Spacer(Modifier.height(12.dp))
-
-    // Included benefits
-    Surface(
-        shape = HomeDecorShape.Card,
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.border),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                Strings.pwS5BenefitsTitle,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.textPrimary,
-            )
-
-            Spacer(Modifier.height(10.dp))
-
-            listOf(
-                Strings.pwS5Benefit1,
-                Strings.pwS5Benefit2,
-                Strings.pwS5Benefit3,
-                Strings.pwS5Benefit4,
-                Strings.pwS5Benefit5,
-                Strings.pwS5Benefit6,
-            ).forEachIndexed { index, benefit ->
-                Row(
-                    Modifier.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = colors.checkGreen.copy(alpha = 0.12f),
-                        modifier = Modifier.size(22.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Rounded.Check,
-                                contentDescription = null,
-                                tint = colors.checkGreen,
-                                modifier = Modifier.size(14.dp),
-                            )
-                        }
-                    }
-                    Text(
-                        benefit,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.textPrimary,
-                    )
-                }
-            }
-        }
-    }
-
-    Spacer(Modifier.height(12.dp))
-
-    // Trust row
-    Surface(
-        shape = HomeDecorShape.Card,
-        color = colors.cardSurface,
-        border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.12f)),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(
-            Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = colors.accent.copy(alpha = 0.10f),
-                modifier = Modifier.size(32.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Rounded.Lock,
-                        contentDescription = null,
-                        tint = colors.accent,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-            }
-            Text(
-                Strings.pwS5Trust,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
-            )
-        }
-    }
-
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(6.dp))
 
     Text(
         Strings.pwS5Legal,
@@ -1441,7 +868,7 @@ private fun PaywallBottomCta(
                 ),
             )
             .padding(horizontal = 20.dp)
-            .padding(top = 16.dp, bottom = 16.dp)
+            .padding(top = 12.dp, bottom = 12.dp)
             .windowInsetsPadding(WindowInsets.navigationBars),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

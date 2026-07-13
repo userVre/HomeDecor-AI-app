@@ -5,7 +5,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,19 +29,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Diamond
 import androidx.compose.material.icons.rounded.Email
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,7 +57,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -101,6 +106,7 @@ fun SharedAuthScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f))
                 .testTag("auth_screen"),
             contentAlignment = if (isDesktop) Alignment.Center else Alignment.TopCenter,
         ) {
@@ -204,9 +210,9 @@ private fun MobileAuthLayout(
             ) {
                 IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
                     Icon(
-                        Icons.Rounded.ArrowBack,
+                        Icons.Rounded.Close,
                         contentDescription = Strings.authClose,
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -215,11 +221,11 @@ private fun MobileAuthLayout(
 
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.size(72.dp),
             ) {
                 Icon(
-                    Icons.Rounded.Diamond,
+                    Icons.Rounded.AutoAwesome,
                     contentDescription = null,
                     modifier = Modifier
                         .padding(18.dp)
@@ -255,12 +261,13 @@ private fun MobileAuthLayout(
                 Spacer(Modifier.height(16.dp))
             }
 
-            ElevatedCard(
+            Card(
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
                 ),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(
@@ -281,12 +288,7 @@ private fun MobileAuthLayout(
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         enabled = !isLoading,
                     ) {
-                        Icon(
-                            Icons.Rounded.Person,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp),
-                        )
+                        GoogleIcon(modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(10.dp))
                         Text(
                             Strings.authContinueWithGoogle,
@@ -327,7 +329,7 @@ private fun MobileAuthLayout(
                         value = password,
                         onValueChange = onPasswordChange,
                         label = Strings.password,
-                        leadingIcon = Icons.Rounded.Lock,
+                        leadingIcon = Icons.Rounded.Shield,
                         isPassword = true,
                         passwordVisible = passwordVisible,
                         onTogglePassword = onTogglePassword,
@@ -359,7 +361,7 @@ private fun MobileAuthLayout(
 
                     Button(
                         onClick = onSubmit,
-                        shape = CircleShape,
+                        shape = HomeDecorShape.ButtonLarge,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(HomeDecorSpacing.ButtonHeight),
@@ -383,13 +385,25 @@ private fun MobileAuthLayout(
                         }
                     }
 
-                    Text(
-                        Strings.authDataProtected,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodySmall,
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                    )
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Rounded.Shield,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            Strings.authDataProtected,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
             }
 
@@ -448,41 +462,68 @@ private fun DesktopAuthLayout(
                 .fillMaxSize(),
             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(48.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(80.dp),
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Decorative backdrop elements (faded, behind content)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(48.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Icon(
-                        Icons.Rounded.Diamond,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(20.dp)
-                            .size(40.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary,
+                    Text(
+                        "HomeDecor AI",
+                        style = MaterialTheme.typography.displayLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Transform your space\nwith AI-powered design",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Light,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.06f),
+                        textAlign = TextAlign.Center,
                     )
                 }
-                Spacer(Modifier.height(24.dp))
-                Text(
-                    "HomeDecor AI",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Transform your space with AI-powered design",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
+
+                // Primary brand content (sharp, foreground)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(48.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(80.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .size(40.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                    Spacer(Modifier.height(24.dp))
+                    Text(
+                        "HomeDecor AI",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Transform your space with AI-powered design",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
 
@@ -527,12 +568,13 @@ private fun DesktopAuthLayout(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                ElevatedCard(
+                Card(
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
                     ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(
@@ -552,14 +594,9 @@ private fun DesktopAuthLayout(
                             ),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                             enabled = !isLoading,
-                        ) {
-                            Icon(
-                                Icons.Rounded.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Spacer(Modifier.width(10.dp))
+                    ) {
+                        GoogleIcon(modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(10.dp))
                             Text(
                                 Strings.authContinueWithGoogle,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -599,7 +636,7 @@ private fun DesktopAuthLayout(
                             value = password,
                             onValueChange = onPasswordChange,
                             label = Strings.password,
-                            leadingIcon = Icons.Rounded.Lock,
+                            leadingIcon = Icons.Rounded.Shield,
                             isPassword = true,
                             passwordVisible = passwordVisible,
                             onTogglePassword = onTogglePassword,
@@ -631,7 +668,7 @@ private fun DesktopAuthLayout(
 
                         Button(
                             onClick = onSubmit,
-                            shape = CircleShape,
+                            shape = HomeDecorShape.ButtonLarge,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(HomeDecorSpacing.ButtonHeight),
@@ -655,13 +692,25 @@ private fun DesktopAuthLayout(
                             }
                         }
 
-                        Text(
-                            Strings.authDataProtected,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodySmall,
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                        )
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Rounded.Shield,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                Strings.authDataProtected,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
                     }
                 }
 
@@ -702,6 +751,43 @@ private fun DesktopAuthLayout(
             }
         }
     }
+}
+
+@Composable
+private fun GoogleIcon(modifier: Modifier = Modifier) {
+    val googleRed = Color(0xFFEA4335)
+    val googleBlue = Color(0xFF4285F4)
+    val googleYellow = Color(0xFFFBBC05)
+    val googleGreen = Color(0xFF34A853)
+
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .drawBehind {
+                drawCircle(color = Color.White)
+                drawGoogleG(googleRed, googleBlue, googleYellow, googleGreen)
+            },
+    )
+}
+
+private fun DrawScope.drawGoogleG(red: Color, blue: Color, yellow: Color, green: Color) {
+    val s = size.width
+    val sw = s * 0.12f
+    val half = s * 0.5f
+    val strokeStyle = androidx.compose.ui.graphics.drawscope.Stroke(width = sw, cap = androidx.compose.ui.graphics.StrokeCap.Butt)
+    val rect = androidx.compose.ui.geometry.Rect(Offset(sw / 2f, sw / 2f), Size(s - sw, s - sw))
+
+    val bluePath = Path().apply {
+        arcTo(rect, startAngleDegrees = 0f, sweepAngleDegrees = 270f, forceMoveTo = true)
+        lineTo(half + s * 0.25f, half)
+    }
+    drawPath(bluePath, color = blue, style = strokeStyle)
+
+    drawArc(color = red, startAngle = 180f, sweepAngle = 90f, useCenter = false, topLeft = Offset(sw / 2f, sw / 2f), size = Size(s - sw, s - sw), style = strokeStyle)
+
+    drawArc(color = yellow, startAngle = 90f, sweepAngle = 90f, useCenter = false, topLeft = Offset(sw / 2f, sw / 2f), size = Size(s - sw, s - sw), style = strokeStyle)
+
+    drawArc(color = green, startAngle = 0f, sweepAngle = 90f, useCenter = false, topLeft = Offset(sw / 2f, sw / 2f), size = Size(s - sw, s - sw), style = strokeStyle)
 }
 
 @Composable

@@ -287,74 +287,70 @@ class AccessibilityAndQaTest {
         assertNotNull(Strings.TestTags.wizardStepContent)
     }
 
-    // ── Paywall Step 4 → Step 5 ────────────────────────────────────────────
+    // ── Paywall Step 2 → Step 3 ────────────────────────────────────────────
 
     @Test
     fun testPaywallStepProgression_allSteps() {
         var step = 1
         step++; assertEquals(2, step)
         step++; assertEquals(3, step)
-        step++; assertEquals(4, step)
-        step = 5; assertEquals(5, step)
     }
 
     @Test
-    fun testPaywallStep4ToStep5_withPlanSelection() {
-        var currentStep = 4
+    fun testPaywallStep2ToStep3_withPlanSelection() {
+        var currentStep = 2
         var selectedPlan = "yearly"
 
-        // Simulate: user taps CTA on step 4
         when (currentStep) {
-            1, 2, 3 -> currentStep++
-            4 -> {
-                // Plan is selected
+            1 -> currentStep++
+            2 -> {
                 assertEquals("yearly", selectedPlan)
-                currentStep = 5
+                currentStep = 3
             }
-            5 -> { /* would call onContinue */ }
+            3 -> { /* would call onContinue */ }
         }
 
-        assertEquals(5, currentStep)
+        assertEquals(3, currentStep)
         assertEquals("yearly", selectedPlan)
     }
 
     @Test
-    fun testPaywallStep4ToStep5_monthlyPlan() {
-        var currentStep = 4
+    fun testPaywallStep2ToStep3_monthlyPlan() {
+        var currentStep = 2
         val selectedPlan = "monthly"
 
         when (currentStep) {
-            4 -> {
+            2 -> {
                 assertEquals("monthly", selectedPlan)
-                currentStep = 5
+                currentStep = 3
             }
         }
 
-        assertEquals(5, currentStep)
+        assertEquals(3, currentStep)
         assertEquals("monthly", selectedPlan)
     }
 
     @Test
-    fun testPaywallStep4ToStep5_familyPlan() {
-        var currentStep = 4
+    fun testPaywallStep2ToStep3_familyPlan() {
+        var currentStep = 2
         val selectedPlan = "family"
 
         when (currentStep) {
-            4 -> {
+            2 -> {
                 assertEquals("family", selectedPlan)
-                currentStep = 5
+                currentStep = 3
             }
         }
 
-        assertEquals(5, currentStep)
+        assertEquals(3, currentStep)
         assertEquals("family", selectedPlan)
     }
 
     @Test
-    fun testPaywallBackFromStep5() {
-        var currentStep = 5
+    fun testPaywallBackFromStep3() {
+        var currentStep = 3
         currentStep = if (currentStep > 1) currentStep - 1 else currentStep
-        assertEquals(4, currentStep)
+        assertEquals(2, currentStep)
     }
 
     @Test
@@ -366,16 +362,16 @@ class AccessibilityAndQaTest {
 
     @Test
     fun testPaywallStepLabels_matchStrings() {
-        assertEquals("Redesign your room", Strings.pwS1Heading)
+        assertEquals("Pick your plan", Strings.pwS1Heading)
         assertEquals("Why go Pro?", Strings.pwS2Heading)
         assertEquals("What's included in Pro", Strings.pwS3Heading)
         assertEquals("Choose your plan", Strings.pwS4Heading)
-        assertEquals("Your subscription is handled securely.", Strings.pwS5Heading)
+        assertEquals("Confirm your subscription", Strings.pwS5Heading)
     }
 
     @Test
     fun testPaywallCtaLabels_productionReady() {
-        assertEquals("Continue", Strings.pwS1Cta)
+        assertEquals("See Plans", Strings.pwS1Cta)
         assertEquals("Continue", Strings.pwS2Cta)
         assertEquals("Continue", Strings.pwS3Cta)
         assertEquals("Subscribe Now", Strings.pwS4Cta)

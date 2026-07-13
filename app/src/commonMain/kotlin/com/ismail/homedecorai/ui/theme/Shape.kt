@@ -46,6 +46,9 @@ object HomeDecorShape {
     val TopAppBar = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
     val Snackbar = RoundedCornerShape(16.dp)
     val Tooltip = RoundedCornerShape(12.dp)
+
+    // Content panel shape — soft 14dp rounding for modular sections (sidebar, panels, cards)
+    val ContentPanel = RoundedCornerShape(14.dp)
 }
 
 val HomeDecorShapes = Shapes(

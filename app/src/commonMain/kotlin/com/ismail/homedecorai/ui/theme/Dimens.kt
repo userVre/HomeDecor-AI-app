@@ -25,16 +25,16 @@ object HomeDecorSpacing {
     val Xxxxxl = 64.dp
 
     // -- Layout spacing --
-    val SectionGap = 20.dp     // tight but breathable between sections
-    val ListItemGap = 12.dp
+    val SectionGap = 28.dp     // generous breathing room between sections
+    val ListItemGap = 14.dp
     val ChipGap = 8.dp
     val IconGap = 8.dp
-    val CardPadding = 16.dp
+    val CardPadding = 20.dp
     val CardInternal = 16.dp
-    val ScreenHorizontal = 16.dp   // aligned with native app for tighter feel
-    val ScreenVerticalPadding = 20.dp
+    val ScreenHorizontal = 20.dp   // slightly more horizontal padding
+    val ScreenVerticalPadding = 24.dp
     val HeroVerticalPadding = 40.dp
-    val ContentGap = 16.dp       // gap between content sections
+    val ContentGap = 20.dp       // gap between content sections
 
     // -- Component sizing --
     val ButtonHeight = 56.dp
@@ -75,45 +75,6 @@ object HomeDecorStateLayers {
 }
 
 // ---------------------------------------------------------------------------
-// Motion tokens  –  MD3 Expressive transitions
-// ---------------------------------------------------------------------------
-
-object HomeDecorMotion {
-    /** Duration for micro-interactions (hover, press, focus) */
-    const val DurationShort1 = 50
-    const val DurationShort2 = 100
-    /** Standard transition duration (150ms) */
-    const val DurationMedium1 = 150
-    /** Default transition duration (200ms) */
-    const val DurationMedium2 = 200
-    /** Complex transitions (page, sheet) */
-    const val DurationMedium3 = 250
-    /** Long transitions (modals, drawers) */
-    const val DurationLong1 = 300
-    const val DurationLong2 = 400
-    /** Very long transitions (hero) */
-    const val DurationExtraLong = 500
-
-    /** Easing: standard */
-    const val EasingStandard = 0.2f
-    /** Easing: decelerate (entering) */
-    const val EasingDecelerate = 0.0f
-    /** Easing: accelerate (exiting) */
-    const val EasingAccelerate = 0.3f
-
-    // M3 Expressive emphasis patterns
-    /** Spring: bouncy for playful interactions */
-    const val SpringBouncyDamping = 0.6f
-    const val SpringBouncyStiffness = 300f
-    /** Spring: snappy for responsive feedback */
-    const val SpringSnappyDamping = 0.8f
-    const val SpringSnappyStiffness = 500f
-    /** Spring: gentle for smooth transitions */
-    const val SpringGentleDamping = 0.7f
-    const val SpringGentleStiffness = 200f
-}
-
-// ---------------------------------------------------------------------------
 // Elevation tokens  –  MD3 Expressive
 // ---------------------------------------------------------------------------
 
@@ -136,23 +97,10 @@ object HomeDecorElevation {
     val DialogElevation = Level5
     val SheetElevation = Level3
     val NavElevation = Level2
-}
 
-// ---------------------------------------------------------------------------
-// Breakpoint tokens  –  responsive web
-// ---------------------------------------------------------------------------
-
-object HomeDecorBreakpoints {
-    /** Mobile: < 768px */
-    const val Mobile = 390
-    /** Tablet: 768px - 1023px */
-    const val Tablet = 768
-    /** Desktop: 1024px - 1439px */
-    const val Desktop = 1024
-    /** Wide: >= 1440px */
-    const val Wide = 1440
-    /** Ultra-wide: >= 1920px */
-    const val UltraWide = 1920
+    // Surface panel elevation (soft, natural shadows for content panels)
+    val SurfacePanel = Level2      // 3.dp — default content panel
+    val SurfacePanelElevated = Level3  // 6.dp — prominent panels (settings dialog, sidebar)
 }
 
 fun navBarBottomPadding(additionalContentPadding: Dp = 0.dp): Dp {

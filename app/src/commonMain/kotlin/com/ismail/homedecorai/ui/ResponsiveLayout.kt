@@ -11,12 +11,19 @@ import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.getScreenWidthDp
 
 private val DesktopBreakpoint = 1024
+private val CompactBreakpoint = 600
 private val DesktopMaxWidth = 1200.dp
 
 @Composable
 fun rememberIsDesktop(): Boolean {
     val screenWidthDp = getScreenWidthDp()
     return remember(screenWidthDp) { screenWidthDp >= DesktopBreakpoint }
+}
+
+@Composable
+fun rememberIsCompact(): Boolean {
+    val screenWidthDp = getScreenWidthDp()
+    return remember(screenWidthDp) { screenWidthDp < CompactBreakpoint }
 }
 
 @Composable

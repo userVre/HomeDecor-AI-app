@@ -37,7 +37,7 @@ actual fun getScreenWidthDp(): Int {
         context.resources.displayMetrics.density).toInt()
 }
 
-actual fun setpageTitle(title: String) {
+actual fun setPageTitle(title: String) {
     // No-op on Android: activity title is managed by the Activity itself
 }
 

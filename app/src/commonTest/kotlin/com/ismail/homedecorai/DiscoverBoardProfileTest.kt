@@ -100,9 +100,9 @@ class DiscoverBoardProfileTest {
 
     @Test
     fun testBoardEmptyDescriptions() {
-        assertEquals("Create your first AI design and it will appear here.", Strings.boardEmptyGeneratedBody)
-        assertEquals("Save designs you love and they'll show up here.", Strings.boardEmptyFavoritesBody)
-        assertEquals("Create projects to organize your design collections.", Strings.boardEmptyProjectsBody)
+        assertEquals("Pick a tool and upload a photo to generate your first design.", Strings.boardEmptyGeneratedBody)
+        assertEquals("Star a design to save it here for quick access.", Strings.boardEmptyFavoritesBody)
+        assertEquals("Create a project to group designs by room and compare options.", Strings.boardEmptyProjectsBody)
     }
 
     @Test
@@ -120,7 +120,7 @@ class DiscoverBoardProfileTest {
 
     @Test
     fun testBoardSignInCta() {
-        assertEquals("Sign in to save your designs.", Strings.boardSignInCta)
+        assertEquals("Sign in to save this design.", Strings.boardSignInCta)
     }
 
     @Test
@@ -153,13 +153,13 @@ class DiscoverBoardProfileTest {
 
     @Test
     fun testProfileSubtitle() {
-        assertEquals("Manage your account and preferences", Strings.profileSubtitle)
+        assertEquals("Settings, support, and account info", Strings.profileSubtitle)
     }
 
     @Test
     fun testProfileSignInStrings() {
-        assertEquals("Sign in to save your projects and access your diamonds across devices.", Strings.profileSignInBody)
-        assertEquals("Sign In / Register", Strings.profileSignInRegister)
+        assertEquals("Create an account to save your profile preferences and access them from any device.", Strings.profileSignInBody)
+        assertEquals("Sign in to get started", Strings.profileSignInRegister)
     }
 
     @Test

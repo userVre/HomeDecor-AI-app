@@ -43,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +67,7 @@ import com.ismail.homedecorai.model.BoardScreenState
 import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.ui.theme.HomeDecorElevation
 import com.ismail.homedecorai.ui.theme.HomeDecorExtra
+import com.ismail.homedecorai.ui.theme.HomeDecorColors
 import com.ismail.homedecorai.ui.theme.HomeDecorShape
 import com.ismail.homedecorai.ui.theme.HomeDecorSpacing
 import com.ismail.homedecorai.model.DiscoverScreenState
@@ -89,7 +91,9 @@ import com.ismail.homedecorai.ui.auth.SharedAuthScreen
 import com.ismail.homedecorai.ui.tools.SharedToolsScreen
 import com.ismail.homedecorai.ui.tools.WebWizardScreen
 import com.ismail.homedecorai.ui.upgrade.SharedUpgradeScreen
-import com.ismail.homedecorai.ui.theme.HomeDecorColors
+import com.ismail.homedecorai.ui.store.SharedDiamondStoreSheet
+import com.ismail.homedecorai.ui.store.DiamondStoreState
+import com.ismail.homedecorai.ui.store.DiamondPackage
 import com.ismail.homedecorai.ui.theme.HomeDecorTheme
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -121,7 +125,9 @@ fun App() {
         }
         var selectedTab by remember { mutableStateOf(initialTab) }
         var paywallVisible by remember { mutableStateOf(false) }
+        var paywallSelectedPlan by remember { mutableStateOf("yearly") }
         var settingsVisible by remember { mutableStateOf(false) }
+        var diamondStoreVisible by remember { mutableStateOf(false) }
 
         // Announce modal state changes to screen readers
         LaunchedEffect(paywallVisible) {
@@ -130,13 +136,16 @@ fun App() {
         LaunchedEffect(settingsVisible) {
             if (settingsVisible) announceToScreenReader(Strings.a11ySettingsHeading)
         }
+        LaunchedEffect(diamondStoreVisible) {
+            if (diamondStoreVisible) announceToScreenReader(Strings.a11yDiamondStoreTitle)
+        }
 
         var activeWizard by remember {
             val path = getCurrentPathname()
             val match = Regex("/create/(\\w+)").find(path)
             mutableStateOf(match?.groupValues?.get(1)?.let { toolId ->
-                ToolItem(toolId, "", "", Color(0xFF2E6B6E), Color(0xFF1A4A4C), "images/tool_${toolId}.webp",
-                    accentColor = Color(0xFFC1E4E7))
+                ToolItem(toolId, "", "", HomeDecorColors.ToolGradientInteriorStart, HomeDecorColors.ToolGradientInteriorEnd, "images/tool_${toolId}.webp",
+                    accentColor = HomeDecorColors.PrimaryContainer)
             })
         }
 
@@ -147,7 +156,7 @@ fun App() {
             } else {
                 selectedTab.pageTitle
             }
-            setpageTitle(title)
+            setPageTitle(title)
             val path = if (activeWizard != null) {
                 "/create/${activeWizard!!.id}"
             } else {
@@ -175,35 +184,35 @@ fun App() {
                 diamonds = 150,
                 tools = listOf(
                     ToolItem("interior", "Interior Design", "Redesign any room with AI-powered interior concepts",
-                        gradientStart = Color(0xFF2E6B6E), gradientEnd = Color(0xFF1A4A4C),
+                        gradientStart = HomeDecorColors.ToolGradientInteriorStart, gradientEnd = HomeDecorColors.ToolGradientInteriorEnd,
                         imageUrl = "images/tool_interior.webp",
-                        accentColor = Color(0xFFC1E4E7)),
+                        accentColor = HomeDecorColors.PrimaryContainer),
                     ToolItem("facade", "Exterior Design", "Transform your home's exterior with modern facade styles",
-                        gradientStart = Color(0xFF3B5998), gradientEnd = Color(0xFF1E3A5F),
+                        gradientStart = HomeDecorColors.ToolGradientExteriorStart, gradientEnd = HomeDecorColors.ToolGradientExteriorEnd,
                         imageUrl = "images/tool_exterior.webp",
                         accentColor = Color(0xFFB8CCE8)),
                     ToolItem("garden", "Garden Design", "Plan and visualize your dream garden landscape",
-                        gradientStart = Color(0xFF2D6A4F), gradientEnd = Color(0xFF1B4332),
+                        gradientStart = HomeDecorColors.ToolGradientGardenStart, gradientEnd = HomeDecorColors.ToolGradientGardenEnd,
                         imageUrl = "images/tool_garden.webp",
-                        accentColor = Color(0xFFC8E3CE)),
+                        accentColor = HomeDecorColors.SecondaryContainer),
                     ToolItem("paint", "Smart Wall Paint", "Preview smart paint colors on your walls instantly",
-                        gradientStart = Color(0xFFC45B3F), gradientEnd = Color(0xFF8B2E1A),
+                        gradientStart = HomeDecorColors.ToolGradientPaintStart, gradientEnd = HomeDecorColors.ToolGradientPaintEnd,
                         imageUrl = "images/tool_paint.webp",
-                        accentColor = Color(0xFFFDDDD0)),
+                        accentColor = HomeDecorColors.QuaternaryContainer),
                     ToolItem("floor", "Floor Design", "Explore premium flooring from hardwood to marble tile",
-                        gradientStart = Color(0xFF8B6914), gradientEnd = Color(0xFF5C4510),
+                        gradientStart = HomeDecorColors.ToolGradientFloorStart, gradientEnd = HomeDecorColors.ToolGradientFloorEnd,
                         imageUrl = "images/tool_floor.webp",
-                        accentColor = Color(0xFFF5DFA0)),
+                        accentColor = HomeDecorColors.TertiaryContainer),
                     ToolItem("layout", "Layout Makeover", "Optimize room layout for better flow and functionality",
-                        gradientStart = Color(0xFF5B4FCF), gradientEnd = Color(0xFF3A2D8F),
+                        gradientStart = HomeDecorColors.ToolGradientLayoutStart, gradientEnd = HomeDecorColors.ToolGradientLayoutEnd,
                         imageUrl = "images/tool_layout.webp",
                         accentColor = Color(0xFFD0C4F8)),
                     ToolItem("replace", "Replace Furniture", "Swap furniture and decor with AI-generated alternatives",
-                        gradientStart = Color(0xFFB85C38), gradientEnd = Color(0xFF7A3520),
+                        gradientStart = HomeDecorColors.ToolGradientReplaceStart, gradientEnd = HomeDecorColors.ToolGradientReplaceEnd,
                         imageUrl = "images/tool_replace.webp",
                         accentColor = Color(0xFFF5D0C0)),
                     ToolItem("reference", "Reference Style", "Use any reference image to guide your design direction",
-                        gradientStart = Color(0xFF1A3A5C), gradientEnd = Color(0xFF0D2240),
+                        gradientStart = HomeDecorColors.ToolGradientReferenceStart, gradientEnd = HomeDecorColors.ToolGradientReferenceEnd,
                         imageUrl = "images/tool_reference.webp",
                         accentColor = Color(0xFFB0C8E0)),
                 ),
@@ -505,11 +514,14 @@ fun App() {
                     selectedTab = selectedTab,
                     onSelectTab = { selectedTab = it },
                     paywallVisible = paywallVisible,
+                    paywallSelectedPlan = paywallSelectedPlan,
+                    onPaywallPlanSelected = { paywallSelectedPlan = it },
                     onPaywallDismiss = { paywallVisible = false },
                     onOpenPaywall = { paywallVisible = true },
                     settingsVisible = settingsVisible,
                     onSettingsDismiss = { settingsVisible = false },
                     onSettingsOpen = { settingsVisible = true },
+                    onOpenDiamondStore = { diamondStoreVisible = true },
                     activeWizard = activeWizard,
                     onWizardBack = { activeWizard = null },
                     onToolClick = { tool -> activeWizard = tool },
@@ -609,7 +621,6 @@ fun App() {
                                             SharedToolsScreen(
                                                 state = toolsState,
                                                 onToolClick = { tool -> activeWizard = tool },
-                                                onCredits = { paywallVisible = true },
                                             )
                                         }
                                         WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
@@ -778,19 +789,20 @@ fun App() {
                             }
 
                             if (paywallVisible) {
-                                var selectedPlan by remember { mutableStateOf("yearly") }
-                                val paywallState = PaywallState(
-                                    isPro = false,
-                                    plans = listOf(
-                                        PaywallPlan("yearly", Strings.paywallV3PlanYearly, "$39.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanAnnualDetail, isRecommended = true),
-                                        PaywallPlan("monthly", Strings.paywallV3PlanMonthly, "$7.99", Strings.paywallV3PlanPerMonth, Strings.paywallV3PlanMonthlyDetail, isRecommended = false),
-                                        PaywallPlan("family", Strings.paywallV3PlanFamily, "$59.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanFamilyDetail, isRecommended = false),
-                                    ),
-                                    selectedPlanId = selectedPlan,
-                                    offeringsLoading = false,
-                                    purchasing = false,
-                                    purchaseSuccess = false,
-                                )
+                                val paywallState = remember(paywallSelectedPlan) {
+                                    PaywallState(
+                                        isPro = false,
+                                        plans = listOf(
+                                            PaywallPlan("yearly", Strings.paywallV3PlanYearly, "$39.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanAnnualDetail, isRecommended = true),
+                                            PaywallPlan("monthly", Strings.paywallV3PlanMonthly, "$7.99", Strings.paywallV3PlanPerMonth, Strings.paywallV3PlanMonthlyDetail, isRecommended = false),
+                                            PaywallPlan("family", Strings.paywallV3PlanFamily, "$59.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanFamilyDetail, isRecommended = false),
+                                        ),
+                                        selectedPlanId = paywallSelectedPlan,
+                                        offeringsLoading = false,
+                                        purchasing = false,
+                                        purchaseSuccess = false,
+                                    )
+                                }
                                 Box(
                                     modifier = Modifier
                                         .testTag(Strings.TestTags.paywallSheet)
@@ -802,12 +814,12 @@ fun App() {
                                         }
                                 ) {
                                     SharedPaywallSheet(
-                                        state = paywallState.copy(selectedPlanId = selectedPlan),
+                                        state = paywallState,
                                         onClose = { paywallVisible = false },
-                                        onPlanSelected = { selectedPlan = it },
+                                        onPlanSelected = { paywallSelectedPlan = it },
                                         onContinue = {
                                             if (Strings.PAYMENTS_ENABLED) {
-                                                openUrl(Strings.checkoutUrlForPlan(selectedPlan))
+                                                openUrl(Strings.checkoutUrlForPlan(paywallSelectedPlan))
                                             } else {
                                                 openUrl(Strings.BILLING_SUPPORT_URL)
                                             }
@@ -821,6 +833,28 @@ fun App() {
                                         },
                                     )
                                 }
+                            }
+
+                            if (diamondStoreVisible) {
+                                val diamondStoreState = remember {
+                                    DiamondStoreState(
+                                        currentDiamonds = toolsState.diamonds,
+                                        packages = listOf(
+                                            DiamondPackage("starter", "Starter", 50, "$1.99", "$0.04", gradientStart = Color(0xFF4DD9E0), gradientEnd = Color(0xFF0097A7)),
+                                            DiamondPackage("designer", "Creator", 150, "$4.99", "$0.03", badge = "POPULAR", gradientStart = Color(0xFF9B6EFF), gradientEnd = Color(0xFF6A1B9A)),
+                                            DiamondPackage("architect", "Pro", 400, "$9.99", "$0.02", badge = "BEST VALUE", gradientStart = Color(0xFF34D399), gradientEnd = Color(0xFF047857)),
+                                            DiamondPackage("estate", "Ultimate", 1000, "$19.99", "$0.02", gradientStart = Color(0xFFFFD166), gradientEnd = Color(0xFFB08D3A)),
+                                        ),
+                                    )
+                                }
+                                SharedDiamondStoreSheet(
+                                    state = diamondStoreState,
+                                    onClose = { diamondStoreVisible = false },
+                                    onPurchase = { pkg ->
+                                        openUrl(Strings.checkoutUrlForPlan(pkg.id))
+                                    },
+                                    onClaimDaily = { showToast(Strings.toastComingSoon) },
+                                )
                             }
                         }
                     }
@@ -836,7 +870,7 @@ private fun WebBottomBar(
     onSelectTab: (WebTab) -> Unit,
 ) {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = HomeDecorExtra.surfaceCard,
         contentColor = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.testTag(Strings.TestTags.bottomNav),
     ) {
@@ -844,7 +878,7 @@ private fun WebBottomBar(
             val selected = tab == selectedTab
             NavigationBarItem(
                 selected = selected,
-                onClick = { onSelectTab(tab) },
+                onClick = { if (!selected) onSelectTab(tab) },
                 modifier = Modifier.testTag(
                     Strings.formatTestTag(Strings.TestTags.bottomNavItem, tab.name)
                 ),
@@ -878,11 +912,14 @@ private fun DesktopAppLayout(
     selectedTab: WebTab,
     onSelectTab: (WebTab) -> Unit,
     paywallVisible: Boolean,
+    paywallSelectedPlan: String,
+    onPaywallPlanSelected: (String) -> Unit,
     onPaywallDismiss: () -> Unit,
     onOpenPaywall: () -> Unit,
     settingsVisible: Boolean,
     onSettingsDismiss: () -> Unit,
     onSettingsOpen: () -> Unit,
+    onOpenDiamondStore: () -> Unit,
     activeWizard: ToolItem?,
     onWizardBack: () -> Unit,
     onToolClick: (ToolItem) -> Unit,
@@ -909,94 +946,104 @@ private fun DesktopAppLayout(
     isDarkTheme: Boolean = false,
     onThemeToggle: () -> Unit = {},
 ) {
+    var showDiamondTooltip by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
         DesktopTopNav(
+            showDiamondTooltip = showDiamondTooltip,
+            onToggleTooltip = { showDiamondTooltip = !showDiamondTooltip },
+            onDismissTooltip = { showDiamondTooltip = false },
             selectedTab = selectedTab,
             onSelectTab = onSelectTab,
             diamonds = toolsState.diamonds,
             isPro = toolsState.isPro,
-            onCredits = { onOpenPaywall() },
+            onOpenDiamondStore = onOpenDiamondStore,
         )
 
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.TopCenter,
-        ) {
             Box(
-                modifier = Modifier.widthIn(max = 1200.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopCenter,
             ) {
-                if (activeWizard != null) {
-                    Box(Modifier.testTag(Strings.TestTags.wizardScreen)) {
-                        WebWizardScreen(
-                            tool = activeWizard,
-                            onBack = onWizardBack,
-                        )
-                    }
-                } else {
-                    AnimatedContent(
-                        targetState = selectedTab,
-                        label = "tab",
-                        transitionSpec = {
-                            fadeIn() + slideInVertically { it / 20 } togetherWith fadeOut() + slideOutVertically { it / 20 }
-                        },
-                    ) { tab ->
-                        when (tab) {
-                            WebTab.Tools -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
-                                SharedToolsScreen(
-                                    state = toolsState,
-                                    onToolClick = { tool -> onToolClick(tool) },
-                                    onCredits = { onOpenPaywall() },
-                                )
-                            }
-                            WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
-                                SharedDiscoverScreen(
-                                    state = discoverState,
-                                    onToggleFavorite = { section, item -> onToggleFavorite(section, item) },
-                                    onAddToMoodboard = { section, item -> onAddToMoodboard(section, item) },
-                                    onUseStyle = { section, item -> onUseStyle(section, item) },
-                                    onSignIn = { onSignIn() },
-                                )
-                            }
-                            WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
-                                SharedMyBoardScreen(
-                                    state = boardState,
-                                    isGuest = profileState.isGuest,
-                                    isPro = toolsState.isPro,
-                                    onSignIn = { onSignIn() },
-                                    onNavigateToTools = { onSelectTab(WebTab.Tools) },
-                                    onNavigateToDiscover = { onSelectTab(WebTab.Discover) },
-                                    onOpenUpgrade = onOpenPaywall,
-                                    onItemClick = onBoardItemClick,
-                                    onToggleFavorite = onBoardToggleFavorite,
-                                    signedInName = profileState.signedInName,
-                                )
-                            }
-                            WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
-                                SharedUpgradeScreen(
-                                    isPro = false,
-                                    onOpenPaywall = onOpenPaywall,
-                                )
-                            }
-                            WebTab.Profile -> Box(Modifier.testTag(Strings.TestTags.profileScreen)) {
-                                SharedProfileScreen(
-                                    state = profileState,
-                                    onSettings = { onSettingsOpen() },
-                                    onSignIn = { onSignIn() },
-                                    onOpenDiamonds = { onOpenPaywall() },
-                                    onOpenPaywall = onOpenPaywall,
-                                    onOpenBoard = { onSelectTab(WebTab.Board) },
-                                )
+                Surface(
+                    modifier = Modifier
+                        .widthIn(max = 1200.dp)
+                        .fillMaxHeight()
+                        .padding(horizontal = HomeDecorSpacing.Xl, vertical = HomeDecorSpacing.Sm),
+                    shape = HomeDecorShape.ContentPanel,
+                    color = HomeDecorExtra.surfaceCard,
+                    shadowElevation = HomeDecorElevation.SurfacePanel,
+                ) {
+                    if (activeWizard != null) {
+                        Box(Modifier.testTag(Strings.TestTags.wizardScreen)) {
+                            WebWizardScreen(
+                                tool = activeWizard,
+                                onBack = onWizardBack,
+                            )
+                        }
+                    } else {
+                        AnimatedContent(
+                            targetState = selectedTab,
+                            label = "tab",
+                            transitionSpec = {
+                                fadeIn() + slideInVertically { it / 20 } togetherWith fadeOut() + slideOutVertically { it / 20 }
+                            },
+                        ) { tab ->
+                            when (tab) {
+                                WebTab.Tools -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
+                                    SharedToolsScreen(
+                                        state = toolsState,
+                                        onToolClick = { tool -> onToolClick(tool) },
+                                    )
+                                }
+                                WebTab.Discover -> Box(Modifier.testTag(Strings.TestTags.discoverScreen)) {
+                                    SharedDiscoverScreen(
+                                        state = discoverState,
+                                        onToggleFavorite = { section, item -> onToggleFavorite(section, item) },
+                                        onAddToMoodboard = { section, item -> onAddToMoodboard(section, item) },
+                                        onUseStyle = { section, item -> onUseStyle(section, item) },
+                                        onSignIn = { onSignIn() },
+                                    )
+                                }
+                                WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
+                                    SharedMyBoardScreen(
+                                        state = boardState,
+                                        isGuest = profileState.isGuest,
+                                        isPro = toolsState.isPro,
+                                        onSignIn = { onSignIn() },
+                                        onNavigateToTools = { onSelectTab(WebTab.Tools) },
+                                        onNavigateToDiscover = { onSelectTab(WebTab.Discover) },
+                                        onOpenUpgrade = onOpenPaywall,
+                                        onItemClick = onBoardItemClick,
+                                        onToggleFavorite = onBoardToggleFavorite,
+                                        signedInName = profileState.signedInName,
+                                    )
+                                }
+                                WebTab.Upgrade -> Box(Modifier.testTag(Strings.TestTags.upgradeScreen)) {
+                                    SharedUpgradeScreen(
+                                        isPro = false,
+                                        onOpenPaywall = onOpenPaywall,
+                                    )
+                                }
+                                WebTab.Profile -> Box(Modifier.testTag(Strings.TestTags.profileScreen)) {
+                                    SharedProfileScreen(
+                                        state = profileState,
+                                        onSettings = { onSettingsOpen() },
+                                        onSignIn = { onSignIn() },
+                                        onOpenDiamonds = { onOpenPaywall() },
+                                        onOpenPaywall = onOpenPaywall,
+                                        onOpenBoard = { onSelectTab(WebTab.Board) },
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
             if (settingsVisible) {
                 Box(
@@ -1026,7 +1073,7 @@ private fun DesktopAppLayout(
                                 interactionSource = remember { MutableInteractionSource() },
                             ) { /* absorb clicks */ },
                         shape = RoundedCornerShape(24.dp),
-                        color = MaterialTheme.colorScheme.surface,
+                        color = HomeDecorExtra.surfaceCard,
                         shadowElevation = 8.dp,
                     ) {
                         SharedSettingsScreen(
@@ -1064,19 +1111,20 @@ private fun DesktopAppLayout(
             }
 
             if (paywallVisible) {
-                var selectedPlan by remember { mutableStateOf("yearly") }
-                val paywallState = PaywallState(
-                    isPro = false,
-                    plans = listOf(
-                        PaywallPlan("yearly", Strings.paywallV3PlanYearly, "$39.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanAnnualDetail, isRecommended = true),
-                        PaywallPlan("monthly", Strings.paywallV3PlanMonthly, "$7.99", Strings.paywallV3PlanPerMonth, Strings.paywallV3PlanMonthlyDetail, isRecommended = false),
-                        PaywallPlan("family", Strings.paywallV3PlanFamily, "$59.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanFamilyDetail, isRecommended = false),
-                    ),
-                    selectedPlanId = selectedPlan,
-                    offeringsLoading = false,
-                    purchasing = false,
-                    purchaseSuccess = false,
-                )
+                val paywallState = remember(paywallSelectedPlan) {
+                    PaywallState(
+                        isPro = false,
+                        plans = listOf(
+                            PaywallPlan("yearly", Strings.paywallV3PlanYearly, "$39.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanAnnualDetail, isRecommended = true),
+                            PaywallPlan("monthly", Strings.paywallV3PlanMonthly, "$7.99", Strings.paywallV3PlanPerMonth, Strings.paywallV3PlanMonthlyDetail, isRecommended = false),
+                            PaywallPlan("family", Strings.paywallV3PlanFamily, "$59.99", Strings.paywallV3PlanPerYear, Strings.paywallV3PlanFamilyDetail, isRecommended = false),
+                        ),
+                        selectedPlanId = paywallSelectedPlan,
+                        offeringsLoading = false,
+                        purchasing = false,
+                        purchaseSuccess = false,
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .testTag(Strings.TestTags.paywallSheet)
@@ -1088,12 +1136,12 @@ private fun DesktopAppLayout(
                         }
                 ) {
                     SharedPaywallSheet(
-                        state = paywallState.copy(selectedPlanId = selectedPlan),
+                        state = paywallState,
                         onClose = onPaywallDismiss,
-                        onPlanSelected = { selectedPlan = it },
+                        onPlanSelected = { onPaywallPlanSelected(it) },
                         onContinue = {
                             if (Strings.PAYMENTS_ENABLED) {
-                                openUrl(Strings.checkoutUrlForPlan(selectedPlan))
+                                openUrl(Strings.checkoutUrlForPlan(paywallSelectedPlan))
                             } else {
                                 openUrl(Strings.BILLING_SUPPORT_URL)
                             }
@@ -1107,6 +1155,28 @@ private fun DesktopAppLayout(
                         },
                     )
                 }
+            }
+
+            if (diamondStoreVisible) {
+                val diamondStoreState = remember {
+                    DiamondStoreState(
+                        currentDiamonds = toolsState.diamonds,
+                        packages = listOf(
+                            DiamondPackage("starter", "Starter", 50, "$1.99", "$0.04", gradientStart = Color(0xFF4DD9E0), gradientEnd = Color(0xFF0097A7)),
+                            DiamondPackage("designer", "Creator", 150, "$4.99", "$0.03", badge = "POPULAR", gradientStart = Color(0xFF9B6EFF), gradientEnd = Color(0xFF6A1B9A)),
+                            DiamondPackage("architect", "Pro", 400, "$9.99", "$0.02", badge = "BEST VALUE", gradientStart = Color(0xFF34D399), gradientEnd = Color(0xFF047857)),
+                            DiamondPackage("estate", "Ultimate", 1000, "$19.99", "$0.02", gradientStart = Color(0xFFFFD166), gradientEnd = Color(0xFFB08D3A)),
+                        ),
+                    )
+                }
+                SharedDiamondStoreSheet(
+                    state = diamondStoreState,
+                    onClose = { diamondStoreVisible = false },
+                    onPurchase = { pkg ->
+                        openUrl(Strings.checkoutUrlForPlan(pkg.id))
+                    },
+                    onClaimDaily = { showToast(Strings.toastComingSoon) },
+                )
             }
 
             if (authVisible) {
@@ -1146,11 +1216,15 @@ private fun DesktopTopNav(
     onSelectTab: (WebTab) -> Unit,
     diamonds: Int,
     isPro: Boolean,
-    onCredits: () -> Unit = {},
+    showDiamondTooltip: Boolean = false,
+    onToggleTooltip: () -> Unit = {},
+    onDismissTooltip: () -> Unit = {},
+    onOpenDiamondStore: () -> Unit = {},
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surface,
+        color = HomeDecorExtra.surfaceCard,
         shadowElevation = HomeDecorElevation.NavElevation,
+        shape = HomeDecorShape.TopNav,
     ) {
         Row(
             modifier = Modifier
@@ -1183,32 +1257,70 @@ private fun DesktopTopNav(
 
             Spacer(Modifier.weight(1f))
 
-            Surface(
-                onClick = onCredits,
-                shape = HomeDecorShape.Pill,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier.semantics {
-                    contentDescription = Strings.a11yOpenDiamondStore
-                    role = Role.Button
-                },
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            Box {
+                Surface(
+                    onClick = {
+                        onOpenDiamondStore()
+                    },
+                    shape = HomeDecorShape.Pill,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    modifier = Modifier.semantics {
+                        contentDescription = Strings.a11yOpenDiamondStore
+                        role = Role.Button
+                    },
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Stars,
-                        contentDescription = null,
-                        modifier = Modifier.size(HomeDecorSpacing.Base),
-                        tint = HomeDecorExtra.diamondAccent,
-                    )
-                    Text(
-                        if (isPro) "PRO" else "$diamonds",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Stars,
+                            contentDescription = null,
+                            modifier = Modifier.size(HomeDecorSpacing.Base),
+                            tint = HomeDecorExtra.diamondAccent,
+                        )
+                        Text(
+                            if (isPro) "PRO" else "$diamonds",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+
+                if (showDiamondTooltip) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.inverseSurface,
+                        shadowElevation = 6.dp,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 48.dp)
+                            .widthIn(max = 280.dp),
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "You have 150 free credits! Each generation costs 10 \uD83D\uDC8E",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.inverseOnSurface,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Surface(
+                                onClick = onDismissTooltip,
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.inversePrimary,
+                            ) {
+                                Text(
+                                    text = "Got it",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1226,10 +1338,11 @@ private fun DesktopTopNavItem(
     val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
 
     Surface(
-        onClick = onClick,
+        onClick = { if (!isSelected) onClick() },
         shape = HomeDecorShape.Medium,
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent,
         modifier = Modifier
+            .size(48.dp)
             .testTag(testTag)
             .semantics {
                 role = Role.Tab

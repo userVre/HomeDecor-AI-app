@@ -52,7 +52,6 @@ data class BoardItem(
     val roomType: String = "",
     val imageUrl: String? = null,
     val imageUri: String? = null,
-    val imageRes: Int = 0,
     val sourceImageUri: String? = null,
     val sourceImageUrl: String? = null,
     val status: String = "completed",

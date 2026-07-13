@@ -16,8 +16,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -25,6 +23,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -52,11 +51,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.CloudUpload
-import androidx.compose.material.icons.rounded.CreditCard
-import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.AutoAwesome
@@ -72,7 +70,6 @@ import androidx.compose.material.icons.rounded.Chair
 import androidx.compose.material.icons.rounded.ChildCare
 import androidx.compose.material.icons.rounded.Desk
 import androidx.compose.material.icons.rounded.DoorFront
-import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Fireplace
 import androidx.compose.material.icons.rounded.GridOn
 import androidx.compose.material.icons.rounded.Image
@@ -80,7 +77,6 @@ import androidx.compose.material.icons.rounded.Lightbulb
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LocalLaundryService
 import androidx.compose.material.icons.rounded.LunchDining
-import androidx.compose.material.icons.rounded.MailOutline
 import androidx.compose.material.icons.rounded.Minimize
 import androidx.compose.material.icons.rounded.Movie
 import androidx.compose.material.icons.rounded.Palette
@@ -91,12 +87,13 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material.icons.rounded.Style
-import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material.icons.rounded.Store
 import androidx.compose.material.icons.rounded.TableRestaurant
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material.icons.rounded.Weekend
 import androidx.compose.material.icons.rounded.Yard
+import androidx.compose.material.icons.rounded.CameraAlt
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -109,12 +106,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -131,8 +136,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -318,6 +326,28 @@ private fun encodeToBase64(bytes: ByteArray): String {
         i += 3
     }
     return sb.toString()
+}
+
+private fun downscaleImageBytes(bytes: ByteArray, maxDimension: Int = 1200): ByteArray {
+    val image = org.jetbrains.skia.Image.makeFromEncoded(bytes)
+    val w = image.width
+    val h = image.height
+    val scale = if (maxOf(w, h) <= maxDimension) 1.0f else maxDimension.toFloat() / maxOf(w, h)
+    if (scale >= 1.0f) return bytes
+    return try {
+        val newW = (w * scale).toInt()
+        val newH = (h * scale).toInt()
+        val info = org.jetbrains.skia.ImageInfo.makeN32Premul(newW, newH)
+        val surface = org.jetbrains.skia.Surface.makeRaster(info)
+        surface.canvas.drawImageRect(
+            image,
+            org.jetbrains.skia.Rect.makeWH(w.toFloat(), h.toFloat()),
+            org.jetbrains.skia.Rect.makeWH(newW.toFloat(), newH.toFloat()),
+        )
+        surface.makeImageSnapshot().encodeToData()?.bytes ?: bytes
+    } catch (_: Exception) {
+        bytes
+    }
 }
 
 private fun extractJsonString(json: String, key: String): String {
@@ -806,12 +836,13 @@ private fun uploadTitleForTool(toolId: String?): String = when (toolId) {
 }
 
 private fun uploadSubtitleForTool(toolId: String?): String = when (toolId) {
-    "facade", "exterior" -> "Drag and drop an exterior photo, or click to browse"
-    "garden" -> "Drag and drop a garden photo, or click to browse"
-    "paint" -> "Drag and drop a wall photo, or click to browse"
-    "floor" -> "Drag and drop a floor photo, or click to browse"
-    "replace" -> "Drag and drop a furniture photo, or click to browse"
-    "layout" -> "Drag and drop a floor plan photo, or click to browse"
+    "facade", "exterior" -> "Upload an exterior photo and we'll redesign it with AI in seconds"
+    "garden" -> "Upload an outdoor photo and we'll redesign it with AI in seconds"
+    "paint" -> "Upload a wall photo and we'll apply your chosen material with AI"
+    "floor" -> "Upload a floor photo and we'll apply your chosen material with AI"
+    "replace" -> "Upload a furniture photo and we'll swap it with a new piece"
+    "layout" -> "Upload a floor plan and we'll optimize the layout with AI"
+    "reference" -> "Upload your space and we'll match it to a reference style"
     else -> Strings.wizardUploadSubtitle
 }
 
@@ -899,15 +930,22 @@ fun WebWizardScreen(
     var previousStep by remember { mutableStateOf(state.step) }
     var showBackDialog by remember { mutableStateOf(false) }
     var showCloseDialog by remember { mutableStateOf(false) }
+    var isDecodingImage by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     val screenWidth = getScreenWidthDp()
     val isWide = screenWidth >= 700
-    val stepFocusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(state.step) {
-        try {
-            stepFocusRequester.requestFocus()
-        } catch (_: Exception) { }
+    // ── Cleanup on wizard exit / disposal ─────────────────────────────
+    // Cancels background jobs, releases image bytes, and resets wizard
+    // state so the previous session's resources are available for GC.
+    DisposableEffect(Unit) {
+        onDispose {
+            scope.coroutineContext[Job]?.children?.forEach { it.cancel() }
+            state = WizardState(tool = null)
+        }
     }
+
+
 
     LaunchedEffect(state.step) {
         if (state.step != previousStep) {
@@ -1063,14 +1101,28 @@ fun WebWizardScreen(
 
     val picker = rememberImagePicker { picked: PickedImageData ->
         if (picked.isValid) {
-            state = state.copy(photo = picked, isUsingExample = false, error = null, isDragging = false)
+            scope.launch {
+                isDecodingImage = true
+                val downscaledBytes = withContext(Dispatchers.Default) {
+                    picked.imageBytes?.let { downscaleImageBytes(it) } ?: picked.imageBytes
+                }
+                state = state.copy(photo = picked.copy(imageBytes = downscaledBytes), isUsingExample = false, error = null, isDragging = false)
+                isDecodingImage = false
+            }
         }
     }
 
     rememberDragDropHandler(
         onImageDropped = { picked ->
             if (picked.isValid) {
-                state = state.copy(photo = picked, isUsingExample = false, error = null, isDragging = false)
+                scope.launch {
+                    isDecodingImage = true
+                    val downscaledBytes = withContext(Dispatchers.Default) {
+                        picked.imageBytes?.let { downscaleImageBytes(it) } ?: picked.imageBytes
+                    }
+                    state = state.copy(photo = picked.copy(imageBytes = downscaledBytes), isUsingExample = false, error = null, isDragging = false)
+                    isDecodingImage = false
+                }
             }
         },
         onDragEnter = { state = state.copy(isDragging = true) },
@@ -1192,27 +1244,10 @@ fun WebWizardScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .clipToBounds()
-                .focusRequester(stepFocusRequester)
                 .testTag(Strings.formatTestTag(Strings.TestTags.wizardStepContent, state.step.name)),
         ) {
-            AnimatedContent(
-                targetState = state.step,
-                label = "wizardStep",
-                transitionSpec = {
-                    val steps = stepsForTool(state.tool?.id)
-                    val prevIdx = steps.indexOf(initialState)
-                    val nextIdx = steps.indexOf(targetState)
-                    val isForward = nextIdx > prevIdx
-                    if (isForward) {
-                        slideInHorizontally { it / 3 } togetherWith
-                                slideOutHorizontally { -it / 3 } + fadeOut()
-                    } else {
-                        slideInHorizontally { -it / 3 } togetherWith
-                                slideOutHorizontally { it / 3 } + fadeOut()
-                    }
-                },
-            ) { step ->
-                when (step) {
+            key(state.step) {
+            when (state.step) {
                     WizardStep.Upload -> UploadStep(
                         state = state,
                         isWide = isWide,
@@ -1301,8 +1336,11 @@ fun WebWizardScreen(
                         onMaskReady = {
                             state = state.copy(maskStrokes = listOf(MaskStroke()))
                         },
-                        onObjectSelected = {
-                            state = state.copy(objectSelectedOnImage = true)
+                        onNext = {
+                            state = state.copy(
+                                maskStrokes = listOf(MaskStroke()),
+                                objectSelectedOnImage = true,
+                            )
                         },
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -1382,6 +1420,37 @@ fun WebWizardScreen(
                         },
                         modifier = Modifier.fillMaxSize(),
                     )
+            }
+            } // key(state.step)
+
+            if (isDecodingImage) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        shadowElevation = 8.dp,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 3.dp,
+                            )
+                            Text(
+                                "Processing image…",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1403,6 +1472,9 @@ fun WebWizardScreen(
                 if (currentIndex < steps.size - 1) {
                     state = state.copy(step = steps[currentIndex + 1], error = null)
                 }
+            },
+            onGenerate = {
+                state = state.copy(isGenerating = true, generationError = null)
             },
             modifier = Modifier.fillMaxWidth(),
         )
@@ -1484,10 +1556,7 @@ private fun WizardProgressBar(
         pulseAnim.snapTo(0f)
         pulseAnim.animateTo(
             targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 1200),
-                repeatMode = RepeatMode.Reverse,
-            ),
+            animationSpec = tween(durationMillis = 600),
         )
     }
 
@@ -1506,10 +1575,19 @@ private fun WizardProgressBar(
                 .padding(horizontal = HomeDecorSpacing.Base, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // Step count label (above the dots)
+            Text(
+                "Step ${currentIndex + 1} of ${steps.size}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(Modifier.height(6.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 steps.forEachIndexed { index, step ->
                     val isCompleted = index < currentIndex
@@ -1520,7 +1598,7 @@ private fun WizardProgressBar(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(5.dp),
+                                .height(3.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Box(
@@ -1575,7 +1653,7 @@ private fun WizardProgressBar(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(5.dp),
+                                .height(3.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Box(
@@ -1595,13 +1673,14 @@ private fun WizardProgressBar(
                 }
             }
 
+            Spacer(Modifier.height(16.dp))
+
             // Active step label (below the dots)
             Text(
                 stepTitle(currentStep, toolId),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(top = 6.dp),
             )
         }
     }
@@ -1631,7 +1710,7 @@ private fun UploadStep(
             .padding(vertical = HomeDecorSpacing.Lg),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Single title + subtitle
+        // Title
         Text(
             uploadTitleForTool(state.tool?.id),
             style = MaterialTheme.typography.headlineSmall,
@@ -1658,6 +1737,38 @@ private fun UploadStep(
                 onChange = onImagePicked,
             )
         } else {
+            // Workflow explainer — "How it works" with 3 steps
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.6f),
+                modifier = if (isWide) Modifier.fillMaxWidth(0.55f) else Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        Strings.wizardHowItWorks,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    WizardTrustRow(
+                        icon = Icons.Rounded.CameraAlt,
+                        text = Strings.wizardWorkflowStep1,
+                    )
+                    WizardTrustRow(
+                        icon = Icons.Rounded.Tune,
+                        text = Strings.wizardWorkflowStep2,
+                    )
+                    WizardTrustRow(
+                        icon = Icons.Rounded.AutoAwesome,
+                        text = Strings.wizardWorkflowStep3,
+                    )
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+
             UploadDropZone(
                 isWide = isWide,
                 isDragging = state.isDragging,
@@ -1668,28 +1779,44 @@ private fun UploadStep(
             )
             Spacer(Modifier.height(12.dp))
             TryExampleButton(onTryExample = onTryExample)
-        }
 
-        // Inline validation
-        AnimatedVisibility(visible = state.error != null) {
-            Text(
-                state.error ?: "",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 12.dp),
-            )
-        }
+            // Post-upload helper — explains what happens next
+            Spacer(Modifier.height(14.dp))
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
+                modifier = if (isWide) Modifier.fillMaxWidth(0.55f) else Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        Strings.wizardUploadAfterHelper,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
-        // Helper tips (below the upload area, not in a separate column)
-        if (state.photo == null) {
-            Spacer(Modifier.height(20.dp))
+            // Photo tips
+            Spacer(Modifier.height(16.dp))
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = if (isWide) Modifier.fillMaxWidth(0.5f) else Modifier.fillMaxWidth(),
             ) {
-                TipRow(Strings.wizardProTip)
+                UploadTipRow(Strings.wizardUploadPhotoTip1)
+                UploadTipRow(Strings.wizardUploadPhotoTip2)
+                UploadTipRow(Strings.wizardUploadPhotoTip3)
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
             // Privacy note
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -1708,6 +1835,16 @@ private fun UploadStep(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
             }
+        }
+
+        // Inline validation
+        AnimatedVisibility(visible = state.error != null) {
+            Text(
+                state.error ?: "",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 12.dp),
+            )
         }
     }
 }
@@ -1799,6 +1936,12 @@ private fun UploadDropZone(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                "or drag and drop",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            )
         }
     }
 }
@@ -1816,19 +1959,21 @@ private fun TryExampleButton(onTryExample: () -> Unit) {
 
     Surface(
         onClick = onTryExample,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = if (isHovered)
-            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
         else
-            Color.Transparent,
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f),
         interactionSource = interactionSource,
         modifier = Modifier
             .testTag(Strings.TestTags.wizardTryExample)
+            .fillMaxWidth()
+            .height(56.dp)
             .scale(scale)
             .border(
                 width = 1.5.dp,
-                color = MaterialTheme.colorScheme.secondary,
-                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(14.dp),
             )
             .semantics {
                 role = Role.Button
@@ -1836,28 +1981,164 @@ private fun TryExampleButton(onTryExample: () -> Unit) {
             },
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.Center,
         ) {
             Icon(
                 Icons.Rounded.Lightbulb,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.secondary,
             )
+            Spacer(Modifier.width(10.dp))
             Column {
                 Text(
-                    Strings.wizardTryExample,
+                    Strings.wizardExampleCtaLabel,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    Strings.wizardTryExampleSubtitle,
+                    Strings.wizardExampleCtaSubtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Upload photo tip row
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun UploadTipRow(text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(18.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    Icons.Rounded.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(10.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+        }
+        Text(
+            text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Standardized local image preview helper (Web WasmJS-safe)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun LocalImagePreview(
+    imageState: Any?,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+) {
+    var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var isDecoding by remember { mutableStateOf(false) }
+
+    LaunchedEffect(imageState) {
+        when (imageState) {
+            is PickedImageData -> {
+                isDecoding = true
+                imageBitmap = withContext(Dispatchers.Default) {
+                    imageState.imageBytes?.let { bytes ->
+                        try {
+                            val downscaled = downscaleImageBytes(bytes)
+                            Image.makeFromEncoded(downscaled).toComposeImageBitmap()
+                        } catch (_: Exception) { null }
+                    }
+                }
+                isDecoding = false
+            }
+            is ImageBitmap -> {
+                imageBitmap = imageState
+                isDecoding = false
+            }
+            else -> {
+                imageBitmap = null
+                isDecoding = false
+            }
+        }
+    }
+
+    Box(
+        modifier = modifier.fillMaxSize(),
+    ) {
+        if (isDecoding) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 3.dp,
+                )
+            }
+        } else if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap!!,
+                contentDescription = contentDescription,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit,
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Rounded.Image,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        Strings.wizardPhotoSelected,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
@@ -1885,9 +2166,12 @@ private fun PhotoPreview(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (isWide) 320.dp else 240.dp),
+            .aspectRatio(16f / 9f)
+            .heightIn(max = 450.dp),
     ) {
-        Box {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+        ) {
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)),
@@ -1932,50 +2216,11 @@ private fun PhotoPreview(
                         }
                     }
                 } else {
-                    val imageBitmap = remember(photo) {
-                        photo.imageBytes?.let { bytes ->
-                            try {
-                                Image.makeFromEncoded(bytes).toComposeImageBitmap()
-                            } catch (_: Exception) { null }
-                        }
-                    }
-                    if (imageBitmap != null) {
-                        Image(
-                            bitmap = imageBitmap,
-                            contentDescription = Strings.wizardPhotoSelected,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                                        )
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Rounded.Image,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    Strings.wizardPhotoSelected,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
+                    LocalImagePreview(
+                        imageState = photo,
+                        modifier = Modifier.fillMaxSize(),
+                        contentDescription = Strings.wizardPhotoSelected,
+                    )
                 }
             }
 
@@ -2293,7 +2538,7 @@ private fun StyleImageCard(
 
     val borderColor = when {
         isSelected -> MaterialTheme.colorScheme.primary
-        isHovered -> MaterialTheme.colorScheme.outline
+        isHovered -> MaterialTheme.colorScheme.outlineVariant
         else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
     }
 
@@ -2301,11 +2546,7 @@ private fun StyleImageCard(
 
     val imageUrl = remember(styleId) { styleImageUrl(styleId) }
 
-    Surface(
-        onClick = onClick,
-        shape = HomeDecorShape.Card,
-        color = Color.Transparent,
-        interactionSource = interactionSource,
+    Box(
         modifier = modifier
             .testTag(Strings.formatTestTag(Strings.TestTags.wizardStyleCard, styleId))
             .focusRequester(focusRequester)
@@ -2319,6 +2560,11 @@ private fun StyleImageCard(
                 width = borderStroke,
                 color = borderColor,
                 shape = HomeDecorShape.Card,
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
             ),
     ) {
         Box(
@@ -2369,8 +2615,8 @@ private fun StyleImageCard(
 
             Column(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(horizontal = 12.dp, vertical = 10.dp)
+                    .align(Alignment.CenterStart)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
                     .fillMaxWidth(),
             ) {
                 Text(
@@ -2749,9 +2995,12 @@ private fun MaskStep(
     state: WizardState,
     isWide: Boolean,
     onMaskReady: () -> Unit,
-    onObjectSelected: () -> Unit,
+    onNext: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val maskPathPoints = remember { mutableStateListOf<Offset>() }
+    val hasDrawnMask = maskPathPoints.isNotEmpty()
+
     Column(
         modifier = modifier
             .fillMaxWidth(if (isWide) 0.92f else 1f)
@@ -2768,114 +3017,108 @@ private fun MaskStep(
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            "Highlight the furniture or object you want to replace in your photo",
+            "Draw over the furniture or object you want to replace",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(20.dp))
 
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(if (isWide) 320.dp else 240.dp),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) { onObjectSelected() },
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.fillMaxSize(),
             ) {
-                if (state.isUsingExample) {
-                    val exampleImageUrl = when (state.tool?.id) {
-                        "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
-                        "facade", "exterior" -> "images/assets_media_discover_exterior_exteriormodernvilla.webp"
-                        "paint" -> "images/assets_media_discover_wallscenes_lavendermistbath.webp"
-                        "floor" -> "images/assets_media_discover_floorscenes_naturaloakparquet.webp"
-                        else -> "images/tool_interior.webp"
-                    }
-                    NetworkImage(
-                        url = exampleImageUrl,
-                        contentDescription = "Selected photo",
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    val imageBitmap = remember(state.photo) {
-                        state.photo?.imageBytes?.let { bytes ->
-                            try {
-                                Image.makeFromEncoded(bytes).toComposeImageBitmap()
-                            } catch (_: Exception) { null }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, _ ->
+                                change.consume()
+                                maskPathPoints.add(change.position)
+                            }
+                        },
+                ) {
+                    if (state.isUsingExample) {
+                        val exampleImageUrl = when (state.tool?.id) {
+                            "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
+                            "facade", "exterior" -> "images/assets_media_discover_exterior_exteriormodernvilla.webp"
+                            "paint" -> "images/assets_media_discover_wallscenes_lavendermistbath.webp"
+                            "floor" -> "images/assets_media_discover_floorscenes_naturaloakparquet.webp"
+                            else -> "images/tool_interior.webp"
                         }
-                    }
-                    if (imageBitmap != null) {
-                        Image(
-                            bitmap = imageBitmap,
+                        NetworkImage(
+                            url = exampleImageUrl,
                             contentDescription = "Selected photo",
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
                         )
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                                        )
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center,
+                        LocalImagePreview(
+                            imageState = state.photo,
+                            modifier = Modifier.fillMaxSize(),
+                            contentDescription = "Selected photo",
+                        )
+                    }
+
+                    if (hasDrawnMask) {
+                        Canvas(
+                            modifier = Modifier.fillMaxSize(),
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Rounded.Image,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    Strings.wizardPhotoSelected,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                            val path = Path().apply {
+                                if (maskPathPoints.isNotEmpty()) {
+                                    moveTo(maskPathPoints[0].x, maskPathPoints[0].y)
+                                    for (i in 1 until maskPathPoints.size) {
+                                        lineTo(maskPathPoints[i].x, maskPathPoints[i].y)
+                                    }
+                                }
                             }
+                            drawPath(
+                                path = path,
+                                color = Color(0x80008080),
+                                style = Stroke(
+                                    width = 36f,
+                                    cap = StrokeCap.Round,
+                                    join = androidx.compose.ui.graphics.StrokeJoin.Round,
+                                ),
+                            )
                         }
+
+
                     }
                 }
+            }
 
-                if (state.maskStrokes.isNotEmpty() || state.objectSelectedOnImage) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(12.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+            if (hasDrawnMask) {
+                Surface(
+                    onClick = { onNext() },
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(12.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                Icons.Rounded.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = HomeDecorExtra.onGradientText,
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                "Object selected",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = HomeDecorExtra.onGradientText,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
+                        Text(
+                            "Next",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = HomeDecorExtra.onGradientText,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = HomeDecorExtra.onGradientText,
+                        )
                     }
                 }
             }
@@ -2883,47 +3126,14 @@ private fun MaskStep(
 
         Spacer(Modifier.height(16.dp))
 
-        if (state.maskStrokes.isEmpty()) {
-            if (state.objectSelectedOnImage) {
-                Text(
-                    "Object tapped! Tap Next or confirm below to continue.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center,
-                )
-            } else {
-                Text(
-                    "Tap on the object in the photo to select it for replacement",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            Spacer(Modifier.height(16.dp))
-            val buttonEnabled = state.objectSelectedOnImage
-            Surface(
-                onClick = { if (buttonEnabled) onMaskReady() },
-                shape = RoundedCornerShape(12.dp),
-                color = if (buttonEnabled) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surfaceContainerHigh,
-            ) {
-                Text(
-                    "I've selected the object",
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (buttonEnabled) HomeDecorExtra.onGradientText
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        } else {
-            Text(
-                "Object selected! Tap Next to describe what to replace it with.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-            )
-        }
+        Text(
+            if (hasDrawnMask) "Tap Next to describe what to replace it with"
+            else "Drag over the object, then tap Next",
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (hasDrawnMask) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
 
         AnimatedVisibility(visible = state.error != null) {
             Text(
@@ -3600,7 +3810,9 @@ private fun ReviewStep(
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f),
         ) {
-            Box {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+            ) {
                 if (state.isUsingExample) {
                     val exampleImageUrl = when (state.tool?.id) {
                         "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
@@ -3615,50 +3827,11 @@ private fun ReviewStep(
                         modifier = Modifier.fillMaxSize(),
                     )
                 } else {
-                    val imageBitmap = remember(state.photo) {
-                        state.photo?.imageBytes?.let { bytes ->
-                            try {
-                                Image.makeFromEncoded(bytes).toComposeImageBitmap()
-                            } catch (_: Exception) { null }
-                        }
-                    }
-                    if (imageBitmap != null) {
-                        Image(
-                            bitmap = imageBitmap,
-                            contentDescription = Strings.wizardPhotoSelected,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                                        )
-                                    )
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    Icons.Rounded.Image,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                )
-                                Spacer(Modifier.height(8.dp))
-                                Text(
-                                    Strings.wizardPhotoSelected,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    }
+                    LocalImagePreview(
+                        imageState = state.photo,
+                        modifier = Modifier.fillMaxSize(),
+                        contentDescription = Strings.wizardPhotoSelected,
+                    )
                 }
 
                 Surface(
@@ -3677,6 +3850,34 @@ private fun ReviewStep(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
                     )
+                }
+
+                // Loading overlay when generation is active
+                if (state.isGenerating) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.4f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(48.dp),
+                                color = Color.White,
+                                strokeWidth = 4.dp,
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Text(
+                                "AI is re-imagining your space...\nThis usually takes 10-15 seconds.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -4273,6 +4474,7 @@ private fun GeneratingState(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
                         .clip(RoundedCornerShape(24.dp)),
                 ) {
                     if (isUsingExample) {
@@ -4292,46 +4494,11 @@ private fun GeneratingState(
                                 .clip(RoundedCornerShape(24.dp)),
                         )
                     } else {
-                        val imageBitmap = remember(photo) {
-                            photo?.imageBytes?.let { bytes ->
-                                try {
-                                    Image.makeFromEncoded(bytes).toComposeImageBitmap()
-                                } catch (_: Exception) { null }
-                            }
-                        }
-                        if (imageBitmap != null) {
-                            Image(
-                                bitmap = imageBitmap,
-                                contentDescription = Strings.wizardPhotoSelected,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(180.dp)
-                                    .clip(RoundedCornerShape(24.dp)),
-                                contentScale = ContentScale.Crop,
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(180.dp)
-                                    .background(
-                                        Brush.verticalGradient(
-                                            listOf(
-                                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                                            )
-                                        )
-                                    ),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    Icons.Rounded.Image,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                )
-                            }
-                        }
+                        LocalImagePreview(
+                            imageState = photo,
+                            modifier = Modifier.fillMaxSize(),
+                            contentDescription = Strings.wizardPhotoSelected,
+                        )
                     }
 
                     // "AI Generating..." badge
@@ -5003,34 +5170,8 @@ private fun BenefitRow(text: String) {
     }
 }
 
-@Composable
-private fun TipRow(text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            modifier = Modifier.size(20.dp),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    Icons.Rounded.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                )
-            }
-        }
-        Text(
-            text,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
+// ---------------------------------------------------------------------------
+// Option Cards (for room type, material, goals, etc.)
 // ---------------------------------------------------------------------------
 // Option Cards (for room type, material, goals, etc.)
 // ---------------------------------------------------------------------------
@@ -5501,122 +5642,7 @@ private fun MaterialSwatchCard(
 }
 
 // ---------------------------------------------------------------------------
-// Style Option Card (for floor, replacement style)
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun StyleOptionCard(
-    label: String,
-    styleId: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessHigh),
-        label = "cardScale",
-    )
-
-    val borderColor = if (isSelected)
-        MaterialTheme.colorScheme.primary
-    else
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-
-    Surface(
-        onClick = onClick,
-        modifier = modifier
-            .semantics {
-                role = Role.RadioButton
-                selected = isSelected
-                contentDescription = Strings.a11yWizardOption(label, isSelected)
-            }
-            .scale(scale)
-            .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(16.dp),
-            ),
-        shape = RoundedCornerShape(16.dp),
-        color = if (isSelected)
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
-        else
-            MaterialTheme.colorScheme.surface,
-        interactionSource = interactionSource,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            // Visual placeholder - colored circle
-            Surface(
-                shape = CircleShape,
-                color = when (styleId) {
-                    "hardwood", "wood" -> Color(0xFF8B5A2B)
-                    "marble", "marble-white" -> Color(0xFFF5F5F5)
-                    "concrete" -> Color(0xFF9E9E9E)
-                    "tile", "ceramic" -> Color(0xFFB0BEC5)
-                    "carpet" -> Color(0xFF795548)
-                    "rugs", "rugs-persian" -> Color(0xFFC62828)
-                    "laminate" -> Color(0xFFD7CCC8)
-                    "vinyl" -> Color(0xFFA1887F)
-                    "bamboo" -> Color(0xFF8D6E63)
-                    "stone" -> Color(0xFF607D8B)
-                    "terracotta" -> Color(0xFFBF360C)
-                    "parquet" -> Color(0xFF6D4C41)
-                    "sleek-modern" -> Color(0xFF455A64)
-                    "ornate-classic" -> Color(0xFF5D4037)
-                    "minimalist" -> Color(0xFFECEFF1)
-                    "boho-eclectic" -> Color(0xFFFF8A65)
-                    "natural" -> Color(0xFF4CAF50)
-                    "industrial" -> Color(0xFF37474F)
-                    "mid-century" -> Color(0xFFFF9800)
-                    "scandinavian" -> Color(0xFFE0E0E0)
-                    "rustic" -> Color(0xFF795548)
-                    "luxury" -> Color(0xFFFFD700)
-                    "traditional" -> Color(0xFF6D4C41)
-                    "transitional" -> Color(0xFF90A4AE)
-                    "art-deco" -> Color(0xFF1A237E)
-                    "farmhouse" -> Color(0xFFD7CCC8)
-                    "coastal" -> Color(0xFF29B6F6)
-                    "vintage" -> Color(0xFF8D6E63)
-                    "midcentury" -> Color(0xFFFF9800)
-                    "asian" -> Color(0xFFB71C1C)
-                    "mediterranean" -> Color(0xFF0277BD)
-                    else -> MaterialTheme.colorScheme.primaryContainer
-                },
-                modifier = Modifier.size(48.dp),
-            ) {
-                CheckIconOverlay(
-                    isSelected = isSelected,
-                    tint = if (styleId == "marble" || styleId == "minimalist" || styleId == "scandinavian" || styleId == "luxury")
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        HomeDecorExtra.onGradientText,
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                else MaterialTheme.colorScheme.onSurface,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Check Icon Overlay (used in PaintColorSwatch, StyleOptionCard)
+// Check Icon Overlay (used in PaintColorSwatch)
 // ---------------------------------------------------------------------------
 
 @Composable
@@ -5749,6 +5775,7 @@ private fun WizardBottomBar(
     state: WizardState,
     onBack: () -> Unit,
     onNext: () -> Unit,
+    onGenerate: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val steps = stepsForTool(state.tool?.id)
@@ -5786,80 +5813,162 @@ private fun WizardBottomBar(
         tonalElevation = 2.dp,
         modifier = modifier.testTag(Strings.TestTags.wizardBottomBar),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Base, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (state.step != WizardStep.Upload) {
-                Surface(
-                    onClick = onBack,
-                    shape = HomeDecorShape.Medium,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    modifier = Modifier
-                        .height(44.dp)
-                        .testTag(Strings.TestTags.wizardBackStepButton),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HomeDecorSpacing.Base, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (state.step != WizardStep.Upload) {
+                    Surface(
+                        onClick = onBack,
+                        shape = HomeDecorShape.Medium,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        modifier = Modifier
+                            .height(44.dp)
+                            .testTag(Strings.TestTags.wizardBackStepButton),
                     ) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            Strings.wizardBack,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium,
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                Strings.wizardBack,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                if (!isLastStep) {
+                    Surface(
+                        onClick = onNext,
+                        shape = HomeDecorShape.Pill,
+                        color = if (canProceed) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        enabled = canProceed,
+                        interactionSource = interactionSource,
+                        modifier = Modifier
+                            .height(48.dp)
+                            .testTag(Strings.TestTags.wizardNextStepButton)
+                            .scale(scale),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 24.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Rounded.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = if (canProceed) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                Strings.wizardNext,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (canProceed) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+
+                if (isLastStep && state.step == WizardStep.Review) {
+                    val generateEnabled = !state.isGenerating && !state.generationComplete
+                    val generateInteractionSource = remember { MutableInteractionSource() }
+                    val generateIsPressed by generateInteractionSource.collectIsPressedAsState()
+                    val generateScale by animateFloatAsState(
+                        targetValue = if (generateIsPressed && generateEnabled) 0.97f else 1f,
+                        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+                        label = "genRedesignScale",
+                    )
+
+                    Surface(
+                        onClick = {
+                            if (generateEnabled) {
+                                onGenerate()
+                            }
+                        },
+                        shape = HomeDecorShape.Pill,
+                        color = Color(0xFF1D5C5E),
+                        enabled = generateEnabled,
+                        interactionSource = generateInteractionSource,
+                        modifier = Modifier
+                            .height(48.dp)
+                            .scale(generateScale),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                Icons.Rounded.AutoAwesome,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.White,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Generate Redesign \u2022 10 \uD83D\uDC8E",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(Modifier.weight(1f))
-
-            if (!isLastStep) {
-                Surface(
-                    onClick = onNext,
-                    shape = HomeDecorShape.Pill,
-                    color = if (canProceed) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceContainerHigh,
-                    interactionSource = interactionSource,
-                    modifier = Modifier
-                        .height(48.dp)
-                        .testTag(Strings.TestTags.wizardNextStepButton)
-                        .scale(scale),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Icon(
-                            Icons.Rounded.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = if (canProceed) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            Strings.wizardNext,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (canProceed) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+            // Disabled hint when a required field is missing
+            AnimatedVisibility(
+                visible = !canProceed && !isLastStep,
+            ) {
+                val hint = when (state.step) {
+                    WizardStep.Upload -> Strings.wizardHintUpload
+                    WizardStep.RoomType -> Strings.wizardHintRoomType
+                    WizardStep.Style -> Strings.wizardHintStyle
+                    WizardStep.Palette -> Strings.wizardHintPalette
+                    WizardStep.Material -> Strings.wizardHintMaterial
+                    WizardStep.Goals -> Strings.wizardHintGoals
+                    WizardStep.Mask -> Strings.wizardHintMask
+                    WizardStep.ReplacementPrompt -> Strings.wizardHintReplacementPrompt
+                    WizardStep.TransferStrength -> Strings.wizardHintTransferStrength
+                    WizardStep.PaintColor -> Strings.wizardHintPaintColor
+                    WizardStep.FloorStyle -> Strings.wizardHintFloorStyle
+                    WizardStep.FurnitureType -> Strings.wizardHintFurnitureType
+                    WizardStep.ReplacementStyle -> Strings.wizardHintReplacementStyle
+                    WizardStep.ReferenceImage -> Strings.wizardHintReferenceImage
+                    else -> ""
                 }
-            } else {
-                Spacer(Modifier.weight(1f))
+                Text(
+                    hint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = HomeDecorSpacing.Base)
+                        .padding(bottom = 6.dp),
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }

@@ -35,16 +35,14 @@ class PaywallTest {
         var currentStep = 1
         currentStep++; assertEquals(2, currentStep)
         currentStep++; assertEquals(3, currentStep)
-        currentStep++; assertEquals(4, currentStep)
-        currentStep = 5; assertEquals(5, currentStep)
     }
 
     @Test
-    fun testPaywallStep4ToStep5() {
-        var currentStep = 4
+    fun testPaywallStep2ToStep3() {
+        var currentStep = 2
         val selectedPlan = "yearly"
-        currentStep = 5
-        assertEquals(5, currentStep)
+        currentStep = 3
+        assertEquals(3, currentStep)
         assertEquals("yearly", selectedPlan)
     }
 
@@ -62,16 +60,16 @@ class PaywallTest {
 
     @Test
     fun testPaywallStepLabels() {
-        assertEquals("Redesign your room", Strings.pwS1Heading)
+        assertEquals("Pick your plan", Strings.pwS1Heading)
         assertEquals("Why go Pro?", Strings.pwS2Heading)
         assertEquals("What's included in Pro", Strings.pwS3Heading)
         assertEquals("Choose your plan", Strings.pwS4Heading)
-        assertEquals("Your subscription is handled securely.", Strings.pwS5Heading)
+        assertEquals("Confirm your subscription", Strings.pwS5Heading)
     }
 
     @Test
     fun testPaywallCtaLabels() {
-        assertEquals("Continue", Strings.pwS1Cta)
+        assertEquals("See Plans", Strings.pwS1Cta)
         assertEquals("Continue", Strings.pwS2Cta)
         assertEquals("Continue", Strings.pwS3Cta)
         assertEquals("Subscribe Now", Strings.pwS4Cta)
@@ -96,7 +94,7 @@ class PaywallTest {
 
     @Test
     fun testPaywallTrustLabels() {
-        assertEquals("Cancel anytime. No commitment.", Strings.pwS5Trust)
+        assertEquals("Cancel anytime.", Strings.pwS5Trust)
         assertEquals("Cancel anytime.", Strings.pwS4Trust)
     }
 
@@ -121,9 +119,7 @@ class PaywallTest {
 
     @Test
     fun testPaywallBackNavigation() {
-        var currentStep = 5
-        currentStep = if (currentStep > 1) currentStep - 1 else currentStep; assertEquals(4, currentStep)
-        currentStep = if (currentStep > 1) currentStep - 1 else currentStep; assertEquals(3, currentStep)
+        var currentStep = 3
         currentStep = if (currentStep > 1) currentStep - 1 else currentStep; assertEquals(2, currentStep)
         currentStep = if (currentStep > 1) currentStep - 1 else currentStep; assertEquals(1, currentStep)
         currentStep = if (currentStep > 1) currentStep - 1 else currentStep; assertEquals(1, currentStep)

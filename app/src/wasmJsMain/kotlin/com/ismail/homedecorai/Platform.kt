@@ -26,7 +26,7 @@ actual fun getScreenWidthDp(): Int = getScreenWidthDpJs()
 @JsFun("(title) => { document.title = title; }")
 private external fun setPageTitleJs(title: String)
 
-actual fun setpageTitle(title: String) {
+actual fun setPageTitle(title: String) {
     setPageTitleJs(title)
 }
 
