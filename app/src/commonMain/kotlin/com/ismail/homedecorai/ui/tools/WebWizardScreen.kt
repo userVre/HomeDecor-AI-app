@@ -183,7 +183,6 @@ enum class WizardStep { Upload, RoomType, Style, Palette, Refine, Material, Goal
 
 data class MaskStroke(
     val points: List<Pair<Float, Float>> = emptyList(),
-    val erase: Boolean = false,
 )
 
 data class WizardOption(
@@ -231,8 +230,7 @@ data class WizardState(
 // ---------------------------------------------------------------------------
 
 private fun stepsForTool(toolId: String?): List<WizardStep> = when (toolId) {
-    "interior", "facade" -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Style, WizardStep.Palette, WizardStep.Refine)
-    "garden" -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Style, WizardStep.Palette, WizardStep.Refine)
+    "interior", "garden" -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Style, WizardStep.Palette, WizardStep.Refine)
     "paint" -> listOf(WizardStep.Upload, WizardStep.Material, WizardStep.PaintColor, WizardStep.Review)
     "floor" -> listOf(WizardStep.Upload, WizardStep.Material, WizardStep.FloorStyle, WizardStep.Review)
     "layout" -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Goals, WizardStep.Review)
@@ -541,26 +539,7 @@ private fun furnitureTypeIcon(furnitureId: String): @Composable () -> Unit = {
 }
 
 private fun styleOptions(toolId: String): List<WizardOption> = when (toolId) {
-    "interior", "reference" -> listOf(
-        WizardOption("ai-suggestion", "AI Suggestion"),
-        WizardOption("modern", "Modern"),
-        WizardOption("luxury", "Luxury"),
-        WizardOption("japandi", "Japandi"),
-        WizardOption("cyberpunk", "Cyberpunk"),
-        WizardOption("tropical", "Tropical"),
-        WizardOption("minimalist", "Minimalist"),
-        WizardOption("scandinavian", "Scandinavian"),
-        WizardOption("bohemian", "Bohemian"),
-        WizardOption("mid-century", "Mid-Century"),
-        WizardOption("art-deco", "Art Deco"),
-        WizardOption("coastal", "Coastal"),
-        WizardOption("rustic", "Rustic"),
-        WizardOption("vintage", "Vintage"),
-        WizardOption("mediterranean", "Mediterranean"),
-        WizardOption("glam", "Glam"),
-        WizardOption("french-country", "French Country"),
-    )
-    "facade" -> listOf(
+    "interior", "facade", "reference" -> listOf(
         WizardOption("ai-suggestion", "AI Suggestion"),
         WizardOption("modern", "Modern"),
         WizardOption("luxury", "Luxury"),
@@ -855,6 +834,14 @@ private fun exampleLabelForTool(toolId: String?): String = when (toolId) {
     else -> Strings.wizardExampleRoom
 }
 
+private fun exampleImageUrlForTool(toolId: String?): String = when (toolId) {
+    "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
+    "facade", "exterior" -> "images/assets_media_discover_exterior_exteriormodernvilla.webp"
+    "paint" -> "images/assets_media_discover_wallscenes_lavendermistbath.webp"
+    "floor" -> "images/assets_media_discover_floorscenes_naturaloakparquet.webp"
+    else -> "images/tool_interior.webp"
+}
+
 // ---------------------------------------------------------------------------
 // Building type image URL mapping (for facade/garden visual cards)
 // ---------------------------------------------------------------------------
@@ -987,9 +974,6 @@ fun WebWizardScreen(
                 return@LaunchedEffect
             }
 
-            // Step 2: Upload mask if present (for paint/floor/replace)
-            val maskStorageId: String? = null
-
             // Step 3: Upload reference image if present (for reference)
             var referenceStorageIds: List<String> = emptyList()
             val refPhoto = state.referencePhoto
@@ -1034,15 +1018,6 @@ fun WebWizardScreen(
                 "modeId" to "default",
                 "paletteId" to palette,
             )
-            if (maskStorageId != null) {
-                args["maskStorageId"] = maskStorageId
-                args["targetSurface"] = when (toolId) {
-                    "paint" -> "wall"
-                    "floor" -> "floor"
-                    "replace" -> "object"
-                    else -> roomType
-                }
-            }
             if (toolId == "paint" && style.isNotBlank()) {
                 args["targetColor"] = style
                 args["targetColorCategory"] = style
@@ -2177,15 +2152,8 @@ private fun PhotoPreview(
                 enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessLow)),
             ) {
                 if (isUsingExample) {
-                    val exampleImageUrl = when (toolId) {
-                        "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
-                        "facade", "exterior" -> "images/assets_media_discover_exterior_exteriormodernvilla.webp"
-                        "paint" -> "images/assets_media_discover_wallscenes_lavendermistbath.webp"
-                        "floor" -> "images/assets_media_discover_floorscenes_naturaloakparquet.webp"
-                        else -> "images/tool_interior.webp"
-                    }
                     NetworkImage(
-                        url = exampleImageUrl,
+                        url = exampleImageUrlForTool(toolId),
                         contentDescription = Strings.wizardExampleRoom,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -3045,15 +3013,8 @@ private fun MaskStep(
                         },
                 ) {
                     if (state.isUsingExample) {
-                        val exampleImageUrl = when (state.tool?.id) {
-                            "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
-                            "facade", "exterior" -> "images/assets_media_discover_exterior_exteriormodernvilla.webp"
-                            "paint" -> "images/assets_media_discover_wallscenes_lavendermistbath.webp"
-                            "floor" -> "images/assets_media_discover_floorscenes_naturaloakparquet.webp"
-                            else -> "images/tool_interior.webp"
-                        }
                         NetworkImage(
-                            url = exampleImageUrl,
+                            url = exampleImageUrlForTool(state.tool?.id),
                             contentDescription = "Selected photo",
                             modifier = Modifier.fillMaxSize(),
                         )
@@ -3160,7 +3121,7 @@ private fun ReplacementPromptStep(
     modifier: Modifier = Modifier,
 ) {
     val options = replacementSuggestionOptions()
-    var emailInput by remember { mutableStateOf(state.replacementPrompt) }
+    var replacementInput by remember { mutableStateOf(state.replacementPrompt) }
 
     Column(
         modifier = modifier
@@ -3193,7 +3154,7 @@ private fun ReplacementPromptStep(
                 Surface(
                     onClick = {
                         onSelect(option.label)
-                        emailInput = option.label
+                        replacementInput = option.label
                     },
                     shape = RoundedCornerShape(20.dp),
                     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
@@ -3220,9 +3181,9 @@ private fun ReplacementPromptStep(
         Spacer(Modifier.height(20.dp))
 
         OutlinedTextField(
-            value = emailInput,
+            value = replacementInput,
             onValueChange = {
-                emailInput = it
+                replacementInput = it
                 onTextChange(it)
             },
             label = { Text("Or describe what you want") },
@@ -3814,15 +3775,8 @@ private fun ReviewStep(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 if (state.isUsingExample) {
-                    val exampleImageUrl = when (state.tool?.id) {
-                        "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
-                        "facade", "exterior" -> "images/assets_media_discover_exterior_exteriormodernvilla.webp"
-                        "paint" -> "images/assets_media_discover_wallscenes_lavendermistbath.webp"
-                        "floor" -> "images/assets_media_discover_floorscenes_naturaloakparquet.webp"
-                        else -> "images/tool_interior.webp"
-                    }
                     NetworkImage(
-                        url = exampleImageUrl,
+                        url = exampleImageUrlForTool(state.tool?.id),
                         contentDescription = Strings.wizardExampleRoom,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -4478,15 +4432,8 @@ private fun GeneratingState(
                         .clip(RoundedCornerShape(24.dp)),
                 ) {
                     if (isUsingExample) {
-                        val exampleImageUrl = when (toolId) {
-                            "garden" -> "images/assets_media_discover_garden_gardenpatio.webp"
-                            "facade", "exterior" -> "images/assets_media_discover_exterior_exteriormodernvilla.webp"
-                            "paint" -> "images/assets_media_discover_wallscenes_lavendermistbath.webp"
-                            "floor" -> "images/assets_media_discover_floorscenes_naturaloakparquet.webp"
-                            else -> "images/tool_interior.webp"
-                        }
                         NetworkImage(
-                            url = exampleImageUrl,
+                            url = exampleImageUrlForTool(toolId),
                             contentDescription = Strings.wizardExampleRoom,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -5143,32 +5090,6 @@ private fun WizardTrustRow(
 }
 
 @Composable
-private fun BenefitRow(text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier.size(20.dp),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    Icons.Rounded.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-        }
-        Text(
-            text,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
 
 // ---------------------------------------------------------------------------
 // Option Cards (for room type, material, goals, etc.)
