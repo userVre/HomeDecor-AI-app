@@ -519,6 +519,8 @@ fun App() {
                     onSettingsDismiss = { settingsVisible = false },
                     onSettingsOpen = { settingsVisible = true },
                     onOpenDiamondStore = { diamondStoreVisible = true },
+                    diamondStoreVisible = diamondStoreVisible,
+                    onDiamondStoreDismiss = { diamondStoreVisible = false },
                     activeWizard = activeWizard,
                     onWizardBack = { activeWizard = null },
                     onToolClick = { tool -> activeWizard = tool },
@@ -917,6 +919,8 @@ private fun DesktopAppLayout(
     onSettingsDismiss: () -> Unit,
     onSettingsOpen: () -> Unit,
     onOpenDiamondStore: () -> Unit,
+    diamondStoreVisible: Boolean = false,
+    onDiamondStoreDismiss: () -> Unit = {},
     activeWizard: ToolItem?,
     onWizardBack: () -> Unit,
     onToolClick: (ToolItem) -> Unit,
@@ -1168,7 +1172,7 @@ private fun DesktopAppLayout(
                 }
                 SharedDiamondStoreSheet(
                     state = diamondStoreState,
-                    onClose = { diamondStoreVisible = false },
+                    onClose = { onDiamondStoreDismiss() },
                     onPurchase = { pkg ->
                         openUrl(Strings.checkoutUrlForPlan(pkg.id))
                     },

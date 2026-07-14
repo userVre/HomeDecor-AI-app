@@ -80,6 +80,8 @@ import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.settings.LanguagePickerContent
 import com.ismail.homedecorai.ui.settings.SettingsLanguage
 import com.ismail.homedecorai.ui.theme.*
+import kotlinx.coroutines.launch
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 data class ProfileScreenState(
     val isGuest: Boolean = true,
@@ -91,6 +93,7 @@ data class ProfileScreenState(
     val savedDesigns: List<BoardItem> = emptyList(),
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SharedProfileScreen(
     state: ProfileScreenState,
@@ -405,6 +408,7 @@ fun SharedProfileScreen(
                                 }
                             }
                         }
+                    }
                     }
                 } else {
                     item("account-section") {

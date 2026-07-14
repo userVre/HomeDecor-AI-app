@@ -719,6 +719,7 @@ object Strings {
 
     // ── A11y labels for modal close ──────────────────────────────────────────
     const val a11ySettingsClose = "Close settings"
+    const val a11yDiamondStoreTitle = "Diamond store"
     const val a11yDiamondStoreClose = "Close diamond store"
 
     // ── Test Tags (for Compose test / accessibility snapshots) ──────────────
