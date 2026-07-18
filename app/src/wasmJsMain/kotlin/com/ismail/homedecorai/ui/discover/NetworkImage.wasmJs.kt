@@ -112,6 +112,37 @@ import homedecorai.app.generated.resources.tool_layout
 import homedecorai.app.generated.resources.tool_paint
 import homedecorai.app.generated.resources.tool_reference
 import homedecorai.app.generated.resources.tool_replace
+import homedecorai.app.generated.resources.sample_after_luxury
+import homedecorai.app.generated.resources.sample_before_empty
+import homedecorai.app.generated.resources.assets_media_materials_bamboo
+import homedecorai.app.generated.resources.assets_media_materials_carraramarble
+import homedecorai.app.generated.resources.assets_media_materials_oakwood
+import homedecorai.app.generated.resources.assets_media_materials_warmoak
+import homedecorai.app.generated.resources.assets_media_materials_darkparquet
+import homedecorai.app.generated.resources.assets_media_materials_terracottatile
+import homedecorai.app.generated.resources.assets_media_materials_darkstone
+import homedecorai.app.generated.resources.assets_media_materials_concrete
+import homedecorai.app.generated.resources.assets_media_materials_whiteplaster
+import homedecorai.app.generated.resources.assets_media_materials_carpet
+import homedecorai.app.generated.resources.assets_media_floor_floorplanannotated
+import homedecorai.app.generated.resources.assets_media_floor_naturaloakroom
+import homedecorai.app.generated.resources.assets_media_floor_oakhallway
+import homedecorai.app.generated.resources.assets_media_floor_rusticliving
+import homedecorai.app.generated.resources.assets_media_styles_example_warmneutral
+import homedecorai.app.generated.resources.assets_media_styles_example_scandinavianbright
+import homedecorai.app.generated.resources.assets_media_styles_example_minimalistsoft
+import homedecorai.app.generated.resources.assets_media_styles_example_luxuryclassic
+import homedecorai.app.generated.resources.assets_media_styles_example_modernwarm
+import homedecorai.app.generated.resources.assets_media_styles_example_contemporarydark
+import homedecorai.app.generated.resources.assets_media_styles_example_neutralemptywall
+import homedecorai.app.generated.resources.assets_media_styles_example_warmdining
+import homedecorai.app.generated.resources.assets_media_styles_example_rusticfireplace
+import homedecorai.app.generated.resources.assets_media_styles_example_industrial
+import homedecorai.app.generated.resources.assets_media_styles_example_modernorganic
+import homedecorai.app.generated.resources.assets_media_styles_example_bohemian
+import homedecorai.app.generated.resources.assets_media_styles_example_luxurycontemporary
+import homedecorai.app.generated.resources.assets_media_garden_landscapedpath
+import homedecorai.app.generated.resources.assets_media_exterior_modernhouse
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -255,6 +286,37 @@ private fun urlToPainter(url: String): Painter? {
         "assets_media_discover_floorscenes_walnutchevron" -> painterResource(Res.drawable.assets_media_discover_floorscenes_walnutchevron)
         "assets_media_discover_floorscenes_weatheredoakstudio" -> painterResource(Res.drawable.assets_media_discover_floorscenes_weatheredoakstudio)
         "assets_media_discover_exterior_exteriorretailstorefront" -> painterResource(Res.drawable.assets_media_discover_exterior_exteriorretailstorefront)
+        "sample_before_empty" -> painterResource(Res.drawable.sample_before_empty)
+        "sample_after_luxury" -> painterResource(Res.drawable.sample_after_luxury)
+        "assets_media_materials_bamboo" -> painterResource(Res.drawable.assets_media_materials_bamboo)
+        "assets_media_materials_carraramarble" -> painterResource(Res.drawable.assets_media_materials_carraramarble)
+        "assets_media_materials_oakwood" -> painterResource(Res.drawable.assets_media_materials_oakwood)
+        "assets_media_materials_warmoak" -> painterResource(Res.drawable.assets_media_materials_warmoak)
+        "assets_media_materials_darkparquet" -> painterResource(Res.drawable.assets_media_materials_darkparquet)
+        "assets_media_materials_terracottatile" -> painterResource(Res.drawable.assets_media_materials_terracottatile)
+        "assets_media_materials_darkstone" -> painterResource(Res.drawable.assets_media_materials_darkstone)
+        "assets_media_materials_concrete" -> painterResource(Res.drawable.assets_media_materials_concrete)
+        "assets_media_materials_whiteplaster" -> painterResource(Res.drawable.assets_media_materials_whiteplaster)
+        "assets_media_materials_carpet" -> painterResource(Res.drawable.assets_media_materials_carpet)
+        "assets_media_floor_floorplanannotated" -> painterResource(Res.drawable.assets_media_floor_floorplanannotated)
+        "assets_media_floor_naturaloakroom" -> painterResource(Res.drawable.assets_media_floor_naturaloakroom)
+        "assets_media_floor_oakhallway" -> painterResource(Res.drawable.assets_media_floor_oakhallway)
+        "assets_media_floor_rusticliving" -> painterResource(Res.drawable.assets_media_floor_rusticliving)
+        "assets_media_styles_example_warmneutral" -> painterResource(Res.drawable.assets_media_styles_example_warmneutral)
+        "assets_media_styles_example_scandinavianbright" -> painterResource(Res.drawable.assets_media_styles_example_scandinavianbright)
+        "assets_media_styles_example_minimalistsoft" -> painterResource(Res.drawable.assets_media_styles_example_minimalistsoft)
+        "assets_media_styles_example_luxuryclassic" -> painterResource(Res.drawable.assets_media_styles_example_luxuryclassic)
+        "assets_media_styles_example_modernwarm" -> painterResource(Res.drawable.assets_media_styles_example_modernwarm)
+        "assets_media_styles_example_contemporarydark" -> painterResource(Res.drawable.assets_media_styles_example_contemporarydark)
+        "assets_media_styles_example_neutralemptywall" -> painterResource(Res.drawable.assets_media_styles_example_neutralemptywall)
+        "assets_media_styles_example_warmdining" -> painterResource(Res.drawable.assets_media_styles_example_warmdining)
+        "assets_media_styles_example_rusticfireplace" -> painterResource(Res.drawable.assets_media_styles_example_rusticfireplace)
+        "assets_media_styles_example_industrial" -> painterResource(Res.drawable.assets_media_styles_example_industrial)
+        "assets_media_styles_example_modernorganic" -> painterResource(Res.drawable.assets_media_styles_example_modernorganic)
+        "assets_media_styles_example_bohemian" -> painterResource(Res.drawable.assets_media_styles_example_bohemian)
+        "assets_media_styles_example_luxurycontemporary" -> painterResource(Res.drawable.assets_media_styles_example_luxurycontemporary)
+        "assets_media_garden_landscapedpath" -> painterResource(Res.drawable.assets_media_garden_landscapedpath)
+        "assets_media_exterior_modernhouse" -> painterResource(Res.drawable.assets_media_exterior_modernhouse)
         else -> null
     }
 }

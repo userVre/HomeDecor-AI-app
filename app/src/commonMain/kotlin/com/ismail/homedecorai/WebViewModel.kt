@@ -6,8 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.ismail.homedecorai.model.BoardScreenState
 import com.ismail.homedecorai.model.BoardItem
-import com.ismail.homedecorai.ui.profile.ProfileScreenState
-import com.ismail.homedecorai.ui.settings.SettingsScreenState
+import com.ismail.homedecorai.model.ProfileScreenState
+import com.ismail.homedecorai.model.SettingsScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

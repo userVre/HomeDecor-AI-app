@@ -1,10 +1,14 @@
 package com.ismail.homedecorai.ui.profile
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
@@ -40,24 +43,21 @@ import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -73,27 +73,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.model.BoardItem
+import com.ismail.homedecorai.model.SettingsLanguage
+import com.ismail.homedecorai.model.ProfileScreenState
 import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.showToast
 import com.ismail.homedecorai.ui.rememberIsCompact
 import com.ismail.homedecorai.ui.rememberIsDesktop
-import com.ismail.homedecorai.ui.settings.LanguagePickerContent
-import com.ismail.homedecorai.ui.settings.SettingsLanguage
+import com.ismail.homedecorai.ui.settings.LanguagePickerDialog
 import com.ismail.homedecorai.ui.theme.*
-import kotlinx.coroutines.launch
-import androidx.compose.material3.ExperimentalMaterial3Api
+import com.ismail.homedecorai.ui.theme.isReducedMotionEnabled
 
-data class ProfileScreenState(
-    val isGuest: Boolean = true,
-    val signedInName: String? = null,
-    val signedInEmail: String? = null,
-    val diamonds: Int = 0,
-    val isPro: Boolean = false,
-    val favoritesCount: Int = 0,
-    val savedDesigns: List<BoardItem> = emptyList(),
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SharedProfileScreen(
     state: ProfileScreenState,
@@ -108,8 +97,15 @@ fun SharedProfileScreen(
     val signedIn = !state.isGuest && (state.signedInName != null || state.signedInEmail != null)
     val isDesktop = rememberIsDesktop()
     var showLanguageDialog by remember { mutableStateOf(false) }
-    val languageSheetState = rememberModalBottomSheetState()
-    val languageScope = rememberCoroutineScope()
+
+    if (showLanguageDialog) {
+        LanguagePickerDialog(
+            currentLanguageTag = "en",
+            supportedLanguages = listOf(SettingsLanguage("en", "English")),
+            onLanguageSelected = { showLanguageDialog = false },
+            onDismiss = { showLanguageDialog = false },
+        )
+    }
 
     Column(
         Modifier
@@ -146,15 +142,25 @@ fun SharedProfileScreen(
                         Text(
                             Strings.profileSubtitle,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
+                    val settingsInteractionSource = remember { MutableInteractionSource() }
+                    val settingsIsPressed by settingsInteractionSource.collectIsPressedAsState()
+                    val settingsIsHovered by settingsInteractionSource.collectIsHoveredAsState()
+                    val settingsScale by animateFloatAsState(
+                        targetValue = if (settingsIsPressed) 0.98f else 1f,
+                        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+                        label = "settingsScale",
+                    )
                     Surface(
                         onClick = onSettings,
                         shape = HomeDecorShape.Medium,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        color = if (settingsIsHovered) MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.8f) else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        interactionSource = settingsInteractionSource,
                         modifier = Modifier
                             .height(40.dp)
+                            .scale(settingsScale)
                             .testTag(Strings.TestTags.profileSettingsButton),
                     ) {
                         Row(
@@ -535,45 +541,6 @@ fun SharedProfileScreen(
             }
         }
     }
-
-    if (showLanguageDialog) {
-        if (isDesktop) {
-            AlertDialog(
-                onDismissRequest = { showLanguageDialog = false },
-            ) {
-                Surface(
-                    shape = HomeDecorShape.ExtraExtraLarge,
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 2.dp,
-                ) {
-                    LanguagePickerContent(
-                        currentLanguageTag = "en",
-                        supportedLanguages = listOf(SettingsLanguage("en", "English")),
-                        onLanguageSelected = {
-                            showLanguageDialog = false
-                        },
-                    )
-                }
-            }
-        } else {
-            ModalBottomSheet(
-                onDismissRequest = { showLanguageDialog = false },
-                sheetState = languageSheetState,
-                containerColor = MaterialTheme.colorScheme.surface,
-            ) {
-                LanguagePickerContent(
-                    currentLanguageTag = "en",
-                    supportedLanguages = listOf(SettingsLanguage("en", "English")),
-                    onLanguageSelected = {
-                        languageScope.launch {
-                            languageSheetState.hide()
-                            showLanguageDialog = false
-                        }
-                    },
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -599,20 +566,20 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                     Icon(
                         Icons.Rounded.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(HomeDecorIconSize.Xl),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
             Text(
-                Strings.boardGuestHeadline,
+                Strings.profileGuestHeadline,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 Strings.profileSignInBody,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = if (isDesktop) HomeDecorSpacing.Xl else 0.dp),
@@ -624,7 +591,8 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(HomeDecorSpacing.ButtonHeight)
-                    .testTag(Strings.TestTags.profileSignInButton),
+                    .testTag(Strings.TestTags.profileSignInButton)
+                    .semantics { contentDescription = Strings.profileSignInRegister },
             ) {
                 Text(
                     Strings.profileSignInRegister,
@@ -688,7 +656,7 @@ private fun ProfileDesignPreviewCard(name: String, style: String) {
                 Text(
                     style,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -803,7 +771,10 @@ private fun StatusCard(
         modifier = modifier
             .minimumTouchTarget()
             .testTag(Strings.formatTestTag(Strings.TestTags.profileStatusCard, label))
-            .semantics { role = Role.Button }
+            .semantics {
+                contentDescription = "$label: $value"
+                role = Role.Button
+            }
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
     ) {
         Column(
@@ -813,7 +784,7 @@ private fun StatusCard(
             Icon(
                 icon,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(HomeDecorIconSize.Medium),
                 tint = iconTint,
             )
             Spacer(Modifier.height(HomeDecorSpacing.Xxs))
@@ -827,7 +798,7 @@ private fun StatusCard(
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -886,7 +857,7 @@ private fun SignedInProfileHero(state: ProfileScreenState, isDesktop: Boolean = 
                 Text(
                     state.signedInEmail ?: "",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -930,6 +901,15 @@ private fun ProfileSavedDesignsPreview(
     state: ProfileScreenState,
     onViewAll: () -> Unit,
 ) {
+    val savedInteractionSource = remember { MutableInteractionSource() }
+    val savedIsPressed by savedInteractionSource.collectIsPressedAsState()
+    val savedIsHovered by savedInteractionSource.collectIsHoveredAsState()
+    val savedScale by animateFloatAsState(
+        targetValue = if (savedIsPressed) 0.98f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+        label = "savedScale",
+    )
+
     Surface(
         shape = HomeDecorShape.CardLarge,
         color = MaterialTheme.colorScheme.surface,
@@ -955,7 +935,7 @@ private fun ProfileSavedDesignsPreview(
                             Icon(
                                 Icons.Rounded.FavoriteBorder,
                                 contentDescription = null,
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(HomeDecorIconSize.Large),
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         }
@@ -963,20 +943,22 @@ private fun ProfileSavedDesignsPreview(
                     Text(
                         Strings.profileNoDesignsYet,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                     )
                     Text(
                         Strings.boardEmptyGeneratedBody,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(HomeDecorSpacing.Xs))
                     Surface(
                         shape = HomeDecorShape.Button,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onViewAll),
+                        color = if (savedIsHovered) MaterialTheme.colorScheme.primary.copy(alpha = 0.9f) else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clickable(interactionSource = savedInteractionSource, indication = null, onClick = onViewAll)
+                            .scale(savedScale),
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
@@ -986,7 +968,7 @@ private fun ProfileSavedDesignsPreview(
                             Icon(
                                 Icons.Rounded.Explore,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(HomeDecorIconSize.Small),
                                 tint = MaterialTheme.colorScheme.onPrimary,
                             )
                             Text(
@@ -1015,7 +997,8 @@ private fun ProfileSavedDesignsPreview(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(onClick = onViewAll)
+                        .clickable(interactionSource = savedInteractionSource, indication = null, onClick = onViewAll)
+                        .scale(savedScale)
                         .padding(HomeDecorSpacing.Md),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -1039,7 +1022,7 @@ private fun ProfileSectionLabel(label: String) {
             .semantics { heading() },
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 }
 
@@ -1075,6 +1058,13 @@ private fun ProfileRow(
     subtitle: String,
     onClick: (() -> Unit)? = null,
 ) {
+    val rowInteractionSource = remember { MutableInteractionSource() }
+    val rowIsPressed by rowInteractionSource.collectIsPressedAsState()
+    val rowScale by animateFloatAsState(
+        targetValue = if (rowIsPressed) 0.98f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+        label = "rowScale",
+    )
     ListItem(
         headlineContent = {
             Text(
@@ -1104,7 +1094,7 @@ private fun ProfileRow(
                         icon,
                         contentDescription = null,
                         tint = iconTint,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(HomeDecorIconSize.Medium),
                     )
                 }
             }
@@ -1115,7 +1105,7 @@ private fun ProfileRow(
                     Icons.AutoMirrored.Rounded.ArrowForward,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(HomeDecorIconSize.Small),
                 )
             }
         } else null,
@@ -1124,14 +1114,18 @@ private fun ProfileRow(
             .fillMaxWidth()
             .minimumTouchTarget()
             .testTag(Strings.formatTestTag(Strings.TestTags.profileRow, title))
+            .semantics {
+                contentDescription = "$title. $subtitle"
+                if (onClick != null) role = Role.Button
+            }
             .then(
                 if (onClick != null) {
-                    Modifier.semantics { role = Role.Button }
-                        .clickable(onClick = onClick)
+                    Modifier.clickable(interactionSource = rowInteractionSource, indication = null, onClick = onClick)
                 } else {
                     Modifier
                 }
-            ),
+            )
+            .scale(rowScale),
     )
 }
 

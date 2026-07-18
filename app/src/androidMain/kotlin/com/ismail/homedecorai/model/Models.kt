@@ -30,7 +30,12 @@ data class GalleryItem(
     val id: String,
     val title: String,
     val category: String,
+    val styleType: String = "",
+    val description: String = "",
     val imageRes: Int,
+    val room: String = "",
+    val color: String = "",
+    val mood: String = "",
 )
 
 data class DiscoverSection(

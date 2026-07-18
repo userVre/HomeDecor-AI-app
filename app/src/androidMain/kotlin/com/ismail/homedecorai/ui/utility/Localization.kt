@@ -1088,13 +1088,13 @@ fun selectedPhotoImageRes(state: HomeDecorUiState, slot: SelectedPhoto): Int {
 
 fun choiceImageRes(label: String): Int {
     return when (label) {
+        // ── Interior styles ──
         "Moderne" -> R.drawable.assets_media_styles_stylemodern
         "Noël" -> R.drawable.assets_media_styles_stylemodern
         "Luxe" -> R.drawable.assets_media_styles_styleluxury
         "Japandi" -> R.drawable.assets_media_styles_stylejapandi
         "Zen" -> R.drawable.assets_media_styles_styleminimalist
         "Jardin anglais" -> R.drawable.assets_media_styles_stylefrenchcountry
-        "Paysage" -> R.drawable.assets_media_discover_generated_garden_garden5
         "Cyberpunk" -> R.drawable.assets_media_styles_stylecyberpunk
         "Tropicale" -> R.drawable.assets_media_styles_styletropical
         "Minimaliste" -> R.drawable.assets_media_styles_styleminimalist
@@ -1109,19 +1109,59 @@ fun choiceImageRes(label: String): Int {
         "Méditerranéen" -> R.drawable.assets_media_styles_stylemediterranean
         "Glam" -> R.drawable.assets_media_styles_styleglam
         "Campagne française" -> R.drawable.assets_media_styles_stylefrenchcountry
+
+        // ── Exterior styles ──
         "Appartement" -> R.drawable.assets_media_discover_exterior_exteriorapartmentblock
         "Maison" -> R.drawable.assets_media_discover_exterior_exteriormodernvilla
         "Immeuble de bureaux" -> R.drawable.assets_media_discover_exterior_exteriorglassoffice
         "Résidentiel" -> R.drawable.assets_media_discover_exterior_exteriorpoolhouse
         "Vente au détail" -> R.drawable.assets_media_discover_exterior_exteriorretailstorefront
         "Villa" -> R.drawable.assets_media_discover_exterior_exteriormodernvilla
+
+        // ── Floor materials ──
         "Marbre de Carrare" -> R.drawable.assets_media_discover_floorscenes_polishedcarraramarble
+        "Carrara Marble" -> R.drawable.assets_media_discover_floorscenes_polishedcarraramarble
         "Chêne naturel" -> R.drawable.assets_media_discover_floorscenes_naturaloakparquet
+        "Oak Wood" -> R.drawable.assets_media_discover_floorscenes_naturaloakparquet
         "Bois de noyer" -> R.drawable.assets_media_discover_floorscenes_heritagewalnutplank
+        "Walnut" -> R.drawable.assets_media_discover_floorscenes_heritagewalnutplank
         "Tuile calcaire" -> R.drawable.assets_media_discover_floorscenes_modernslatetile
         "Béton poli" -> R.drawable.assets_media_discover_floorscenes_industrialgrayconcrete
+        "Concrete" -> R.drawable.assets_media_discover_floorscenes_industrialgrayconcrete
         "Bois chevron" -> R.drawable.assets_media_discover_floorscenes_walnutchevron
         "Terrazzo" -> R.drawable.assets_media_discover_floorscenes_terracottaateliertile
+
+        // ── Wall materials ──
+        "Limewash" -> R.drawable.assets_media_discover_wallscenes_softivorykitchen
+        "White Tile" -> R.drawable.assets_media_discover_wallscenes_pearlgraysalon
+        "Carrelage blanc" -> R.drawable.assets_media_discover_wallscenes_pearlgraysalon
+        "Black Tile" -> R.drawable.assets_media_discover_wallscenes_gallerycharcoallounge
+        "Carrelage noir" -> R.drawable.assets_media_discover_wallscenes_gallerycharcoallounge
+        "Warm Beige" -> R.drawable.assets_media_discover_wallscenes_terracottadining
+        "Peinture beige chaude" -> R.drawable.assets_media_discover_wallscenes_terracottadining
+        "Dark Elegant" -> R.drawable.assets_media_discover_wallscenes_midnightnavybedroom
+        "Peinture sombre élégante" -> R.drawable.assets_media_discover_wallscenes_midnightnavybedroom
+
+        // ── Garden styles ──
+        "Paysage" -> R.drawable.assets_media_discover_generated_garden_garden5
+        "Cour arrière" -> R.drawable.assets_media_discover_garden_gardenbackyard
+        "Terrasse" -> R.drawable.assets_media_discover_garden_gardenterrace
+        "Patio" -> R.drawable.assets_media_discover_garden_gardenpatio
+        "Cour" -> R.drawable.assets_media_discover_garden_gardenfrontyard
+        "Piscine" -> R.drawable.assets_media_discover_garden_gardenswimmingpool
+        "Jardin avant" -> R.drawable.assets_media_discover_garden_gardenfrontyard
+
+        // ── Replacement styles ──
+        "Remplacer le sofa" -> R.drawable.assets_media_discover_generated_livingroom_livingroom1
+        "Remplacer la table" -> R.drawable.assets_media_discover_generated_livingroom_livingroom2
+        "Remplacer la lampe" -> R.drawable.assets_media_discover_home_homelivingroom
+        "Remplacer le tapis" -> R.drawable.assets_media_discover_generated_livingroom_livingroom3
+        "Remplacer l'art mural" -> R.drawable.assets_media_discover_wallscenes_pearlgraysalon
+        "Remplacer la plante" -> R.drawable.assets_media_discover_garden_gardenfrontyard
+        "Remplacer la chaise" -> R.drawable.assets_media_discover_generated_livingroom_livingroom4
+        "Remplacer le cabinet" -> R.drawable.assets_media_discover_home_homestudy
+
+        // ── Fallback ──
         else -> R.drawable.assets_media_styles_stylemodern
     }
 }

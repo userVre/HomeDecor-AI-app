@@ -19,6 +19,7 @@ object Strings {
     }
 
     // Navigation
+    const val navCreate = "Create"
     const val navTools = "Tools"
     const val navDiscover = "Discover"
     const val navUpgrade = "Upgrade"
@@ -48,6 +49,8 @@ object Strings {
     const val favorited = "Favorited"
     const val favorite = "Favorite"
     const val addToMoodboard = "Save to board"
+    const val discoverNoResults = "No inspiration found"
+    const val discoverNoResultsHint = "Try a different category"
     const val toastFavoriteAdded = "Added to favorites"
     const val toastFavoriteRemoved = "Removed from favorites"
     const val toastMoodboardAdded = "Saved to your board"
@@ -59,6 +62,16 @@ object Strings {
     fun a11yDiscoverCluster(clusterLabel: String) = "Cluster: $clusterLabel"
     fun a11ySeeAll(sectionTitle: String) = "See all $sectionTitle"
     fun a11yGalleryCard(itemTitle: String, itemCategory: String) = "$itemTitle, $itemCategory"
+
+    // Discover Filters
+    const val filterAll = "All"
+    const val filterRoom = "Room"
+    const val filterStyle = "Style"
+    const val filterColor = "Color"
+    const val filterMood = "Mood"
+    const val filterClearAll = "Clear filters"
+    const val discoverEmptyFilteredTitle = "No matches"
+    const val discoverEmptyFilteredHint = "Try adjusting your filters"
 
     // Profile Screen
     const val myProfileTitle = "Profile"
@@ -73,8 +86,9 @@ object Strings {
     fun myDiamondsBody(diamonds: Int) = "$diamonds diamonds available"
     const val subscriptionStatus = "Subscription"
     const val currentPlan = "Current Plan"
-    const val currentPlanBodyPro = "You have unlimited generations"
-    const val currentPlanBodyFree = "Upgrade for unlimited generations"
+    const val currentPlanBodyPro = "You have generous daily generation limits"
+    const val currentPlanBodyFree = "1 generation/day, 5 basic styles, standard export"
+    const val freePlanDetails = "Free plan includes 1 generation per day, 5 basic design styles, and standard quality exports"
     const val profileSignInBody = "Create an account to save your profile preferences and access them from any device."
     const val profileSignInRegister = "Sign in to get started"
     const val profileGuestBenefit1Title = "Save designs"
@@ -160,12 +174,30 @@ object Strings {
     const val myBoardTitle = "My Board"
     const val boardSignInCta = "Sign in to save this design."
     const val boardSignInToUnlock = "Sign in to unlock"
+    const val boardSignInSaveSync = "Sign in to save and sync your designs"
     const val boardEmptyGenerated = "No designs yet"
     const val boardEmptyGeneratedBody = "Pick a tool and upload a photo to generate your first design."
     const val boardEmptyFavorites = "No favorites yet"
     const val boardEmptyFavoritesBody = "Star a design to save it here for quick access."
     const val boardEmptyProjects = "No projects yet"
     const val boardEmptyProjectsBody = "Create a project to group designs by room and compare options."
+    const val boardEmptyGuestFavorites = "Favorite designs appear here after you sign in."
+    const val boardEmptyGuestProjects = "Create your first project after signing in."
+    const val boardEmptyGuestGenerated = "Sign in to save your designs across devices."
+    const val boardLocalDesigns = "Local Designs"
+    const val boardSave = "Save"
+    const val boardRename = "Rename"
+    const val boardDelete = "Delete"
+    const val boardRenameTitle = "Rename design"
+    const val boardRenameLabel = "Design name"
+    const val boardDeleteConfirm = "Delete this design?"
+    const val boardDeleteConfirmBody = "This action cannot be undone."
+    const val boardCancel = "Cancel"
+    const val boardConfirm = "Confirm"
+    const val boardGuestLocalNote = "Designs you create are saved locally on this device."
+    const val boardGuestSyncNote = "Sign in to save and sync your designs across devices."
+    const val boardGuestLocalTitle = "Saved to this device"
+    const val boardGuestSyncTitle = "Saved to your account"
     const val startADesign = "Start a design"
     const val exploreDiscover = "Explore Discover"
     const val generatedTab = "Generated"
@@ -175,10 +207,10 @@ object Strings {
     const val aiGeneratedBadge = "Generated with HomeDecor AI"
     const val favoritesSection = "Favorites"
     const val savedProjects = "Projects"
-    const val boardGuestHeadline = "Sign in to get started"
+    const val boardGuestHeadline = "Sign in to save and sync your designs"
     const val boardGuestSubtitle = "Sign in to save every design you create, organize them into projects, and access them on any device."
     const val boardGuestSampleSection = "Sign in to save designs like these"
-    const val boardHeroGuestTitle = "Sign in to unlock premium styles"
+    const val boardHeroGuestTitle = "Sign in to save and sync your designs"
     const val boardGuestBenefitSaved = "Your designs"
     const val boardGuestBenefitSavedBody = "Every design you create is saved to your board."
     const val boardGuestBenefitFavorites = "Favorites"
@@ -270,7 +302,7 @@ object Strings {
 
     // Step 1: Plan Selection
     const val pwS1Heading = "Pick your plan"
-    const val pwS1HeadingHighlight = "Unlimited AI redesigns, clean exports, no watermarks"
+    const val pwS1HeadingHighlight = "Generous daily AI redesigns, clean exports, no watermarks"
     const val pwS1Benefit1 = "AI-powered redesigns"
     const val pwS1Benefit2 = "Multiple design styles"
     const val pwS1Benefit3 = "Inspiration gallery"
@@ -280,9 +312,9 @@ object Strings {
 
     // Step 2: Benefits reminder
     const val pwS2Heading = "Why go Pro?"
-    const val pwS2Option1 = "Unlimited AI generations"
+    const val pwS2Option1 = "Generous daily AI generations"
     const val pwS2Option2 = "All premium styles"
-    const val pwS2Info = "Get unlimited generations, all styles, and clean exports."
+    const val pwS2Info = "Get generous daily generations, all styles, and clean exports."
     const val pwS2Cta = "Continue"
 
     // Step 3: Comparison
@@ -292,7 +324,7 @@ object Strings {
     const val pwS3ColPremium = "Pro"
     const val pwS3Row1Feature = "AI room redesigns"
     const val pwS3Row1Free = "1/day"
-    const val pwS3Row1Pro = "Unlimited"
+    const val pwS3Row1Pro = "300/month"
     const val pwS3Row2Feature = "Export quality"
     const val pwS3Row2Free = "Standard"
     const val pwS3Row2Pro = "High quality"
@@ -307,8 +339,8 @@ object Strings {
     const val pwS3Row5Pro = "Faster"
     const val pwS3Row6Feature = "Save projects"
     const val pwS3Row6Free = "Limited"
-    const val pwS3Row6Pro = "Unlimited"
-    const val pwS3Recommendation = "Upgrade for unlimited generations and faster processing."
+    const val pwS3Row6Pro = "300/month"
+    const val pwS3Recommendation = "Upgrade for generous daily generations and faster processing."
     const val pwS3Cta = "Continue"
 
     // Step 4: Plans
@@ -316,7 +348,7 @@ object Strings {
     const val pwS4PlanYearlyTitle = "Yearly"
     const val pwS4PlanYearlyPrice = "\$39.99"
     const val pwS4PlanYearlyPer = "/year"
-    const val pwS4PlanYearlyDetail = "Only \$3.33 / month"
+    const val pwS4PlanYearlyDetail = "Billed annually. Only \$3.33/month — save \$55.89 vs monthly"
     const val pwS4PlanYearlyBadge = "Most Popular"
     const val pwS4PlanYearlySavings = "Save 58%"
     const val pwS4PlanMonthlyTitle = "Monthly"
@@ -367,9 +399,9 @@ object Strings {
 
     // Upgrade Screen
     const val proActivated = "Pro Activated"
-    const val activeProAccess = "You have Pro access. Generate unlimited designs."
-    const val upgradeV3Headline = "Unlimited Redesigns. Clean Export."
-    const val upgradeV3Subtitle = "Unlimited generations, high-resolution export, no watermarks."
+    const val activeProAccess = "You have generous daily generation limits. Keep designing!"
+    const val upgradeV3Headline = "Generous Daily Redesigns. Clean Export."
+    const val upgradeV3Subtitle = "Join thousands of homeowners transforming their spaces."
     const val upgradeV3TrialBadge = "Cancel anytime"
     const val upgradeV3Trust = "Cancel anytime. No commitment."
     const val upgradeV3Before = "Before"
@@ -380,6 +412,7 @@ object Strings {
     const val upgradeV3BenefitStyles = "All available styles"
     const val upgradeV3BenefitHistory = "Design history"
     const val upgradeV3Cta = "Get Pro"
+    const val upgradeV3BottomCta = "Start your Pro journey today"
     const val upgradeV3Secondary = "Compare plans"
     const val upgradePlanMonthly = "Monthly"
     const val upgradePlanMonthlyPrice = "$7.99"
@@ -393,9 +426,9 @@ object Strings {
     const val upgradePlanFamilyPrice = "$59.99"
     const val upgradePlanFamilyPeriod = "/year"
     const val upgradePlanFamilySubtitle = "Share with family"
-    const val upgradePlanMonthlyDesc = "Try Pro risk-free. Unlimited generations and clean exports, no long commitment."
-    const val upgradePlanYearlyDesc = "Best deal. Unlimited generations, HD export, and all premium styles \u2014 save 58%."
-    const val upgradePlanFamilyDesc = "Share with up to 5 family members. Each gets their own unlimited generations and clean exports."
+    const val upgradePlanMonthlyDesc = "Try Pro risk-free. No long commitment."
+    const val upgradePlanYearlyDesc = "Best deal. Generous daily generations, HD export, and all premium styles \u2014 save 58%."
+    const val upgradePlanFamilyDesc = "Share with up to 5 family members. Each gets full Pro access."
     const val upgradePlanFamilySeats = "Up to 5 members"
     const val upgradeBenefitUnlimited = "AI-powered redesigns"
     const val upgradeBenefitExport = "Export options"
@@ -408,7 +441,7 @@ object Strings {
     const val upgradeProPlan = "Pro"
     const val upgradeCompareGenerations = "AI Generations"
     const val upgradeCompareGenerationsFree = "1 per day"
-    const val upgradeCompareGenerationsPro = "Unlimited"
+    const val upgradeCompareGenerationsPro = "300/month"
     const val upgradeCompareExport = "Export Quality"
     const val upgradeCompareExportFree = "Standard"
     const val upgradeCompareExportPro = "Premium HD"
@@ -429,11 +462,17 @@ object Strings {
     const val upgradeFeatureTableHeaderFeature = "Features"
     const val upgradeFeatureTableHeaderFree = "Free Plan"
     const val upgradeFeatureTableHeaderPro = "Pro Plan"
-    const val upgradeFeatureGenerations = "Unlimited Generations"
+    const val upgradeFeatureGenerations = "Daily Generation Limits"
     const val upgradeFeatureAiTools = "All 8 AI Tools"
     const val upgradeFeatureExport = "High Resolution Export"
     const val upgradeFeatureNoWatermark = "No Watermark"
     const val upgradeFeatureQueue = "Fast Generation Queue"
+    const val upgradeFeatureResolution = "Output Resolution"
+    const val upgradeFeatureFreeResolution = "1024\u00D71024"
+    const val upgradeFeatureProResolution = "1024\u00D71536 HD"
+    const val upgradeFeatureFailedRefund = "Failed Generation Refund"
+    const val upgradeFeatureFreeFailedRefund = "Yes"
+    const val upgradeFeatureProFailedRefund = "Yes"
 
     // Feature comparison table (Free vs Pro values)
     const val upgradeFeatureOutput = "Output Style"
@@ -449,7 +488,7 @@ object Strings {
     const val upgradeFeatureFreeSaveProjects = "Limited"
     const val upgradeFeatureProSaveProjects = "Unlimited"
     const val upgradeFeatureFreeGenerations = "1/day"
-    const val upgradeFeatureProGenerations = "Unlimited"
+    const val upgradeFeatureProGenerations = "300/month"
     const val upgradeFeatureFreeExport = "Standard"
     const val upgradeFeatureProExport = "High quality"
 
@@ -473,6 +512,23 @@ object Strings {
     const val wizardReviewPhoto = "Photo"
     const val wizardReviewRoom = "Room"
     const val wizardReviewStyle = "Style"
+    const val wizardReviewDesignBrief = "Design Brief"
+    const val wizardReviewEdit = "Edit"
+    const val wizardReviewCustomNotes = "Notes (optional)"
+    const val wizardReviewCustomNotesHint = "Add any special instructions..."
+    const val wizardReviewDiamondCost = "10 diamonds"
+    const val wizardReviewDiamondBalance = "120 diamonds remaining"
+
+    // Tool-specific generate actions
+    const val wizardActionInterior = "Generate interior redesign"
+    const val wizardActionExterior = "Generate exterior redesign"
+    const val wizardActionGarden = "Generate garden redesign"
+    const val wizardActionFloor = "Apply flooring \u00B7 10 \uD83D\uDC8E"
+    const val wizardActionPaint = "Apply paint \u00B7 10 \uD83D\uDC8E"
+    const val wizardActionReplace = "Replace furniture"
+    const val wizardActionLayout = "Generate layout redesign"
+    const val wizardActionReference = "Generate style transfer"
+
     const val wizardGenerate = "Generate Design"
     const val wizardGenerateWithCost = "Generate (1 diamond)"
     const val wizardGenerating = "Generating..."
@@ -483,7 +539,7 @@ object Strings {
     const val wizardErrorRoom = "Select a room type"
     const val wizardErrorStyle = "Select a style"
     const val wizardClose = "Close"
-    const val wizardExampleRoom = "Empty living room"
+    const val wizardExampleRoom = "Sample room"
     const val wizardExampleGarden = "Backyard garden"
     const val wizardExampleExterior = "House facade"
     const val wizardDropHere = "Drop your photo here"
@@ -517,6 +573,34 @@ object Strings {
     // Upload step: post-upload helper
     const val wizardUploadAfterHelper = "After uploading, you'll pick a style and your AI redesign will be ready in 15\u201330 seconds"
 
+    // Upload step: file constraints
+    const val wizardMaxFileSize = "Max file size: 20 MB"
+    const val wizardAcceptedTypes = "JPG, PNG, or WebP"
+    const val wizardDragAndDrop = "or drag and drop"
+    const val wizardImageUploaded = "Image uploaded"
+    const val wizardChangeImage = "Change image"
+    const val wizardRemoveImage = "Remove image"
+    const val wizardCropImage = "Crop"
+    const val wizardRotateImage = "Rotate"
+    const val wizardInvalidFileType = "Please select a JPG, PNG, or WebP image"
+    const val wizardFileTooLarge = "Image exceeds 20 MB limit. Please choose a smaller file."
+    const val wizardUploadSubtitleDesign = "Upload a photo and we'll redesign it with AI"
+    const val wizardUploadSubtitlePaint = "Upload a wall photo to preview paint colors"
+    const val wizardUploadSubtitleFloor = "Upload a floor photo to explore materials"
+    const val wizardUploadSubtitleReplace = "Upload a photo showing the furniture to replace"
+    const val wizardUploadSubtitleLayout = "Upload a floor plan or room photo to optimize"
+    const val wizardUploadSubtitleReference = "Upload your space to match a reference style"
+    const val wizardUploadSubtitleExterior = "Upload an exterior photo for a facade redesign"
+    const val wizardUploadSubtitleGarden = "Upload an outdoor photo to landscape with AI"
+
+    // Workflow steps: route-specific
+    const val wizardWorkflowStep2Design = "2. Pick a style"
+    const val wizardWorkflowStep2Paint = "2. Choose a material & color"
+    const val wizardWorkflowStep2Floor = "2. Choose a material & style"
+    const val wizardWorkflowStep2Replace = "2. Select the object to replace"
+    const val wizardWorkflowStep2Layout = "2. Set your goals"
+    const val wizardWorkflowStep2Reference = "2. Pick transfer strength"
+
     // Step-specific disabled hints (shown below Next when a required field is missing)
     const val wizardHintUpload = "Upload a photo or try an example to continue"
     const val wizardHintRoomType = "Select a room type to continue"
@@ -525,6 +609,23 @@ object Strings {
     const val wizardHintMaterial = "Select a material to continue"
     const val wizardHintGoals = "Select at least one goal to continue"
     const val wizardHintMask = "Draw over the object in the photo to select it"
+
+    // Mask editor
+    const val wizardMaskTitle = "Select the object to replace"
+    const val wizardMaskSubtitle = "Paint over the furniture or object you want to replace"
+    const val wizardMaskInstruction = "Paint over the object you want to replace"
+    const val wizardMaskInstructionHint = "Use the brush to draw over the object, then tap Next"
+    const val wizardMaskInstructionDismiss = "Tap anywhere to start drawing"
+    const val wizardMaskBrush = "Brush"
+    const val wizardMaskEraser = "Eraser"
+    const val wizardMaskUndo = "Undo"
+    const val wizardMaskRedo = "Redo"
+    const val wizardMaskClear = "Clear"
+    const val wizardMaskCoverageLabel = "Mask the object completely"
+    const val wizardMaskCoverageEmpty = "Paint over the object you want to replace"
+    const val wizardMaskReadyHint = "Tap Next to describe what to replace it with"
+    const val wizardMaskEmptyHint = "Drag over the object, then tap Next"
+
     const val wizardHintReplacementPrompt = "Describe what to put in its place"
     const val wizardHintTransferStrength = "Choose a transfer strength to continue"
     const val wizardHintPaintColor = "Pick a paint color to continue"
@@ -637,7 +738,7 @@ object Strings {
 
     // Loading & Error
     const val loadingContent = "Loading..."
-    const val errorGeneric = "Try again"
+    const val errorGeneric = "Something went wrong"
 
     // ── Auth Screen ──────────────────────────────────────────────────────────
     const val authWelcomeBack = "Sign in to continue"
@@ -716,11 +817,50 @@ object Strings {
 
     // ── A11y labels for board cards ──────────────────────────────────────────
     fun a11yBoardCard(title: String, subtitle: String) = "$title, $subtitle"
+    fun a11yBoardCardAction(title: String, action: String) = "$title - $action"
+
+    // ── Pricing Dialog ───────────────────────────────────────────────────────
+    const val pricingDialogTitle = "Pricing"
+    const val pricingFreeLimit = "1 generation per day"
+    const val pricingProLimit = "300 generations/month"
+    const val pricingBillingAnnual = "Billed annually"
+    const val pricingBillingMonthly = "Billed monthly"
+    const val pricingRenewalBehavior = "Auto-renews until canceled"
+    const val pricingCancelPolicy = "Cancel anytime \u2014 access continues until end of billing period"
+    const val pricingFreePlanTitle = "Free"
+    const val pricingProPlanTitle = "Pro"
+    const val pricingCompareTitle = "Plan comparison"
+
+    // ── Language Dialog ──────────────────────────────────────────────────────
+    const val languageChangeImmediate = "The language change applies immediately."
+
+    // ── Diamond Store ────────────────────────────────────────────────────────
+    const val diamondCostPer = "Cost per diamond"
+    const val diamondPurchase = "Purchase"
+    const val diamondYourBalance = "Your current balance"
+
+    // ── Auth Form Validation ─────────────────────────────────────────────────
+    const val authValidationEmailRequired = "Email is required"
+    const val authValidationEmailInvalid = "Please enter a valid email address"
+    const val authValidationPasswordRequired = "Password is required"
+    const val authValidationPasswordMin = "Password must be at least 6 characters"
+    const val authValidationPasswordMatch = "Passwords must match"
+
+    // ── Profile-specific (to avoid contradictory copy with My Board) ────────
+    const val profileGuestHeadline = "Sign in to personalize your experience"
+    const val profileGuestBody = "Create an account to save your profile preferences and access them from any device."
 
     // ── A11y labels for modal close ──────────────────────────────────────────
     const val a11ySettingsClose = "Close settings"
     const val a11yDiamondStoreTitle = "Diamond store"
     const val a11yDiamondStoreClose = "Close diamond store"
+    const val a11yDialogClose = "Close dialog"
+    const val a11yPasswordToggle = "Toggle password visibility"
+    const val a11yMoreActions = "More actions"
+    const val a11yBoardEmptyTitle = "Empty board section"
+    const val a11yTabGenerated = "Generated designs tab"
+    const val a11yTabFavorites = "Favorites tab"
+    const val a11yTabProjects = "Projects tab"
 
     // ── Test Tags (for Compose test / accessibility snapshots) ──────────────
     object TestTags {
@@ -750,6 +890,8 @@ object Strings {
         const val discoverSectionCard = "discover_section_card_%s"
         const val discoverSectionScroll = "discover_section_scroll"
         const val discoverSeeAll = "discover_see_all_%s"
+        const val discoverFilterRow = "discover_filter_row"
+        const val discoverFilterChip = "discover_filter_chip_%s"
 
         // Board
         const val boardTabRow = "board_tab_row"
@@ -760,6 +902,16 @@ object Strings {
         const val boardFavoriteCard = "board_favorite_card_%s"
         const val boardProjectCard = "board_project_card_%s"
         const val boardLockedCard = "board_locked_card_%s"
+        const val boardLocalBanner = "board_local_banner"
+        const val boardCardMenu = "board_card_menu"
+        const val boardCardMenuItem = "board_card_menu_item_%s"
+        const val boardEmptyState = "board_empty_state_%s"
+        const val boardRenameDialog = "board_rename_dialog"
+        const val boardRenameInput = "board_rename_input"
+        const val boardRenameConfirm = "board_rename_confirm"
+        const val boardDeleteDialog = "board_delete_dialog"
+        const val boardDeleteConfirm = "board_delete_confirm"
+        const val boardGrid = "board_grid_%s"
 
         // Profile
         const val profileHeading = "profile_heading"
@@ -785,6 +937,35 @@ object Strings {
         const val wizardReviewEditRoom = "wizard_review_edit_room"
         const val wizardReviewEditStyle = "wizard_review_edit_style"
         const val wizardStepContent = "wizard_step_content_%s"
+        const val wizardFooterHint = "wizard_footer_hint"
+        const val wizardSelectionCard = "wizard_selection_card_%s"
+        const val wizardSelectionGrid = "wizard_selection_grid_%s"
+        const val wizardSelectionGroup = "wizard_selection_group_%s"
+        const val wizardSelectionSummary = "wizard_selection_summary"
+        const val wizardSelectionRequirement = "wizard_selection_requirement_%s"
+
+        // Mask editor
+        const val wizardMaskCanvas = "wizard_mask_canvas"
+        const val wizardMaskDrawing = "wizard_mask_drawing"
+        const val wizardMaskBrush = "wizard_mask_brush"
+        const val wizardMaskEraser = "wizard_mask_eraser"
+        const val wizardMaskUndo = "wizard_mask_undo"
+        const val wizardMaskRedo = "wizard_mask_redo"
+        const val wizardMaskClear = "wizard_mask_clear"
+        const val wizardMaskBrushSize = "wizard_mask_brush_size"
+        const val wizardMaskOpacity = "wizard_mask_opacity"
+        const val wizardMaskCoverage = "wizard_mask_coverage"
+
+        // Review step
+        const val wizardReviewImageCard = "wizard_review_image_card"
+        const val wizardReviewChangePhoto = "wizard_review_change_photo"
+        const val wizardReviewSummaryCard = "wizard_review_summary_card"
+        const val wizardReviewSummaryRow = "wizard_review_summary_row_%s"
+        const val wizardReviewSummaryEdit = "wizard_review_summary_edit_%s"
+        const val wizardReviewCustomNotes = "wizard_review_custom_notes"
+        const val wizardReviewDiamondCost = "wizard_review_diamond_cost"
+        const val wizardReviewDiamondBalance = "wizard_review_diamond_balance"
+        const val wizardReviewGenerateAction = "wizard_review_generate_action"
 
         // Paywall
         const val paywallSheet = "paywall_sheet"
@@ -814,7 +995,8 @@ object Strings {
     fun a11yUpgradePlan(title: String, recommended: Boolean) = "$title plan${if (recommended) ", recommended" else ""}"
     fun a11yProfileRow(title: String) = title
     fun a11yWizardOption(label: String, selected: Boolean) = "$label${if (selected) ", selected" else ""}"
-    fun a11yDiscoverCard(title: String, category: String) = "$title \u2014 $category"
+    fun a11yDiscoverCard(title: String, category: String, styleType: String = "") =
+        if (styleType.isNotBlank()) "$title \u2014 $styleType, $category" else "$title \u2014 $category"
     fun a11yBoardDesign(title: String, style: String, tab: String) = "$title \u2014 $style \u2014 $tab"
     fun a11yPaywallStep(step: Int, heading: String) = "Step $step: $heading"
     fun a11yWizardStep(step: Int, total: Int, label: String) = "Step $step of $total: $label"

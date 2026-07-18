@@ -1,11 +1,16 @@
 package com.ismail.homedecorai.ui.discover
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,13 +33,21 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Save
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.SearchOff
+import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -42,6 +55,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +65,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,8 +74,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -77,8 +93,24 @@ import com.ismail.homedecorai.getScreenWidthDp
 import com.ismail.homedecorai.model.DiscoverSectionItem
 import com.ismail.homedecorai.model.DiscoverScreenState
 import com.ismail.homedecorai.model.GalleryCardItem
+import com.ismail.homedecorai.ui.auth.SharedAuthScreen
+import com.ismail.homedecorai.ui.components.ImageCard
+import com.ismail.homedecorai.ui.components.ScrimIntensity
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
+
+// ---------------------------------------------------------------------------
+// Filter definitions
+// ---------------------------------------------------------------------------
+
+private enum class FilterCategory(val label: String) {
+    Room(Strings.filterRoom),
+    Style(Strings.filterStyle),
+    Color(Strings.filterColor),
+    Mood(Strings.filterMood),
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────
 
 @Composable
 fun SharedDiscoverScreen(
@@ -86,7 +118,12 @@ fun SharedDiscoverScreen(
     onToggleFavorite: (DiscoverSectionItem, GalleryCardItem) -> Unit,
     onAddToMoodboard: (DiscoverSectionItem, GalleryCardItem) -> Unit,
     onUseStyle: (DiscoverSectionItem, GalleryCardItem) -> Unit,
-    onSignIn: () -> Unit = {},
+    onSignUp: (String, String) -> Unit = { _, _ -> },
+    onGoogleSignIn: () -> Unit = {},
+    onForgotPassword: () -> Unit = {},
+    isAuthLoading: Boolean = false,
+    authError: String? = null,
+    onDismissAuthError: () -> Unit = {},
 ) {
     if (state.isLoading) {
         DiscoverLoadingContent()
@@ -98,13 +135,31 @@ fun SharedDiscoverScreen(
         return
     }
 
+    if (state.noResultsMessage != null) {
+        DiscoverNoResultsContent(message = state.noResultsMessage)
+        return
+    }
+
     var selectedCluster by rememberSaveable { mutableStateOf(state.selectedCluster) }
     var detailSection by rememberSaveable { mutableStateOf<String?>(null) }
     var previewItem by rememberSaveable { mutableStateOf<String?>(null) }
+    var showAuthOverlay by rememberSaveable { mutableStateOf(false) }
+
+    // Filter state
+    var activeFilterCategory by rememberSaveable { mutableStateOf<FilterCategory?>(null) }
+    var selectedFilterValues by rememberSaveable { mutableStateOf(setOf<String>()) }
+
     val clusters = listOf("interior", "architecture", "landscape")
     val sections = state.sections.filter { it.cluster == selectedCluster }
     val isDesktop = rememberIsDesktop()
     val scrollState = rememberLazyListState()
+
+    // Auto-close auth overlay when user signs in
+    LaunchedEffect(state.isSignedIn) {
+        if (showAuthOverlay && state.isSignedIn) {
+            showAuthOverlay = false
+        }
+    }
 
     val activeDetailSection = remember(detailSection, state.sections) {
         detailSection?.let { id -> state.sections.find { it.id == id } }
@@ -121,7 +176,7 @@ fun SharedDiscoverScreen(
 
     fun toggleFavorite(section: DiscoverSectionItem, item: GalleryCardItem) {
         if (!state.isSignedIn) {
-            onSignIn()
+            showAuthOverlay = true
             return
         }
         onToggleFavorite(section, item)
@@ -129,7 +184,7 @@ fun SharedDiscoverScreen(
 
     fun addToMoodboard(section: DiscoverSectionItem, item: GalleryCardItem) {
         if (!state.isSignedIn) {
-            onSignIn()
+            showAuthOverlay = true
             return
         }
         onAddToMoodboard(section, item)
@@ -141,6 +196,43 @@ fun SharedDiscoverScreen(
         detailSection = null
     }
 
+    // Build filter option sets from all items in current cluster
+    val filterOptions = remember(sections) {
+        FilterCategory.entries.associateWith { category ->
+            sections.flatMap { section ->
+                section.items.map { item ->
+                    when (category) {
+                        FilterCategory.Room -> item.room
+                        FilterCategory.Style -> item.styleType
+                        FilterCategory.Color -> item.color
+                        FilterCategory.Mood -> item.mood
+                    }
+                }.filter { it.isNotBlank() }
+            }.toSet().sorted().toList()
+        }
+    }
+
+    // Apply filters to sections
+    val filteredSections = remember(sections, activeFilterCategory, selectedFilterValues) {
+        if (activeFilterCategory == null || selectedFilterValues.isEmpty()) {
+            sections
+        } else {
+            sections.map { section ->
+                val filteredItems = section.items.filter { item ->
+                    val fieldValue = when (activeFilterCategory) {
+                        FilterCategory.Room -> item.room
+                        FilterCategory.Style -> item.styleType
+                        FilterCategory.Color -> item.color
+                        FilterCategory.Mood -> item.mood
+                        null -> ""
+                    }
+                    fieldValue in selectedFilterValues
+                }
+                section.copy(items = filteredItems)
+            }.filter { it.items.isNotEmpty() }
+        }
+    }
+
     if (activeDetailSection != null) {
         DiscoverDetailScreen(
             section = activeDetailSection,
@@ -148,6 +240,10 @@ fun SharedDiscoverScreen(
             onPreview = { previewItem = it.id },
             favoriteSources = state.favoriteSourceIds,
             onFavorite = { toggleFavorite(activeDetailSection, it) },
+            onMoodboard = { addToMoodboard(activeDetailSection, it) },
+            onUseStyle = { useStyle(activeDetailSection, it) },
+            isSignedIn = state.isSignedIn,
+            onRequireAuth = { showAuthOverlay = true },
         )
         return
     }
@@ -169,24 +265,68 @@ fun SharedDiscoverScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.SectionGap),
         ) {
+            // Cluster tabs
             item {
                 DiscoverClusterTabs(
                     clusters = clusters,
                     selected = selectedCluster,
-                    onSelect = { selectedCluster = it },
+                    onSelect = {
+                        selectedCluster = it
+                        activeFilterCategory = null
+                        selectedFilterValues = emptySet()
+                    },
                 )
             }
-            items(sections, key = { it.id }) { section ->
-                DiscoverSectionRow(
-                    section = section,
-                    onSeeAll = {
-                        previewItem = null
-                        detailSection = section.id
+            // Filter chips row
+            item {
+                DiscoverFilterRow(
+                    activeCategory = activeFilterCategory,
+                    selectedValues = selectedFilterValues,
+                    options = filterOptions,
+                    onCategorySelect = { category ->
+                        if (activeFilterCategory == category) {
+                            activeFilterCategory = null
+                            selectedFilterValues = emptySet()
+                        } else {
+                            activeFilterCategory = category
+                            selectedFilterValues = emptySet()
+                        }
                     },
-                    onPreview = { previewItem = it.id },
-                    favoriteSources = state.favoriteSourceIds,
-                    onFavorite = { toggleFavorite(section, it) },
+                    onValueToggle = { value ->
+                        selectedFilterValues = if (value in selectedFilterValues) {
+                            selectedFilterValues - value
+                        } else {
+                            selectedFilterValues + value
+                        }
+                    },
+                    onClear = {
+                        activeFilterCategory = null
+                        selectedFilterValues = emptySet()
+                    },
                 )
+            }
+            // Sections
+            if (filteredSections.isEmpty() && activeFilterCategory != null) {
+                item {
+                    DiscoverFilteredEmptyContent()
+                }
+            } else {
+                items(filteredSections, key = { it.id }) { section ->
+                    DiscoverSectionRow(
+                        section = section,
+                        onSeeAll = {
+                            previewItem = null
+                            detailSection = section.id
+                        },
+                        onPreview = { previewItem = it.id },
+                        favoriteSources = state.favoriteSourceIds,
+                        onFavorite = { toggleFavorite(section, it) },
+                        onMoodboard = { addToMoodboard(section, it) },
+                        onUseStyle = { useStyle(section, it) },
+                        isSignedIn = state.isSignedIn,
+                        onRequireAuth = { showAuthOverlay = true },
+                    )
+                }
             }
         }
     }
@@ -200,6 +340,27 @@ fun SharedDiscoverScreen(
             onFavorite = { toggleFavorite(targetSection, targetItem) },
             onMoodboard = { addToMoodboard(targetSection, targetItem) },
             onUseStyle = { useStyle(targetSection, targetItem) },
+        )
+    }
+
+    if (showAuthOverlay) {
+        SharedAuthScreen(
+            onSignIn = { _, _ ->
+                showAuthOverlay = false
+            },
+            onSignUp = { email, password ->
+                onSignUp(email, password)
+                showAuthOverlay = false
+            },
+            onGoogleSignIn = {
+                onGoogleSignIn()
+                showAuthOverlay = false
+            },
+            onForgotPassword = onForgotPassword,
+            onClose = { showAuthOverlay = false },
+            isLoading = isAuthLoading,
+            errorMessage = authError,
+            onDismissError = onDismissAuthError,
         )
     }
 }
@@ -236,7 +397,7 @@ fun ScreenHeaderPills(title: String, trailing: (@Composable () -> Unit)?) {
             Text(
                 "Explore AI-generated design inspiration",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
         Box(contentAlignment = Alignment.CenterEnd) {
@@ -245,7 +406,7 @@ fun ScreenHeaderPills(title: String, trailing: (@Composable () -> Unit)?) {
     }
 }
 
-// ─── MD3 Expressive Segmented Tabs with Sliding Indicator ──────────────────
+// ─── MD3 Expressive Segmented Tabs ────────────────────────────────────────
 
 @Composable
 fun DiscoverClusterTabs(clusters: List<String>, selected: String, onSelect: (String) -> Unit) {
@@ -269,7 +430,6 @@ fun DiscoverClusterTabs(clusters: List<String>, selected: String, onSelect: (Str
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .padding(3.dp),
         ) {
-            // Sliding filled indicator
             Box(
                 modifier = Modifier
                     .offset(x = animatedOffset)
@@ -278,7 +438,6 @@ fun DiscoverClusterTabs(clusters: List<String>, selected: String, onSelect: (Str
                     .clip(RoundedCornerShape(6.dp))
                     .background(MaterialTheme.colorScheme.primary),
             )
-            // Tab labels
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -309,6 +468,133 @@ fun DiscoverClusterTabs(clusters: List<String>, selected: String, onSelect: (Str
     }
 }
 
+// ─── Filter Chips Row ─────────────────────────────────────────────────────
+
+@Composable
+private fun DiscoverFilterRow(
+    activeCategory: FilterCategory?,
+    selectedValues: Set<String>,
+    options: Map<FilterCategory, List<String>>,
+    onCategorySelect: (FilterCategory) -> Unit,
+    onValueToggle: (String) -> Unit,
+    onClear: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(Strings.TestTags.discoverFilterRow),
+    ) {
+        // Category selector row
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Base),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        ) {
+            items(FilterCategory.entries.toList()) { category ->
+                val isActive = activeCategory == category
+                FilterChip(
+                    selected = isActive,
+                    onClick = { onCategorySelect(category) },
+                    label = {
+                        Text(
+                            category.label,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Medium,
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = category.icon(),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    trailingIcon = if (isActive && selectedValues.isNotEmpty()) {
+                        {
+                            Text(
+                                "${selectedValues.size}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    } else null,
+                    shape = HomeDecorShape.Chip,
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                    modifier = Modifier.testTag(
+                        Strings.formatTestTag(Strings.TestTags.discoverFilterChip, category.name)
+                    ),
+                )
+            }
+            if (activeCategory != null && selectedValues.isNotEmpty()) {
+                item {
+                    FilterChip(
+                        selected = false,
+                        onClick = onClear,
+                        label = {
+                            Text(
+                                Strings.filterClearAll,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        },
+                        shape = HomeDecorShape.Chip,
+                    )
+                }
+            }
+        }
+
+        // Value chips row (shown when a category is active)
+        AnimatedVisibility(
+            visible = activeCategory != null,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            val values = options[activeCategory] ?: emptyList()
+            if (values.isNotEmpty()) {
+                LazyRow(
+                    contentPadding = PaddingValues(
+                        start = HomeDecorSpacing.Base,
+                        end = HomeDecorSpacing.Base,
+                        top = HomeDecorSpacing.Xs,
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+                ) {
+                    items(values) { value ->
+                        val isSelected = value in selectedValues
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { onValueToggle(value) },
+                            label = {
+                                Text(
+                                    value,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                )
+                            },
+                            shape = HomeDecorShape.Chip,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun FilterCategory.icon(): ImageVector = when (this) {
+    FilterCategory.Room -> Icons.Rounded.Image
+    FilterCategory.Style -> Icons.Rounded.Spa
+    FilterCategory.Color -> Icons.Rounded.Palette
+    FilterCategory.Mood -> Icons.Rounded.Star
+}
+
 // ─── Section Row ───────────────────────────────────────────────────────────
 
 @Composable
@@ -318,6 +604,10 @@ fun DiscoverSectionRow(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
+    onMoodboard: (GalleryCardItem) -> Unit,
+    onUseStyle: (GalleryCardItem) -> Unit,
+    isSignedIn: Boolean,
+    onRequireAuth: () -> Unit,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val isDesktop = rememberIsDesktop()
@@ -357,7 +647,7 @@ fun DiscoverSectionRow(
                 Icon(
                     imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(HomeDecorIconSize.Small),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -369,6 +659,10 @@ fun DiscoverSectionRow(
                 onPreview = onPreview,
                 favoriteSources = favoriteSources,
                 onFavorite = onFavorite,
+                onMoodboard = onMoodboard,
+                onUseStyle = onUseStyle,
+                isSignedIn = isSignedIn,
+                onRequireAuth = onRequireAuth,
             )
         } else {
             DiscoverSectionMobileRow(
@@ -422,6 +716,10 @@ fun DiscoverSectionGrid(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
+    onMoodboard: (GalleryCardItem) -> Unit,
+    onUseStyle: (GalleryCardItem) -> Unit,
+    isSignedIn: Boolean,
+    onRequireAuth: () -> Unit,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val screenWidthDp = getScreenWidthDp()
@@ -430,6 +728,7 @@ fun DiscoverSectionGrid(
         screenWidthDp >= 900 -> 3
         else -> 2
     }
+    // Only show filled cells — no empty gray placeholders
     val visibleItems = section.items.take(columns * 2)
 
     Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
@@ -448,6 +747,10 @@ fun DiscoverSectionGrid(
                         modifier = Modifier.weight(1f),
                         onClick = { onPreview(item) },
                         onFavorite = { onFavorite(item) },
+                        onMoodboard = {
+                            if (!isSignedIn) { onRequireAuth() } else onMoodboard(item)
+                        },
+                        onUseStyle = { onUseStyle(item) },
                     )
                 }
             }
@@ -464,6 +767,10 @@ fun DiscoverDetailScreen(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
+    onMoodboard: (GalleryCardItem) -> Unit,
+    onUseStyle: (GalleryCardItem) -> Unit,
+    isSignedIn: Boolean,
+    onRequireAuth: () -> Unit,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val isDesktop = rememberIsDesktop()
@@ -503,12 +810,13 @@ fun DiscoverDetailScreen(
             }
         }
 
-        // Responsive grid
+        // Responsive grid: 4 desktop, 2 tablet, 1 mobile
         val columns = when {
             isDesktop && getScreenWidthDp() >= 1200 -> GridCells.Fixed(4)
             isDesktop && getScreenWidthDp() >= 900 -> GridCells.Fixed(3)
             isDesktop -> GridCells.Fixed(3)
-            else -> GridCells.Fixed(2)
+            getScreenWidthDp() >= 600 -> GridCells.Fixed(2)
+            else -> GridCells.Fixed(1)
         }
         LazyVerticalGrid(
             columns = columns,
@@ -530,13 +838,17 @@ fun DiscoverDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { onPreview(item) },
                     onFavorite = { onFavorite(item) },
+                    onMoodboard = {
+                        if (!isSignedIn) { onRequireAuth() } else onMoodboard(item)
+                    },
+                    onUseStyle = { onUseStyle(item) },
                 )
             }
         }
     }
 }
 
-// ─── Preview Dialog ────────────────────────────────────────────────────────
+// ─── Preview Dialog (internally scrollable) ───────────────────────────────
 
 @Composable
 fun DiscoverPreviewDialog(
@@ -551,18 +863,21 @@ fun DiscoverPreviewDialog(
     val itemTitle = item.title
     val sectionTitle = Strings.discoverSectionTitle(section.id)
 
+    val metaItems = buildList {
+        if (item.styleType.isNotBlank()) add(item.styleType)
+        add(sectionTitle)
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Button(
-                onClick = {
-                    onUseStyle()
-                },
+                onClick = onUseStyle,
                 modifier = Modifier.fillMaxWidth(),
                 shape = HomeDecorShape.Button,
                 colors = studioPrimaryButtonColors(),
             ) {
-                Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(HomeDecorSpacing.Base))
+                Icon(Icons.Rounded.Palette, null, Modifier.size(HomeDecorSpacing.Base))
                 Spacer(Modifier.width(HomeDecorSpacing.Sm))
                 Text(Strings.createWithStyle, style = MaterialTheme.typography.labelLarge)
             }
@@ -581,7 +896,9 @@ fun DiscoverPreviewDialog(
                     ),
                 ) {
                     Icon(
-                        Icons.Rounded.Star, null, Modifier.size(HomeDecorSpacing.Base),
+                        imageVector = if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = null,
+                        modifier = Modifier.size(HomeDecorSpacing.Base),
                         tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.width(HomeDecorSpacing.Xs))
@@ -596,7 +913,7 @@ fun DiscoverPreviewDialog(
                     shape = HomeDecorShape.Button,
                     modifier = Modifier.weight(1f),
                 ) {
-                    Icon(Icons.Rounded.Save, null, Modifier.size(HomeDecorSpacing.Base))
+                    Icon(Icons.Rounded.Bookmark, null, Modifier.size(HomeDecorSpacing.Base))
                     Spacer(Modifier.width(HomeDecorSpacing.Xs))
                     Text(
                         Strings.addToMoodboard,
@@ -610,8 +927,8 @@ fun DiscoverPreviewDialog(
             Box(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(end = 48.dp),
+                        .align(Alignment.TopStart)
+                        .padding(end = 52.dp),
                 ) {
                     Text(
                         itemTitle,
@@ -623,31 +940,48 @@ fun DiscoverPreviewDialog(
                     )
                     Spacer(Modifier.height(HomeDecorSpacing.Xxs))
                     Text(
-                        sectionTitle,
+                        metaItems.joinToString(" \u00b7 "),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
                 IconButton(
                     onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.TopEnd),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(40.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                            CircleShape,
+                        ),
                 ) {
                     Icon(Icons.Rounded.Close, contentDescription = Strings.close)
                 }
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm)) {
+            // Internally scrollable content
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            ) {
                 NetworkImage(
                     url = item.imageUrl,
                     contentDescription = itemTitle,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(0.92f)
+                        .aspectRatio(4f / 3f)
                         .clip(HomeDecorShape.ImageLarge),
                 )
+                if (item.description.isNotBlank()) {
+                    Text(
+                        item.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         },
         shape = HomeDecorShape.Dialog,
@@ -665,9 +999,32 @@ fun GalleryCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onFavorite: () -> Unit,
+    onMoodboard: (() -> Unit)? = null,
+    onUseStyle: (() -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    // Subtle hover/focus animation
+    val cardScale by animateFloatAsState(
+        targetValue = when {
+            isPressed -> 0.97f
+            isHovered -> 1.01f
+            else -> 1f
+        },
+        animationSpec = spring(
+            dampingRatio = 0.7f,
+            stiffness = 300f,
+        ),
+        label = "cardScale",
+    )
+
+    val cardDescription = if (item.styleType.isNotBlank()) {
+        Strings.a11yDiscoverCard(item.title, sectionTitle, item.styleType)
+    } else {
+        Strings.a11yInspirationImage(sectionTitle)
+    }
 
     ElevatedCard(
         onClick = onClick,
@@ -681,18 +1038,42 @@ fun GalleryCard(
         modifier = modifier
             .testTag(Strings.formatTestTag(Strings.TestTags.discoverSectionCard, item.id))
             .semantics {
-                contentDescription = Strings.a11yInspirationImage(sectionTitle)
+                contentDescription = cardDescription
                 role = Role.Button
             },
     ) {
-        Box(Modifier.fillMaxWidth().aspectRatio(0.8f)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(4f / 3f) // stable aspect ratio — no 0.8f
+        ) {
             GalleryImageCard(
                 item = item,
                 sectionTitle = sectionTitle,
                 isDesktop = isDesktop,
                 modifier = Modifier.fillMaxSize(),
             )
-            // Favorite badge — minimal dot, top-end
+            // Style type badge — top-start
+            if (item.styleType.isNotBlank()) {
+                Surface(
+                    shape = HomeDecorShape.Chip,
+                    color = HomeDecorColors.PrimaryContainer.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(HomeDecorSpacing.Sm),
+                ) {
+                    Text(
+                        text = item.styleType,
+                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = HomeDecorColors.OnPrimaryContainer,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            // Favorite badge — top-end
             if (isFavorite) {
                 Surface(
                     shape = HomeDecorShape.Full,
@@ -704,7 +1085,7 @@ fun GalleryCard(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Rounded.Star,
+                            imageVector = Icons.Rounded.Favorite,
                             contentDescription = Strings.favorited,
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.tertiary,
@@ -712,13 +1093,61 @@ fun GalleryCard(
                     }
                 }
             }
-            // Desktop hover — faint overlay to hint interactivity, no button
+            // Desktop hover overlay with quick actions
             if (isDesktop && isHovered) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.04f)),
+                        .background(Color.Black.copy(alpha = 0.08f))
                 )
+                // Quick action buttons — bottom-right
+                if (onMoodboard != null || onUseStyle != null) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(HomeDecorSpacing.Sm),
+                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+                    ) {
+                        if (onMoodboard != null) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                shadowElevation = 2.dp,
+                            ) {
+                                IconButton(
+                                    onClick = onMoodboard,
+                                    modifier = Modifier.size(32.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Bookmark,
+                                        contentDescription = Strings.addToMoodboard,
+                                        modifier = Modifier.size(HomeDecorIconSize.Small),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
+                        if (onUseStyle != null) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                                shadowElevation = 2.dp,
+                            ) {
+                                IconButton(
+                                    onClick = onUseStyle,
+                                    modifier = Modifier.size(32.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Palette,
+                                        contentDescription = Strings.createWithStyle,
+                                        modifier = Modifier.size(HomeDecorIconSize.Small),
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -731,34 +1160,21 @@ fun GalleryImageCard(
     isDesktop: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .clip(HomeDecorShape.Card)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center,
+    val cardDescription = if (item.styleType.isNotBlank()) {
+        Strings.a11yDiscoverCard(item.title, sectionTitle, item.styleType)
+    } else {
+        Strings.a11yInspirationImage(sectionTitle)
+    }
+
+    ImageCard(
+        imageUrl = item.imageUrl,
+        contentDescription = cardDescription,
+        modifier = modifier,
+        scrimIntensity = ScrimIntensity.Standard,
     ) {
-        if (item.imageUrl.isNotEmpty()) {
-            NetworkImage(
-                url = item.imageUrl,
-                contentDescription = Strings.a11yInspirationImage(sectionTitle),
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-        // Bottom label — minimal title only, generous padding
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.40f),
-                            Color.Black.copy(alpha = 0.70f),
-                        )
-                    )
-                )
                 .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Lg),
         ) {
             Text(
@@ -769,11 +1185,21 @@ fun GalleryImageCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (item.styleType.isNotBlank()) {
+                Spacer(Modifier.height(HomeDecorSpacing.Xxs))
+                Text(
+                    text = item.styleType,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.85f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
 
-// ─── Loading & Error States ────────────────────────────────────────────────
+// ─── Loading, Error & Empty States ────────────────────────────────────────
 
 @Composable
 private fun DiscoverLoadingContent() {
@@ -808,6 +1234,13 @@ private fun DiscoverErrorContent(message: String) {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Rounded.SearchOff,
+                contentDescription = null,
+                modifier = Modifier.size(HomeDecorIconSize.Xxxl),
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
             Text(
                 text = Strings.errorGeneric,
                 style = MaterialTheme.typography.titleMedium,
@@ -817,7 +1250,71 @@ private fun DiscoverErrorContent(message: String) {
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DiscoverNoResultsContent(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Rounded.SearchOff,
+                contentDescription = null,
+                modifier = Modifier.size(HomeDecorIconSize.Xxxl),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
+            Text(
+                text = Strings.discoverNoResults,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Xs))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DiscoverFilteredEmptyContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = HomeDecorSpacing.Xxxxl),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Rounded.SearchOff,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
+            Text(
+                text = Strings.discoverEmptyFilteredTitle,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Xs))
+            Text(
+                text = Strings.discoverEmptyFilteredHint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

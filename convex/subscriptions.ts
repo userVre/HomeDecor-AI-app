@@ -5,9 +5,9 @@ export const MONTHLY_RESET_MS = 30 * DAY_MS;
 export const FREE_IMAGE_LIMIT = 1;
 export const INITIAL_FREE_DIAMONDS = 0;
 export const FREE_DAILY_DIAMOND_CAP = 3;
-export const WEEKLY_IMAGE_LIMIT = Number.MAX_SAFE_INTEGER;
-export const MONTHLY_IMAGE_LIMIT = Number.MAX_SAFE_INTEGER;
-export const YEARLY_MONTHLY_IMAGE_LIMIT = Number.MAX_SAFE_INTEGER;
+export const WEEKLY_PRO_GENERATION_LIMIT = 75;
+export const MONTHLY_PRO_GENERATION_LIMIT = 300;
+export const YEARLY_PRO_GENERATION_LIMIT = 300;
 export const FREE_REFILL_INTERVAL_MS = DAY_MS;
 
 export type SubscriptionType = "weekly" | "monthly" | "yearly" | "free";
@@ -163,9 +163,9 @@ function getSubscriptionAnchor(user: SubscriptionLikeUser, now: number) {
 
 export function getGenerationLimit(subscriptionType: SubscriptionType) {
   if (subscriptionType === "free") return FREE_IMAGE_LIMIT;
-  if (subscriptionType === "weekly") return WEEKLY_IMAGE_LIMIT;
-  if (subscriptionType === "monthly") return MONTHLY_IMAGE_LIMIT;
-  if (subscriptionType === "yearly") return YEARLY_MONTHLY_IMAGE_LIMIT;
+  if (subscriptionType === "weekly") return WEEKLY_PRO_GENERATION_LIMIT;
+  if (subscriptionType === "monthly") return MONTHLY_PRO_GENERATION_LIMIT;
+  if (subscriptionType === "yearly") return YEARLY_PRO_GENERATION_LIMIT;
   return FREE_IMAGE_LIMIT;
 }
 
@@ -401,15 +401,17 @@ export function deriveSubscriptionState(user: SubscriptionLikeUser, now: number)
       }
 
       const active = subscriptionEnd > now;
-      const remaining = active ? Number.MAX_SAFE_INTEGER : 0;
-      const reachedLimit = false;
+      const remaining = active ? Math.max(imageLimit - imageGenerationCount, 0) : 0;
+      const reachedLimit = active && remaining <= 0;
       const statusLabel =
         plan === "trial"
           ? "Unlimited generations during your active trial"
-          : "Unlimited generations";
+          : `${remaining} generations remaining this period`;
       const statusMessage = !active
         ? "Plan expired. Upgrade or renew to continue."
-        : statusLabel;
+        : reachedLimit
+          ? "Generation limit reached. Upgrade your plan for more."
+          : statusLabel;
       const hasPaidAccess = active && (plan === "pro" || plan === "trial");
       const hasProAccess = hasPaidAccess || hasActiveProTrial;
       if (canClaimDiamond) {

@@ -177,7 +177,7 @@ private fun SharedProActiveScreen() {
                         Icons.Rounded.CheckCircle,
                         contentDescription = null,
                         tint = ProCheckGreen,
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(HomeDecorIconSize.Xxl),
                     )
                 }
             }
@@ -353,7 +353,7 @@ private fun UpgradeDesktopHero(colors: SharedUpgradeColors) {
                     Icons.Rounded.Check,
                     contentDescription = null,
                     tint = colors.accent,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(HomeDecorIconSize.Small),
                 )
                 Text(
                     Strings.upgradeV3Trust,
@@ -402,7 +402,7 @@ private fun UpgradeMobileHero(colors: SharedUpgradeColors) {
                     Icons.Rounded.Check,
                     contentDescription = null,
                     tint = colors.accent,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(HomeDecorIconSize.Small),
                 )
                 Text(
                     Strings.upgradeV3Trust,
@@ -553,6 +553,12 @@ private fun PlanCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressedScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+        label = "plan_pressed_scale",
+    )
 
     val borderColor by animateColorAsState(
         targetValue = when {
@@ -614,13 +620,14 @@ private fun PlanCard(
             shadowElevation = if (isSelected || isRecommended) 6.dp else 0.dp,
             modifier = Modifier
                 .then(if (isRecommended) Modifier.padding(top = 10.dp) else Modifier)
+                .scale(pressedScale)
                 .testTag(Strings.formatTestTag(Strings.TestTags.upgradePlanCard, title.lowercase()))
                 .semantics {
                     role = Role.RadioButton
                     this.selected = isSelected
                     contentDescription = Strings.a11yUpgradePlanCard(title, price, period, isRecommended)
                 }
-                .clickable { onSelect() },
+                .clickable(interactionSource = interactionSource, indication = null) { onSelect() },
         ) {
             Column(
                 modifier = Modifier.padding(HomeDecorSpacing.Base),
@@ -703,11 +710,13 @@ private fun PlanCard(
 private data class FeatureRow(val name: String, val freeValue: String, val proValue: String)
 
 private val featureRows = listOf(
-    FeatureRow(Strings.upgradeFeatureGenerations, freeValue = "1/day", proValue = "Unlimited"),
-    FeatureRow(Strings.upgradeFeatureAiTools, freeValue = "Yes", proValue = "Yes"),
-    FeatureRow(Strings.upgradeFeatureExport, freeValue = "No", proValue = "Yes"),
+    FeatureRow(Strings.upgradeFeatureGenerations, freeValue = "1/day", proValue = "300/month"),
+    FeatureRow(Strings.upgradeFeatureResolution, freeValue = Strings.upgradeFeatureFreeResolution, proValue = Strings.upgradeFeatureProResolution),
     FeatureRow(Strings.upgradeFeatureNoWatermark, freeValue = "No", proValue = "Yes"),
-    FeatureRow(Strings.upgradeFeatureQueue, freeValue = "No", proValue = "Yes"),
+    FeatureRow(Strings.upgradeFeatureQueue, freeValue = "Standard", proValue = "Priority"),
+    FeatureRow(Strings.upgradeFeatureFailedRefund, freeValue = Strings.upgradeFeatureFreeFailedRefund, proValue = Strings.upgradeFeatureProFailedRefund),
+    FeatureRow(Strings.upgradeFeatureExport, freeValue = "No", proValue = "Yes"),
+    FeatureRow(Strings.upgradeFeatureAiTools, freeValue = "Basic", proValue = "All Styles"),
 )
 
 @Composable
@@ -865,7 +874,7 @@ private fun UpgradeBottomCta(
                 }
             }
             Text(
-                Strings.upgradeV3Subtitle,
+                Strings.upgradeV3BottomCta,
                 style = MaterialTheme.typography.bodyLarge,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
@@ -1035,7 +1044,7 @@ private fun SharedUpgradeBeforeAfterHero(colors: SharedUpgradeColors) {
                         Icons.Rounded.AutoAwesome,
                         contentDescription = null,
                         tint = HomeDecorExtra.onGradientText,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(HomeDecorIconSize.Small),
                     )
                 }
             }

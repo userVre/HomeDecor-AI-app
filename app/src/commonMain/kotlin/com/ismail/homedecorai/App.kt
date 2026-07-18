@@ -24,11 +24,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Create
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Stars
-import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -79,24 +79,24 @@ import com.ismail.homedecorai.ui.discover.SharedDiscoverScreen
 import com.ismail.homedecorai.ui.paywall.PaywallPlan
 import com.ismail.homedecorai.ui.paywall.PaywallState
 import com.ismail.homedecorai.ui.paywall.SharedPaywallSheet
-import com.ismail.homedecorai.ui.profile.ProfileScreenState
+import com.ismail.homedecorai.model.DiamondPackage
+import com.ismail.homedecorai.model.DiamondStoreState
+import com.ismail.homedecorai.model.ProfileScreenState
+import com.ismail.homedecorai.model.SettingsLanguage
+import com.ismail.homedecorai.model.SettingsScreenState
 import com.ismail.homedecorai.ui.profile.SharedProfileScreen
 import com.ismail.homedecorai.ui.rememberIsDesktop
-import com.ismail.homedecorai.ui.settings.SettingsLanguage
-import com.ismail.homedecorai.ui.settings.SettingsScreenState
 import com.ismail.homedecorai.ui.settings.SharedSettingsScreen
 import com.ismail.homedecorai.ui.auth.SharedAuthScreen
 import com.ismail.homedecorai.ui.tools.SharedToolsScreen
 import com.ismail.homedecorai.ui.tools.WebWizardScreen
 import com.ismail.homedecorai.ui.upgrade.SharedUpgradeScreen
 import com.ismail.homedecorai.ui.store.SharedDiamondStoreSheet
-import com.ismail.homedecorai.ui.store.DiamondStoreState
-import com.ismail.homedecorai.ui.store.DiamondPackage
 import com.ismail.homedecorai.ui.theme.HomeDecorTheme
 import kotlinx.coroutines.launch
 
 private enum class WebTab(val label: String, val icon: ImageVector, val route: String, val pageTitle: String) {
-    Tools("Tools", Icons.Rounded.Widgets, "/tools", "Tools - HomeDecor AI"),
+    Create("Create", Icons.Rounded.Create, "/tools", "Create - HomeDecor AI"),
     Discover("Discover", Icons.Rounded.Explore, "/discover", "Discover - HomeDecor AI"),
     Board("My Board", Icons.Rounded.Dashboard, "/board", "My Board - HomeDecor AI"),
     Upgrade("Pro", Icons.Rounded.Stars, "/pro", "Pro - HomeDecor AI"),
@@ -111,13 +111,13 @@ fun App() {
         val initialTab = remember {
             val path = getCurrentPathname().removePrefix("/")
             when {
-                path.startsWith("create/") -> WebTab.Tools
-                path.startsWith("tools") -> WebTab.Tools
+                path.startsWith("create/") -> WebTab.Create
+                path.startsWith("tools") -> WebTab.Create
                 path.startsWith("discover") -> WebTab.Discover
                 path.startsWith("board") -> WebTab.Board
                 path.startsWith("profile") -> WebTab.Profile
                 path.startsWith("pro") -> WebTab.Upgrade
-                else -> WebTab.Tools
+                else -> WebTab.Create
             }
         }
         var selectedTab by remember { mutableStateOf(initialTab) }
@@ -342,92 +342,103 @@ fun App() {
                 isSignedIn = webIsSignedIn,
                 selectedCluster = "interior",
                 sections = listOf(
+                    // ── Interior ──
                     DiscoverSectionItem("kitchen", "Kitchen", "interior", listOf(
-                        GalleryCardItem("kitchen-1", "Kitchen Inspiration", "interior", "images/assets_media_discover_generated_kitchen_kitchen1.webp"),
-                        GalleryCardItem("kitchen-2", "Kitchen Design", "interior", "images/assets_media_discover_generated_kitchen_kitchen2.webp"),
-                        GalleryCardItem("kitchen-3", "Kitchen Style", "interior", "images/assets_media_discover_generated_kitchen_kitchen3.webp"),
-                        GalleryCardItem("kitchen-4", "Modern Kitchen", "interior", "images/assets_media_discover_generated_kitchen_kitchen4.webp"),
-                        GalleryCardItem("kitchen-5", "Kitchen Layout", "interior", "images/assets_media_discover_generated_kitchen_kitchen5.webp"),
-                        GalleryCardItem("kitchen-6", "Kitchen Ideas", "interior", "images/assets_media_discover_generated_kitchen_kitchen6.webp"),
-                        GalleryCardItem("kitchen-7", "Kitchen Makeover", "interior", "images/assets_media_discover_generated_kitchen_kitchen7.webp"),
+                        GalleryCardItem("kitchen-1", "Kitchen Inspiration", "interior", "Modern", "Modern kitchen with island and pendant lighting", "images/assets_media_discover_generated_kitchen_kitchen1.webp"),
+                        GalleryCardItem("kitchen-2", "Kitchen Design", "interior", "Minimalist", "Minimalist kitchen with clean lines and neutral palette", "images/assets_media_discover_generated_kitchen_kitchen2.webp"),
+                        GalleryCardItem("kitchen-3", "Kitchen Style", "interior", "Contemporary", "Contemporary kitchen with warm wood accents", "images/assets_media_discover_generated_kitchen_kitchen3.webp"),
+                        GalleryCardItem("kitchen-4", "Modern Kitchen", "interior", "Scandinavian", "Scandinavian kitchen with bright natural light", "images/assets_media_discover_generated_kitchen_kitchen4.webp"),
+                        GalleryCardItem("kitchen-5", "Kitchen Layout", "interior", "Transitional", "Transitional kitchen blending traditional and modern elements", "images/assets_media_discover_generated_kitchen_kitchen5.webp"),
+                        GalleryCardItem("kitchen-6", "Kitchen Ideas", "interior", "Coastal", "Coastal kitchen with light blue cabinetry", "images/assets_media_discover_generated_kitchen_kitchen6.webp"),
+                        GalleryCardItem("kitchen-7", "Kitchen Makeover", "interior", "Farmhouse", "Farmhouse kitchen with rustic charm and open shelving", "images/assets_media_discover_generated_kitchen_kitchen7.webp"),
                     )),
                     DiscoverSectionItem("living-room", "Living Room", "interior", listOf(
-                        GalleryCardItem("living-1", "Living Room Inspiration", "interior", "images/assets_media_discover_generated_livingroom_livingroom1.webp"),
-                        GalleryCardItem("living-2", "Living Room Design", "interior", "images/assets_media_discover_generated_livingroom_livingroom2.webp"),
-                        GalleryCardItem("living-3", "Living Room Style", "interior", "images/assets_media_discover_generated_livingroom_livingroom3.webp"),
-                        GalleryCardItem("living-4", "Modern Living", "interior", "images/assets_media_discover_generated_livingroom_livingroom4.webp"),
-                        GalleryCardItem("living-5", "Living Room Ideas", "interior", "images/assets_media_discover_generated_livingroom_livingroom5.webp"),
-                        GalleryCardItem("living-6", "Cozy Living", "interior", "images/assets_media_discover_generated_livingroom_livingroom6.webp"),
-                        GalleryCardItem("living-7", "Living Makeover", "interior", "images/assets_media_discover_generated_livingroom_livingroom7.webp"),
+                        GalleryCardItem("living-1", "Living Room Inspiration", "interior", "Modern", "Modern living room with clean lines and neutral tones", "images/assets_media_discover_generated_livingroom_livingroom1.webp"),
+                        GalleryCardItem("living-2", "Living Room Design", "interior", "Scandinavian", "Scandinavian living room with cozy textiles and light wood", "images/assets_media_discover_generated_livingroom_livingroom2.webp"),
+                        GalleryCardItem("living-3", "Living Room Style", "interior", "Contemporary", "Contemporary living room with statement lighting", "images/assets_media_discover_generated_livingroom_livingroom3.webp"),
+                        GalleryCardItem("living-4", "Modern Living", "interior", "Minimalist", "Minimalist living room with curated furnishings", "images/assets_media_discover_generated_livingroom_livingroom4.webp"),
+                        GalleryCardItem("living-5", "Living Room Ideas", "interior", "Transitional", "Transitional living room blending classic and modern pieces", "images/assets_media_discover_generated_livingroom_livingroom5.webp"),
+                        GalleryCardItem("living-6", "Cozy Living", "interior", "Coastal", "Coastal living room with breezy blue accents", "images/assets_media_discover_generated_livingroom_livingroom6.webp"),
+                        GalleryCardItem("living-7", "Living Makeover", "interior", "Bohemian", "Bohemian living room with eclectic patterns and plants", "images/assets_media_discover_generated_livingroom_livingroom7.webp"),
                     )),
                     DiscoverSectionItem("bedroom", "Bedroom", "interior", listOf(
-                        GalleryCardItem("bedroom-1", "Bedroom Inspiration", "interior", "images/assets_media_discover_generated_bedroom_bedroom1.webp"),
-                        GalleryCardItem("bedroom-2", "Bedroom Design", "interior", "images/assets_media_discover_generated_bedroom_bedroom2.webp"),
-                        GalleryCardItem("bedroom-3", "Bedroom Style", "interior", "images/assets_media_discover_generated_bedroom_bedroom3.webp"),
-                        GalleryCardItem("bedroom-4", "Modern Bedroom", "interior", "images/assets_media_discover_generated_bedroom_bedroom4.webp"),
-                        GalleryCardItem("bedroom-5", "Bedroom Ideas", "interior", "images/assets_media_discover_generated_bedroom_bedroom5.webp"),
-                        GalleryCardItem("bedroom-6", "Cozy Bedroom", "interior", "images/assets_media_discover_generated_bedroom_bedroom6.webp"),
-                        GalleryCardItem("bedroom-7", "Bedroom Makeover", "interior", "images/assets_media_discover_generated_bedroom_bedroom7.webp"),
+                        GalleryCardItem("bedroom-1", "Bedroom Inspiration", "interior", "Modern", "Modern bedroom with platform bed and soft lighting", "images/assets_media_discover_generated_bedroom_bedroom1.webp"),
+                        GalleryCardItem("bedroom-2", "Bedroom Design", "interior", "Minimalist", "Minimalist bedroom with clean serene aesthetic", "images/assets_media_discover_generated_bedroom_bedroom2.webp"),
+                        GalleryCardItem("bedroom-3", "Bedroom Style", "interior", "Scandinavian", "Scandinavian bedroom with warm wood and layered textiles", "images/assets_media_discover_generated_bedroom_bedroom3.webp"),
+                        GalleryCardItem("bedroom-4", "Modern Bedroom", "interior", "Contemporary", "Contemporary bedroom with accent wall", "images/assets_media_discover_generated_bedroom_bedroom4.webp"),
+                        GalleryCardItem("bedroom-5", "Bedroom Ideas", "interior", "Luxury", "Luxury bedroom with elegant drapery", "images/assets_media_discover_generated_bedroom_bedroom5.webp"),
+                        GalleryCardItem("bedroom-6", "Cozy Bedroom", "interior", "Coastal", "Coastal bedroom with light airy palette", "images/assets_media_discover_generated_bedroom_bedroom6.webp"),
+                        GalleryCardItem("bedroom-7", "Bedroom Makeover", "interior", "Transitional", "Transitional bedroom balanced and timeless", "images/assets_media_discover_generated_bedroom_bedroom7.webp"),
                     )),
                     DiscoverSectionItem("bathroom", "Bathroom", "interior", listOf(
-                        GalleryCardItem("bathroom-1", "Bathroom Inspiration", "interior", "images/assets_media_discover_home_homebathroom.webp"),
-                        GalleryCardItem("bathroom-2", "Bathroom Design", "interior", "images/assets_media_discover_wallscenes_lavendermistbath.webp"),
-                        GalleryCardItem("bathroom-3", "Luxury Bathroom", "interior", "images/assets_media_styles_styleluxury.webp"),
+                        GalleryCardItem("bathroom-1", "Bathroom Inspiration", "interior", "Modern", "Modern bathroom with floating vanity and clean lines", "images/assets_media_discover_home_homebathroom.webp"),
+                        GalleryCardItem("bathroom-2", "Bathroom Design", "interior", "Spa", "Spa-inspired bathroom with lavender tones and soaking tub", "images/assets_media_discover_wallscenes_lavendermistbath.webp"),
+                        GalleryCardItem("bathroom-3", "Contemporary Bathroom", "interior", "Contemporary", "Contemporary bathroom with green tile accents and natural light", "images/assets_media_discover_wallscenes_sagegreensuite.webp"),
                     )),
                     DiscoverSectionItem("office", "Office", "interior", listOf(
-                        GalleryCardItem("office-1", "Home Office", "interior", "images/assets_media_discover_home_homehomeoffice.webp"),
-                        GalleryCardItem("office-2", "Study Space", "interior", "images/assets_media_discover_home_homestudy.webp"),
-                        GalleryCardItem("office-3", "Office Style", "interior", "images/assets_media_styles_stylemidcentury.webp"),
+                        GalleryCardItem("office-1", "Home Office", "interior", "Modern", "Modern home office with desk and shelving", "images/assets_media_discover_home_homehomeoffice.webp"),
+                        GalleryCardItem("office-2", "Study Space", "interior", "Traditional", "Traditional study with warm wood paneling", "images/assets_media_discover_home_homestudy.webp"),
+                        GalleryCardItem("office-3", "Contemporary Study", "interior", "Contemporary", "Contemporary study with olive green accent wall", "images/assets_media_discover_wallscenes_deepolivestudy.webp"),
                     )),
                     DiscoverSectionItem("dining", "Dining Room", "interior", listOf(
-                        GalleryCardItem("dining-1", "Dining Inspiration", "interior", "images/assets_media_discover_home_homediningroom.webp"),
-                        GalleryCardItem("dining-2", "Dining Design", "interior", "images/assets_media_styles_styleartdeco.webp"),
-                        GalleryCardItem("dining-3", "Dining Style", "interior", "images/assets_media_styles_stylemediterranean.webp"),
+                        GalleryCardItem("dining-1", "Dining Inspiration", "interior", "Modern", "Modern dining room with centerpiece table setting", "images/assets_media_discover_home_homediningroom.webp"),
+                        GalleryCardItem("dining-2", "Dining Design", "interior", "Contemporary", "Contemporary dining room with terracotta accent wall", "images/assets_media_styles_example_warmdining.webp"),
+                        GalleryCardItem("dining-3", "Formal Dining", "interior", "Formal", "Formal dining room in soft neutral tones", "images/assets_media_discover_wallscenes_pearlgraysalon.webp"),
                     )),
 
-                    DiscoverSectionItem("villa", "Villa", "architecture", listOf(
-                        GalleryCardItem("villa-1", "Villa Inspiration", "architecture", "images/assets_media_discover_exterior_exteriormodernvilla.webp"),
-                        GalleryCardItem("villa-2", "Villa Design", "architecture", "images/assets_media_discover_generated_exterior_exterior1.webp"),
-                        GalleryCardItem("villa-3", "Villa Style", "architecture", "images/assets_media_discover_generated_exterior_exterior2.webp"),
+                    // ── Architecture ──
+                    DiscoverSectionItem("modern-house", "Modern House", "architecture", listOf(
+                        GalleryCardItem("modern-house-1", "Modern House", "architecture", "Contemporary", "Contemporary house with clean geometric facade", "images/assets_media_exterior_modernhouse.webp"),
+                        GalleryCardItem("modern-house-2", "Minimalist House", "architecture", "Minimalist", "Minimalist house with warm exterior lighting", "images/assets_media_discover_generated_exterior_exterior2.webp"),
+                        GalleryCardItem("modern-house-3", "Glass House", "architecture", "Glass", "Glass-front house with modern landscaping", "images/assets_media_discover_generated_exterior_exterior3.webp"),
+                        GalleryCardItem("modern-house-4", "Mid-Century House", "architecture", "Mid-Century", "Mid-century inspired house with flat roof", "images/assets_media_discover_generated_exterior_exterior4.webp"),
                     )),
-                    DiscoverSectionItem("house", "House", "architecture", listOf(
-                        GalleryCardItem("house-1", "House Inspiration", "architecture", "images/tool_exterior.webp"),
-                        GalleryCardItem("house-2", "House Design", "architecture", "images/assets_media_discover_generated_exterior_exterior7.webp"),
+                    DiscoverSectionItem("classic-house", "Classic House", "architecture", listOf(
+                        GalleryCardItem("classic-house-1", "Stone Manor", "architecture", "Stone Manor", "Elegant stone manor house with classic architecture", "images/assets_media_discover_exterior_exteriorstonemanor.webp"),
+                        GalleryCardItem("classic-house-2", "Traditional House", "architecture", "Traditional", "Traditional house with gabled roof and warm tones", "images/assets_media_discover_generated_exterior_exterior7.webp"),
+                        GalleryCardItem("classic-house-3", "Modern Traditional", "architecture", "Modern Traditional", "Modern traditional house blending classic proportions", "images/assets_media_discover_generated_exterior_exterior5.webp"),
                     )),
                     DiscoverSectionItem("apartment", "Apartment", "architecture", listOf(
-                        GalleryCardItem("apartment-1", "Apartment Inspiration", "architecture", "images/assets_media_discover_exterior_exteriorapartmentblock.webp"),
-                        GalleryCardItem("apartment-2", "Apartment Design", "architecture", "images/assets_media_discover_generated_exterior_exterior3.webp"),
+                        GalleryCardItem("apartment-1", "Modern Block", "architecture", "Modern Block", "Modern apartment block with clean facade", "images/assets_media_discover_exterior_exteriorapartmentblock.webp"),
+                        GalleryCardItem("apartment-2", "Contemporary Apartment", "architecture", "Contemporary", "Contemporary apartment with balcony details", "images/assets_media_discover_generated_exterior_exterior6.webp"),
+                        GalleryCardItem("apartment-3", "Urban Apartment", "architecture", "Urban", "Urban apartment building with rooftop features", "images/assets_media_discover_generated_exterior_exterior2.webp"),
                     )),
-                    DiscoverSectionItem("modern-house", "Modern House", "architecture", listOf(
-                        GalleryCardItem("modern-house-1", "Modern House Inspiration", "architecture", "images/assets_media_discover_exterior_exteriorglassoffice.webp"),
-                        GalleryCardItem("modern-house-2", "Modern House Design", "architecture", "images/assets_media_discover_generated_exterior_exterior4.webp"),
+                    DiscoverSectionItem("villa", "Villa", "architecture", listOf(
+                        GalleryCardItem("villa-1", "Modern Villa", "architecture", "Modern", "Modern villa with clean lines and pool", "images/assets_media_discover_exterior_exteriormodernvilla.webp"),
+                        GalleryCardItem("villa-2", "Luxury Villa", "architecture", "Luxury", "Luxury villa with dramatic evening lighting", "images/assets_media_discover_generated_exterior_exterior7.webp"),
+                        GalleryCardItem("villa-3", "Mediterranean Villa", "architecture", "Mediterranean", "Mediterranean-inspired villa exterior", "images/assets_media_discover_generated_exterior_exterior1.webp"),
                     )),
                     DiscoverSectionItem("cabin", "Cabin", "architecture", listOf(
-                        GalleryCardItem("cabin-1", "Cabin Inspiration", "architecture", "images/assets_media_discover_exterior_exteriorpoolhouse.webp"),
-                        GalleryCardItem("cabin-2", "Cabin Design", "architecture", "images/assets_media_discover_exterior_exteriorstonemanor.webp"),
-                        GalleryCardItem("cabin-3", "Cabin Style", "architecture", "images/assets_media_discover_generated_exterior_exterior6.webp"),
+                        GalleryCardItem("cabin-1", "Rustic Cabin", "architecture", "Rustic", "Rustic cabin with stone facade and warm lighting", "images/assets_media_discover_exterior_exteriorpoolhouse.webp"),
+                        GalleryCardItem("cabin-2", "Woodland Cabin", "architecture", "Woodland", "Woodland cabin retreat surrounded by nature", "images/assets_media_discover_generated_exterior_exterior3.webp"),
                     )),
 
+                    // ── Landscape ──
                     DiscoverSectionItem("garden", "Garden", "landscape", listOf(
-                        GalleryCardItem("garden-1", "Garden Inspiration", "landscape", "images/assets_media_discover_garden_gardenfiresidepatio.webp"),
-                        GalleryCardItem("garden-2", "Garden Design", "landscape", "images/assets_media_discover_generated_garden_garden1.webp"),
-                        GalleryCardItem("garden-3", "Garden Style", "landscape", "images/assets_media_discover_generated_garden_garden2.webp"),
+                        GalleryCardItem("garden-1", "Garden Inspiration", "landscape", "Cozy", "Cozy garden with fire pit seating area", "images/assets_media_garden_landscapedpath.webp"),
+                        GalleryCardItem("garden-2", "Garden Design", "landscape", "Backyard", "Backyard garden with lush lawn and trees", "images/assets_media_discover_garden_gardenbackyard.webp"),
+                        GalleryCardItem("garden-3", "Modern Garden", "landscape", "Modern", "Modern landscape design with structured planting", "images/assets_media_discover_generated_garden_garden1.webp"),
+                        GalleryCardItem("garden-4", "Tropical Garden", "landscape", "Tropical", "Tropical garden with vibrant foliage", "images/assets_media_discover_generated_garden_garden2.webp"),
                     )),
                     DiscoverSectionItem("patio", "Patio", "landscape", listOf(
-                        GalleryCardItem("patio-1", "Patio Inspiration", "landscape", "images/assets_media_discover_garden_gardenpatio.webp"),
-                        GalleryCardItem("patio-2", "Patio Design", "landscape", "images/assets_media_discover_generated_garden_garden4.webp"),
+                        GalleryCardItem("patio-1", "Patio Inspiration", "landscape", "Elegant", "Elegant patio with comfortable outdoor furniture", "images/assets_media_discover_garden_gardenpatio.webp"),
+                        GalleryCardItem("patio-2", "Terraced Patio", "landscape", "Terraced", "Terraced patio with layered seating areas", "images/assets_media_discover_garden_gardenterrace.webp"),
+                        GalleryCardItem("patio-3", "Modern Patio", "landscape", "Modern", "Modern patio with clean lines and planters", "images/assets_media_discover_generated_garden_garden3.webp"),
                     )),
                     DiscoverSectionItem("pool", "Pool Area", "landscape", listOf(
-                        GalleryCardItem("pool-1", "Pool Inspiration", "landscape", "images/assets_media_discover_garden_gardenswimmingpool.webp"),
-                        GalleryCardItem("pool-2", "Pool Design", "landscape", "images/assets_media_discover_garden_gardenpoolcourtyard.webp"),
+                        GalleryCardItem("pool-1", "Pool Inspiration", "landscape", "Luxury", "Luxury swimming pool with lounge area", "images/assets_media_discover_garden_gardenswimmingpool.webp"),
+                        GalleryCardItem("pool-2", "Pool Design", "landscape", "Courtyard", "Pool courtyard with elegant tilework", "images/assets_media_discover_garden_gardenpoolcourtyard.webp"),
+                        GalleryCardItem("pool-3", "Modern Pool", "landscape", "Modern", "Modern pool design with clean geometric lines", "images/assets_media_discover_generated_garden_garden4.webp"),
                     )),
                     DiscoverSectionItem("rooftop", "Rooftop", "landscape", listOf(
-                        GalleryCardItem("rooftop-1", "Rooftop Inspiration", "landscape", "images/assets_media_discover_garden_gardenterrace.webp"),
-                        GalleryCardItem("rooftop-2", "Rooftop Design", "landscape", "images/assets_media_discover_garden_gardendeck.webp"),
+                        GalleryCardItem("rooftop-1", "Rooftop Inspiration", "landscape", "Modern", "Modern rooftop deck with seating and planters", "images/assets_media_discover_garden_gardendeck.webp"),
+                        GalleryCardItem("rooftop-2", "Urban Rooftop", "landscape", "Urban", "Urban rooftop terrace with panoramic views", "images/assets_media_discover_generated_garden_garden5.webp"),
+                        GalleryCardItem("rooftop-3", "Contemporary Rooftop", "landscape", "Contemporary", "Contemporary rooftop lounge with greenery", "images/assets_media_discover_generated_garden_garden6.webp"),
                     )),
                     DiscoverSectionItem("balcony", "Balcony", "landscape", listOf(
-                        GalleryCardItem("balcony-1", "Balcony Inspiration", "landscape", "images/assets_media_discover_garden_gardenfrontyard.webp"),
-                        GalleryCardItem("balcony-2", "Balcony Design", "landscape", "images/assets_media_discover_garden_gardenvillaentry.webp"),
+                        GalleryCardItem("balcony-1", "Balcony Inspiration", "landscape", "Cozy", "Cozy balcony with potted plants and seating", "images/assets_media_discover_garden_gardenfrontyard.webp"),
+                        GalleryCardItem("balcony-2", "Balcony Design", "landscape", "Greenery", "Balcony entrance with lush greenery and stone path", "images/assets_media_discover_garden_gardenvillaentry.webp"),
+                        GalleryCardItem("balcony-3", "Modern Balcony", "landscape", "Modern", "Modern balcony garden with tropical plants", "images/assets_media_discover_generated_garden_garden7.webp"),
                     )),
                 ),
             )
@@ -488,9 +499,9 @@ fun App() {
                     cleanPath.startsWith("create/") -> {
                         val toolId = cleanPath.removePrefix("create/")
                         val tool = toolsState.tools.find { it.id == toolId }
-                        if (tool != null) { activeWizard = tool } else { selectedTab = WebTab.Tools; activeWizard = null }
+                        if (tool != null) { activeWizard = tool } else { selectedTab = WebTab.Create; activeWizard = null }
                     }
-                    cleanPath.startsWith("tools") -> { selectedTab = WebTab.Tools; activeWizard = null }
+                    cleanPath.startsWith("tools") -> { selectedTab = WebTab.Create; activeWizard = null }
                     cleanPath.startsWith("discover") -> { selectedTab = WebTab.Discover; activeWizard = null }
                     cleanPath.startsWith("board") -> { selectedTab = WebTab.Board; activeWizard = null }
                     cleanPath.startsWith("profile") -> { selectedTab = WebTab.Profile; activeWizard = null }
@@ -549,7 +560,7 @@ fun App() {
                         if (refTool != null) {
                             activeWizard = refTool
                         } else {
-                            selectedTab = WebTab.Tools
+                            selectedTab = WebTab.Create
                         }
                     },
                     onSignIn = { openAuth() },
@@ -605,6 +616,8 @@ fun App() {
                                     WebWizardScreen(
                                         tool = activeWizard!!,
                                         onBack = { activeWizard = null },
+                                        isGuest = profileState.isGuest,
+                                        onSignIn = { openAuth() },
                                     )
                                 }
                             } else {
@@ -616,7 +629,7 @@ fun App() {
                                     },
                                 ) { tab ->
                                     when (tab) {
-                                        WebTab.Tools -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
+                                        WebTab.Create -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
                                             SharedToolsScreen(
                                                 state = toolsState,
                                                 onToolClick = { tool -> activeWizard = tool },
@@ -645,10 +658,15 @@ fun App() {
                                                     if (refTool != null) {
                                                         activeWizard = refTool
                                                     } else {
-                                                        selectedTab = WebTab.Tools
+                                                        selectedTab = WebTab.Create
                                                     }
                                                 },
-                                                onSignIn = { openAuth() },
+                                                onSignUp = { email, password -> doSignUp(email, password) },
+                                                onGoogleSignIn = { doGoogleSignIn() },
+                                                onForgotPassword = { showToast(Strings.toastComingSoon) },
+                                                isAuthLoading = authLoading,
+                                                authError = authError,
+                                                onDismissAuthError = { authError = null },
                                             )
                                         }
                                         WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
@@ -657,7 +675,7 @@ fun App() {
                                                 isGuest = profileState.isGuest,
                                                 isPro = toolsState.isPro,
                                                 onSignIn = { openAuth() },
-                                                onNavigateToTools = { selectedTab = WebTab.Tools },
+                                                onNavigateToTools = { selectedTab = WebTab.Create },
                                                 onNavigateToDiscover = { selectedTab = WebTab.Discover },
                                                 onOpenUpgrade = { paywallVisible = true },
                                                 onItemClick = { item ->
@@ -691,7 +709,7 @@ fun App() {
                                                 state = profileState,
                                                 onSettings = { settingsVisible = true },
                                                 onSignIn = { openAuth() },
-                                    onOpenDiamonds = { paywallVisible = true },
+                                    onOpenDiamonds = { diamondStoreVisible = true },
                                                 onOpenPaywall = { paywallVisible = true },
                                                 onOpenBoard = { selectedTab = WebTab.Board },
                                     )
@@ -766,7 +784,7 @@ fun App() {
                             onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
                             onConfirmDelete = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Account") },
                                             onEditProfile = { showToast(Strings.toastComingSoon) },
-                                    onOpenDiamonds = { paywallVisible = true },
+                                    onOpenDiamonds = { diamondStoreVisible = true },
                                                 onOpenPaywall = { paywallVisible = true },
                                             onFaq = { showToast(Strings.toastComingSoon) },
                                             onTerms = { showToast(Strings.toastComingSoon) },
@@ -782,6 +800,7 @@ fun App() {
                                             onClose = { settingsVisible = false },
                                             isDarkTheme = isDarkTheme,
                                             onThemeToggle = { isDarkTheme = !isDarkTheme },
+                                            isDesktop = isDesktop,
                                         )
                                     }
                                 }
@@ -853,6 +872,7 @@ fun App() {
                                         openUrl(Strings.checkoutUrlForPlan(pkg.id))
                                     },
                                     onClaimDaily = { showToast(Strings.toastComingSoon) },
+                                    onRestorePurchases = { showToast(Strings.toastComingSoon) },
                                 )
                             }
                         }
@@ -985,6 +1005,8 @@ private fun DesktopAppLayout(
                             WebWizardScreen(
                                 tool = activeWizard,
                                 onBack = onWizardBack,
+                                isGuest = profileState.isGuest,
+                                onSignIn = onSignIn,
                             )
                         }
                     } else {
@@ -996,7 +1018,7 @@ private fun DesktopAppLayout(
                             },
                         ) { tab ->
                             when (tab) {
-                                WebTab.Tools -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
+                                WebTab.Create -> Box(Modifier.testTag(Strings.TestTags.toolsScreen)) {
                                     SharedToolsScreen(
                                         state = toolsState,
                                         onToolClick = { tool -> onToolClick(tool) },
@@ -1008,7 +1030,11 @@ private fun DesktopAppLayout(
                                         onToggleFavorite = { section, item -> onToggleFavorite(section, item) },
                                         onAddToMoodboard = { section, item -> onAddToMoodboard(section, item) },
                                         onUseStyle = { section, item -> onUseStyle(section, item) },
-                                        onSignIn = { onSignIn() },
+                                        onSignUp = onAuthSignUp,
+                                        onGoogleSignIn = onAuthGoogleSignIn,
+                                        isAuthLoading = authIsLoading,
+                                        authError = authError,
+                                        onDismissAuthError = onAuthDismissError,
                                     )
                                 }
                                 WebTab.Board -> Box(Modifier.testTag(Strings.TestTags.boardScreen)) {
@@ -1017,7 +1043,7 @@ private fun DesktopAppLayout(
                                         isGuest = profileState.isGuest,
                                         isPro = toolsState.isPro,
                                         onSignIn = { onSignIn() },
-                                        onNavigateToTools = { onSelectTab(WebTab.Tools) },
+                                        onNavigateToTools = { onSelectTab(WebTab.Create) },
                                         onNavigateToDiscover = { onSelectTab(WebTab.Discover) },
                                         onOpenUpgrade = onOpenPaywall,
                                         onItemClick = onBoardItemClick,
@@ -1036,7 +1062,7 @@ private fun DesktopAppLayout(
                                         state = profileState,
                                         onSettings = { onSettingsOpen() },
                                         onSignIn = { onSignIn() },
-                                        onOpenDiamonds = { onOpenPaywall() },
+                                        onOpenDiamonds = { onOpenDiamondStore() },
                                         onOpenPaywall = onOpenPaywall,
                                         onOpenBoard = { onSelectTab(WebTab.Board) },
                                     )
@@ -1090,7 +1116,7 @@ private fun DesktopAppLayout(
                             onSubmitFeedback = { openUrl("mailto:support@homedecorai.com?subject=Feedback") },
                             onConfirmDelete = { openUrl("mailto:support@homedecorai.com?subject=Delete%20Account") },
                             onEditProfile = { showToast(Strings.toastComingSoon) },
-                            onOpenDiamonds = { onOpenPaywall() },
+                            onOpenDiamonds = { onOpenDiamondStore() },
                             onOpenPaywall = { onOpenPaywall() },
                             onFaq = { showToast(Strings.toastComingSoon) },
                             onTerms = { showToast(Strings.toastComingSoon) },
@@ -1106,6 +1132,7 @@ private fun DesktopAppLayout(
                             onClose = onSettingsDismiss,
                             isDarkTheme = isDarkTheme,
                             onThemeToggle = onThemeToggle,
+                            isDesktop = true,
                         )
                     }
                 }
@@ -1177,6 +1204,7 @@ private fun DesktopAppLayout(
                         openUrl(Strings.checkoutUrlForPlan(pkg.id))
                     },
                     onClaimDaily = { showToast(Strings.toastComingSoon) },
+                    onRestorePurchases = { showToast(Strings.toastComingSoon) },
                 )
             }
 

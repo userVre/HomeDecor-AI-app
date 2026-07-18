@@ -15,5 +15,8 @@
     "jimp-compact": "^0.16.0",
     "playwright": "^1.61.1",
     "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
   }
 }

@@ -2,9 +2,12 @@ package com.ismail.homedecorai
 
 import com.ismail.homedecorai.model.BoardTab
 import com.ismail.homedecorai.model.DiscoverScreenState
-import com.ismail.homedecorai.ui.profile.ProfileScreenState
+import com.ismail.homedecorai.model.DiscoverSectionItem
+import com.ismail.homedecorai.model.GalleryCardItem
+import com.ismail.homedecorai.model.ProfileScreenState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -40,8 +43,14 @@ class DiscoverBoardProfileTest {
 
     @Test
     fun testDiscoverA11yLabel() {
-        val label = Strings.a11yDiscoverCard("Living Room", "Modern Interior")
-        assertEquals("Living Room \u2014 Modern Interior", label)
+        val label = Strings.a11yDiscoverCard("Living Room", "Interior", "Modern")
+        assertEquals("Living Room \u2014 Modern, Interior", label)
+    }
+
+    @Test
+    fun testDiscoverA11yLabelWithoutStyle() {
+        val label = Strings.a11yDiscoverCard("Living Room", "Interior")
+        assertEquals("Living Room \u2014 Interior", label)
     }
 
     @Test
@@ -55,6 +64,216 @@ class DiscoverBoardProfileTest {
         val label = Strings.a11ySeeAll("Living Room")
         assertEquals("See all Living Room", label)
     }
+
+    // ── Fixture Validation ──
+
+    @Test
+    fun testInteriorSectionsHaveCorrectCluster() {
+        val interiorIds = setOf("kitchen", "living-room", "bedroom", "bathroom", "office", "dining")
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        for (section in state.sections) {
+            if (section.id in interiorIds) {
+                assertEquals("interior", section.cluster, "Section ${section.id} must be in interior cluster")
+            }
+        }
+    }
+
+    @Test
+    fun testArchitectureSectionsHaveCorrectCluster() {
+        val archIds = setOf("modern-house", "classic-house", "apartment", "villa", "cabin")
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        for (section in state.sections) {
+            if (section.id in archIds) {
+                assertEquals("architecture", section.cluster, "Section ${section.id} must be in architecture cluster")
+            }
+        }
+    }
+
+    @Test
+    fun testLandscapeSectionsHaveCorrectCluster() {
+        val landscapeIds = setOf("garden", "patio", "pool", "rooftop", "balcony")
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        for (section in state.sections) {
+            if (section.id in landscapeIds) {
+                assertEquals("landscape", section.cluster, "Section ${section.id} must be in landscape cluster")
+            }
+        }
+    }
+
+    @Test
+    fun testNoOfficeBuildingsInVillaOrHouse() {
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        val villaOrHouseIds = setOf("villa", "modern-house", "classic-house")
+        for (section in state.sections) {
+            if (section.id in villaOrHouseIds) {
+                for (item in section.items) {
+                    assertFalse(
+                        item.title.contains("Glass Office", ignoreCase = true) ||
+                        item.id.contains("glassoffice", ignoreCase = true),
+                        "Office building image must not appear in ${section.id}",
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testNoApartmentBuildingsInHouseSections() {
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        val houseIds = setOf("modern-house", "classic-house")
+        for (section in state.sections) {
+            if (section.id in houseIds) {
+                for (item in section.items) {
+                    assertFalse(
+                        item.title.contains("Apartment", ignoreCase = true) ||
+                        item.id.contains("apartmentblock", ignoreCase = true),
+                        "Apartment building image must not appear in ${section.id}",
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testPoolsOnlyInPoolSectionNotGarden() {
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        for (section in state.sections) {
+            if (section.id == "garden") {
+                for (item in section.items) {
+                    assertFalse(
+                        item.id.contains("pool", ignoreCase = true) ||
+                        item.id.contains("swimming", ignoreCase = true),
+                        "Pool image must not appear in Garden section — pool images belong in Pool Area",
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testEveryCardHasStyleType() {
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        for (section in state.sections) {
+            for (item in section.items) {
+                assertTrue(
+                    item.styleType.isNotBlank(),
+                    "Card ${item.id} in ${section.id} must have non-blank styleType",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testEveryCardHasDescription() {
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        for (section in state.sections) {
+            for (item in section.items) {
+                assertTrue(
+                    item.description.isNotBlank(),
+                    "Card ${item.id} in ${section.id} must have non-blank description",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testNoDuplicateImageIdsAcrossSections() {
+        val state = DiscoverScreenState(sections = discoverTestSections())
+        val allIds = mutableSetOf<String>()
+        for (section in state.sections) {
+            for (item in section.items) {
+                assertTrue(
+                    allIds.add(item.id),
+                    "Duplicate item id '${item.id}' found across sections",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testGalleryCardItemDefaults() {
+        val item = GalleryCardItem(id = "test", title = "Test", category = "interior")
+        assertEquals("", item.styleType)
+        assertEquals("", item.description)
+        assertEquals("", item.imageUrl)
+    }
+
+    @Test
+    fun testDiscoverScreenStateDefaults() {
+        val state = DiscoverScreenState()
+        assertEquals("interior", state.selectedCluster)
+        assertTrue(state.sections.isEmpty())
+        assertFalse(state.isLoading)
+        assertEquals(null, state.error)
+        assertFalse(state.isSignedIn)
+        assertEquals(null, state.noResultsMessage)
+    }
+
+    @Test
+    fun testDiscoverNoResultsStrings() {
+        assertEquals("No inspiration found", Strings.discoverNoResults)
+        assertEquals("Try a different category", Strings.discoverNoResultsHint)
+    }
+
+    // ── Fixture Data ──
+
+    private fun discoverTestSections() = listOf(
+        DiscoverSectionItem("kitchen", "Kitchen", "interior", listOf(
+            GalleryCardItem("kitchen-1", "Kitchen", "interior", "Modern", "desc"),
+            GalleryCardItem("kitchen-2", "Kitchen", "interior", "Minimalist", "desc"),
+            GalleryCardItem("kitchen-3", "Kitchen", "interior", "Contemporary", "desc"),
+        )),
+        DiscoverSectionItem("living-room", "Living Room", "interior", listOf(
+            GalleryCardItem("living-1", "Living Room", "interior", "Modern", "desc"),
+            GalleryCardItem("living-2", "Living Room", "interior", "Scandinavian", "desc"),
+        )),
+        DiscoverSectionItem("bedroom", "Bedroom", "interior", listOf(
+            GalleryCardItem("bedroom-1", "Bedroom", "interior", "Modern", "desc"),
+            GalleryCardItem("bedroom-2", "Bedroom", "interior", "Minimalist", "desc"),
+        )),
+        DiscoverSectionItem("bathroom", "Bathroom", "interior", listOf(
+            GalleryCardItem("bathroom-1", "Bathroom", "interior", "Modern", "desc"),
+        )),
+        DiscoverSectionItem("office", "Office", "interior", listOf(
+            GalleryCardItem("office-1", "Office", "interior", "Modern", "desc"),
+        )),
+        DiscoverSectionItem("dining", "Dining Room", "interior", listOf(
+            GalleryCardItem("dining-1", "Dining", "interior", "Modern", "desc"),
+        )),
+        DiscoverSectionItem("modern-house", "Modern House", "architecture", listOf(
+            GalleryCardItem("modern-house-1", "Modern House", "architecture", "Contemporary", "desc"),
+        )),
+        DiscoverSectionItem("classic-house", "Classic House", "architecture", listOf(
+            GalleryCardItem("classic-house-1", "Stone Manor", "architecture", "Stone Manor", "desc"),
+        )),
+        DiscoverSectionItem("apartment", "Apartment", "architecture", listOf(
+            GalleryCardItem("apartment-1", "Apartment", "architecture", "Modern Block", "desc"),
+            GalleryCardItem("apartment-2", "Apartment", "architecture", "Contemporary", "desc"),
+        )),
+        DiscoverSectionItem("villa", "Villa", "architecture", listOf(
+            GalleryCardItem("villa-1", "Modern Villa", "architecture", "Modern", "desc"),
+        )),
+        DiscoverSectionItem("cabin", "Cabin", "architecture", listOf(
+            GalleryCardItem("cabin-1", "Rustic Cabin", "architecture", "Rustic", "desc"),
+        )),
+        DiscoverSectionItem("garden", "Garden", "landscape", listOf(
+            GalleryCardItem("garden-1", "Garden", "landscape", "Cozy", "desc"),
+            GalleryCardItem("garden-2", "Garden", "landscape", "Backyard", "desc"),
+        )),
+        DiscoverSectionItem("patio", "Patio", "landscape", listOf(
+            GalleryCardItem("patio-1", "Patio", "landscape", "Elegant", "desc"),
+        )),
+        DiscoverSectionItem("pool", "Pool Area", "landscape", listOf(
+            GalleryCardItem("pool-1", "Pool", "landscape", "Luxury", "desc"),
+            GalleryCardItem("pool-2", "Pool", "landscape", "Courtyard", "desc"),
+        )),
+        DiscoverSectionItem("rooftop", "Rooftop", "landscape", listOf(
+            GalleryCardItem("rooftop-1", "Rooftop", "landscape", "Modern", "desc"),
+        )),
+        DiscoverSectionItem("balcony", "Balcony", "landscape", listOf(
+            GalleryCardItem("balcony-1", "Balcony", "landscape", "Cozy", "desc"),
+        )),
+    )
 
     // ── Board ──
     @Test

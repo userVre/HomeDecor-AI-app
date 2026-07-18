@@ -30,6 +30,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -488,6 +489,7 @@ fun StepScaffold(
     contentBottomPadding: Dp = HomeDecorSpacing.Lg,
     protectBottomInsets: Boolean = false,
     buttonAllowsTwoLines: Boolean = false,
+    showBottomButton: Boolean = true,
     onButton: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -525,46 +527,48 @@ fun StepScaffold(
             }
             item { content() }
         }
-        Surface(
-            color = MaterialTheme.colorScheme.background,
-        ) {
-            val buttonModifier = if (buttonAllowsTwoLines) {
-                Modifier.fillMaxWidth().heightIn(min = 56.dp)
-            } else {
-                Modifier.fillMaxWidth().height(56.dp)
-            }
-            Column(
-                Modifier.fillMaxWidth().padding(PaddingValues(start = HomeDecorSpacing.Base, top = HomeDecorSpacing.Sm, end = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.Md)),
-                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        if (showBottomButton) {
+            Surface(
+                color = MaterialTheme.colorScheme.background,
             ) {
-                if (showValidationBanner && !validationMessage.isNullOrBlank()) {
-                    ValidationAlertBanner(message = validationMessage)
+                val buttonModifier = if (buttonAllowsTwoLines) {
+                    Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                } else {
+                    Modifier.fillMaxWidth().height(56.dp)
                 }
-                Button(
-                    onClick = {
-                        if (showValidationBanner) {
-                            showValidationBanner = false
-                            onButton()
-                        } else if (!validationMessage.isNullOrBlank()) {
-                            showValidationBanner = true
-                            onValidationFailed?.invoke()
-                        } else {
-                            onButton()
-                        }
-                    },
-                    enabled = canProceed,
-                    shape = CircleShape,
-                    colors = studioPrimaryButtonColors(),
-                    modifier = buttonModifier.disabledSemantics(canProceed),
+                Column(
+                    Modifier.fillMaxWidth().padding(PaddingValues(start = HomeDecorSpacing.Base, top = HomeDecorSpacing.Sm, end = HomeDecorSpacing.Base, bottom = HomeDecorSpacing.Md)),
+                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
                 ) {
-                    Icon(buttonIcon, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(HomeDecorSpacing.Sm))
-                    Text(
-                        buttonLabel,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = if (buttonAllowsTwoLines) 2 else 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    if (showValidationBanner && !validationMessage.isNullOrBlank()) {
+                        ValidationAlertBanner(message = validationMessage)
+                    }
+                    Button(
+                        onClick = {
+                            if (showValidationBanner) {
+                                showValidationBanner = false
+                                onButton()
+                            } else if (!validationMessage.isNullOrBlank()) {
+                                showValidationBanner = true
+                                onValidationFailed?.invoke()
+                            } else {
+                                onButton()
+                            }
+                        },
+                        enabled = canProceed,
+                        shape = CircleShape,
+                        colors = studioPrimaryButtonColors(),
+                        modifier = buttonModifier.disabledSemantics(canProceed),
+                    ) {
+                        Icon(buttonIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                        Text(
+                            buttonLabel,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = if (buttonAllowsTwoLines) 2 else 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
@@ -2022,6 +2026,9 @@ fun ObjectMaskStep(
         emptyStateBody = null,
         polishedControls = true,
         forceEnableButton = true,
+        maskColor = Color(0x80008080),
+        showNextButton = true,
+        onNext = viewModel::nextStage,
     )
 }
 
@@ -2039,6 +2046,9 @@ fun MaskEditorStep(
     polishedControls: Boolean = false,
     allowAutoDetect: Boolean = target != "object",
     forceEnableButton: Boolean = false,
+    maskColor: Color = StudioAccent,
+    showNextButton: Boolean = false,
+    onNext: (() -> Unit)? = null,
 ) {
     val requiresVisibleMask = target in setOf("floor", "wall", "object")
     val isSurfaceMask = target in setOf("floor", "wall")
@@ -2072,6 +2082,7 @@ fun MaskEditorStep(
         contentBottomPadding = if (isSurfaceMask) 32.dp else 16.dp,
         protectBottomInsets = isSurfaceMask,
         buttonAllowsTwoLines = isSurfaceMask,
+        showBottomButton = !(showNextButton && hasMask),
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
@@ -2099,6 +2110,9 @@ fun MaskEditorStep(
                 hasVisibleMask = hasMask,
                 readyLabel = if (isSurfaceMask) stringResource(R.string.mask_ready, surfaceLabel) else null,
                 onStroke = viewModel::addMaskStroke,
+                maskColor = maskColor,
+                showFloatingNext = showNextButton && hasMask,
+                onNext = onNext,
             )
             if (polishedControls && isSurfaceMask) {
                 Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md)) {
@@ -2349,6 +2363,9 @@ fun MaskCanvas(
     hasVisibleMask: Boolean? = null,
     readyLabel: String? = null,
     onStroke: (MaskStroke) -> Unit,
+    maskColor: Color = StudioAccent,
+    showFloatingNext: Boolean = false,
+    onNext: (() -> Unit)? = null,
 ) {
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     var livePoints by remember { mutableStateOf<List<MaskPoint>>(emptyList()) }
@@ -2376,6 +2393,14 @@ fun MaskCanvas(
                     },
                     onDragCancel = { livePoints = emptyList() },
                 )
+            }
+            .pointerInput(state.brushSize, state.eraserSelected) {
+                detectTapGestures { offset ->
+                    val point = offset.toMaskPoint()
+                    livePoints = listOf(point)
+                    onStroke(MaskStroke(livePoints, state.brushSize, state.eraserSelected))
+                    livePoints = emptyList()
+                }
             },
     ) {
         val firstPhoto = state.selectedPhotos.firstOrNull()
@@ -2395,7 +2420,7 @@ fun MaskCanvas(
                 if (points.size < 2) return
                 points.zipWithNext().forEach { (start, end) ->
                     drawLine(
-                        color = if (stroke.erase) Color.Transparent else StudioAccent.copy(alpha = 0.62f),
+                        color = if (stroke.erase) Color.Transparent else maskColor.copy(alpha = 0.62f),
                         start = Offset(start.x * size.width, start.y * size.height),
                         end = Offset(end.x * size.width, end.y * size.height),
                         strokeWidth = stroke.brushSize,
@@ -2423,6 +2448,29 @@ fun MaskCanvas(
                     Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                     Text(readyLabel, color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+            }
+        }
+        if (showFloatingNext && onNext != null) {
+            Button(
+                onClick = onNext,
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White,
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(12.dp)
+                    .height(48.dp),
+            ) {
+                Text(
+                    stringResource(R.string.continue_action),
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.width(HomeDecorSpacing.Xs))
+                Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
             }
         }
     }

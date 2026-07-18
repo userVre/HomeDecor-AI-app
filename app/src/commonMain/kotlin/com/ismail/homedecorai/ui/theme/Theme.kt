@@ -50,6 +50,10 @@ data class HomeDecorExtraColors(
     val surfaceHover: Color,
     val surfacePressed: Color,
     val focusRing: Color,
+    // Surface border semantics
+    val surfaceBorder: Color,
+    val surfaceBorderSelected: Color,
+    val surfaceBorderHover: Color,
     // M3 Expressive: contextual accents (reduce teal overuse)
     val boardAccent: Color,
     val discoverAccent: Color,
@@ -88,6 +92,9 @@ val LocalHomeDecorExtraColors = staticCompositionLocalOf {
         surfaceHover = Color.Unspecified,
         surfacePressed = Color.Unspecified,
         focusRing = Color.Unspecified,
+        surfaceBorder = Color.Unspecified,
+        surfaceBorderSelected = Color.Unspecified,
+        surfaceBorderHover = Color.Unspecified,
         boardAccent = Color.Unspecified,
         discoverAccent = Color.Unspecified,
         profileAccent = Color.Unspecified,
@@ -205,6 +212,9 @@ internal val LightExtra = HomeDecorExtraColors(
     surfaceHover = Color(0x0D000000),   // 5% black for hover on light
     surfacePressed = Color(0x14000000),  // 8% black for pressed on light
     focusRing = HomeDecorColors.Primary,
+    surfaceBorder = HomeDecorColors.SurfaceBorder,
+    surfaceBorderSelected = HomeDecorColors.SurfaceBorderSelected,
+    surfaceBorderHover = HomeDecorColors.SurfaceBorderHover,
     boardAccent = HomeDecorColors.BoardAccent,
     discoverAccent = HomeDecorColors.DiscoverAccent,
     profileAccent = HomeDecorColors.ProfileAccent,
@@ -239,6 +249,9 @@ internal val DarkExtra = HomeDecorExtraColors(
     surfaceHover = Color(0x14FFFFFF),   // 8% white for hover on dark
     surfacePressed = Color(0x1FFFFFFF), // 12% white for pressed on dark
     focusRing = HomeDecorColors.DarkPrimary,
+    surfaceBorder = HomeDecorColors.DarkSurfaceBorder,
+    surfaceBorderSelected = HomeDecorColors.DarkSurfaceBorderSelected,
+    surfaceBorderHover = HomeDecorColors.DarkSurfaceBorderHover,
     boardAccent = HomeDecorColors.DarkBoardAccent,
     discoverAccent = HomeDecorColors.DarkDiscoverAccent,
     profileAccent = HomeDecorColors.DarkProfileAccent,
@@ -307,7 +320,7 @@ fun studioPrimaryButtonColors() = ButtonDefaults.buttonColors(
     containerColor = MaterialTheme.colorScheme.primary,
     contentColor = MaterialTheme.colorScheme.onPrimary,
     disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = HomeDecorStateLayers.DisabledContainer),
-    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = HomeDecorStateLayers.DisabledContent),
+    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
 )
 
 

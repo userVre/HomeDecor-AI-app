@@ -481,6 +481,16 @@ async function finalizeGenerationAllowance(ctx: any, ownerId: string, generation
     ...(typeof state.patch.imageLimit === "number" ? { imageLimit: state.patch.imageLimit } : {}),
   });
 
+  if (generationId && isDiamondSource(usedDiamondSource)) {
+    await ctx.db.insert("diamondUsageHistory", {
+      userId: user._id as string,
+      generationId: generationId as any,
+      diamondSource: usedDiamondSource,
+      timestamp: now,
+      balanceAfter: nextCredits,
+    });
+  }
+
   return {
     ok: true,
     credits: nextCredits,
@@ -505,28 +515,38 @@ function normalizeGenerationSchedulerError(message?: string | null) {
     return "AI service configuration is unavailable right now. Please try again shortly.";
   }
 
+  if (normalized.includes("gemini_api_key") || normalized.includes("missing gemini")) {
+    return "AI service configuration is unavailable right now. Please try again shortly.";
+  }
+
   if (normalized.includes("unauthorized") || normalized.includes("401")) {
-    return "Azure OpenAI authentication failed. Please verify the API key.";
+    return "AI authentication failed. Please verify the API key.";
   }
 
   if (normalized.includes("not found") || normalized.includes("404")) {
-    return "Azure OpenAI deployment was not found. Please verify the deployment name and endpoint.";
+    return "AI service deployment was not found. Please verify the configuration.";
+  }
+
+  if (normalized.includes("gemini error") || normalized.includes("gemini timeout")) {
+    return "AI service temporarily unavailable. Please try again shortly.";
   }
 
   return raw;
 }
 
 function validateAzureGenerationEnv() {
+  const geminiApiKey = trimOptional(process.env.GEMINI_API_KEY);
   const endpoint = trimOptional(process.env.AZURE_OPENAI_ENDPOINT);
   const apiKey = trimOptional(process.env.AZURE_OPENAI_API_KEY);
 
-  if (!endpoint || !apiKey) {
-    throw new ConvexError("Missing Azure Environment Variables in Convex Dashboard");
+  if (!geminiApiKey && (!endpoint || !apiKey)) {
+    throw new ConvexError("Missing GEMINI_API_KEY or Azure Environment Variables in Convex Dashboard");
   }
 
   return {
-    endpoint,
-    apiKey,
+    endpoint: endpoint ?? "",
+    apiKey: apiKey ?? "",
+    geminiApiKey: geminiApiKey ?? "",
   };
 }
 
@@ -648,6 +668,12 @@ export const getUserArchive = queryGeneric({
           status: resolveRowStatus(row, imageUrl),
           isFavorite: row.isFavorite ?? false,
           errorMessage: row.errorMessage ?? null,
+          diamondSource: row.diamondSource ?? undefined,
+          diamondRefunded: row.diamondRefunded ?? false,
+          renderCostUsd: row.renderCostUsd ?? undefined,
+          qualityTier: row.qualityTier ?? undefined,
+          outputResolution: row.outputResolution ?? undefined,
+          idempotencyKey: row.idempotencyKey ?? undefined,
         };
       }),
     );
@@ -702,9 +728,40 @@ export const startGeneration = mutationGeneric({
     regenerate: v.optional(v.boolean()),
     ignoreReviewCooldown: v.optional(v.boolean()),
     speedTier: v.optional(v.union(v.literal("standard"), v.literal("pro"), v.literal("ultra"))),
+    idempotencyKey: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     validateAzureGenerationEnv();
+
+    if (args.idempotencyKey) {
+      const existing = await ctx.db
+        .query("generations")
+        .withIndex("by_idempotencyKey", (q: any) => q.eq("idempotencyKey", args.idempotencyKey))
+        .unique();
+      if (existing) {
+        const generatedStorageUrl = existing.storageId ? await ctx.storage.getUrl(existing.storageId) : null;
+        return {
+          generationId: existing._id,
+          prompt: existing.prompt ?? "",
+          reviewState: { count: 0, shouldPrompt: false, shouldPromptFirstDiamondRating: false },
+          creditsRemaining: 0,
+          planUsed: existing.planUsed,
+          generationPolicy: {
+            qualityTier: existing.qualityTier ?? "free",
+            outputResolution: existing.outputResolution ?? "1024x1024",
+            speedTier: existing.speedTier ?? "standard",
+            watermarkRequired: existing.watermarkRequired ?? true,
+            priorityProcessing: false,
+          },
+          imageUrl: generatedStorageUrl ?? existing.imageUrl ?? null,
+          isWatermarked: existing.watermarkRequired ?? false,
+          quality: existing.renderQuality === "high" ? "high" : "medium",
+          renderLabel: existing.qualityTier === "premium" ? "Premium 4K" : "Standard HD",
+          renderConfig: null,
+          duplicated: true,
+        };
+      }
+    }
     const requestedServiceType = inferRequestedServiceType(args as typeof args & { serviceType: RequestedServiceType });
     const canonicalServiceType = canonicalizeServiceType(requestedServiceType);
     const storedServiceType = resolveStoredServiceType(requestedServiceType, canonicalServiceType);
@@ -809,6 +866,8 @@ export const startGeneration = mutationGeneric({
       feedbackReason: undefined,
       retryGranted: false,
       projectId: undefined,
+      idempotencyKey: trimOptional(args.idempotencyKey),
+      diamondRefunded: false,
     });
 
     try {
@@ -897,13 +956,14 @@ export const markGenerationFailed = internalMutationGeneric({
       return { ok: true, skipped: true };
     }
 
-    await releaseGenerationAllowance(ctx, args.ownerId);
+    const releaseResult = await releaseGenerationAllowance(ctx, args.ownerId);
     await ctx.db.patch(args.generationId, {
       status: "failed",
       errorMessage: args.errorMessage,
       completedAt: Date.now(),
+      diamondRefunded: releaseResult.ok,
     });
-    return { ok: true };
+    return { ok: true, diamondRefunded: releaseResult.ok };
   },
 });
 
@@ -954,13 +1014,14 @@ export const cancelGeneration = mutationGeneric({
       return { ok: true, cancelled: false };
     }
 
-    await releaseGenerationAllowance(ctx, viewer.userId);
+    const releaseResult = await releaseGenerationAllowance(ctx, viewer.userId);
     await ctx.db.patch(args.id, {
       status: "failed",
       errorMessage: "Cancelled by user.",
       completedAt: Date.now(),
+      diamondRefunded: releaseResult.ok,
     });
-    return { ok: true, cancelled: true };
+    return { ok: true, cancelled: true, diamondRefunded: releaseResult.ok };
   },
 });
 
@@ -1073,6 +1134,43 @@ export const deleteGeneration = mutationGeneric({
     }
 
     await ctx.db.delete(args.id);
+    return { ok: true };
+  },
+});
+
+export const getGenerationByOrderId = queryGeneric({
+  args: {
+    orderId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const generation = await ctx.db
+      .query("generations")
+      .withIndex("by_idempotencyKey", (q) => q.eq("idempotencyKey", args.orderId))
+      .first();
+
+    if (generation) {
+      return generation;
+    }
+
+    const allGenerations = await ctx.db.query("generations").collect();
+    return allGenerations.find((g) => g.orderId === args.orderId) ?? null;
+  },
+});
+
+export const markGenerationRefunded = internalMutationGeneric({
+  args: {
+    id: v.id("generations"),
+    internalToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.internalToken !== process.env.CONVEX_INTERNAL_API_TOKEN) {
+      throw new ConvexError("Unauthorized");
+    }
+
+    await ctx.db.patch(args.id, {
+      diamondRefunded: true,
+    });
+
     return { ok: true };
   },
 });

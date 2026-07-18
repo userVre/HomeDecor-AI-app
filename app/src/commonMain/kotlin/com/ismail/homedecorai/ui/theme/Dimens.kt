@@ -41,6 +41,7 @@ object HomeDecorSpacing {
     val ButtonHeightMedium = 48.dp
     val ButtonHeightSmall = 40.dp
     val TouchTarget = 48.dp
+    val MinTouchTarget = 44.dp   // WCAG minimum hit area
     val CtaBarHeight = 64.dp
     val NavBarReservation = 80.dp
     val BottomContentPadding = 16.dp
@@ -51,6 +52,25 @@ object HomeDecorSpacing {
     val DesktopTopNavHeight = 60.dp    // slightly taller for premium feel
     val DesktopSideRailWidth = 80.dp
     val DesktopContentHorizontalPadding = 40.dp  // generous desktop spacing
+}
+
+// ---------------------------------------------------------------------------
+// Icon size scale  –  Consistent sizing across the app
+// ---------------------------------------------------------------------------
+
+object HomeDecorIconSize {
+    /** Inline icons in chips, badges, small UI elements */
+    val Small = 16.dp
+    /** Standard icons in buttons, list items, card actions */
+    val Medium = 20.dp
+    /** Standalone icons, navigation items, section headers */
+    val Large = 24.dp
+    /** Empty states, hero icons, loading indicators */
+    val Xl = 32.dp
+    /** Large empty state icons */
+    val Xxl = 40.dp
+    /** Extra-large decorative icons */
+    val Xxxl = 56.dp
 }
 
 // ---------------------------------------------------------------------------

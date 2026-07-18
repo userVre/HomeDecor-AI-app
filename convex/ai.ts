@@ -105,12 +105,21 @@ export function normalizeGenerationError(message?: string | null) {
     normalized.includes("missing azure_openai_api_key") ||
     normalized.includes("missing azure_openai_endpoint") ||
     normalized.includes("missing azure_openai_deployment_name") ||
+    normalized.includes("missing gemini_api_key") ||
     normalized.includes("api key missing") ||
     normalized.includes("api key invalid") ||
     normalized.includes("unauthorized") ||
     normalized.includes("permission denied")
   ) {
     return "AI service configuration is unavailable right now. Please try again shortly.";
+  }
+
+  if (
+    normalized.includes("gemini error") ||
+    normalized.includes("gemini timeout") ||
+    normalized.includes("gemini returned no")
+  ) {
+    return "AI service temporarily unavailable. Please try again shortly.";
   }
 
   if (

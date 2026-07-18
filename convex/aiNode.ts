@@ -26,6 +26,10 @@ import {
 const AZURE_IMAGE_API_VERSION = "2025-04-01-preview";
 const AZURE_IMAGE_REQUEST_TIMEOUT_MS = 90_000;
 const AZURE_IMAGE_DEPLOYMENT_NAME = "gpt-image-2";
+
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-preview-image-generation";
+const GEMINI_REQUEST_TIMEOUT_MS = 120_000;
 const AZURE_GEOMETRIC_ADHERENCE_SYSTEM_PROMPT =
   `${GLOBAL_PERSPECTIVE_LOCK_INSTRUCTION} STRICT PERSPECTIVE LOCK: You are an AI Architect. The output image MUST align pixel-for-pixel with the source image's structural boundaries. Do not change the horizon line, the floor level, the ceiling height, the camera angle, or the focal length. Redesign furniture, textures, lighting, landscaping, and decor only inside the existing pixel-grid boundaries. Generate one clean full-frame design image only: no text overlays, no captions, no labels, no watermarks, no comparison layout. ${GLOBAL_MASTERPIECE_QUALITY_INSTRUCTION}`;
 const AZURE_EXTERIOR_PERSPECTIVE_LOCK_PROMPT =
@@ -759,6 +763,109 @@ async function runAzureImageGeneration(args: {
   return result.image;
 }
 
+// ---------------------------------------------------------------------------
+// Gemini Image Generation
+// ---------------------------------------------------------------------------
+
+async function blobToBase64(blob: Blob): Promise<{ base64: string; mimeType: string }> {
+  const buffer = await blob.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+  return { base64, mimeType: blob.type || "image/jpeg" };
+}
+
+async function runGeminiImageGeneration(args: {
+  apiKey: string;
+  prompt: string;
+  negativePrompt: string;
+  serviceType: ServiceType;
+  requestedServiceType?: RequestedServiceType;
+  roomType: string;
+  sourceBlob: Blob;
+  referenceBlobs: Blob[];
+  maskBlob?: Blob | null;
+  targetColor?: string;
+  targetColorHex?: string;
+  customPrompt?: string;
+}): Promise<{ uint8Array: Uint8Array; mediaType: string }> {
+  const flowInstruction = buildAzureFlowInstruction({
+    requestedServiceType: args.requestedServiceType,
+    serviceType: args.serviceType,
+    customPrompt: args.customPrompt,
+    referenceImageCount: args.referenceBlobs.length,
+  });
+
+  const fullPrompt = [
+    AZURE_GEOMETRIC_ADHERENCE_SYSTEM_PROMPT,
+    flowInstruction,
+    args.prompt,
+    `Realism Tokens: ${GLOBAL_REALISM_TOKEN_INJECTION}`,
+    `Avoid: ${args.negativePrompt}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const sourceData = await blobToBase64(args.sourceBlob);
+
+  const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> = [
+    { text: fullPrompt },
+    { inline_data: { mime_type: sourceData.mimeType, data: sourceData.base64 } },
+  ];
+
+  for (const refBlob of args.referenceBlobs) {
+    const refData = await blobToBase64(refBlob);
+    parts.push({ inline_data: { mime_type: refData.mimeType, data: refData.base64 } });
+  }
+
+  const requestUrl = `${GEMINI_API_BASE}/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${args.apiKey}`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), GEMINI_REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(requestUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ role: "user", parts }],
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"],
+          temperature: 0.7,
+        },
+      }),
+    });
+  } catch (error) {
+    throw isAbortError(error) ? new ConvexError("Gemini API Timeout") : error;
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    const message = normalizeGenerationError(errorText);
+    throw new ConvexError(`Gemini error: ${message}`);
+  }
+
+  const payload = await response.json();
+  const candidates = payload.candidates;
+  if (!candidates || candidates.length === 0) {
+    throw new ConvexError("Gemini returned no candidates.");
+  }
+
+  const parts2 = candidates[0].content?.parts ?? [];
+  for (const part of parts2) {
+    if (part.inlineData?.data) {
+      const imageBuffer = Buffer.from(part.inlineData.data, "base64");
+      return {
+        uint8Array: new Uint8Array(imageBuffer),
+        mediaType: part.inlineData.mimeType || "image/png",
+      };
+    }
+  }
+
+  throw new ConvexError("Gemini returned no image in response.");
+}
+
 async function limitFreeImageResolution(blob: Blob) {
   try {
     const imageBuffer = await blobToImageBuffer(blob, "limitFreeImageResolution");
@@ -1063,17 +1170,20 @@ export const generateDesign: any = internalAction({
     ctx,
     args,
   ): Promise<{ ok: true; storageId: string; imageUrl: string; isWatermarked: boolean; quality: AzureRenderQuality }> => {
-    const apiKey = trimOptional(process.env.AZURE_OPENAI_API_KEY);
+    const geminiApiKey = trimOptional(process.env.GEMINI_API_KEY);
+    const azureApiKey = trimOptional(process.env.AZURE_OPENAI_API_KEY);
     const endpoint = trimOptional(process.env.AZURE_OPENAI_ENDPOINT);
     const configuredDeploymentName = trimOptional(process.env.AZURE_OPENAI_DEPLOYMENT_NAME);
     const deploymentName = configuredDeploymentName ?? AZURE_IMAGE_DEPLOYMENT_NAME;
 
-    if (!apiKey || !endpoint || !deploymentName) {
-      const missingVariable = !apiKey
-        ? "AZURE_OPENAI_API_KEY"
-        : !endpoint
-          ? "AZURE_OPENAI_ENDPOINT"
-          : "AZURE_OPENAI_DEPLOYMENT_NAME";
+    if (!geminiApiKey && (!azureApiKey || !endpoint || !deploymentName)) {
+      const missingVariable = !geminiApiKey
+        ? "GEMINI_API_KEY"
+        : !azureApiKey
+          ? "AZURE_OPENAI_API_KEY"
+          : !endpoint
+            ? "AZURE_OPENAI_ENDPOINT"
+            : "AZURE_OPENAI_DEPLOYMENT_NAME";
       const message = normalizeGenerationError(`Missing ${missingVariable} in Convex environment variables.`);
       await ctx.runMutation((internal as any).generations.markGenerationFailed, {
         generationId: args.generationId,
@@ -1204,22 +1314,37 @@ export const generateDesign: any = internalAction({
         userTier: args.renderUserTier ?? (renderProfile.quality === "high" ? "paid" : "free"),
       });
 
-      const generatedImage = await runAzureImageGeneration({
-        apiKey,
-        endpoint,
-        prompt: optimizedPrompt,
-        negativePrompt,
-        serviceType,
-        roomType: promptRoomType,
-        sourceBlob,
-        referenceBlobs,
-        maskBlob,
-        renderProfile,
-        targetColor: args.targetColor,
-        targetColorHex: args.targetColorHex,
-        customPrompt: args.customPrompt,
-        requestedServiceType,
-      });
+      const generatedImage = geminiApiKey
+        ? await runGeminiImageGeneration({
+            apiKey: geminiApiKey,
+            prompt: optimizedPrompt,
+            negativePrompt,
+            serviceType,
+            roomType: promptRoomType,
+            sourceBlob,
+            referenceBlobs,
+            maskBlob,
+            targetColor: args.targetColor,
+            targetColorHex: args.targetColorHex,
+            customPrompt: args.customPrompt,
+            requestedServiceType,
+          })
+        : await runAzureImageGeneration({
+            apiKey: azureApiKey!,
+            endpoint: endpoint!,
+            prompt: optimizedPrompt,
+            negativePrompt,
+            serviceType,
+            roomType: promptRoomType,
+            sourceBlob,
+            referenceBlobs,
+            maskBlob,
+            renderProfile,
+            targetColor: args.targetColor,
+            targetColorHex: args.targetColorHex,
+            customPrompt: args.customPrompt,
+            requestedServiceType,
+          });
 
       const imageBytes = generatedImage.uint8Array;
       const imageBuffer = imageBytes.buffer.slice(

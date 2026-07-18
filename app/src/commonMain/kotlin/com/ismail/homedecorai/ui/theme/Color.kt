@@ -110,6 +110,15 @@ object HomeDecorColors {
     val StoreAccent       = Color(0xFF7A6830)   // muted gold for Store
     val ToolsAccent       = Color(0xFF1B5860)   // teal for Tools (creative hub, desaturated)
 
+    // -- Disabled states (higher contrast than 0.38f default for readability) --
+    val DisabledOnSurface     = Color(0xFF9E9A94)  // light mode disabled text — clearly inactive but readable
+    val DisabledOnSurfaceDark = Color(0xFF5A5C56)   // dark mode disabled text
+
+    // -- Surface borders (semantic tokens for consistent card/selection borders) --
+    val SurfaceBorder         = Color(0xFFD0C9C0)  // default card/surface border — same as Line
+    val SurfaceBorderSelected = Color(0xFF1B5860)  // selected state border — deep teal primary
+    val SurfaceBorderHover    = Color(0xFF6B6459)  // hover state border — outline color
+
     // -- Scrim & overlays --
     val Scrim              = Color(0xFF000000)   // standard MD3 scrim
     val ScrimLight         = Color(0x1A000000)   // subtle overlay (10% black)
@@ -229,6 +238,14 @@ object HomeDecorColors {
     val DarkSettingsAccent = Color(0xFF94948C)
     val DarkStoreAccent    = Color(0xFFC0A050)   // muted gold
     val DarkToolsAccent    = Color(0xFF72C4C8)
+
+    // -- Dark disabled states --
+    val DarkDisabledOnSurface = Color(0xFF5A5C56)
+
+    // -- Dark surface borders --
+    val DarkSurfaceBorder         = Color(0xFF3D4038)  // default dark card border
+    val DarkSurfaceBorderSelected = Color(0xFF72C4C8)  // selected border — muted teal
+    val DarkSurfaceBorderHover    = Color(0xFF7A7C75)  // hover border
 
     // -- Dark scrim --
     val DarkScrim         = Color(0xFF000000)

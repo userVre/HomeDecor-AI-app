@@ -524,8 +524,6 @@
   <string name="restore_unavailable">Restore is temporarily unavailable.</string>
   <string name="no_active_pro_purchase">No active subscriptions were found.</string>
   <string name="restore_failed">Restore failed. Please try again.</string>
-  <string name="auth_welcome">Welcome back.</string>
-  <string name="auth_subtitle">Sign in to find your designs, credits, and history.</string>
   <string name="continue_with_google">Continue with Google</string>
   <string name="profile_sign_in_register">Sign in or register</string>
   <string name="google_initial">G</string>

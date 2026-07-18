@@ -2,8 +2,8 @@ package com.ismail.homedecorai
 
 import com.ismail.homedecorai.model.BoardScreenState
 import com.ismail.homedecorai.model.BoardItem
-import com.ismail.homedecorai.ui.profile.ProfileScreenState
-import com.ismail.homedecorai.ui.settings.SettingsScreenState
+import com.ismail.homedecorai.model.ProfileScreenState
+import com.ismail.homedecorai.model.SettingsScreenState
 
 expect fun getAnonymousIdFromPlatform(): String
 

@@ -119,4 +119,77 @@ http.route({
   }),
 });
 
+http.route({
+  path: "/webhooks/revenuecat/refund",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const expectedAuth = process.env.REVENUECAT_WEBHOOK_AUTH;
+    const authorization = request.headers.get("authorization");
+    if (expectedAuth && authorization !== expectedAuth && authorization !== `Bearer ${expectedAuth}`) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const payload = await request.json();
+    const event = payload?.event ?? payload;
+    const clerkId = event?.app_user_id ?? event?.appUserId ?? event?.aliases?.[0];
+    if (typeof clerkId !== "string" || clerkId.trim().length === 0) {
+      return new Response(JSON.stringify({ ok: false, error: "Missing app_user_id" }), { status: 400 });
+    }
+
+    const eventType = String(event?.type ?? "").toUpperCase();
+
+    if (eventType !== "REFUND" && eventType !== "UNCANCELLATION") {
+      return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 });
+    }
+
+    const affectedStore = String(event?.store ?? "").toLowerCase();
+
+    if (affectedStore === "app_store") {
+      const originalTransactionId = String(event?.original_transaction_id ?? event?.transaction_id ?? "").trim();
+      if (!originalTransactionId) {
+        return new Response(JSON.stringify({ ok: false, error: "Missing transaction_id" }), { status: 400 });
+      }
+
+      const generation = await ctx.runQuery(api.generations.getGenerationByOrderId, {
+        orderId: originalTransactionId,
+      });
+
+      if (generation && generation.status === "failed" && !generation.diamondRefunded) {
+        await ctx.runMutation(api.users.fulfillDiamondPurchase, {
+          clerkId,
+          packId: "starter",
+          orderId: originalTransactionId,
+          receiptData: JSON.stringify(event),
+          internalToken: process.env.CONVEX_INTERNAL_API_TOKEN,
+        });
+
+        await ctx.runMutation(api.generations.markGenerationRefunded, {
+          id: generation._id,
+          internalToken: process.env.CONVEX_INTERNAL_API_TOKEN,
+        });
+
+        return Response.json({ ok: true, action: "refund_processed", clerkId });
+      }
+
+      return Response.json({ ok: true, action: "no_action_needed", clerkId });
+    }
+
+    if (affectedStore === "play_store") {
+      const productIds = Array.isArray(event?.product_ids) ? event.product_ids : [];
+      const diamondProduct = productIds.find((id: string) =>
+        id.includes("starter") || id.includes("designer") || id.includes("creator") ||
+        id.includes("pro") || id.includes("studio") || id.includes("architect") || id.includes("estate"),
+      );
+
+      if (diamondProduct) {
+        return Response.json({ ok: true, action: "play_store_refund_detected", clerkId });
+      }
+
+      return Response.json({ ok: true, action: "subscription_refund", clerkId });
+    }
+
+    return Response.json({ ok: true, action: "unknown_store", clerkId });
+  }),
+});
+
 export default http;

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,8 +25,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.SearchOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
@@ -55,16 +56,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.Strings
+import com.ismail.homedecorai.getScreenWidthDp
 import com.ismail.homedecorai.model.ToolItem
 import com.ismail.homedecorai.model.ToolsScreenState
-import com.ismail.homedecorai.ui.discover.NetworkImage
+import com.ismail.homedecorai.ui.components.ImageCard
+import com.ismail.homedecorai.ui.components.ScrimIntensity
 import com.ismail.homedecorai.ui.theme.*
 
 // ---------------------------------------------------------------------------
 // SharedToolsScreen  –  MD3 Expressive  |  Production Product Hub
 // ---------------------------------------------------------------------------
-// Full-bleed image cards matching native app density.
-// Responsive grid: GridCells.Adaptive(280.dp) auto-wraps across viewports.
+// Responsive grid: 4 columns desktop, 2 tablet, 1 mobile.
 // Each card: full-bleed image, gradient overlay, title, description, pill CTA.
 // All 8 tools route to /create/{toolId} via onToolClick callback.
 // ---------------------------------------------------------------------------
@@ -84,6 +86,18 @@ fun SharedToolsScreen(
         return
     }
 
+    if (state.tools.isEmpty()) {
+        ToolsEmptyContent()
+        return
+    }
+
+    val screenWidthDp = getScreenWidthDp()
+    val columns = when {
+        screenWidthDp >= 1200 -> GridCells.Fixed(4)
+        screenWidthDp >= 600 -> GridCells.Fixed(2)
+        else -> GridCells.Fixed(1)
+    }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -93,7 +107,7 @@ fun SharedToolsScreen(
         ToolsHeader()
 
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 280.dp),
+            columns = columns,
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(
                 start = HomeDecorSpacing.ScreenHorizontal,
@@ -204,29 +218,9 @@ fun ToolCard(
         label = "imageScale",
     )
 
-    // Gradient overlay — text readability on image (matches native app)
-    // Cards with light photo backgrounds (paint, floor) need a stronger scrim.
-    val needsStrongerScrim = tool.id == "paint" || tool.id == "floor"
-    val gradientStops = if (needsStrongerScrim) {
-        arrayOf(
-            0.0f to Color.Transparent,
-            0.55f to Color.Transparent,
-            0.70f to Color.Black.copy(alpha = 0.25f),
-            0.82f to Color.Black.copy(alpha = 0.50f),
-            0.92f to Color.Black.copy(alpha = 0.72f),
-            1.0f to Color.Black.copy(alpha = 0.85f),
-        )
-    } else {
-        arrayOf(
-            0.0f to Color.Transparent,
-            0.55f to Color.Transparent,
-            0.70f to Color.Black.copy(alpha = 0.15f),
-            0.82f to Color.Black.copy(alpha = 0.35f),
-            0.92f to Color.Black.copy(alpha = 0.52f),
-            1.0f to Color.Black.copy(alpha = 0.65f),
-        )
-    }
-    val gradientOverlay = Brush.verticalGradient(*gradientStops)
+    // Scrim intensity: paint/floor cards use stronger scrim for light backgrounds
+    val scrimIntensity = if (tool.id == "paint" || tool.id == "floor")
+        ScrimIntensity.Strong else ScrimIntensity.Standard
 
     Surface(
         onClick = onClick,
@@ -248,39 +242,21 @@ fun ToolCard(
                 .fillMaxWidth()
                 .aspectRatio(4f / 3f),
         ) {
-            // ── Full-bleed image ─────────────────────────────────────────
-            if (tool.imageUrl.isNotEmpty()) {
-                NetworkImage(
-                    url = tool.imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            scaleX = imageScale
-                            scaleY = imageScale
-                        },
-                )
-            } else {
-                // Gradient fallback when no image available
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.linearGradient(
-                                listOf(tool.gradientStart, tool.gradientEnd)
-                            ),
-                        ),
-                )
-            }
-
-            // ── Gradient overlay for text readability ────────────────────
-            Box(
+            // Full-bleed image via shared ImageCard
+            ImageCard(
+                imageUrl = tool.imageUrl,
+                contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(gradientOverlay),
+                    .graphicsLayer {
+                        scaleX = imageScale
+                        scaleY = imageScale
+                    },
+                aspectRatio = 4f / 3f,
+                scrimIntensity = scrimIntensity,
             )
 
-            // ── Content overlaid at bottom ───────────────────────────────
+            // Content overlaid at bottom
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -332,36 +308,33 @@ fun ToolCard(
                     )
                 }
                 Spacer(Modifier.height(12.dp))
-                // Slim ElevatedButton CTA
-                ElevatedButton(
-                    onClick = {},
+                // Pill CTA — styled text inside the Surface (no separate clickable)
+                Surface(
                     shape = HomeDecorShape.Badge,
-                    colors = androidx.compose.material3.ButtonDefaults.elevatedButtonColors(
-                        containerColor = Color(0xD9FFFFFF),
-                        contentColor = HomeDecorColors.Primary,
-                    ),
-                    elevation = androidx.compose.material3.ButtonDefaults.elevatedButtonElevation(
-                        defaultElevation = 0.dp,
-                    ),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
-                    modifier = Modifier.height(32.dp),
+                    color = Color(0xD9FFFFFF),
                 ) {
-                    Icon(
-                        Icons.Rounded.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = HomeDecorColors.Primary,
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        Strings.toolCta(tool.id),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Rounded.Palette,
+                            contentDescription = null,
+                            modifier = Modifier.size(HomeDecorIconSize.Small),
+                            tint = HomeDecorColors.Primary,
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            Strings.toolCta(tool.id),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = HomeDecorColors.Primary,
+                        )
+                    }
                 }
             }
 
-            // ── Focus ring (keyboard navigation) ─────────────────────────
+            // Focus ring (keyboard navigation)
             if (isFocused) {
                 val focusRingColor = MaterialTheme.colorScheme.primary.copy(
                     alpha = HomeDecorStateLayers.FocusRing
@@ -384,7 +357,7 @@ fun ToolCard(
 }
 
 // ---------------------------------------------------------------------------
-// Loading & Error States
+// Loading, Error & Empty States
 // ---------------------------------------------------------------------------
 
 @Composable
@@ -396,9 +369,10 @@ private fun ToolsLoadingContent() {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            androidx.compose.material3.CircularProgressIndicator(
+            CircularProgressIndicator(
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(48.dp)
+                    .semantics { contentDescription = Strings.a11yLoading },
             )
             Spacer(Modifier.height(HomeDecorSpacing.Md))
             Text(
@@ -419,6 +393,13 @@ private fun ToolsErrorContent(message: String) {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Rounded.SearchOff,
+                contentDescription = null,
+                modifier = Modifier.size(HomeDecorIconSize.Xxl),
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
             Text(
                 text = Strings.errorGeneric,
                 style = MaterialTheme.typography.titleMedium,
@@ -427,6 +408,38 @@ private fun ToolsErrorContent(message: String) {
             Spacer(Modifier.height(HomeDecorSpacing.Xs))
             Text(
                 text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ToolsEmptyContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                imageVector = Icons.Rounded.SearchOff,
+                contentDescription = null,
+                modifier = Modifier.size(HomeDecorIconSize.Xxl),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Md))
+            Text(
+                text = "No tools available",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(HomeDecorSpacing.Xs))
+            Text(
+                text = "Check back later for new tools",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

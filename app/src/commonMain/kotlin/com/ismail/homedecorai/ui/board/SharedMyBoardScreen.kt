@@ -1,8 +1,13 @@
 package com.ismail.homedecorai.ui.board
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,7 +17,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,29 +24,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DesignServices
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.FolderOpen
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.PhoneAndroid
-import androidx.compose.material.icons.rounded.PushPin
-import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,9 +78,12 @@ import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.model.BoardItem
 import com.ismail.homedecorai.model.BoardScreenState
 import com.ismail.homedecorai.model.BoardTab
+import com.ismail.homedecorai.ui.components.ResponsiveDialog
 import com.ismail.homedecorai.ui.discover.NetworkImage
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
+import com.ismail.homedecorai.ui.theme.HomeDecorIconSize
+import com.ismail.homedecorai.ui.theme.isReducedMotionEnabled
 
 @Composable
 fun SharedMyBoardScreen(
@@ -93,137 +104,106 @@ fun SharedMyBoardScreen(
     }
 
     if (state.error != null) {
-        BoardErrorContent(message = state.error)
+        BoardErrorContent(state.error)
         return
     }
 
     val isDesktop = rememberIsDesktop()
+    val reducedMotion = isReducedMotionEnabled()
     var selectedTab by remember { mutableStateOf(BoardTab.Generated) }
-    val isAuthenticated = !isGuest || signedInName != null
+    var renameTarget by remember { mutableStateOf<BoardItem?>(null) }
+    var deleteTarget by remember { mutableStateOf<BoardItem?>(null) }
 
-    if (isDesktop) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .testTag(Strings.TestTags.boardScreen),
-        ) {
-            BoardHeader(isDesktop = true)
+    Column(
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+            .testTag(Strings.TestTags.boardScreen),
+    ) {
+        BoardHeader(isDesktop = isDesktop)
 
-            if (!isAuthenticated) {
-                BoardGuestHero(onSignIn = onSignIn, isDesktop = true)
-            }
+        if (isGuest) {
+            GuestHero(onSignIn = onSignIn, isDesktop = isDesktop)
+            GuestLocalBanner(isDesktop = isDesktop)
+        }
 
-            if (!isPro && isAuthenticated) {
-                CompactProBanner(onUpgrade = onOpenUpgrade)
-            }
+        BoardTabRow(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
 
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-
-            BoardTabRow(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                isGuest = !isAuthenticated,
-            )
-
-            when (selectedTab) {
-                BoardTab.Generated -> GeneratedSection(
+        AnimatedContent(
+            targetState = selectedTab,
+            transitionSpec = {
+                if (reducedMotion) {
+                    fadeIn(tween(0)) togetherWith fadeOut(tween(0))
+                } else {
+                    fadeIn(animationSpec = tween(180)) togetherWith fadeOut(animationSpec = tween(150))
+                }
+            },
+            label = "boardTabContent",
+        ) { tab ->
+            when (tab) {
+                BoardTab.Generated -> GeneratedTab(
                     items = state.generatedItems,
-                    isGuest = !isAuthenticated,
-                    isDesktop = true,
-                    onSignIn = onSignIn,
-                    onNavigateToTools = onNavigateToTools,
-                    onItemClick = onItemClick,
-                )
-                BoardTab.Favorites -> FavoritesSection(
-                    items = state.favoriteItems,
-                    isGuest = !isAuthenticated,
-                    isDesktop = true,
+                    localDesigns = state.localGuestDesigns,
+                    isGuest = isGuest,
+                    isDesktop = isDesktop,
                     onSignIn = onSignIn,
                     onNavigateToTools = onNavigateToTools,
                     onItemClick = onItemClick,
                     onToggleFavorite = onToggleFavorite,
+                    onRename = { renameTarget = it },
+                    onDelete = { deleteTarget = it },
                 )
-                BoardTab.Projects -> ProjectsSection(
-                    items = state.projectItems,
-                    isGuest = !isAuthenticated,
-                    isDesktop = true,
-                    onSignIn = onSignIn,
-                    onNavigateToTools = onNavigateToTools,
-                    onItemClick = onItemClick,
-                )
-            }
-        }
-    } else {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .testTag(Strings.TestTags.boardScreen),
-        ) {
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-
-            BoardHeader(isDesktop = false)
-
-            if (!isAuthenticated) {
-                BoardGuestHero(onSignIn = onSignIn, isDesktop = false)
-            }
-
-            if (!isPro && isAuthenticated) {
-                CompactProBanner(onUpgrade = onOpenUpgrade)
-            }
-
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-
-            BoardTabRow(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                isGuest = !isAuthenticated,
-            )
-
-            when (selectedTab) {
-                BoardTab.Generated -> GeneratedSection(
-                    items = state.generatedItems,
-                    isGuest = !isAuthenticated,
-                    isDesktop = false,
-                    onSignIn = onSignIn,
-                    onNavigateToTools = onNavigateToTools,
-                    onItemClick = onItemClick,
-                )
-                BoardTab.Favorites -> FavoritesSection(
+                BoardTab.Favorites -> FavoritesTab(
                     items = state.favoriteItems,
-                    isGuest = !isAuthenticated,
-                    isDesktop = false,
+                    isGuest = isGuest,
+                    isDesktop = isDesktop,
+                    onSignIn = onSignIn,
+                    onNavigateToTools = onNavigateToTools,
+                    onNavigateToDiscover = onNavigateToDiscover,
+                    onItemClick = onItemClick,
+                    onToggleFavorite = onToggleFavorite,
+                    onRename = { renameTarget = it },
+                    onDelete = { deleteTarget = it },
+                )
+                BoardTab.Projects -> ProjectsTab(
+                    items = state.projectItems,
+                    isGuest = isGuest,
+                    isDesktop = isDesktop,
                     onSignIn = onSignIn,
                     onNavigateToTools = onNavigateToTools,
                     onItemClick = onItemClick,
                     onToggleFavorite = onToggleFavorite,
-                )
-                BoardTab.Projects -> ProjectsSection(
-                    items = state.projectItems,
-                    isGuest = !isAuthenticated,
-                    isDesktop = false,
-                    onSignIn = onSignIn,
-                    onNavigateToTools = onNavigateToTools,
-                    onItemClick = onItemClick,
+                    onRename = { renameTarget = it },
+                    onDelete = { deleteTarget = it },
                 )
             }
-
-            Spacer(Modifier.height(navBarBottomPadding()))
         }
+
+        Spacer(Modifier.height(navBarBottomPadding()))
+    }
+
+    renameTarget?.let { item ->
+        RenameDialog(
+            currentName = item.toolTitle.ifBlank { item.roomType }.ifBlank { "Design" },
+            onConfirm = { renameTarget = null },
+            onDismiss = { renameTarget = null },
+        )
+    }
+
+    deleteTarget?.let { item ->
+        DeleteConfirmDialog(
+            title = item.toolTitle.ifBlank { item.roomType }.ifBlank { "this design" },
+            onConfirm = { deleteTarget = null },
+            onDismiss = { deleteTarget = null },
+        )
     }
 }
 
 @Composable
 private fun BoardHeader(isDesktop: Boolean) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = if (isDesktop) HomeDecorSpacing.Xxl else HomeDecorSpacing.ScreenHorizontal,
-                vertical = HomeDecorSpacing.Lg,
-            )
-            .semantics { heading() },
+        modifier = Modifier.fillMaxWidth().padding(
+            horizontal = if (isDesktop) HomeDecorSpacing.Xxl else HomeDecorSpacing.ScreenHorizontal,
+            vertical = HomeDecorSpacing.Lg,
+        ).semantics { heading() },
     ) {
         Text(
             Strings.myBoardTitle,
@@ -240,24 +220,17 @@ private fun BoardHeader(isDesktop: Boolean) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Guest Hero
-// ---------------------------------------------------------------------------
-
 @Composable
-private fun BoardGuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
+private fun GuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
     Surface(
         shape = HomeDecorShape.ExtraExtraLarge,
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = if (isDesktop) HomeDecorSpacing.Xxl else HomeDecorSpacing.Base,
-                vertical = HomeDecorSpacing.Sm,
-            )
-            .then(if (isDesktop) Modifier.widthIn(max = 640.dp) else Modifier)
+        modifier = Modifier.fillMaxWidth().padding(
+            horizontal = if (isDesktop) HomeDecorSpacing.Xxl else HomeDecorSpacing.Base,
+            vertical = HomeDecorSpacing.Sm,
+        ).then(if (isDesktop) Modifier.widthIn(max = 640.dp) else Modifier)
             .testTag(Strings.TestTags.boardGuestHero),
     ) {
         Column(
@@ -269,12 +242,9 @@ private fun BoardGuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             Text(
-                Strings.boardHeroGuestTitle,
-                style = if (isDesktop) {
-                    MaterialTheme.typography.titleLarge
-                } else {
-                    MaterialTheme.typography.titleMedium
-                },
+                Strings.boardSignInSaveSync,
+                style = if (isDesktop) MaterialTheme.typography.titleLarge
+                else MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
@@ -283,40 +253,35 @@ private fun BoardGuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
             )
             Text(
                 Strings.boardGuestSubtitle,
-                style = if (isDesktop) {
-                    MaterialTheme.typography.bodyMedium
-                } else {
-                    MaterialTheme.typography.bodySmall
-                },
+                style = if (isDesktop) MaterialTheme.typography.bodyMedium
+                else MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 softWrap = true,
             )
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(
                     if (isDesktop) HomeDecorSpacing.Md else HomeDecorSpacing.Sm,
                 ),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                BoardBenefitChip(
-                    icon = Icons.Rounded.PushPin,
+                GuestBenefitChip(
+                    icon = Icons.Rounded.Save,
                     label = Strings.boardGuestBenefitSaved,
                     modifier = Modifier.weight(1f),
                 )
-                BoardBenefitChip(
+                GuestBenefitChip(
                     icon = Icons.Rounded.FolderOpen,
                     label = Strings.boardGuestBenefitProjects,
                     modifier = Modifier.weight(1f),
                 )
-                BoardBenefitChip(
-                    icon = Icons.Rounded.PhoneAndroid,
-                    label = Strings.boardGuestBenefitCrossDevice,
+                GuestBenefitChip(
+                    icon = Icons.Rounded.Add,
+                    label = Strings.boardGuestBenefitFavorites,
                     modifier = Modifier.weight(1f),
                 )
             }
-
             Button(
                 onClick = onSignIn,
                 shape = HomeDecorShape.Button,
@@ -324,9 +289,7 @@ private fun BoardGuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(HomeDecorSpacing.ButtonHeight)
+                modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight)
                     .testTag(Strings.TestTags.boardSignInButton),
             ) {
                 Text(
@@ -339,16 +302,45 @@ private fun BoardGuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Benefit components
-// ---------------------------------------------------------------------------
+@Composable
+private fun GuestLocalBanner(isDesktop: Boolean) {
+    Surface(
+        shape = HomeDecorShape.Medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth().padding(
+            horizontal = if (isDesktop) HomeDecorSpacing.Xxl else HomeDecorSpacing.Base,
+        ).testTag(Strings.TestTags.boardLocalBanner),
+    ) {
+        Row(
+            modifier = Modifier.padding(HomeDecorSpacing.Sm),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        ) {
+            Icon(
+                Icons.Rounded.Info,
+                contentDescription = null,
+                modifier = Modifier.size(HomeDecorIconSize.Small),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    Strings.boardGuestLocalNote,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    Strings.boardGuestSyncNote,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                )
+            }
+        }
+    }
+}
 
 @Composable
-private fun BoardBenefitChip(
-    icon: ImageVector,
-    label: String,
-    modifier: Modifier = Modifier,
-) {
+private fun GuestBenefitChip(icon: ImageVector, label: String, modifier: Modifier = Modifier) {
     Surface(
         shape = HomeDecorShape.Chip,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -359,12 +351,7 @@ private fun BoardBenefitChip(
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = MaterialTheme.colorScheme.primary,
-            )
+            Icon(icon, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small), tint = MaterialTheme.colorScheme.primary)
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall,
@@ -378,104 +365,25 @@ private fun BoardBenefitChip(
 }
 
 // ---------------------------------------------------------------------------
-// Pro Banner
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun CompactProBanner(onUpgrade: () -> Unit) {
-    Surface(
-        shape = HomeDecorShape.Card,
-        color = Color.Transparent,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = HomeDecorSpacing.Base,
-                vertical = HomeDecorSpacing.Xxs,
-            ),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        ),
-                    ),
-                    shape = HomeDecorShape.Card,
-                )
-                .minimumTouchTarget()
-                .semantics {
-                    contentDescription = Strings.upgradeV3Headline
-                    role = Role.Button
-                }
-                .clickable(onClick = onUpgrade),
-        ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = HomeDecorSpacing.CardInternal,
-                        vertical = HomeDecorSpacing.Sm,
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-            ) {
-                Icon(
-                    Icons.Rounded.AutoAwesome,
-                    contentDescription = null,
-                    tint = HomeDecorExtra.onGradientText,
-                    modifier = Modifier.size(16.dp),
-                )
-                Text(
-                    Strings.upgradeV3Headline,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                    ),
-                    color = HomeDecorExtra.onGradientText,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    Strings.upgradeV3TrialBadge,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = HomeDecorExtra.onGradientTextSubtle,
-                )
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
 // Tab Row
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun BoardTabRow(
-    selectedTab: BoardTab,
-    onTabSelected: (BoardTab) -> Unit,
-    isGuest: Boolean,
-) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .testTag(Strings.TestTags.boardTabRow),
-    ) {
+private fun BoardTabRow(selectedTab: BoardTab, onTabSelected: (BoardTab) -> Unit) {
+    val reducedMotion = isReducedMotionEnabled()
+    val animDuration = if (reducedMotion) 0 else 180
+
+    Column(Modifier.fillMaxWidth().testTag(Strings.TestTags.boardTabRow)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Base),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
         ) {
-            boardTabs.forEach { tab ->
+            BoardTab.entries.forEach { tab ->
                 val isSelected = selectedTab == tab
                 val labelColor by animateColorAsState(
-                    targetValue = if (isSelected) {
-                        MaterialTheme.colorScheme.onSurface
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    },
-                    animationSpec = spring(stiffness = Spring.StiffnessMedium),
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    animationSpec = tween(animDuration),
                     label = "tabLabel",
                 )
                 val label = when (tab) {
@@ -483,24 +391,37 @@ private fun BoardTabRow(
                     BoardTab.Favorites -> Strings.favoritesTab
                     BoardTab.Projects -> Strings.projectsTab
                 }
+                val tabIcon = when (tab) {
+                    BoardTab.Generated -> Icons.Rounded.AutoAwesome
+                    BoardTab.Favorites -> Icons.Rounded.FavoriteBorder
+                    BoardTab.Projects -> Icons.Rounded.FolderOpen
+                }
+                val tabDescription = when (tab) {
+                    BoardTab.Generated -> Strings.a11yTabGenerated
+                    BoardTab.Favorites -> Strings.a11yTabFavorites
+                    BoardTab.Projects -> Strings.a11yTabProjects
+                }
                 Surface(
                     onClick = { onTabSelected(tab) },
                     shape = HomeDecorShape.Pill,
                     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else Color.Transparent,
-                    modifier = Modifier
-                        .weight(1f)
+                    modifier = Modifier.weight(1f)
                         .testTag(Strings.formatTestTag(Strings.TestTags.boardTab, label))
-                        .semantics {
-                            role = Role.Tab
-                            selected = isSelected
-                            contentDescription = Strings.a11yBoardTab(label, isSelected)
-                        },
+                        .semantics { role = Role.Tab; selected = isSelected
+                            contentDescription = tabDescription },
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = 8.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        Icon(
+                            tabIcon,
+                            contentDescription = null,
+                            modifier = Modifier.size(HomeDecorIconSize.Small),
+                            tint = labelColor,
+                        )
+                        Spacer(Modifier.width(HomeDecorSpacing.Xs))
                         Text(
                             label,
                             style = MaterialTheme.typography.labelMedium,
@@ -512,80 +433,132 @@ private fun BoardTabRow(
                 }
             }
         }
-
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Base)
-                .height(1.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base).height(1.dp)
                 .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
         )
     }
 }
 
 // ---------------------------------------------------------------------------
-// Tab Sections
+// Tab Content
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun GeneratedSection(
+private fun GeneratedTab(
     items: List<BoardItem>,
+    localDesigns: List<BoardItem>,
     isGuest: Boolean,
     isDesktop: Boolean,
     onSignIn: () -> Unit,
     onNavigateToTools: () -> Unit,
     onItemClick: (BoardItem) -> Unit,
+    onToggleFavorite: (BoardItem) -> Unit,
+    onRename: (BoardItem) -> Unit,
+    onDelete: (BoardItem) -> Unit,
 ) {
-    Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-        if (!isGuest) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = HomeDecorSpacing.Base),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    Strings.generatedImages,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                if (items.isNotEmpty()) {
-                    Text(
-                        "${items.size}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-        }
+    val displayItems = if (isGuest) localDesigns else items
 
-        if (items.isEmpty()) {
-            if (isGuest) {
-                SectionHeader(text = Strings.boardGuestSampleSection)
-                Spacer(Modifier.height(HomeDecorSpacing.Sm))
-                LockedPreviewRow(onSignIn = onSignIn, isDesktop = isDesktop)
-            } else {
-                BoardOnboardingEmptyState(
-                    onNavigateToTools = onNavigateToTools,
-                )
-            }
-        } else {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = HomeDecorSpacing.Lg),
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-            ) {
-                items(items, key = { it.id }) { item ->
-                    BoardGeneratedCard(item = item, onClick = { onItemClick(item) })
+    if (displayItems.isEmpty()) {
+        TabEmptyState(
+            icon = Icons.Rounded.AutoAwesome,
+            title = Strings.boardEmptyGenerated,
+            body = Strings.boardEmptyGeneratedBody,
+            isGuest = isGuest,
+            guestMessage = Strings.boardEmptyGuestGenerated,
+            actionLabel = "Open Tools",
+            onAction = onNavigateToTools,
+            testTag = "generated",
+        )
+    } else {
+        Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
+            if (isGuest && localDesigns.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(Strings.boardLocalDesigns, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("${localDesigns.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            } else if (!isGuest) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(Strings.generatedImages, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("${items.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
             }
+
+            BoardGrid(
+                items = displayItems,
+                tab = BoardTab.Generated,
+                isGuest = isGuest,
+                isDesktop = isDesktop,
+                onItemClick = onItemClick,
+                onToggleFavorite = onToggleFavorite,
+                onRename = onRename,
+                onDelete = onDelete,
+            )
         }
     }
 }
 
 @Composable
-private fun FavoritesSection(
+private fun FavoritesTab(
+    items: List<BoardItem>,
+    isGuest: Boolean,
+    isDesktop: Boolean,
+    onSignIn: () -> Unit,
+    onNavigateToTools: () -> Unit,
+    onNavigateToDiscover: () -> Unit,
+    onItemClick: (BoardItem) -> Unit,
+    onToggleFavorite: (BoardItem) -> Unit,
+    onRename: (BoardItem) -> Unit,
+    onDelete: (BoardItem) -> Unit,
+) {
+    if (items.isEmpty()) {
+        TabEmptyState(
+            icon = Icons.Rounded.FavoriteBorder,
+            title = Strings.boardEmptyFavorites,
+            body = if (isGuest) Strings.boardEmptyGuestFavorites else Strings.boardEmptyFavoritesBody,
+            isGuest = isGuest,
+            guestMessage = Strings.boardEmptyGuestFavorites,
+            actionLabel = "Explore Discover",
+            onAction = onNavigateToDiscover,
+            testTag = "favorites",
+        )
+    } else {
+        Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(Strings.favoritesSection, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text("${items.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            BoardGrid(
+                items = items,
+                tab = BoardTab.Favorites,
+                isGuest = isGuest,
+                isDesktop = isDesktop,
+                onItemClick = onItemClick,
+                onToggleFavorite = onToggleFavorite,
+                onRename = onRename,
+                onDelete = onDelete,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProjectsTab(
     items: List<BoardItem>,
     isGuest: Boolean,
     isDesktop: Boolean,
@@ -593,306 +566,245 @@ private fun FavoritesSection(
     onNavigateToTools: () -> Unit,
     onItemClick: (BoardItem) -> Unit,
     onToggleFavorite: (BoardItem) -> Unit,
+    onRename: (BoardItem) -> Unit,
+    onDelete: (BoardItem) -> Unit,
 ) {
-    Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-        if (!isGuest) {
+    if (items.isEmpty()) {
+        TabEmptyState(
+            icon = Icons.Rounded.FolderOpen,
+            title = Strings.boardEmptyProjects,
+            body = if (isGuest) Strings.boardEmptyGuestProjects else Strings.boardEmptyProjectsBody,
+            isGuest = isGuest,
+            guestMessage = Strings.boardEmptyGuestProjects,
+            actionLabel = "Open Tools",
+            onAction = onNavigateToTools,
+            testTag = "projects",
+        )
+    } else {
+        Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = HomeDecorSpacing.Base),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    Strings.favoritesSection,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                if (items.isNotEmpty()) {
-                    Text(
-                        "${items.size}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(Strings.savedProjects, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text("${items.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(HomeDecorSpacing.Sm))
-        }
-
-        if (items.isEmpty()) {
-            if (isGuest) {
-                SectionHeader(text = Strings.boardGuestSampleSection)
-                Spacer(Modifier.height(HomeDecorSpacing.Sm))
-                LockedPreviewRow(onSignIn = onSignIn, isDesktop = isDesktop)
-            } else {
-                BoardOnboardingEmptyState(
-                    onNavigateToTools = onNavigateToTools,
-                )
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(if (isDesktop) 3 else 2),
-                contentPadding = PaddingValues(
-                    start = HomeDecorSpacing.Base,
-                    end = HomeDecorSpacing.Base,
-                    bottom = navBarBottomPadding(),
-                ),
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-            ) {
-                items(items, key = { it.id }) { item ->
-                    BoardFavoriteCard(
-                        item = item,
-                        onClick = { onItemClick(item) },
-                        onToggleFavorite = { onToggleFavorite(item) },
-                    )
-                }
-                item {
-                    AddFavoriteCard(onClick = onNavigateToTools)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProjectsSection(
-    items: List<BoardItem>,
-    isGuest: Boolean,
-    isDesktop: Boolean,
-    onSignIn: () -> Unit,
-    onNavigateToTools: () -> Unit,
-    onItemClick: (BoardItem) -> Unit,
-) {
-    Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-        if (!isGuest) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = HomeDecorSpacing.Base),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    Strings.savedProjects,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                if (items.isNotEmpty()) {
-                    Text(
-                        "${items.size}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-        }
-
-        if (items.isEmpty()) {
-            if (isGuest) {
-                SectionHeader(text = Strings.boardGuestSampleSection)
-                Spacer(Modifier.height(HomeDecorSpacing.Sm))
-                LockedPreviewRow(onSignIn = onSignIn, isDesktop = isDesktop)
-            } else {
-                BoardOnboardingEmptyState(
-                    onNavigateToTools = onNavigateToTools,
-                )
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(if (isDesktop) 3 else 2),
-                contentPadding = PaddingValues(
-                    start = HomeDecorSpacing.Base,
-                    end = HomeDecorSpacing.Base,
-                    bottom = navBarBottomPadding(),
-                ),
-                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-            ) {
-                items(items, key = { it.id }) { item ->
-                    BoardProjectCard(item = item, onClick = { onItemClick(item) })
-                }
-            }
-        }
-    }
-}
-
-private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
-
-private val lockedPreviewData = listOf(
-    Quadruple(Strings.boardSampleLivingRoom, "Scandinavian", "primaryContainer", "images/assets_media_discover_generated_livingroom_livingroom1.webp"),
-    Quadruple(Strings.boardSampleBedroom, "Bohemian", "secondaryContainer", "images/assets_media_discover_generated_bedroom_bedroom1.webp"),
-    Quadruple(Strings.boardSampleKitchen, "Minimalist", "tertiaryContainer", "images/assets_media_discover_generated_kitchen_kitchen1.webp"),
-    Quadruple(Strings.boardSampleBathroom, "Modern", "primaryContainer", "images/assets_media_discover_home_homebathroom.webp"),
-    Quadruple(Strings.boardSampleOffice, "Industrial", "secondaryContainer", "images/assets_media_discover_home_homehomeoffice.webp"),
-)
-
-private val onboardingSteps = listOf(
-    "Go to the Tools tab and pick a designer.",
-    "Upload a photo of your space.",
-    "Choose a style and generate your design.",
-)
-
-private val boardTabs = BoardTab.entries
-
-// ---------------------------------------------------------------------------
-// Section Header
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun SectionHeader(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = HomeDecorSpacing.Base),
-    )
-}
-
-// ---------------------------------------------------------------------------
-// Locked Preview
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun LockedPreviewRow(onSignIn: () -> Unit, isDesktop: Boolean = false) {
-    val colorMap = mapOf(
-        "primaryContainer" to MaterialTheme.colorScheme.primaryContainer,
-        "secondaryContainer" to MaterialTheme.colorScheme.secondaryContainer,
-        "tertiaryContainer" to MaterialTheme.colorScheme.tertiaryContainer,
-    )
-
-    val cardWidth = if (isDesktop) 220.dp else 170.dp
-
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = if (isDesktop) HomeDecorSpacing.Xl else HomeDecorSpacing.Base),
-        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-    ) {
-        items(lockedPreviewData.size) { index ->
-            val entry = lockedPreviewData[index]
-            LockedPreviewCard(
-                name = entry.first,
-                style = entry.second,
-                gradientColor = colorMap[entry.third] ?: MaterialTheme.colorScheme.primaryContainer,
-                imageUrl = entry.fourth,
-                onClick = onSignIn,
-                modifier = Modifier.width(cardWidth),
+            BoardGrid(
+                items = items,
+                tab = BoardTab.Projects,
+                isGuest = isGuest,
+                isDesktop = isDesktop,
+                onItemClick = onItemClick,
+                onToggleFavorite = onToggleFavorite,
+                onRename = onRename,
+                onDelete = onDelete,
             )
         }
     }
 }
 
+// ---------------------------------------------------------------------------
+// Responsive Grid
+// ---------------------------------------------------------------------------
+
 @Composable
-private fun LockedPreviewCard(
-    name: String,
-    style: String,
-    gradientColor: Color,
-    imageUrl: String = "",
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+private fun BoardGrid(
+    items: List<BoardItem>,
+    tab: BoardTab,
+    isGuest: Boolean,
+    isDesktop: Boolean,
+    onItemClick: (BoardItem) -> Unit,
+    onToggleFavorite: (BoardItem) -> Unit,
+    onRename: (BoardItem) -> Unit,
+    onDelete: (BoardItem) -> Unit,
 ) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = if (isDesktop) 280.dp else 240.dp),
+        contentPadding = PaddingValues(
+            start = HomeDecorSpacing.Base,
+            end = HomeDecorSpacing.Base,
+            bottom = HomeDecorSpacing.Sm,
+        ),
+        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardGrid, tab.name.lowercase())),
+    ) {
+        items(items, key = { it.id }) { item ->
+            BoardCard(
+                item = item,
+                tab = tab,
+                isGuest = isGuest,
+                onClick = { onItemClick(item) },
+                onToggleFavorite = { onToggleFavorite(item) },
+                onRename = { onRename(item) },
+                onDelete = { onDelete(item) },
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Board Card — unified card with context menu actions
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun BoardCard(
+    item: BoardItem,
+    tab: BoardTab,
+    isGuest: Boolean,
+    onClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    onRename: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    val testTag = when (tab) {
+        BoardTab.Generated -> Strings.TestTags.boardGeneratedCard
+        BoardTab.Favorites -> Strings.TestTags.boardFavoriteCard
+        BoardTab.Projects -> Strings.TestTags.boardProjectCard
+    }
+    val subtitle = when {
+        item.style.isNotBlank() -> item.style
+        item.roomType.isNotBlank() -> item.roomType
+        else -> "Design"
+    }
+
     Surface(
         onClick = onClick,
         shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardLockedCard, name)),
+        modifier = Modifier.testTag(Strings.formatTestTag(testTag, item.id))
+            .semantics { contentDescription = Strings.a11yBoardCard(item.toolTitle.ifBlank { subtitle }, subtitle) },
     ) {
         Column {
+            // Image area
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(130.dp)
-                    .clip(HomeDecorShape.Large),
+                modifier = Modifier.fillMaxWidth().height(140.dp).clip(HomeDecorShape.Large),
             ) {
-                if (imageUrl.isNotEmpty()) {
-                    NetworkImage(
-                        url = imageUrl,
-                        contentDescription = name,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                val imageUrl = item.imageUrl
+                if (!imageUrl.isNullOrBlank()) {
+                    NetworkImage(url = imageUrl, contentDescription = subtitle, modifier = Modifier.fillMaxSize())
                 } else {
+                    // Deliberate fallback swatch — never a blank gray card
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        gradientColor.copy(alpha = 0.5f),
-                                        gradientColor.copy(alpha = 0.2f),
-                                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.3f),
-                                    ),
-                                ),
-                            ),
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                                ),
-                            ),
+                        modifier = Modifier.fillMaxSize().background(
+                            Brush.verticalGradient(colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f),
+                            )),
                         ),
-                )
-
-                Surface(
-                    shape = HomeDecorShape.Pill,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = HomeDecorSpacing.Sm),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Xs),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                     ) {
                         Icon(
-                            Icons.Rounded.FavoriteBorder,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary,
+                            Icons.Rounded.AutoAwesome, contentDescription = null,
+                            modifier = Modifier.align(Alignment.Center).size(HomeDecorIconSize.Xl),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         )
-                        Text(
-                            Strings.boardSignInToUnlock,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                    }
+                }
+                if (item.status == "processing") {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center).size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                if (item.isFavorite && tab != BoardTab.Favorites) {
+                    Surface(
+                        shape = HomeDecorShape.Badge,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        modifier = Modifier.align(Alignment.TopStart).padding(HomeDecorSpacing.Sm).size(26.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.Favorite, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small), tint = MaterialTheme.colorScheme.tertiary)
+                        }
+                    }
+                }
+                Box(modifier = Modifier.align(Alignment.TopEnd).padding(HomeDecorSpacing.Sm)) {
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.size(26.dp).testTag(Strings.TestTags.boardCardMenu)
+                            .semantics { contentDescription = Strings.a11yMoreActions },
+                    ) {
+                        Icon(
+                            Icons.Rounded.MoreVert, contentDescription = null,
+                            modifier = Modifier.size(HomeDecorIconSize.Small),
+                            tint = if (item.imageUrl.isNullOrBlank()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Open", style = MaterialTheme.typography.bodyMedium) },
+                            onClick = { menuExpanded = false; onClick() },
+                            leadingIcon = { Icon(Icons.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small)) },
+                            modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardCardMenuItem, "open")),
+                        )
+                        if (tab == BoardTab.Favorites) {
+                            DropdownMenuItem(
+                                text = { Text("Remove favorite", style = MaterialTheme.typography.bodyMedium) },
+                                onClick = { menuExpanded = false; onToggleFavorite() },
+                                leadingIcon = { Icon(Icons.Rounded.Favorite, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small)) },
+                                modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardCardMenuItem, "unfavorite")),
+                            )
+                        } else {
+                            DropdownMenuItem(
+                                text = { Text("Favorite", style = MaterialTheme.typography.bodyMedium) },
+                                onClick = { menuExpanded = false; onToggleFavorite() },
+                                leadingIcon = {
+                                    Icon(
+                                        if (item.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                        contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small),
+                                    )
+                                },
+                                modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardCardMenuItem, "favorite")),
+                            )
+                        }
+                        if (isGuest) {
+                            DropdownMenuItem(
+                                text = { Text(Strings.boardSave, style = MaterialTheme.typography.bodyMedium) },
+                                onClick = { menuExpanded = false },
+                                leadingIcon = { Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small)) },
+                                modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardCardMenuItem, "save")),
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text(Strings.boardRename, style = MaterialTheme.typography.bodyMedium) },
+                            onClick = { menuExpanded = false; onRename() },
+                            leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small)) },
+                            modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardCardMenuItem, "rename")),
+                        )
+                        DropdownMenuItem(
+                            text = { Text(Strings.boardDelete, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error) },
+                            onClick = { menuExpanded = false; onDelete() },
+                            leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small), tint = MaterialTheme.colorScheme.error) },
+                            modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardCardMenuItem, "delete")),
                         )
                     }
                 }
             }
+
+            // Text area
             Column(Modifier.padding(HomeDecorSpacing.Md)) {
                 Text(
-                    name,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    item.toolTitle.ifBlank { item.roomType }.ifBlank { "Design" },
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    style,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (subtitle.isNotBlank()) {
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
@@ -903,454 +815,139 @@ private fun LockedPreviewCard(
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun BoardOnboardingEmptyState(
-    onNavigateToTools: () -> Unit,
+private fun TabEmptyState(
+    icon: ImageVector,
+    title: String,
+    body: String,
+    isGuest: Boolean,
+    guestMessage: String,
+    actionLabel: String,
+    onAction: () -> Unit,
+    testTag: String,
 ) {
-
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .padding(vertical = HomeDecorSpacing.Xxl, horizontal = HomeDecorSpacing.Base),
+        modifier = Modifier.fillMaxWidth().fillMaxSize().padding(vertical = HomeDecorSpacing.Xxl, horizontal = HomeDecorSpacing.Base),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .testTag(Strings.formatTestTag(Strings.TestTags.boardEmptyState, testTag)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
         ) {
             Surface(
                 shape = HomeDecorShape.CardLarge,
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
-                modifier = Modifier.size(88.dp),
+                modifier = Modifier.size(80.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Outlined.DesignServices,
-                        contentDescription = null,
-                        modifier = Modifier.size(44.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
+                    Icon(icon, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Xxl), tint = MaterialTheme.colorScheme.primary)
                 }
             }
-
-            Spacer(Modifier.height(HomeDecorSpacing.Xs))
-
             Text(
-                "Create your first AI design",
-                style = MaterialTheme.typography.headlineSmall,
+                title,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground,
             )
-
             Text(
-                "Upload a room photo, exterior, or floor plan to generate design concepts in seconds.",
+                body,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = HomeDecorSpacing.Lg),
             )
+            if (isGuest && actionLabel.isNotEmpty()) {
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
+                Button(
+                    onClick = onAction,
+                    shape = HomeDecorShape.Button,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
+                ) {
+                    Text(actionLabel, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+    }
+}
 
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
+// ---------------------------------------------------------------------------
+// Dialogs
+// ---------------------------------------------------------------------------
 
-            Surface(
-                shape = HomeDecorShape.Card,
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
+@Composable
+private fun RenameDialog(
+    currentName: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(currentName) }
+    ResponsiveDialog(
+        onDismissRequest = onDismiss,
+        title = Strings.boardRenameTitle,
+        maxWidth = 400.dp,
+        footer = {
+            Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
             ) {
-                Column(
-                    modifier = Modifier.padding(HomeDecorSpacing.Base),
-                    verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-                ) {
-                    onboardingSteps.forEachIndexed { index, step ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Md),
-                            verticalAlignment = Alignment.Top,
-                        ) {
-                            Surface(
-                                shape = HomeDecorShape.Badge,
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                modifier = Modifier.size(24.dp),
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        "${index + 1}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
-                            }
-                            Text(
-                                step,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    }
-                }
+                TextButton(onClick = onDismiss) { Text(Strings.boardCancel) }
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                TextButton(
+                    onClick = { onConfirm(name) },
+                    modifier = Modifier.testTag(Strings.TestTags.boardRenameConfirm),
+                ) { Text(Strings.boardConfirm) }
             }
-
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-
-            Button(
-                onClick = onNavigateToTools,
-                shape = HomeDecorShape.Button,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(HomeDecorSpacing.ButtonHeight),
-            ) {
-                Icon(
-                    Icons.Rounded.Explore,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(HomeDecorSpacing.Xs))
-                Text(
-                    "Open Tools",
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
-        }
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Content cards — Generated, Favorites, Projects
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun BoardGeneratedCard(item: BoardItem, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = Modifier
-            .width(160.dp)
-            .testTag(Strings.formatTestTag(Strings.TestTags.boardGeneratedCard, item.id))
-            .semantics {
-                contentDescription = Strings.a11yBoardCard(
-                    item.roomType.ifBlank { item.style }.ifBlank { item.toolTitle },
-                    "Generated"
-                )
-            },
+        },
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(HomeDecorShape.Large),
-            ) {
-                val imageUrl = item.imageUrl
-                if (!imageUrl.isNullOrBlank()) {
-                    NetworkImage(
-                        url = imageUrl,
-                        contentDescription = item.roomType.ifBlank { item.style }.ifBlank { item.toolTitle },
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
-                                        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.15f),
-                                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f),
-                                    ),
-                                ),
-                            ),
-                    )
-                    Icon(
-                        Icons.Rounded.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(32.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                    )
-                }
-                if (item.status == "processing") {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center).size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                // Open indicator on hover
-                Surface(
-                    shape = HomeDecorShape.Badge,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(HomeDecorSpacing.Sm)
-                        .size(26.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Rounded.OpenInNew,
-                            contentDescription = "Open design",
-                            modifier = Modifier.size(13.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            }
-            Column(Modifier.padding(HomeDecorSpacing.Md)) {
-                Text(
-                    item.roomType.ifBlank { item.style }.ifBlank { item.toolTitle },
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (item.style.isNotBlank()) {
-                    Text(
-                        item.style,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text(Strings.boardRenameLabel) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth().testTag(Strings.TestTags.boardRenameInput),
+        )
     }
 }
 
 @Composable
-private fun BoardFavoriteCard(item: BoardItem, onClick: () -> Unit, onToggleFavorite: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = Modifier
-            .testTag(Strings.formatTestTag(Strings.TestTags.boardFavoriteCard, item.id))
-            .semantics {
-                contentDescription = Strings.a11yBoardCard(
-                    item.roomType.ifBlank { item.style }.ifBlank { item.toolTitle },
-                    "Favorite"
-                )
-            },
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(HomeDecorShape.Large),
+private fun DeleteConfirmDialog(
+    title: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ResponsiveDialog(
+        onDismissRequest = onDismiss,
+        title = Strings.boardDeleteConfirm,
+        maxWidth = 400.dp,
+        footer = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
             ) {
-                val imageUrl = item.imageUrl
-                if (!imageUrl.isNullOrBlank()) {
-                    NetworkImage(
-                        url = imageUrl,
-                        contentDescription = item.roomType.ifBlank { item.style }.ifBlank { item.toolTitle },
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f),
-                                        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.12f),
-                                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f),
-                                    ),
-                                ),
-                            ),
-                    )
-                    Icon(
-                        Icons.Rounded.Star,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(32.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                    )
-                }
-                Surface(
-                    onClick = {
-                        onToggleFavorite()
-                    },
-                    shape = HomeDecorShape.Badge,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(HomeDecorSpacing.Sm)
-                        .size(26.dp),
+                TextButton(onClick = onDismiss) { Text(Strings.boardCancel) }
+                Spacer(Modifier.width(HomeDecorSpacing.Sm))
+                TextButton(
+                    onClick = onConfirm,
+                    modifier = Modifier.testTag(Strings.TestTags.boardDeleteConfirm),
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Rounded.Star,
-                            contentDescription = "Remove from favorites",
-                            modifier = Modifier.padding(5.dp).size(16.dp),
-                            tint = MaterialTheme.colorScheme.tertiary,
-                        )
-                    }
+                    Text(Strings.boardDelete, color = MaterialTheme.colorScheme.error)
                 }
             }
-            Column(Modifier.padding(HomeDecorSpacing.Md)) {
-                Text(
-                    item.toolTitle.ifBlank { item.style },
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (item.style.isNotBlank() || item.roomType.isNotBlank()) {
-                    Text(
-                        item.style.ifBlank { item.roomType },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AddFavoriteCard(onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = HomeDecorShape.Card,
-        color = Color.Transparent,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = Modifier
-            .minimumTouchTarget()
-            .semantics {
-                contentDescription = Strings.favorite
-                role = Role.Button
-            },
+        },
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .height(155.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                Icons.Rounded.Add,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-            )
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
-            Text(
-                Strings.favorite,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
+        Text(
+            Strings.boardDeleteConfirmBody,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
-
-@Composable
-private fun BoardProjectCard(item: BoardItem, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = HomeDecorShape.Card,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = Modifier.testTag(Strings.formatTestTag(Strings.TestTags.boardProjectCard, item.id)),
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(HomeDecorShape.Large),
-            ) {
-                val imageUrl = item.imageUrl
-                if (!imageUrl.isNullOrBlank()) {
-                    NetworkImage(
-                        url = imageUrl,
-                        contentDescription = item.toolTitle.ifBlank { item.roomType },
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f),
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
-                                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f),
-                                    ),
-                                ),
-                            ),
-                    )
-                    Icon(
-                        Icons.Rounded.AutoAwesome,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(24.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                    )
-                }
-                Surface(
-                    shape = HomeDecorShape.Badge,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(HomeDecorSpacing.Sm)
-                        .size(26.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Rounded.FolderOpen,
-                            contentDescription = "Open project",
-                            modifier = Modifier.size(13.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            }
-            Column(Modifier.padding(HomeDecorSpacing.Md)) {
-                Text(
-                    item.toolTitle.ifBlank { item.roomType },
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (item.roomType.isNotBlank()) {
-                    Text(
-                        item.roomType,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-    }
-}
-
 
 // ---------------------------------------------------------------------------
 // Loading & Error
@@ -1359,22 +956,13 @@ private fun BoardProjectCard(item: BoardItem, onClick: () -> Unit) {
 @Composable
 private fun BoardLoadingContent() {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(48.dp),
-            )
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(HomeDecorSpacing.Md))
-            Text(
-                text = Strings.loadingContent,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(Strings.loadingContent, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -1382,23 +970,13 @@ private fun BoardLoadingContent() {
 @Composable
 private fun BoardErrorContent(message: String) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = Strings.errorGeneric,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Text(Strings.errorGeneric, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
             Spacer(Modifier.height(HomeDecorSpacing.Xs))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

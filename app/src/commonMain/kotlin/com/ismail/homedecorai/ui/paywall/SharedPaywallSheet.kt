@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,6 +82,7 @@ import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.showToast
 import com.ismail.homedecorai.ui.rememberIsDesktop
 import com.ismail.homedecorai.ui.theme.*
+import com.ismail.homedecorai.ui.theme.isReducedMotionEnabled
 import homedecorai.app.generated.resources.Res
 import homedecorai.app.generated.resources.assets_media_paywall_carouseljapandibedroom
 import kotlinx.datetime.Clock
@@ -311,7 +313,7 @@ private fun PaywallTopBar(
                     imageVector = if (currentStep == 1) Icons.Rounded.Close else Icons.Rounded.ArrowBack,
                     contentDescription = if (currentStep == 1) Strings.proA11yClose else Strings.paywallA11yBack,
                     tint = ProTextSecondary,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(HomeDecorIconSize.Large),
                 )
             }
         }
@@ -354,7 +356,7 @@ private fun PaywallTopBar(
                 imageVector = Icons.Rounded.Close,
                 contentDescription = Strings.proA11yClose,
                 tint = ProTextSecondary,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(HomeDecorIconSize.Large),
             )
         }
     }
@@ -525,11 +527,21 @@ private fun PaywallPlanCard(
         label = "plan_border",
     )
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val cardScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+        label = "planCardScale",
+    )
+
     Surface(
         shape = HomeDecorShape.Card,
         color = when {
             selected && badge != null -> colors.accentSurface
             selected -> colors.accentSurface.copy(alpha = 0.5f)
+            isHovered -> colors.accentSurface.copy(alpha = 0.15f)
             else -> colors.cardSurface
         },
         border = BorderStroke(if (selected) 2.dp else 1.dp, borderColor),
@@ -541,7 +553,8 @@ private fun PaywallPlanCard(
                 role = Role.RadioButton
                 contentDescription = Strings.a11yPaywallPlan(title, selected)
             }
-            .clickable(onClick = onClick),
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .scale(cardScale),
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(
@@ -957,7 +970,7 @@ private fun PaywallCtaButton(
                 Icon(
                     Icons.Rounded.Check,
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(HomeDecorIconSize.Large),
                     tint = HomeDecorExtra.onGradientText,
                 )
                 Spacer(Modifier.width(8.dp))
@@ -970,7 +983,7 @@ private fun PaywallCtaButton(
                 Icon(
                     Icons.Rounded.AutoAwesome,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(HomeDecorIconSize.Medium),
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -989,9 +1002,11 @@ private fun PaywallBottomLinks(onRestore: () -> Unit) {
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
     ) {
+        val restoreInteraction = remember { MutableInteractionSource() }
+        val restoreHovered by restoreInteraction.collectIsHoveredAsState()
         Box(
             modifier = Modifier
-                .clickable { onRestore() }
+                .clickable(interactionSource = restoreInteraction, indication = null) { onRestore() }
                 .testTag(Strings.TestTags.paywallRestoreButton)
                 .semantics {
                     role = Role.Button
@@ -1002,7 +1017,7 @@ private fun PaywallBottomLinks(onRestore: () -> Unit) {
         ) {
             Text(
                 Strings.pwS5Restore,
-                color = ProTextMuted,
+                color = if (restoreHovered) ProTextPrimary else ProTextMuted,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
             )
         }

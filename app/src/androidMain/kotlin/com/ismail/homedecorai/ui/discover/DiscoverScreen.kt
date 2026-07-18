@@ -23,7 +23,16 @@ fun DiscoverScreen(
             title = section.title,
             cluster = section.cluster,
             items = section.items.map { item ->
-                GalleryCardItem(id = item.id, title = item.title, category = item.category)
+                GalleryCardItem(
+                    id = item.id,
+                    title = item.title,
+                    category = item.category,
+                    styleType = item.styleType,
+                    description = item.description,
+                    room = item.room,
+                    color = item.color,
+                    mood = item.mood,
+                )
             },
         )
     }
