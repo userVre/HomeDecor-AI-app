@@ -1,5 +1,35 @@
 {
+  "buildCommand": "./gradlew wasmJsBrowserDistribution --no-daemon",
+  "outputDirectory": "build/wasm/packages/HomeDecorAI-app/dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https://cdn.homedecor.ai https://*.openai.azure.com data: blob:; connect-src 'self' https://cdn.homedecor.ai https://*.convex.cloud https://*.clerk.accounts.dev https://api.openai.azure.com wss://*.convex.cloud; font-src 'self' data:; worker-src 'self' blob:; frame-src 'self' https://*.clerk.accounts.dev;"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
   "rewrites": [
-    { "source": "/((?!assets/|app.js|app-.*\\.js|kotlin/|.*\\.wasm|.*\\.css|.*\\.ico|.*\\.png|.*\\.webp|.*\\.svg|.*\\.jpg|.*\\.json).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!assets/|app.js|app-.*\\.js|kotlin/|.*\\.wasm|.*\\.css|.*\\.ico|.*\\.png|.*\\.webp|.*\\.svg|.*\\.jpg|.*\\.json).*)",
+      "destination": "/index.html"
+    }
   ]
 }
