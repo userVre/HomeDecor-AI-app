@@ -1,8 +1,8 @@
 {
-  "buildCommand": "./gradlew wasmJsBrowserDistribution --no-daemon",
-  "outputDirectory": "build/wasm/packages/HomeDecorAI-app/dist",
-  "installCommand": "npm install",
   "framework": null,
+  "buildCommand": "chmod +x ./gradlew && ./gradlew wasmJsBrowserDistribution --no-daemon --stacktrace",
+  "outputDirectory": "build/wasm/packages/HomeDecorAI-app/dist",
+  "installCommand": "",
   "headers": [
     {
       "source": "/(.*)",
