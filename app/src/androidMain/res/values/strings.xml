@@ -182,15 +182,17 @@
   <string name="option_advanced_mood">Mood</string>
   <string name="option_advanced_materials">Materials</string>
   <string name="reference_two_images_title">Choose both images</string>
-  <string name="reference_two_images_body">Add one photo under &quot;Your room&quot;, then one under &quot;Reference image&quot;.</string>
-  <string name="your_room">Your room</string>
+  <string name="reference_two_images_body">Add one photo under &quot;YOUR ROOM PHOTO&quot;, then one under &quot;YOUR REFERENCE STYLE IMAGE&quot;.</string>
+  <string name="your_room">YOUR ROOM PHOTO</string>
   <string name="your_room_body">The photo of the room to transform.</string>
-  <string name="reference_image">Reference image</string>
+  <string name="reference_image">YOUR REFERENCE STYLE IMAGE</string>
   <string name="reference_image_body">The visual style that will guide the transfer.</string>
-  <string name="reference_missing_both_hint">Select &quot;Your room&quot; and &quot;Reference image&quot; to enable Continue.</string>
-  <string name="reference_missing_room_hint">Select &quot;Your room&quot; to continue.</string>
-  <string name="reference_missing_reference_hint">Select &quot;Reference image&quot; to continue.</string>
+  <string name="reference_missing_both_hint">Add &quot;YOUR ROOM PHOTO&quot; and &quot;YOUR REFERENCE STYLE IMAGE&quot; to enable Continue.</string>
+  <string name="reference_missing_room_hint">Add &quot;YOUR ROOM PHOTO&quot; to continue.</string>
+  <string name="reference_missing_reference_hint">Add &quot;YOUR REFERENCE STYLE IMAGE&quot; to continue.</string>
   <string name="reference_empty_preview_title">Image needed</string>
+  <string name="error_file_too_large">File too large, max 10MB</string>
+  <string name="error_unsupported_format">Unsupported format</string>
   <string name="style_reference">Style reference</string>
   <string name="reference_added">Reference added</string>
   <string name="no_reference">No reference</string>
@@ -414,6 +416,7 @@
   <string name="choose_material_before_generate">Choose a wall/floor material before generating.</string>
   <string name="ai_generation_unavailable">AI generation is unavailable right now.</string>
   <string name="no_diamonds_recharge">No diamonds left. Recharge to continue.</string>
+  <string name="credits_remainingSnackbar">%1$d credit%2$s remaining</string>
   <string name="image_prepare_failed">Could not prepare this image.</string>
   <string name="design_processing_delayed">The design is still processing. Try again shortly.</string>
   <string name="generation_failed_retry">Generation failed. Try again.</string>
@@ -1312,6 +1315,9 @@
   <string name="board_preview_locked">Sign in to unlock</string>
   <string name="board_upgrade_subtitle">Unlock more generations</string>
   <string name="board_saved_designs_title">Your saved designs</string>
+  <string name="board_guest_sync_header">Your designs are saved on this device. Sign in to sync across devices.</string>
+  <string name="sign_in_to_start_saving">Sign in to start saving</string>
+  <string name="open_tools">Open Tools</string>
 
   <!-- Profile polish -->
   <string name="profile_status_diamonds">Diamonds</string>

@@ -190,16 +190,42 @@ fun SharedProfileScreen(
                     SignInHeroCard(onSignIn = onSignIn, isDesktop = isDesktop)
                 }
 
+                item("account-section-guest") {
+                    ProfileSectionWithLabel(
+                        label = Strings.accountSection,
+                        isDesktop = isDesktop,
+                    ) {
+                        ProfileRow(
+                            icon = Icons.Rounded.Person,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = Strings.accountStatusGuest,
+                            subtitle = Strings.accountStatusGuestBody,
+                        )
+                        ProfileDivider()
+                        ProfileRow(
+                            icon = Icons.Rounded.Diamond,
+                            iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                            iconTint = MaterialTheme.colorScheme.tertiary,
+                            title = Strings.creditsFree,
+                            subtitle = Strings.creditsFreeBody,
+                        )
+                        ProfileDivider()
+                        ProfileRow(
+                            icon = Icons.Rounded.Star,
+                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            title = Strings.subscriptionFree,
+                            subtitle = Strings.subscriptionFreeBody,
+                        )
+                    }
+                }
+
                 item("preferences-section-guest") {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = if (isDesktop) Alignment.TopCenter else Alignment.TopStart,
+                    ProfileSectionWithLabel(
+                        label = Strings.preferencesSection,
+                        isDesktop = isDesktop,
                     ) {
-                    Column(
-                        modifier = if (isDesktop) Modifier.widthIn(max = 800.dp) else Modifier,
-                    ) {
-                    ProfileSectionLabel(Strings.preferencesSection)
-                    SettingsCard(maxWidth = if (isDesktop) 800.dp else null) {
                         ProfileRow(
                             icon = Icons.Rounded.Language,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
@@ -208,21 +234,39 @@ fun SharedProfileScreen(
                             subtitle = Strings.languageBody,
                             onClick = { showLanguageDialog = true },
                         )
+                        ProfileDivider()
+                        ProfileRow(
+                            icon = Icons.Rounded.Settings,
+                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                            iconTint = MaterialTheme.colorScheme.secondary,
+                            title = Strings.themeLabel,
+                            subtitle = Strings.themeBody,
+                            onClick = { showToast(Strings.toastComingSoon) },
+                        )
                     }
-                    }
+                }
+
+                item("billing-section-guest") {
+                    ProfileSectionWithLabel(
+                        label = Strings.billingSection,
+                        isDesktop = isDesktop,
+                    ) {
+                        ProfileRow(
+                            icon = Icons.Rounded.Diamond,
+                            iconBg = MaterialTheme.colorScheme.primaryContainer,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = Strings.buyExtraCredits,
+                            subtitle = Strings.buyExtraCreditsBody,
+                            onClick = onOpenDiamonds,
+                        )
                     }
                 }
 
                 item("support-section-guest") {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = if (isDesktop) Alignment.TopCenter else Alignment.TopStart,
+                    ProfileSectionWithLabel(
+                        label = Strings.supportSection,
+                        isDesktop = isDesktop,
                     ) {
-                    Column(
-                        modifier = if (isDesktop) Modifier.widthIn(max = 800.dp) else Modifier,
-                    ) {
-                    ProfileSectionLabel(Strings.supportSection)
-                    SettingsCard(maxWidth = if (isDesktop) 800.dp else null) {
                         ProfileRow(
                             icon = Icons.Rounded.Help,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
@@ -250,20 +294,13 @@ fun SharedProfileScreen(
                             onClick = { onOpenUrl("mailto:support@homedecorai.com?subject=Feedback") },
                         )
                     }
-                    }
-                    }
                 }
 
                 item("legal-section-guest") {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = if (isDesktop) Alignment.TopCenter else Alignment.TopStart,
+                    ProfileSectionWithLabel(
+                        label = Strings.legalSection,
+                        isDesktop = isDesktop,
                     ) {
-                    Column(
-                        modifier = if (isDesktop) Modifier.widthIn(max = 800.dp) else Modifier,
-                    ) {
-                    ProfileSectionLabel(Strings.legalSection)
-                    SettingsCard(maxWidth = if (isDesktop) 800.dp else null) {
                         ProfileRow(
                             icon = Icons.Rounded.Shield,
                             iconBg = MaterialTheme.colorScheme.tertiaryContainer,
@@ -282,22 +319,10 @@ fun SharedProfileScreen(
                             onClick = { showToast(Strings.toastComingSoon) },
                         )
                     }
-                    }
-                    }
                 }
             } else {
                 item("profile-hero") {
                     SignedInProfileHero(state = state, isDesktop = isDesktop)
-                }
-
-                item("status-cards") {
-                    ProfileStatusCards(
-                        state = state,
-                        onDiamondsClick = onOpenDiamonds,
-                        onPlanClick = onOpenPaywall,
-                        onSavedClick = onOpenBoard,
-                        isDesktop = isDesktop,
-                    )
                 }
 
                 if (isDesktop) {
@@ -312,7 +337,7 @@ fun SharedProfileScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
                         ) {
-                            // Left: Account + Subscription
+                            // Left: Account + Billing
                             Column(modifier = Modifier.weight(1f)) {
                                 ProfileSectionLabel(Strings.accountSection)
                                 SettingsCard {
@@ -324,7 +349,12 @@ fun SharedProfileScreen(
                                         subtitle = Strings.editProfileBody,
                                         onClick = onSettings,
                                     )
-                                    ProfileDivider()
+                                }
+
+                                Spacer(Modifier.height(HomeDecorSpacing.Base))
+
+                                ProfileSectionLabel(Strings.billingSection)
+                                SettingsCard {
                                     ProfileRow(
                                         icon = Icons.Rounded.Diamond,
                                         iconBg = MaterialTheme.colorScheme.primaryContainer,
@@ -333,12 +363,7 @@ fun SharedProfileScreen(
                                         subtitle = Strings.myDiamondsBody(state.diamonds),
                                         onClick = onOpenDiamonds,
                                     )
-                                }
-
-                                Spacer(Modifier.height(HomeDecorSpacing.Base))
-
-                                ProfileSectionLabel(Strings.subscriptionStatus)
-                                SettingsCard {
+                                    ProfileDivider()
                                     ProfileRow(
                                         icon = Icons.Rounded.Star,
                                         iconBg = if (state.isPro) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer,
@@ -347,11 +372,52 @@ fun SharedProfileScreen(
                                         subtitle = if (state.isPro) Strings.currentPlanBodyPro else Strings.currentPlanBodyFree,
                                         onClick = onOpenPaywall,
                                     )
+                                    ProfileDivider()
+                                    ProfileRow(
+                                        icon = Icons.Rounded.Diamond,
+                                        iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.tertiary,
+                                        title = Strings.buyExtraCredits,
+                                        subtitle = Strings.buyExtraCreditsBody,
+                                        onClick = onOpenDiamonds,
+                                    )
+                                    ProfileDivider()
+                                    ProfileRow(
+                                        icon = Icons.Rounded.Settings,
+                                        iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.secondary,
+                                        title = Strings.manageBilling,
+                                        subtitle = Strings.manageBillingBody,
+                                        onClick = { showToast(Strings.toastComingSoon) },
+                                    )
                                 }
                             }
 
-                            // Right: Saved + Support + Legal
+                            // Right: Preferences + Saved + Support + Legal
                             Column(modifier = Modifier.weight(1f)) {
+                                ProfileSectionLabel(Strings.preferencesSection)
+                                SettingsCard {
+                                    ProfileRow(
+                                        icon = Icons.Rounded.Language,
+                                        iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.tertiary,
+                                        title = Strings.languageLabel,
+                                        subtitle = Strings.languageBody,
+                                        onClick = { showLanguageDialog = true },
+                                    )
+                                    ProfileDivider()
+                                    ProfileRow(
+                                        icon = Icons.Rounded.Settings,
+                                        iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.secondary,
+                                        title = Strings.themeLabel,
+                                        subtitle = Strings.themeBody,
+                                        onClick = { showToast(Strings.toastComingSoon) },
+                                    )
+                                }
+
+                                Spacer(Modifier.height(HomeDecorSpacing.Base))
+
                                 ProfileSectionLabel(Strings.profileSavedDesigns)
                                 ProfileSavedDesignsPreview(
                                     state = state,
@@ -368,7 +434,7 @@ fun SharedProfileScreen(
                                         iconTint = MaterialTheme.colorScheme.tertiary,
                                         title = Strings.helpCenter,
                                         subtitle = Strings.helpCenterBody,
-                            onClick = { showToast(Strings.toastComingSoon) },
+                                        onClick = { showToast(Strings.toastComingSoon) },
                                     )
                                     ProfileDivider()
                                     ProfileRow(
@@ -400,7 +466,7 @@ fun SharedProfileScreen(
                                         iconTint = MaterialTheme.colorScheme.tertiary,
                                         title = Strings.termsOfService,
                                         subtitle = Strings.termsOfServiceBody,
-                            onClick = { showToast(Strings.toastComingSoon) },
+                                        onClick = { showToast(Strings.toastComingSoon) },
                                     )
                                     ProfileDivider()
                                     ProfileRow(
@@ -409,8 +475,8 @@ fun SharedProfileScreen(
                                         iconTint = MaterialTheme.colorScheme.secondary,
                                         title = Strings.privacyPolicyLabel,
                                         subtitle = Strings.privacyPolicyBody,
-                            onClick = { showToast(Strings.toastComingSoon) },
-                                     )
+                                        onClick = { showToast(Strings.toastComingSoon) },
+                                    )
                                 }
                             }
                         }
@@ -428,7 +494,35 @@ fun SharedProfileScreen(
                                 subtitle = Strings.editProfileBody,
                                 onClick = onSettings,
                             )
+                        }
+                    }
+
+                    item("preferences-section") {
+                        ProfileSectionLabel(Strings.preferencesSection)
+                        SettingsCard {
+                            ProfileRow(
+                                icon = Icons.Rounded.Language,
+                                iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                                iconTint = MaterialTheme.colorScheme.tertiary,
+                                title = Strings.languageLabel,
+                                subtitle = Strings.languageBody,
+                                onClick = { showLanguageDialog = true },
+                            )
                             ProfileDivider()
+                            ProfileRow(
+                                icon = Icons.Rounded.Settings,
+                                iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                                iconTint = MaterialTheme.colorScheme.secondary,
+                                title = Strings.themeLabel,
+                                subtitle = Strings.themeBody,
+                                onClick = { showToast(Strings.toastComingSoon) },
+                            )
+                        }
+                    }
+
+                    item("billing-section") {
+                        ProfileSectionLabel(Strings.billingSection)
+                        SettingsCard {
                             ProfileRow(
                                 icon = Icons.Rounded.Diamond,
                                 iconBg = MaterialTheme.colorScheme.primaryContainer,
@@ -436,6 +530,33 @@ fun SharedProfileScreen(
                                 title = Strings.myDiamonds,
                                 subtitle = Strings.myDiamondsBody(state.diamonds),
                                 onClick = onOpenDiamonds,
+                            )
+                            ProfileDivider()
+                            ProfileRow(
+                                icon = Icons.Rounded.Star,
+                                iconBg = if (state.isPro) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer,
+                                iconTint = if (state.isPro) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary,
+                                title = Strings.currentPlan,
+                                subtitle = if (state.isPro) Strings.currentPlanBodyPro else Strings.currentPlanBodyFree,
+                                onClick = onOpenPaywall,
+                            )
+                            ProfileDivider()
+                            ProfileRow(
+                                icon = Icons.Rounded.Diamond,
+                                iconBg = MaterialTheme.colorScheme.tertiaryContainer,
+                                iconTint = MaterialTheme.colorScheme.tertiary,
+                                title = Strings.buyExtraCredits,
+                                subtitle = Strings.buyExtraCreditsBody,
+                                onClick = onOpenDiamonds,
+                            )
+                            ProfileDivider()
+                            ProfileRow(
+                                icon = Icons.Rounded.Settings,
+                                iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                                iconTint = MaterialTheme.colorScheme.secondary,
+                                title = Strings.manageBilling,
+                                subtitle = Strings.manageBillingBody,
+                                onClick = { showToast(Strings.toastComingSoon) },
                             )
                         }
                     }
@@ -448,20 +569,6 @@ fun SharedProfileScreen(
                         )
                     }
 
-                    item("subscription-section") {
-                        ProfileSectionLabel(Strings.subscriptionStatus)
-                        SettingsCard {
-                            ProfileRow(
-                                icon = Icons.Rounded.Star,
-                                iconBg = if (state.isPro) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer,
-                                iconTint = if (state.isPro) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary,
-                                title = Strings.currentPlan,
-                                subtitle = if (state.isPro) Strings.currentPlanBodyPro else Strings.currentPlanBodyFree,
-                                onClick = onOpenPaywall,
-                            )
-                        }
-                    }
-
                     item("support-section") {
                         ProfileSectionLabel(Strings.supportSection)
                         SettingsCard {
@@ -471,7 +578,7 @@ fun SharedProfileScreen(
                                 iconTint = MaterialTheme.colorScheme.tertiary,
                                 title = Strings.helpCenter,
                                 subtitle = Strings.helpCenterBody,
-                            onClick = { showToast(Strings.toastComingSoon) },
+                                onClick = { showToast(Strings.toastComingSoon) },
                             )
                             ProfileDivider()
                             ProfileRow(
@@ -508,16 +615,16 @@ fun SharedProfileScreen(
                             ProfileDivider()
                             ProfileRow(
                                 icon = Icons.Rounded.Shield,
-                            iconBg = MaterialTheme.colorScheme.secondaryContainer,
-                            iconTint = MaterialTheme.colorScheme.secondary,
-                            title = Strings.privacyPolicyLabel,
-                            subtitle = Strings.privacyPolicyBody,
-                            onClick = { showToast(Strings.toastComingSoon) },
-                        )
+                                iconBg = MaterialTheme.colorScheme.secondaryContainer,
+                                iconTint = MaterialTheme.colorScheme.secondary,
+                                title = Strings.privacyPolicyLabel,
+                                subtitle = Strings.privacyPolicyBody,
+                                onClick = { showToast(Strings.toastComingSoon) },
+                            )
+                        }
                     }
-                }
 
-                item("app-info-section") {
+                    item("app-info-section") {
                         ProfileSectionLabel(Strings.appInfoSection)
                         SettingsCard {
                             ProfileRow(
@@ -577,20 +684,13 @@ private fun SignInHeroCard(onSignIn: () -> Unit, isDesktop: Boolean = false) {
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            Text(
-                Strings.profileSignInBody,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = if (isDesktop) HomeDecorSpacing.Xl else 0.dp),
-            )
             Button(
                 onClick = onSignIn,
                 shape = HomeDecorShape.Button,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(HomeDecorSpacing.ButtonHeight)
+                    .height(56.dp)
                     .testTag(Strings.TestTags.profileSignInButton)
                     .semantics { contentDescription = Strings.profileSignInRegister },
             ) {
@@ -1024,6 +1124,27 @@ private fun ProfileSectionLabel(label: String) {
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurface,
     )
+}
+
+@Composable
+private fun ProfileSectionWithLabel(
+    label: String,
+    isDesktop: Boolean,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = if (isDesktop) Alignment.TopCenter else Alignment.TopStart,
+    ) {
+        Column(
+            modifier = if (isDesktop) Modifier.widthIn(max = 800.dp) else Modifier,
+        ) {
+            ProfileSectionLabel(label)
+            SettingsCard(maxWidth = if (isDesktop) 800.dp else null) {
+                content()
+            }
+        }
+    }
 }
 
 @Composable

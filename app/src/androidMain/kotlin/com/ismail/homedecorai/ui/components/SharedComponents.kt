@@ -49,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -182,6 +183,56 @@ fun MaskActionButton(
 }
 
 @Composable
+private fun styleSwatchColor(label: String): Color = when {
+    label.contains("Moderne", ignoreCase = true) -> Color(0xFF1B5860)
+    label.contains("Noël", ignoreCase = true) -> Color(0xFFC62828)
+    label.contains("Luxe", ignoreCase = true) -> Color(0xFF7A5B10)
+    label.contains("Japandi", ignoreCase = true) -> Color(0xFF8D6E63)
+    label.contains("Zen", ignoreCase = true) -> Color(0xFF4A6B3E)
+    label.contains("Jardin anglais", ignoreCase = true) -> Color(0xFF66BB6A)
+    label.contains("Cyberpunk", ignoreCase = true) -> Color(0xFF7C4DFF)
+    label.contains("Tropicale", ignoreCase = true) -> Color(0xFFFF7043)
+    label.contains("Peach", ignoreCase = true) -> Color(0xFFFFCBA4)
+    label.contains("Minimaliste", ignoreCase = true) -> Color(0xFF9E9E9E)
+    label.contains("Marocain", ignoreCase = true) -> Color(0xFFD84315)
+    label.contains("Scandinave", ignoreCase = true) -> Color(0xFFBCAAA4)
+    label.contains("Bohème", ignoreCase = true) -> Color(0xFFA1887F)
+    label.contains("Midcentury", ignoreCase = true) -> Color(0xFFE65100)
+    label.contains("Art Deco", ignoreCase = true) -> Color(0xFF1A237E)
+    label.contains("Côtier", ignoreCase = true) -> Color(0xFF4FC3F7)
+    label.contains("Rustique", ignoreCase = true) -> Color(0xFF795548)
+    label.contains("Vintage", ignoreCase = true) -> Color(0xFF8D6E63)
+    label.contains("Méditerranéen", ignoreCase = true) -> Color(0xFF1565C0)
+    label.contains("Glam", ignoreCase = true) -> Color(0xFFAD1457)
+    label.contains("Campagne française", ignoreCase = true) -> Color(0xFFA5D6A7)
+    label.contains("Marbre", ignoreCase = true) -> Color(0xFFF5F0EB)
+    label.contains("Chêne", ignoreCase = true) || label.contains("Oak", ignoreCase = true) -> Color(0xFFC49A6C)
+    label.contains("Noyer", ignoreCase = true) || label.contains("Walnut", ignoreCase = true) -> Color(0xFF5C4033)
+    label.contains("Béton", ignoreCase = true) || label.contains("Concrete", ignoreCase = true) -> Color(0xFF9E9E9E)
+    label.contains("Terrazzo", ignoreCase = true) -> Color(0xFFE8E0D0)
+    label.contains("Tuile", ignoreCase = true) -> Color(0xFFB0BEC5)
+    label.contains("Chevron", ignoreCase = true) -> Color(0xFF6D4C41)
+    label.contains("Paysage", ignoreCase = true) -> Color(0xFF4CAF50)
+    label.contains("Piscine", ignoreCase = true) -> Color(0xFF29B6F6)
+    label.contains("Limewash", ignoreCase = true) -> Color(0xFFF5F0E8)
+    label.contains("White Tile", ignoreCase = true) -> Color(0xFFF0F0F0)
+    label.contains("Black Tile", ignoreCase = true) -> Color(0xFF2A2A2A)
+    label.contains("Beige", ignoreCase = true) -> Color(0xFFD4C0A8)
+    label.contains("Dark", ignoreCase = true) -> Color(0xFF3A3A3A)
+    label.contains("Suggestion IA", ignoreCase = true) -> Color(0xFF7C4DFF)
+    label.contains("Appartement", ignoreCase = true) -> Color(0xFF5C6BC0)
+    label.contains("Maison", ignoreCase = true) -> Color(0xFF26A69A)
+    label.contains("Immeuble", ignoreCase = true) -> Color(0xFF42A5F5)
+    label.contains("Résidentiel", ignoreCase = true) -> Color(0xFF66BB6A)
+    label.contains("Vente", ignoreCase = true) -> Color(0xFFEF5350)
+    label.contains("Villa", ignoreCase = true) -> Color(0xFF26C6DA)
+    label.contains("Patio", ignoreCase = true) -> Color(0xFF8D6E63)
+    label.contains("Cour", ignoreCase = true) -> Color(0xFF66BB6A)
+    label.contains("Terrasse", ignoreCase = true) -> Color(0xFFA1887F)
+    else -> Color(0xFFB5DDE1)
+}
+
+@Composable
 fun StyleChoiceCard(
     label: String,
     selected: Boolean,
@@ -194,11 +245,10 @@ fun StyleChoiceCard(
     val displayLabel = localizedOption(label)
     val cardShape = HomeDecorShape.Large
 
-    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
 
-    // 150ms scale animation on hover/press/selection
     val targetScale = when {
         isPressed -> 0.97f
         isHovered -> 1.01f
@@ -214,10 +264,9 @@ fun StyleChoiceCard(
         label = "styleCardScale",
     )
 
-    // 150ms elevation animation on hover/selection
     val targetElevation = when {
-        selected -> 4.dp
-        isHovered -> 2.dp
+        isHovered -> 4.dp
+        selected -> 2.dp
         else -> 0.dp
     }
     val elevation by animateFloatAsState(
@@ -229,19 +278,18 @@ fun StyleChoiceCard(
     val borderColor = when {
         selected -> MaterialTheme.colorScheme.primary
         isHovered -> MaterialTheme.colorScheme.outline
-        else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)
     }
     val borderWidth = if (selected) 2.dp else 1.dp
 
     Surface(
         onClick = onClick,
         shape = cardShape,
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surface,
-        tonalElevation = elevation.dp,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.30f) else Color.White,
         interactionSource = interactionSource,
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp)
+            .height(72.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .border(borderWidth, borderColor, cardShape)
             .semantics {
@@ -250,132 +298,90 @@ fun StyleChoiceCard(
                 role = Role.RadioButton
             },
     ) {
-        Box {
-            Column {
-                // Image area with stable 3:2 aspect ratio crop
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.BottomCenter,
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (label == "Suggestion IA") {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(24.dp),
                 ) {
-                    if (label == "Suggestion IA") {
-                        Surface(
-                            shape = HomeDecorShape.Medium,
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            tonalElevation = 1.dp,
-                        ) {
-                            Icon(
-                                Icons.Rounded.AutoAwesome,
-                                null,
-                                Modifier.padding(16.dp).size(28.dp),
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    } else {
-                        Image(
-                            painter = painterResource(choiceImageRes(label)),
-                            contentDescription = displayLabel,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.AutoAwesome,
+                            null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary,
                         )
-                        // Bottom scrim for label readability
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
-                                .align(Alignment.BottomCenter)
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            Color.Black.copy(alpha = 0.45f),
-                                        )
-                                    )
-                                ),
-                        )
-                    }
-
-                    // Selection checkmark badge
-                    if (selected) {
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(HomeDecorSpacing.Sm)
-                                .size(24.dp),
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Rounded.Check,
-                                    null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = Color.White,
-                                )
-                            }
-                        }
-                    }
-
-                    // Favorite button (top-left)
-                    if (onFavorite != null) {
-                        IconButton(
-                            onClick = onFavorite,
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(HomeDecorSpacing.Xs)
-                                .size(32.dp),
-                        ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = Color.Black.copy(alpha = 0.4f),
-                                modifier = Modifier.size(28.dp),
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = if (isFavored) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                                        contentDescription = favoriteLabel,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = if (isFavored) Color(0xFFE53935) else Color.White.copy(alpha = 0.9f),
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
-
-                // Label area
-                if (label == "Suggestion IA") {
+            } else {
+                val isPeach = label.contains("Peach", ignoreCase = true)
+                if (isPeach) {
+                    // Peach: 24dp circle with border
                     Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            displayLabel,
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFCBA4))
+                            .border(1.dp, Color(0xFFE0A878), CircleShape),
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(styleSwatchColor(label))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), RoundedCornerShape(6.dp)),
+                    )
+                }
+            }
+
+            Text(
+                displayLabel,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 17.sp),
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1A1C1C),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            if (onFavorite != null) {
+                Surface(
+                    onClick = onFavorite,
+                    shape = CircleShape,
+                    color = Color.Transparent,
+                    modifier = Modifier.size(24.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (isFavored) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            contentDescription = favoriteLabel,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (isFavored) Color(0xFFE53935) else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                } else {
-                    // Label over scrim at bottom of image
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        Text(
-                            displayLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                }
+            }
+
+            if (selected) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            null,
+                            modifier = Modifier.size(12.dp),
+                            tint = Color.White,
                         )
                     }
                 }
@@ -406,7 +412,7 @@ fun MaterialThumbnailCard(
     val displayLabel = localizedOption(label)
     val cardShape = HomeDecorShape.Large
 
-    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
 
@@ -426,8 +432,8 @@ fun MaterialThumbnailCard(
     )
 
     val targetElevation = when {
-        selected -> 4.dp
-        isHovered -> 2.dp
+        isHovered -> 4.dp
+        selected -> 2.dp
         else -> 0.dp
     }
     val elevation by animateFloatAsState(
@@ -439,19 +445,20 @@ fun MaterialThumbnailCard(
     val borderColor = when {
         selected -> MaterialTheme.colorScheme.primary
         isHovered -> MaterialTheme.colorScheme.outline
-        else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)
     }
     val borderWidth = if (selected) 2.dp else 1.dp
+
+    val swatch = materialSwatchSpec(label)
 
     Surface(
         onClick = onClick,
         shape = cardShape,
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surface,
-        tonalElevation = elevation.dp,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.30f) else Color.White,
         interactionSource = interactionSource,
         modifier = modifier
             .fillMaxWidth()
-            .height(140.dp)
+            .height(72.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .border(borderWidth, borderColor, cardShape)
             .semantics {
@@ -460,87 +467,62 @@ fun MaterialThumbnailCard(
                 role = Role.RadioButton
             },
     ) {
-        Box {
-            // Material image with stable aspect ratio crop
-            Image(
-                painter = painterResource(imageRes),
-                contentDescription = displayLabel,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-
-            // Bottom scrim for label readability
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.55f),
-                            )
-                        )
-                    ),
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(swatch.base)
+                    .border(1.dp, swatch.accent.copy(alpha = 0.35f), RoundedCornerShape(6.dp)),
             )
 
-            // Label at bottom
             Text(
                 displayLabel,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 17.sp),
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
-                maxLines = 1,
+                color = Color(0xFF1A1C1C),
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
 
-            // Selection checkmark badge
-            if (selected) {
+            if (onFavorite != null) {
                 Surface(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(HomeDecorSpacing.Sm)
-                        .size(24.dp),
+                    onClick = onFavorite,
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color.Transparent,
+                    modifier = Modifier.size(24.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            Icons.Rounded.Check,
-                            null,
-                            modifier = Modifier.size(14.dp),
-                            tint = Color.White,
+                            imageVector = if (isFavored) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            contentDescription = favoriteLabel,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (isFavored) Color(0xFFE53935) else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
 
-            // Favorite button (top-left)
-            if (onFavorite != null) {
-                IconButton(
-                    onClick = onFavorite,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(HomeDecorSpacing.Xs)
-                        .size(32.dp),
+            if (selected) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.4f),
-                        modifier = Modifier.size(28.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = if (isFavored) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                                contentDescription = favoriteLabel,
-                                modifier = Modifier.size(16.dp),
-                                tint = if (isFavored) Color(0xFFE53935) else Color.White.copy(alpha = 0.9f),
-                            )
-                        }
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.Check,
+                            null,
+                            modifier = Modifier.size(12.dp),
+                            tint = Color.White,
+                        )
                     }
                 }
             }
@@ -729,15 +711,17 @@ fun ModeCard(
         onClick = onClick,
         shape = HomeDecorShape.ExtraExtraLarge,
         color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
         modifier = modifier
             .height(188.dp)
+            .shadow(1.dp, HomeDecorShape.ExtraExtraLarge)
             .semantics {
                 this.selected = selected
                 contentDescription = "$title. $description"
             }
             .border(
             if (selected) 2.dp else 1.dp,
-            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f),
             HomeDecorShape.ExtraExtraLarge,
         ),
     ) {

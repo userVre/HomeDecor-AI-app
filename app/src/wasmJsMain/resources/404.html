@@ -117,18 +117,35 @@
 
     <!-- Main application mount point with ARIA landmark -->
     <div id="composeApp" role="application" aria-label="HomeDecor AI application">
-        <!-- Loading indicator shown before Compose mounts -->
-        <div id="app-loader" role="status" aria-label="Loading HomeDecor AI application" aria-live="polite" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:24px;font-family:system-ui,-apple-system,sans-serif;background:#F5F0EA;">
-            <div style="display:flex;align-items:center;gap:12px;">
+        <!-- Skeleton loading screen shown while WASM binary downloads -->
+        <div id="app-loader" role="status" aria-label="Loading HomeDecor AI application" aria-live="polite" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:20px;font-family:system-ui,-apple-system,sans-serif;background:#F5F0EA;padding:32px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
                 <div style="width:40px;height:40px;background:#1D5C5F;border-radius:12px;display:flex;align-items:center;justify-content:center;">
                     <span style="color:#fff;font-size:20px;font-weight:700;">H</span>
                 </div>
                 <h1 style="margin:0;font-size:24px;font-weight:700;color:#1D5C5F;letter-spacing:-0.5px;">HomeDecor AI</h1>
             </div>
-            <div class="loader-bar-track" style="width:200px;height:4px;background:#E5E0D9;border-radius:4px;overflow:hidden;">
-                <div class="loader-bar-fill" style="width:40%;height:100%;background:#1D5C5F;border-radius:4px;animation:loaderSlide 1.4s ease-in-out infinite;"></div>
+            <div style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:16px;">
+                <div style="width:100%;height:48px;background:rgba(29,92,95,0.08);border-radius:12px;animation:skeletonPulse 1.8s ease-in-out infinite;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.1s infinite;"></div>
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.2s infinite;"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.3s infinite;"></div>
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.4s infinite;"></div>
+                </div>
+                <div style="width:100%;height:56px;background:rgba(29,92,95,0.05);border-radius:14px;animation:skeletonPulse 1.8s ease-in-out 0.5s infinite;"></div>
             </div>
-            <p style="margin:0;color:#4A4540;font-size:13px;">Preparing your design studio…</p>
+            <div style="width:200px;display:flex;flex-direction:column;gap:6px;align-items:center;">
+                <div style="width:100%;height:4px;background:#E5E0D9;border-radius:4px;overflow:hidden;">
+                    <div id="loader-progress-fill" style="width:0%;height:100%;background:linear-gradient(90deg,#1D5C5F,#2A8A8D);border-radius:4px;transition:width 0.3s ease-out;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;width:100%;">
+                    <p id="loader-status" style="margin:0;color:#4A4540;font-size:12px;font-weight:500;">Downloading design engine…</p>
+                    <p id="loader-percent" style="margin:0;color:#1D5C5F;font-size:12px;font-weight:600;">0%</p>
+                </div>
+            </div>
         </div>
         <div id="app-error" role="alert" aria-label="Failed to load application" style="display:none;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:16px;font-family:system-ui,-apple-system,sans-serif;background:#F5F0EA;">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#BA1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -139,10 +156,9 @@
     </div>
 
     <style>
-        @keyframes loaderSlide {
-            0%   { transform: translateX(-150%); }
-            50%  { transform: translateX(180%); }
-            100% { transform: translateX(-150%); }
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
         @keyframes fadeOutLoader {
             to { opacity: 0; }
@@ -170,6 +186,38 @@
     </style>
 
     <script src="hd-bridge.js"></script>
+    <script>
+        (function() {
+            var progressFill = document.getElementById('loader-progress-fill');
+            var statusEl = document.getElementById('loader-status');
+            var percentEl = document.getElementById('loader-percent');
+            if (!progressFill) return;
+            var phases = [
+                { pct: 10, text: 'Downloading design engine…' },
+                { pct: 30, text: 'Loading AI models…' },
+                { pct: 60, text: 'Preparing image processor…' },
+                { pct: 85, text: 'Almost ready…' },
+                { pct: 95, text: 'Finalizing…' },
+            ];
+            var phaseIdx = 0, progress = 0;
+            var timer = setInterval(function() {
+                if (phaseIdx < phases.length) {
+                    progress = Math.min(progress + 2, phases[phaseIdx].pct);
+                    progressFill.style.width = progress + '%';
+                    percentEl.textContent = progress + '%';
+                    statusEl.textContent = phases[phaseIdx].text;
+                    if (progress >= phases[phaseIdx].pct) phaseIdx++;
+                }
+                if (progress >= 95) clearInterval(timer);
+            }, 200);
+            window._hdLoadComplete = function() {
+                clearInterval(timer);
+                progressFill.style.width = '100%';
+                percentEl.textContent = '100%';
+                statusEl.textContent = 'Ready!';
+            };
+        })();
+    </script>
     <script src="app.js"></script>
 
     <script>

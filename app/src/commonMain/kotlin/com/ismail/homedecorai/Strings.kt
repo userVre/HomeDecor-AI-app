@@ -6,16 +6,39 @@ object Strings {
     const val PAYMENTS_ENABLED = true
 
     // ── Checkout URLs (Whop) ──────────────────────────────────────────────
-    const val CHECKOUT_URL_YEARLY = "https://whop.com/checkout/plan_FCAl4pKNoaC3X/"
-    const val CHECKOUT_URL_MONTHLY = "https://whop.com/checkout/plan_x7j37eWwsXTK1/"
-    const val CHECKOUT_URL_FAMILY = "https://whop.com/checkout/plan_cBvc9Qkwr476O/"
+    const val CHECKOUT_URL_ESSENTIAL_MONTHLY = "https://whop.com/checkout/plan_01R6HzQwtM2sN"
+    const val CHECKOUT_URL_ESSENTIAL_YEARLY = "https://whop.com/checkout/plan_rJLH5wJVSrZzq"
+    const val CHECKOUT_URL_PRO_MONTHLY = "https://whop.com/checkout/plan_gFcWfrHIqYPuY"
+    const val CHECKOUT_URL_PRO_YEARLY = "https://whop.com/checkout/plan_bOQkU9fDeBx45"
+    const val CHECKOUT_URL_STUDIO_MONTHLY = "https://whop.com/checkout/plan_mcNP3brC8NK4w"
+    const val CHECKOUT_URL_STUDIO_YEARLY = "https://whop.com/checkout/plan_lrUcmLZUyyNOW"
+    const val CHECKOUT_URL_AGENCY_MONTHLY = "https://whop.com/checkout/plan_LlmFu3YvuXbHx"
+    const val CHECKOUT_URL_AGENCY_YEARLY = "https://whop.com/checkout/plan_dMjSL0Dy9T2nn"
     const val CUSTOMER_PORTAL_URL = "https://whop.com/account"
     const val BILLING_SUPPORT_URL = "mailto:support@homedecorai.com?subject=Billing%20Help"
 
+    // ── Whop Plan IDs ─────────────────────────────────────────────────
+    const val WHOP_PLAN_ESSENTIAL_MONTHLY = "plan_01R6HzQwtM2sN"
+    const val WHOP_PLAN_ESSENTIAL_YEARLY = "plan_rJLH5wJVSrZzq"
+    const val WHOP_PLAN_PRO_MONTHLY = "plan_gFcWfrHIqYPuY"
+    const val WHOP_PLAN_PRO_YEARLY = "plan_bOQkU9fDeBx45"
+    const val WHOP_PLAN_STUDIO_MONTHLY = "plan_mcNP3brC8NK4w"
+    const val WHOP_PLAN_STUDIO_YEARLY = "plan_lrUcmLZUyyNOW"
+    const val WHOP_PLAN_AGENCY_MONTHLY = "plan_LlmFu3YvuXbHx"
+    const val WHOP_PLAN_AGENCY_YEARLY = "plan_dMjSL0Dy9T2nn"
+
     fun checkoutUrlForPlan(planId: String): String = when (planId) {
-        "monthly" -> CHECKOUT_URL_MONTHLY
-        "family" -> CHECKOUT_URL_FAMILY
-        else -> CHECKOUT_URL_YEARLY
+        "essential_monthly" -> CHECKOUT_URL_ESSENTIAL_MONTHLY
+        "essential_yearly" -> CHECKOUT_URL_ESSENTIAL_YEARLY
+        "pro_monthly" -> CHECKOUT_URL_PRO_MONTHLY
+        "pro_yearly" -> CHECKOUT_URL_PRO_YEARLY
+        "studio_monthly" -> CHECKOUT_URL_STUDIO_MONTHLY
+        "studio_yearly" -> CHECKOUT_URL_STUDIO_YEARLY
+        "agency_monthly" -> CHECKOUT_URL_AGENCY_MONTHLY
+        "agency_yearly" -> CHECKOUT_URL_AGENCY_YEARLY
+        "monthly" -> CHECKOUT_URL_PRO_MONTHLY
+        "yearly" -> CHECKOUT_URL_PRO_YEARLY
+        else -> CHECKOUT_URL_PRO_MONTHLY
     }
 
     // Navigation
@@ -32,6 +55,44 @@ object Strings {
     const val a11yOpenDiamondStore = "Open diamond store"
     fun a11yToolCard(title: String, description: String) = "$title: $description"
 
+    // Hero Section (Homepage)
+    const val heroTitle = "Transform your space with AI"
+    const val heroSubtitle = "Upload a photo, choose a style, and get a realistic redesign in seconds."
+    const val heroCtaPrimary = "Start with a photo"
+    const val heroCtaSecondary = "Try a sample room"
+
+    // Benefits
+    const val benefitUpload = "Upload any room photo"
+    const val benefitExplore = "Explore realistic styles"
+    const val benefitSave = "Save and compare designs"
+
+    // Wizard discard dialog
+    const val discardTitle = "Discard progress?"
+    const val discardBody = "Your selections will be lost. You can start again anytime."
+    const val discardConfirm = "Discard"
+    const val discardCancel = "Keep editing"
+
+    // Insufficient credits
+    const val insufficientCreditsTitle = "Not enough credits"
+    fun insufficientCreditsBody(needed: Int) = "You need $needed credit${if (needed > 1) "s" else ""} to continue."
+    fun buyCreditsCta(count: Int, price: String) = "Buy $count credits for $price"
+    fun insufficientCreditsWithBuy(needed: Int) = "You need $needed credit${if (needed > 1) "s" else ""} to continue. Buy 10 credits for $1.99"
+
+    // Generation time
+    fun estimatedTime(seconds: String) = "Estimated time: $seconds"
+
+    // Trust
+    const val privacyNote = "Photos are never used for AI training"
+    const val noHiddenCharges = "No hidden charges"
+    const val cancelAnytime = "Cancel anytime"
+    const val trustCtaNearGenerate = "No credit card required. No limits. No trial countdown."
+
+    // Trust Signals (Homepage)
+    const val trustPrivacy = "Photos never used for AI training"
+    const val trustNoCommitment = "No commitment. Cancel anytime"
+    const val trustFreeTrial = "5 free credits to start"
+    const val noCreditCardRequired = "No credit card required"
+
     // Before / After Preview
     const val previewBeforeLabel = "Before"
     const val previewAfterLabel = "After"
@@ -46,6 +107,7 @@ object Strings {
     fun ideasCount(count: Int) = "$count ideas"
     const val seeAll = "See all"
     const val createWithStyle = "Create with this style"
+    const val useThisStyle = "Use this style"
     const val favorited = "Favorited"
     const val favorite = "Favorite"
     const val addToMoodboard = "Save to board"
@@ -87,8 +149,8 @@ object Strings {
     const val subscriptionStatus = "Subscription"
     const val currentPlan = "Current Plan"
     const val currentPlanBodyPro = "You have generous daily generation limits"
-    const val currentPlanBodyFree = "1 generation/day, 5 basic styles, standard export"
-    const val freePlanDetails = "Free plan includes 1 generation per day, 5 basic design styles, and standard quality exports"
+    const val currentPlanBodyFree = "5 free credits to start, all 8 AI tools, standard export"
+    const val freePlanDetails = "Free plan includes 5 credits to start, all 8 AI tools, and standard quality exports"
     const val profileSignInBody = "Create an account to save your profile preferences and access them from any device."
     const val profileSignInRegister = "Sign in to get started"
     const val profileGuestBenefit1Title = "Save designs"
@@ -196,6 +258,7 @@ object Strings {
     const val boardConfirm = "Confirm"
     const val boardGuestLocalNote = "Designs you create are saved locally on this device."
     const val boardGuestSyncNote = "Sign in to save and sync your designs across devices."
+    const val boardGuestLocalSync = "Your designs are saved on this device. Sign in to sync across devices."
     const val boardGuestLocalTitle = "Saved to this device"
     const val boardGuestSyncTitle = "Saved to your account"
     const val startADesign = "Start a design"
@@ -220,6 +283,7 @@ object Strings {
     const val boardGuestBenefitCrossDevice = "Sync across devices"
     const val boardGuestBenefitCrossDeviceBody = "Your board syncs automatically across phone, tablet, and desktop."
     const val boardGuestCta = "Sign in to start saving"
+    const val openTools = "Open Tools"
     const val boardSampleLivingRoom = "Modern Living Room"
     const val boardSampleBedroom = "Cozy Bedroom"
     const val boardSampleKitchen = "Minimalist Kitchen"
@@ -271,6 +335,7 @@ object Strings {
 
     // Profile sections
     const val preferencesSection = "Preferences"
+    const val billingSection = "Billing"
     const val supportSection = "Support"
     const val legalSection = "Legal"
     const val appInfoSection = "App Info"
@@ -278,6 +343,8 @@ object Strings {
     const val helpCenterBody = "Browse FAQs and guides"
     const val contactUs = "Contact Us"
     const val contactUsBody = "Get in touch with our team"
+    const val buyExtraCredits = "Buy extra credits"
+    const val buyExtraCreditsBody = "Purchase diamond packs for more designs"
     const val rateApp = "Send Feedback"
     const val rateAppBody = "Share your thoughts with us"
     const val termsOfService = "Terms of Service"
@@ -400,8 +467,8 @@ object Strings {
     // Upgrade Screen
     const val proActivated = "Pro Activated"
     const val activeProAccess = "You have generous daily generation limits. Keep designing!"
-    const val upgradeV3Headline = "Generous Daily Redesigns. Clean Export."
-    const val upgradeV3Subtitle = "Join thousands of homeowners transforming their spaces."
+    const val upgradeV3Headline = "Choose the plan that fits your space"
+    const val upgradeV3Subtitle = "Start with 5 free credits. No credit card required."
     const val upgradeV3TrialBadge = "Cancel anytime"
     const val upgradeV3Trust = "Cancel anytime. No commitment."
     const val upgradeV3Before = "Before"
@@ -411,58 +478,103 @@ object Strings {
     const val upgradeV3BenefitNoWatermark = "Clean, branded output"
     const val upgradeV3BenefitStyles = "All available styles"
     const val upgradeV3BenefitHistory = "Design history"
-    const val upgradeV3Cta = "Get Pro"
-    const val upgradeV3BottomCta = "Start your Pro journey today"
+    const val upgradeV3Cta = "Start Free Trial"
+    const val upgradeV3BottomCta = "Start with 5 free credits today"
     const val upgradeV3Secondary = "Compare plans"
+
+    // Pricing toggle
+    const val pricingToggleMonthly = "Monthly"
+    const val pricingToggleYearly = "Annual"
+    const val pricingDiscountPill = "-17%"
+    fun pricingSavePercent(monthlyTotal: String, yearlyPrice: String) = "Save \$${monthlyTotal} (${yearlyPrice})"
+    const val perCreditSuffix = "per credit"
+    fun creditsPerMonth(credits: String) = "$credits credits/month"
+    fun perCreditPrice(price: String) = "$price per credit"
+    const val pricingPageTitle = "Choose your plan"
+    const val pricingPageSubtitle = "Start with 5 free credits. No credit card required."
+    const val pricingTrustCta = "No credit card required. No limits. No trial countdown."
+    fun creditsRemainingSnackbar(count: Int) = "$count credit${if (count != 1) "s" else ""} remaining"
+
+    // ── 4-Tier Pricing ──────────────────────────────────────────────
+    // Essential
+    const val upgradePlanEssential = "Essential"
+    const val upgradePlanEssentialMonthlyPrice = "\$14"
+    const val upgradePlanEssentialMonthlyPerCredit = "\$0.35"
+    const val upgradePlanEssentialYearlyPrice = "\$117.99"
+    const val upgradePlanEssentialYearlyCredits = "480"
+    const val upgradePlanEssentialYearlyPerCredit = "\$0.25"
+    const val upgradePlanEssentialCredits = "40"
+    const val upgradePlanEssentialDesc = "For casual redesigners"
+    const val upgradePlanEssentialMonthlyId = "essential_monthly"
+    const val upgradePlanEssentialYearlyId = "essential_yearly"
+    // Pro (Popular)
+    const val upgradePlanPro = "Pro"
+    const val upgradePlanProMonthlyPrice = "\$29"
+    const val upgradePlanProMonthlyPerCredit = "\$0.19"
+    const val upgradePlanProYearlyPrice = "\$243.99"
+    const val upgradePlanProYearlyCredits = "1,800"
+    const val upgradePlanProYearlyPerCredit = "\$0.14"
+    const val upgradePlanProCredits = "150"
+    const val upgradePlanProDesc = "For active home designers"
+    const val upgradePlanProMonthlyId = "pro_monthly"
+    const val upgradePlanProYearlyId = "pro_yearly"
+    const val upgradePlanPopular = "Popular"
+    // Studio
+    const val upgradePlanStudio = "Studio"
+    const val upgradePlanStudioMonthlyPrice = "\$59"
+    const val upgradePlanStudioMonthlyPerCredit = "\$0.15"
+    const val upgradePlanStudioYearlyPrice = "\$495.99"
+    const val upgradePlanStudioYearlyCredits = "4,800"
+    const val upgradePlanStudioYearlyPerCredit = "\$0.10"
+    const val upgradePlanStudioCredits = "400"
+    const val upgradePlanStudioDesc = "For design professionals"
+    const val upgradePlanStudioMonthlyId = "studio_monthly"
+    const val upgradePlanStudioYearlyId = "studio_yearly"
+    // Agency
+    const val upgradePlanAgency = "Agency"
+    const val upgradePlanAgencyMonthlyPrice = "\$119"
+    const val upgradePlanAgencyMonthlyPerCredit = "\$0.12"
+    const val upgradePlanAgencyYearlyPrice = "\$999.99"
+    const val upgradePlanAgencyYearlyCredits = "12,000"
+    const val upgradePlanAgencyYearlyPerCredit = "\$0.08"
+    const val upgradePlanAgencyCredits = "1,000"
+    const val upgradePlanAgencyDesc = "For teams and agencies"
+    const val upgradePlanAgencyMonthlyId = "agency_monthly"
+    const val upgradePlanAgencyYearlyId = "agency_yearly"
+
+    // Legacy plan strings (kept for backward compat)
     const val upgradePlanMonthly = "Monthly"
-    const val upgradePlanMonthlyPrice = "$7.99"
+    const val upgradePlanMonthlyPrice = "\$29"
     const val upgradePlanMonthlyPeriod = "/month"
     const val upgradePlanYearly = "Yearly"
-    const val upgradePlanYearlyPrice = "$39.99"
+    const val upgradePlanYearlyPrice = "\$244"
     const val upgradePlanYearlyPeriod = "/year"
-    const val upgradePlanYearlySave = "Save 58%"
+    const val upgradePlanYearlySave = "Save 30%"
     const val upgradePlanBestValue = "Best Value"
+    const val upgradePlanMonthlyDesc = "Try risk-free. No long commitment."
+    const val upgradePlanYearlyDesc = "Best deal. Generous credits, HD export, and all premium styles."
+    const val upgradePlanBestValueSave = "Popular \u00b7 Save 30%"
+
+    // Free trial trust
+    const val freeTrialTrust = "No credit card required. No limits. No trial countdown."
+
+    // Remaining credits
+    fun creditsRemaining(count: Int) = "$count credit${if (count != 1) "s" else ""} remaining"
+    const val creditsDeducted = "Credits deducted"
+
+    // Legacy plan strings (kept for backward compat with old plan card functions)
     const val upgradePlanFamily = "Family"
     const val upgradePlanFamilyPrice = "$59.99"
     const val upgradePlanFamilyPeriod = "/year"
-    const val upgradePlanFamilySubtitle = "Share with family"
-    const val upgradePlanMonthlyDesc = "Try Pro risk-free. No long commitment."
-    const val upgradePlanYearlyDesc = "Best deal. Generous daily generations, HD export, and all premium styles \u2014 save 58%."
-    const val upgradePlanFamilyDesc = "Share with up to 5 family members. Each gets full Pro access."
     const val upgradePlanFamilySeats = "Up to 5 members"
-    const val upgradeBenefitUnlimited = "AI-powered redesigns"
-    const val upgradeBenefitExport = "Export options"
-    const val upgradeBenefitNoWatermark = "Clean output"
-    const val upgradeBenefitStyles = "All available styles"
-    const val upgradeBenefitHistory = "Design history"
-    const val upgradeBenefitUpdates = "Early access to new features"
-    const val upgradeFeatureCompare = "What you get with Pro"
-    const val upgradeFreePlan = "Free"
-    const val upgradeProPlan = "Pro"
-    const val upgradeCompareGenerations = "AI Generations"
-    const val upgradeCompareGenerationsFree = "1 per day"
-    const val upgradeCompareGenerationsPro = "300/month"
-    const val upgradeCompareExport = "Export Quality"
-    const val upgradeCompareExportFree = "Standard"
-    const val upgradeCompareExportPro = "Premium HD"
-    const val upgradeCompareWatermark = "Watermark"
-    const val upgradeCompareWatermarkFree = "Yes"
-    const val upgradeCompareWatermarkPro = "None"
-    const val upgradeCompareSpeed = "Processing"
-    const val upgradeCompareSpeedFree = "Standard"
-    const val upgradeCompareSpeedPro = "Faster"
-    const val upgradeCompareStyles = "Design Styles"
-    const val upgradeCompareStylesFree = "5 basic"
-    const val upgradeCompareStylesPro = "All available"
-    const val upgradeCompareSupport = "Support"
-    const val upgradeCompareSupportFree = "Community"
-    const val upgradeCompareSupportPro = "Email"
-    const val upgradePlanBestValueSave = "Best Value \u00b7 Save 58%"
+    const val upgradePlanFamilyDesc = "Share with up to 5 family members."
+    const val upgradePlanFamilySubtitle = "Share with family"
+
     const val upgradeFeatureTableTitle = "Feature Comparison"
     const val upgradeFeatureTableHeaderFeature = "Features"
-    const val upgradeFeatureTableHeaderFree = "Free Plan"
+    const val upgradeFeatureTableHeaderFree = "Free (5 credits)"
     const val upgradeFeatureTableHeaderPro = "Pro Plan"
-    const val upgradeFeatureGenerations = "Daily Generation Limits"
+    const val upgradeFeatureGenerations = "Credits"
     const val upgradeFeatureAiTools = "All 8 AI Tools"
     const val upgradeFeatureExport = "High Resolution Export"
     const val upgradeFeatureNoWatermark = "No Watermark"
@@ -518,19 +630,22 @@ object Strings {
     const val wizardReviewCustomNotesHint = "Add any special instructions..."
     const val wizardReviewDiamondCost = "10 diamonds"
     const val wizardReviewDiamondBalance = "120 diamonds remaining"
+    const val wizardReviewCreditCost = "1 credit"
+    fun wizardReviewCreditsBalance(count: Int) = "$count credit${if (count != 1) "s" else ""} remaining"
+    const val wizardReviewTimeEstimate = "Estimated time: 10\u201315 seconds"
 
     // Tool-specific generate actions
-    const val wizardActionInterior = "Generate interior redesign"
-    const val wizardActionExterior = "Generate exterior redesign"
-    const val wizardActionGarden = "Generate garden redesign"
-    const val wizardActionFloor = "Apply flooring \u00B7 10 \uD83D\uDC8E"
-    const val wizardActionPaint = "Apply paint \u00B7 10 \uD83D\uDC8E"
-    const val wizardActionReplace = "Replace furniture"
-    const val wizardActionLayout = "Generate layout redesign"
-    const val wizardActionReference = "Generate style transfer"
+    const val wizardActionInterior = "Generate design \u00B7 1 credit"
+    const val wizardActionExterior = "Generate design \u00B7 1 credit"
+    const val wizardActionGarden = "Generate design \u00B7 1 credit"
+    const val wizardActionFloor = "Generate design \u00B7 1 credit"
+    const val wizardActionPaint = "Generate design \u00B7 1 credit"
+    const val wizardActionReplace = "Generate design \u00B7 1 credit"
+    const val wizardActionLayout = "Generate design \u00B7 1 credit"
+    const val wizardActionReference = "Generate design \u00B7 1 credit"
 
-    const val wizardGenerate = "Generate Design"
-    const val wizardGenerateWithCost = "Generate (1 diamond)"
+    const val wizardGenerate = "Generate design \u00B7 1 credit"
+    const val wizardGenerateWithCost = "Generate (1 credit)"
     const val wizardGenerating = "Generating..."
     const val wizardBack = "Back"
     const val wizardNext = "Next"
@@ -566,6 +681,7 @@ object Strings {
     const val wizardUploadPhotoTip1 = "Show the full room or area"
     const val wizardUploadPhotoTip2 = "Use good lighting, avoid blur"
     const val wizardUploadPhotoTip3 = "Include furniture for best results"
+    const val wizardUploadPhotoTip4 = "JPG, PNG, or WebP \u2014 max 20 MB"
     const val wizardUploadDisabledHint = "Upload a photo or try an example to continue"
     const val wizardExampleCtaLabel = "See it in action"
     const val wizardExampleCtaSubtitle = "Skip the upload \u2014 preview a full transformation with a sample photo"
@@ -582,8 +698,8 @@ object Strings {
     const val wizardRemoveImage = "Remove image"
     const val wizardCropImage = "Crop"
     const val wizardRotateImage = "Rotate"
-    const val wizardInvalidFileType = "Please select a JPG, PNG, or WebP image"
-    const val wizardFileTooLarge = "Image exceeds 20 MB limit. Please choose a smaller file."
+    const val wizardInvalidFileType = "Unsupported format"
+    const val wizardFileTooLarge = "File too large, max 10MB"
     const val wizardUploadSubtitleDesign = "Upload a photo and we'll redesign it with AI"
     const val wizardUploadSubtitlePaint = "Upload a wall photo to preview paint colors"
     const val wizardUploadSubtitleFloor = "Upload a floor photo to explore materials"
@@ -642,7 +758,13 @@ object Strings {
     const val wizardAfterLabel = "AI Design"
     const val wizardSaveToBoard = "Save to Board"
     const val wizardShare = "Share"
+    const val wizardDownload = "Download"
+    const val wizardFavorite = "Favorite"
+    const val wizardFavorited = "Favorited"
     const val wizardNewDesign = "New Design"
+    const val wizardTryAnother = "Try another style"
+    const val wizardFollowUp = "Like the room but want a different sofa?"
+    const val wizardFollowUpCta = "Replace Furniture"
 
     // Discover hover overlay
     const val discoverPreview = "Preview"
@@ -696,6 +818,7 @@ object Strings {
         "floor" -> "Floor Design"
         "layout" -> "Layout Makeover"
         "replace" -> "Replace Furniture"
+        "remove" -> "Remove Object"
         "reference" -> "Reference Style"
         else -> toolId.replaceFirstChar { it.uppercase() }
     }
@@ -708,6 +831,7 @@ object Strings {
         "floor" -> "Explore premium flooring from hardwood to marble tile"
         "layout" -> "Optimize room layout for better flow and functionality"
         "replace" -> "Swap furniture and decor with AI-generated alternatives"
+        "remove" -> "Cleanly remove unwanted objects from your space"
         "reference" -> "Use any reference image to guide your design direction"
         else -> "Explore this tool to enhance your space"
     }
@@ -720,6 +844,7 @@ object Strings {
         "floor" -> "Try flooring"
         "layout" -> "Optimize layout"
         "replace" -> "Swap items"
+        "remove" -> "Remove it"
         "reference" -> "Apply style"
         else -> "Try it"
     }
@@ -732,6 +857,7 @@ object Strings {
         "floor" -> "HD materials"
         "layout" -> "Smart fit"
         "replace" -> "Mask & swap"
+        "remove" -> "Mask & remove"
         "reference" -> "Any image works"
         else -> ""
     }
@@ -821,8 +947,10 @@ object Strings {
 
     // ── Pricing Dialog ───────────────────────────────────────────────────────
     const val pricingDialogTitle = "Pricing"
-    const val pricingFreeLimit = "1 generation per day"
+    const val pricingFreeLimit = "5 free credits to start"
     const val pricingProLimit = "300 generations/month"
+    const val upgradeCompareExportFree = "Download results"
+    const val upgradeCompareExportPro = "Download results in full resolution"
     const val pricingBillingAnnual = "Billed annually"
     const val pricingBillingMonthly = "Billed monthly"
     const val pricingRenewalBehavior = "Auto-renews until canceled"
@@ -848,6 +976,12 @@ object Strings {
 
     // ── Profile-specific (to avoid contradictory copy with My Board) ────────
     const val profileGuestHeadline = "Sign in to personalize your experience"
+    const val accountStatusGuest = "Account Status"
+    const val accountStatusGuestBody = "Guest"
+    const val creditsFree = "Credits"
+    const val creditsFreeBody = "5 free"
+    const val subscriptionFree = "Subscription"
+    const val subscriptionFreeBody = "Free"
     const val profileGuestBody = "Create an account to save your profile preferences and access them from any device."
 
     // ── A11y labels for modal close ──────────────────────────────────────────
@@ -871,6 +1005,7 @@ object Strings {
         const val topNavItem = "top_nav_item_%s"
 
         // Screens
+        const val homeScreen = "home_screen"
         const val toolsScreen = "tools_screen"
         const val discoverScreen = "discover_screen"
         const val boardScreen = "board_screen"

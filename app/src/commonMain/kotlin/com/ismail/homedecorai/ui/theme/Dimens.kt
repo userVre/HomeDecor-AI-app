@@ -1,7 +1,25 @@
 package com.ismail.homedecorai.ui.theme
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+
+// ---------------------------------------------------------------------------
+// AppTokens  –  Single source of truth for layout constants & brand tokens
+// ---------------------------------------------------------------------------
+
+object AppTokens {
+    val MaxContentWidth = 1280.dp
+    val ContentPadding = 24.dp
+    val CardRadius = 20.dp
+    val ChipRadius = 16.dp
+    val SectionGap = 48.dp
+    val ItemGap = 16.dp
+
+    // Brand colors (canonical references)
+    val Primary = Color(0xFF0F4C4C)
+    val Surface = Color(0xFFFBF8F5)
+}
 
 // ---------------------------------------------------------------------------
 // HomeDecor AI Dimensions  –  MD3 Expressive
@@ -48,7 +66,7 @@ object HomeDecorSpacing {
     val WizardBottomContentPadding = 80.dp
 
     // -- Desktop layout --
-    val DesktopMaxWidth = 1200.dp
+    val DesktopMaxWidth = 1280.dp
     val DesktopTopNavHeight = 60.dp    // slightly taller for premium feel
     val DesktopSideRailWidth = 80.dp
     val DesktopContentHorizontalPadding = 40.dp  // generous desktop spacing

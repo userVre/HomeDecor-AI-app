@@ -84,9 +84,18 @@ fun UriOrResourceImage(
             bitmap = withContext(Dispatchers.IO) {
                 runCatching {
                     val sourceBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri))
+                        ImageDecoder.decodeBitmap(
+                            ImageDecoder.createSource(context.contentResolver, uri),
+                        ) { decoder, _, _ ->
+                            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                        }
                     } else {
-                        context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
+                        val opts = BitmapFactory.Options().apply {
+                            inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+                        }
+                        context.contentResolver.openInputStream(uri)?.use {
+                            BitmapFactory.decodeStream(it, null, opts)
+                        }
                     }
                     sourceBitmap?.asImageBitmap()
                 }.getOrNull()

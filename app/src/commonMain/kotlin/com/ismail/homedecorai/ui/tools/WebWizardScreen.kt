@@ -100,6 +100,7 @@ import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -109,6 +110,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -242,6 +247,8 @@ data class WizardState(
     val generatedImageUrl: String? = null,
     val objectSelectedOnImage: Boolean = false,
     val hasDrawnMask: Boolean = false,
+    val creditsRemaining: Int? = null,
+    val isFavorited: Boolean = false,
 )
 
 // ---------------------------------------------------------------------------
@@ -256,6 +263,7 @@ internal fun stepsForTool(toolId: String?): List<WizardStep> = when (toolId) {
     "floor" -> listOf(WizardStep.Upload, WizardStep.Material, WizardStep.FloorStyle, WizardStep.Review)
     "layout" -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Goals, WizardStep.Review)
     "replace" -> listOf(WizardStep.Upload, WizardStep.FurnitureType, WizardStep.Mask, WizardStep.ReplacementStyle, WizardStep.ReplacementPrompt, WizardStep.Review)
+    "remove" -> listOf(WizardStep.Upload, WizardStep.Mask, WizardStep.Review)
     "reference" -> listOf(WizardStep.Upload, WizardStep.ReferenceImage, WizardStep.TransferStrength, WizardStep.Review)
     else -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Style, WizardStep.Palette, WizardStep.Refine, WizardStep.Review)
 }
@@ -301,6 +309,10 @@ private fun buildToolPrompt(state: WizardState): String {
             if (!state.selectedReplacementStyle.isNullOrBlank()) append(" Replacement style: ").append(state.selectedReplacementStyle!!.replace("-", " ")).append(".")
             if (state.replacementPrompt.isNotBlank()) append(" Description: ").append(state.replacementPrompt).append(".")
             append(" Preserve the rest of the room exactly as it is.")
+        }
+        "remove" -> buildString {
+            append("Remove the masked object from the image and fill the area naturally. Preserve the surrounding room, lighting, shadows, and perspective. The removal should be seamless and photorealistic.")
+            if (state.customNotes.isNotBlank()) append(" Additional notes: ").append(state.customNotes).append(".")
         }
         else -> buildString {
             append("Redesign this room with a ")
@@ -436,7 +448,7 @@ private fun stepTitle(step: WizardStep, toolId: String?): String = when (step) {
     WizardStep.FloorStyle -> "Floor Style"
     WizardStep.FurnitureType -> "Furniture Type"
     WizardStep.ReplacementStyle -> "Replacement Style"
-    WizardStep.ReferenceImage -> "Reference Image"
+    WizardStep.ReferenceImage -> "Reference Style"
     WizardStep.Review -> "Review"
 }
 
@@ -821,7 +833,7 @@ private fun uploadTitleForTool(toolId: String?): String = when (toolId) {
     "floor" -> "Upload a photo of your floor"
     "replace" -> "Upload a photo of your furniture"
     "layout" -> "Upload a photo of your floor plan"
-    "reference" -> "Upload a photo of your space"
+    "reference" -> "Upload your room photo"
     else -> "Upload a photo of your room"
 }
 
@@ -968,14 +980,30 @@ fun WebWizardScreen(
     onBack: () -> Unit,
     isGuest: Boolean = false,
     onSignIn: () -> Unit = {},
+    onBuyCredits: (() -> Unit)? = null,
+    guestCredits: Int = 5,
+    onCreditUsed: () -> Unit = {},
+    initialStyle: String? = null,
+    initialRoom: String? = null,
 ) {
-    var state by remember(tool.id) { mutableStateOf(WizardState(tool = tool)) }
+    var state by remember(tool.id) {
+        mutableStateOf(WizardState(
+            tool = tool,
+            selectedStyle = initialStyle,
+            selectedRoom = initialRoom,
+        ))
+    }
     var previousStep by remember { mutableStateOf(state.step) }
     var showBackDialog by remember { mutableStateOf(false) }
     var showCloseDialog by remember { mutableStateOf(false) }
     var showSignInDialog by remember { mutableStateOf(false) }
     var isDecodingImage by remember { mutableStateOf(false) }
-    val maskEditorState = remember { MaskEditorState() }
+    // Lazy: only create MaskEditorState when the Mask step is actually visible
+    // to avoid loading the canvas + stroke manager into WASM memory early.
+    var maskEditorState by remember { mutableStateOf<MaskEditorState?>(null) }
+    if (state.step == WizardStep.Mask && maskEditorState == null) {
+        maskEditorState = MaskEditorState()
+    }
     val scope = rememberCoroutineScope()
     val screenWidth = getScreenWidthDp()
     val isWide = screenWidth >= 700
@@ -987,6 +1015,14 @@ fun WebWizardScreen(
         onDispose {
             scope.coroutineContext[Job]?.children?.forEach { it.cancel() }
             state = WizardState(tool = null)
+        }
+    }
+
+    fun tryGenerate() {
+        if (guestCredits <= 0) {
+            onBuyCredits?.invoke()
+        } else {
+            state = state.copy(isGenerating = true, generationError = null)
         }
     }
 
@@ -1002,6 +1038,11 @@ fun WebWizardScreen(
         if (state.step == WizardStep.Mask) {
             state = state.copy(objectSelectedOnImage = false)
         }
+    }
+
+    // Decrement guest credits on successful generation
+    LaunchedEffect(state.generationComplete) {
+        if (state.generationComplete) onCreditUsed()
     }
 
     // Generation flow: triggered when isGenerating becomes true
@@ -1090,6 +1131,7 @@ fun WebWizardScreen(
 
             val startJson = convexMutationAuth("generations:startGeneration", args)
             val generationId = extractJsonString(startJson, "generationId")
+            val creditsAfter = extractJsonInt(startJson, "creditsRemaining")
             if (generationId.isBlank()) {
                 val error = extractJsonString(startJson, "message").ifBlank { "Failed to start generation" }
                 state = state.copy(isGenerating = false, generationError = error)
@@ -1123,6 +1165,7 @@ fun WebWizardScreen(
                     isGenerating = false,
                     generationComplete = true,
                     generatedImageUrl = imageUrl,
+                    creditsRemaining = if (creditsAfter > 0) creditsAfter else null,
                 )
             } else {
                 state = state.copy(isGenerating = false, generationError = "Generation timed out")
@@ -1175,7 +1218,7 @@ fun WebWizardScreen(
         WizardStep.Refine -> true
         WizardStep.Material -> s.selectedMaterial != null
         WizardStep.Goals -> s.selectedGoals.isNotEmpty()
-        WizardStep.Mask -> mask?.hasMask == true
+        WizardStep.Mask -> mask?.isMaskValid == true
         WizardStep.ReplacementPrompt -> s.replacementPrompt.length >= 3
         WizardStep.TransferStrength -> s.selectedTransferStrength != null
         WizardStep.PaintColor -> s.selectedPaintColor != null
@@ -1221,7 +1264,7 @@ fun WebWizardScreen(
         AlertDialog(
             onDismissRequest = { showCloseDialog = false },
             title = { Text("Discard progress?") },
-            text = { Text("You have unsaved changes. Are you sure you want to close?") },
+            text = { Text("Your upload will be lost.") },
             confirmButton = {
                 TextButton(onClick = {
                     showCloseDialog = false
@@ -1232,7 +1275,7 @@ fun WebWizardScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showCloseDialog = false }) {
-                    Text("Stay")
+                    Text("Cancel")
                 }
             },
         )
@@ -1369,9 +1412,7 @@ fun WebWizardScreen(
                         ReviewStep(
                             summaryItems = summaryItems,
                             generateAction = generateActionForTool(state.tool?.id),
-                            onGenerate = {
-                                state = state.copy(isGenerating = true, generationError = null)
-                            },
+                            onGenerate = { tryGenerate() },
                             onEditPhoto = {
                                 state = state.copy(step = WizardStep.Upload)
                             },
@@ -1390,10 +1431,21 @@ fun WebWizardScreen(
                                     generationError = null,
                                 )
                             },
+                            onDownload = {
+                                state.generatedImageUrl?.let { url ->
+                                    browserDownloadFile(url, "homedecor-ai-design.png")
+                                }
+                            },
+                            onFavorite = {
+                                state = state.copy(isFavorited = !state.isFavorited)
+                            },
+                            isFavorited = state.isFavorited,
                             generatedImageUrl = state.generatedImageUrl,
                             isGuest = isGuest,
                             onShowSignInDialog = { showSignInDialog = true },
                             isWide = isWide,
+                            creditsRemaining = state.creditsRemaining,
+                            onBuyCredits = onBuyCredits,
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
@@ -1416,9 +1468,9 @@ fun WebWizardScreen(
                     WizardStep.Mask -> MaskStep(
                         state = state,
                         isWide = isWide,
-                        maskEditorState = maskEditorState,
+                        maskEditorState = maskEditorState!!,
                         onMaskReady = {
-                            state = state.copy(maskStrokes = maskEditorState.exportStrokes())
+                            state = state.copy(maskStrokes = maskEditorState?.exportStrokes() ?: emptyList())
                         },
                         onStateChange = { state = it },
                         modifier = Modifier.fillMaxSize(),
@@ -1493,9 +1545,7 @@ fun WebWizardScreen(
                         ReviewStep(
                             summaryItems = summaryItems,
                             generateAction = generateActionForTool(state.tool?.id),
-                            onGenerate = {
-                                state = state.copy(isGenerating = true, generationError = null)
-                            },
+                            onGenerate = { tryGenerate() },
                             onEditPhoto = {
                                 state = state.copy(step = WizardStep.Upload)
                             },
@@ -1514,10 +1564,21 @@ fun WebWizardScreen(
                                     generationError = null,
                                 )
                             },
+                            onDownload = {
+                                state.generatedImageUrl?.let { url ->
+                                    browserDownloadFile(url, "homedecor-ai-design.png")
+                                }
+                            },
+                            onFavorite = {
+                                state = state.copy(isFavorited = !state.isFavorited)
+                            },
+                            isFavorited = state.isFavorited,
                             generatedImageUrl = state.generatedImageUrl,
                             isGuest = isGuest,
                             onShowSignInDialog = { showSignInDialog = true },
                             isWide = isWide,
+                            creditsRemaining = state.creditsRemaining,
+                            onBuyCredits = onBuyCredits,
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
@@ -1574,9 +1635,7 @@ fun WebWizardScreen(
                     state = state.copy(step = steps[currentIndex + 1], error = null)
                 }
             },
-            onGenerate = {
-                state = state.copy(isGenerating = true, generationError = null)
-            },
+            onGenerate = { tryGenerate() },
             maskEditorState = maskEditorState,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -1693,88 +1752,79 @@ private fun WizardProgressBar(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 steps.forEachIndexed { index, step ->
                     val isCompleted = index < currentIndex
                     val isActive = index == currentIndex
 
-                    // Left connector line
-                    if (index > 0) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(3.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(3.dp)
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(
-                                        if (isCompleted || isActive)
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-                                        else
-                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                    ),
-                            )
-                        }
-                    }
-
-                    // Dot with pulse animation
                     Box(
-                        modifier = Modifier
-                            .size(if (isActive) 12.dp else 10.dp)
-                            .graphicsLayer {
-                                if (isActive) {
-                                    val scale = 1f + pulseAnim.value * 0.18f
-                                    scaleX = scale
-                                    scaleY = scale
-                                    alpha = 0.85f + pulseAnim.value * 0.15f
-                                }
-                            }
-                            .clip(CircleShape)
-                            .background(
-                                when {
-                                    isCompleted -> MaterialTheme.colorScheme.primary
-                                    isActive -> MaterialTheme.colorScheme.primary
-                                    else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                }
-                            ),
+                        modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (isCompleted) {
-                            Icon(
-                                Icons.Rounded.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(6.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-                    }
-
-                    // Right connector line
-                    if (index < steps.size - 1) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(3.dp),
-                            contentAlignment = Alignment.Center,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            if (index > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(3.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(
+                                            if (isCompleted || isActive)
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                                            else
+                                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        ),
+                                )
+                            }
+
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(3.dp)
-                                    .clip(RoundedCornerShape(2.dp))
+                                    .size(if (isActive) 12.dp else 10.dp)
+                                    .graphicsLayer {
+                                        if (isActive) {
+                                            val scale = 1f + pulseAnim.value * 0.18f
+                                            scaleX = scale
+                                            scaleY = scale
+                                            alpha = 0.85f + pulseAnim.value * 0.15f
+                                        }
+                                    }
+                                    .clip(CircleShape)
                                     .background(
-                                        if (isCompleted)
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-                                        else
-                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        when {
+                                            isCompleted -> MaterialTheme.colorScheme.primary
+                                            isActive -> MaterialTheme.colorScheme.primary
+                                            else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        }
                                     ),
-                            )
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (isCompleted) {
+                                    Icon(
+                                        Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(6.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                    )
+                                }
+                            }
+
+                            if (index < steps.size - 1) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(3.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(
+                                            if (isCompleted || isActive)
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                                            else
+                                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        ),
+                                )
+                            }
                         }
                     }
                 }
@@ -1922,6 +1972,7 @@ private fun UploadStep(
                 UploadTipRow(Strings.wizardUploadPhotoTip1)
                 UploadTipRow(Strings.wizardUploadPhotoTip2)
                 UploadTipRow(Strings.wizardUploadPhotoTip3)
+                UploadTipRow(Strings.wizardUploadPhotoTip4)
             }
             Spacer(Modifier.height(12.dp))
             // Privacy note
@@ -2161,28 +2212,45 @@ internal fun LocalImagePreview(
     contentDescription: String? = null,
 ) {
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var decodeError by remember { mutableStateOf<String?>(null) }
     var isDecoding by remember { mutableStateOf(false) }
 
     LaunchedEffect(imageState) {
         when (imageState) {
             is PickedImageData -> {
                 isDecoding = true
-                imageBitmap = withContext(Dispatchers.Default) {
-                    imageState.imageBytes?.let { bytes ->
+                decodeError = null
+                val bytes = imageState.imageBytes
+                if (bytes != null && bytes.isNotEmpty()) {
+                    imageBitmap = withContext(Dispatchers.Default) {
                         try {
                             val downscaled = downscaleImageBytes(bytes)
-                            Image.makeFromEncoded(downscaled).toComposeImageBitmap()
-                        } catch (_: Exception) { null }
+                            val skiaImage = Image.makeFromEncoded(downscaled)
+                            skiaImage.toComposeImageBitmap()
+                        } catch (e: Exception) {
+                            decodeError = "decode failed: ${e.message}"
+                            try {
+                                Image.makeFromEncoded(bytes).toComposeImageBitmap()
+                            } catch (e2: Exception) {
+                                decodeError = "raw decode also failed: ${e2.message} (${bytes.size} bytes)"
+                                null
+                            }
+                        }
                     }
+                } else {
+                    decodeError = "no image bytes (${bytes?.size ?: "null"})"
+                    imageBitmap = null
                 }
                 isDecoding = false
             }
             is ImageBitmap -> {
                 imageBitmap = imageState
+                decodeError = null
                 isDecoding = false
             }
             else -> {
                 imageBitmap = null
+                decodeError = null
                 isDecoding = false
             }
         }
@@ -2215,21 +2283,18 @@ internal fun LocalImagePreview(
             Image(
                 bitmap = imageBitmap!!,
                 contentDescription = contentDescription,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.Crop,
             )
         } else {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                            )
-                        )
-                    ),
+                    .fillMaxWidth()
+                    .height(320.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -2241,7 +2306,7 @@ internal fun LocalImagePreview(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        Strings.wizardPhotoSelected,
+                        decodeError ?: Strings.wizardPhotoSelected,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -2658,9 +2723,9 @@ private fun StyleImageCard(
     )
 
     val targetBgColor = if (isSelected)
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.18f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f)
     else
-        Color.Transparent
+        Color.White
     val animatedBgColor by animateColorAsState(
         targetValue = targetBgColor,
         animationSpec = tween(durationMillis = animDuration),
@@ -2669,7 +2734,12 @@ private fun StyleImageCard(
 
     val imageUrl = remember(styleId) { styleImageUrl(styleId) }
 
-    Box(
+    Surface(
+        onClick = onClick,
+        shape = HomeDecorShape.Card,
+        color = animatedBgColor,
+        border = BorderStroke(animatedBorderWidth, animatedBorderColor),
+        interactionSource = interactionSource,
         modifier = modifier
             .testTag(Strings.formatTestTag(Strings.TestTags.wizardStyleCard, styleId))
             .focusRequester(focusRequester)
@@ -2678,33 +2748,29 @@ private fun StyleImageCard(
                 selected = isSelected
                 contentDescription = Strings.a11yWizardOption(label, isSelected)
             }
-            .scale(scale)
-            .border(
-                width = animatedBorderWidth,
-                color = animatedBorderColor,
-                shape = HomeDecorShape.Card,
-            )
-            .clip(HomeDecorShape.Card)
-            .background(animatedBgColor)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            ),
+            .scale(scale),
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Thumbnail / color dot on the left
             if (imageUrl.isNotEmpty()) {
                 NetworkImage(
                     url = imageUrl,
-                    contentDescription = label,
-                    modifier = Modifier.fillMaxSize(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp)),
                 )
             } else {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .size(48.dp)
+                        .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
                                 listOf(
@@ -2718,34 +2784,18 @@ private fun StyleImageCard(
                     Icon(
                         Icons.Rounded.AutoAwesome,
                         contentDescription = null,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color.Transparent, HomeDecorExtra.scrimHeavy)
-                        )
-                    ),
-            )
-
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .fillMaxWidth(),
-            ) {
+            // Label + description
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     label,
                     style = MaterialTheme.typography.labelLarge,
-                    color = HomeDecorExtra.onGradientText,
+                    color = Color(0xFF1A1C1C),
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -2754,18 +2804,18 @@ private fun StyleImageCard(
                     Text(
                         description,
                         style = MaterialTheme.typography.labelSmall,
-                        color = HomeDecorExtra.onGradientTextSubtle,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
 
+            // Check indicator
             AnimatedVisibility(
                 visible = isSelected,
                 enter = scaleIn(spring(stiffness = Spring.StiffnessHigh)) + fadeIn(),
                 exit = scaleOut() + fadeOut(),
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
             ) {
                 Surface(
                     shape = CircleShape,
@@ -2777,7 +2827,7 @@ private fun StyleImageCard(
                             Icons.Rounded.Check,
                             contentDescription = null,
                             modifier = Modifier.size(14.dp),
-                            tint = HomeDecorExtra.onGradientText,
+                            tint = Color.White,
                         )
                     }
                 }
@@ -3857,7 +3907,7 @@ private fun ReferenceImageStep(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "Add a reference image",
+            "Add your reference style image",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.SemiBold,
@@ -3865,7 +3915,7 @@ private fun ReferenceImageStep(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Upload or select a reference image to guide the style transfer",
+            "Upload an image of the style you want to apply to your room",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -4053,11 +4103,16 @@ private fun FloorMaterialCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val targetScale = when {
+        isPressed -> 0.96f
+        isHovered -> 1.01f
+        else -> 1f
+    }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
+        targetValue = targetScale,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
+            stiffness = Spring.StiffnessMedium,
         ),
         label = "floorCardScale",
     )
@@ -4082,77 +4137,72 @@ private fun FloorMaterialCard(
         isHovered -> MaterialTheme.colorScheme.outline
         else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
     }
+    val borderWidth = if (isSelected) 2.dp else 1.dp
+
+    val targetElevation = when {
+        isHovered -> 4.dp
+        isSelected -> 2.dp
+        else -> 0.dp
+    }
+    val tonalElevation by animateFloatAsState(
+        targetValue = targetElevation.value,
+        animationSpec = tween(durationMillis = 150),
+        label = "floorCardElevation",
+    )
 
     Surface(
         onClick = onClick,
         shape = HomeDecorShape.Card,
-        color = Color.Transparent,
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.30f) else MaterialTheme.colorScheme.surface,
+        tonalElevation = tonalElevation.dp,
         interactionSource = interactionSource,
         modifier = modifier
+            .height(72.dp)
             .semantics {
                 role = Role.RadioButton
                 selected = isSelected
                 contentDescription = Strings.a11yWizardOption(label, isSelected)
             }
-            .scale(scale)
-            .border(
-                width = if (isSelected) 2.5.dp else 1.dp,
-                color = borderColor,
-                shape = HomeDecorShape.Card,
-            ),
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .border(borderWidth, borderColor, HomeDecorShape.Card),
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(HomeDecorShape.Card),
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                materialColor.copy(alpha = 0.3f),
-                                materialColor.copy(alpha = 0.7f),
-                            )
-                        )
-                    ),
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(materialColor)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
             )
 
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(horizontal = 10.dp, vertical = 8.dp)
-                    .fillMaxWidth(),
-            ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (materialId == "marble" || materialId == "laminate")
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        HomeDecorExtra.onGradientText,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                label,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 17.sp),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
 
             if (isSelected) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(22.dp),
+                    modifier = Modifier.size(20.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Rounded.Check,
                             contentDescription = null,
-                            modifier = Modifier.size(13.dp),
-                            tint = HomeDecorExtra.onGradientText,
+                            modifier = Modifier.size(12.dp),
+                            tint = Color.White,
                         )
                     }
                 }
@@ -4172,11 +4222,16 @@ private fun MaterialSwatchCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val targetScale = when {
+        isPressed -> 0.96f
+        isHovered -> 1.01f
+        else -> 1f
+    }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
+        targetValue = targetScale,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow,
+            stiffness = Spring.StiffnessMedium,
         ),
         label = "swatchScale",
     )
@@ -4186,6 +4241,18 @@ private fun MaterialSwatchCard(
         isHovered -> MaterialTheme.colorScheme.outline
         else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
     }
+    val borderWidth = if (isSelected) 2.dp else 1.dp
+
+    val targetElevation = when {
+        isHovered -> 4.dp
+        isSelected -> 2.dp
+        else -> 0.dp
+    }
+    val tonalElevation by animateFloatAsState(
+        targetValue = targetElevation.value,
+        animationSpec = tween(durationMillis = 150),
+        label = "swatchCardElevation",
+    )
 
     val (baseColor, patternType) = when (materialId) {
         "carrara-marble" -> Pair(Color(0xFFF5F0EB), "marble")
@@ -4204,163 +4271,55 @@ private fun MaterialSwatchCard(
     Surface(
         onClick = onClick,
         shape = HomeDecorShape.Card,
-        color = Color.Transparent,
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.30f) else MaterialTheme.colorScheme.surface,
+        tonalElevation = tonalElevation.dp,
         interactionSource = interactionSource,
         modifier = modifier
+            .height(72.dp)
             .semantics {
                 role = Role.RadioButton
                 selected = isSelected
                 contentDescription = Strings.a11yWizardOption(label, isSelected)
             }
-            .scale(scale)
-            .border(
-                width = if (isSelected) 2.5.dp else 1.dp,
-                color = borderColor,
-                shape = HomeDecorShape.Card,
-            ),
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .border(borderWidth, borderColor, HomeDecorShape.Card),
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(HomeDecorShape.Card),
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawRect(color = baseColor)
-                when (patternType) {
-                    "marble" -> {
-                        val veinDark = Color(0xFFB0A89C).copy(alpha = 0.7f)
-                        val veinLight = Color(0xFFD5CFC8).copy(alpha = 0.5f)
-                        drawLine(veinDark, start = Offset(0f, size.height * 0.15f), end = Offset(size.width * 0.6f, size.height), strokeWidth = 4f)
-                        drawLine(veinDark, start = Offset(size.width * 0.25f, 0f), end = Offset(size.width * 0.85f, size.height * 0.85f), strokeWidth = 3f)
-                        drawLine(veinLight, start = Offset(size.width * 0.5f, size.height * 0.05f), end = Offset(size.width, size.height * 0.65f), strokeWidth = 2.5f)
-                        drawLine(veinDark, start = Offset(size.width * 0.1f, size.height * 0.55f), end = Offset(size.width * 0.7f, size.height * 0.3f), strokeWidth = 2f)
-                        drawLine(veinLight, start = Offset(size.width * 0.4f, size.height * 0.7f), end = Offset(size.width * 0.95f, size.height * 0.15f), strokeWidth = 1.5f)
-                    }
-                    "wood" -> {
-                        val grainDark = baseColor.copy(alpha = 0.6f)
-                        val grainLight = baseColor.copy(alpha = 0.35f)
-                        for (i in 0..8) {
-                            val y = size.height * (0.08f + i * 0.1f)
-                            val sw = if (i % 3 == 0) 2.5f else 1.5f
-                            drawLine(grainDark, start = Offset(0f, y), end = Offset(size.width, y + 3f), strokeWidth = sw)
-                        }
-                        drawCircle(grainDark, radius = 6f, center = Offset(size.width * 0.7f, size.height * 0.4f))
-                        drawCircle(grainLight, radius = 3f, center = Offset(size.width * 0.7f, size.height * 0.4f))
-                    }
-                    "concrete" -> {
-                        val speckDark = baseColor.copy(alpha = 0.7f)
-                        val speckLight = Color(0xFFB0B0B0).copy(alpha = 0.4f)
-                        for (i in 0..30) {
-                            val cx = size.width * (0.03f + (i * 0.31f % 1f) * 0.94f)
-                            val cy = size.height * (0.05f + (i * 0.47f % 1f) * 0.9f)
-                            val r = 1.5f + (i % 3).toFloat()
-                            drawCircle(if (i % 2 == 0) speckDark else speckLight, radius = r, center = Offset(cx, cy))
-                        }
-                        val crackColor = baseColor.copy(alpha = 0.55f)
-                        drawLine(crackColor, start = Offset(size.width * 0.2f, 0f), end = Offset(size.width * 0.35f, size.height * 0.4f), strokeWidth = 1f)
-                        drawLine(crackColor, start = Offset(size.width * 0.6f, size.height * 0.6f), end = Offset(size.width * 0.8f, size.height), strokeWidth = 1f)
-                    }
-                    "limewash" -> {
-                        val mottle1 = baseColor.copy(alpha = 0.45f)
-                        val mottle2 = Color(0xFFE8DFD2).copy(alpha = 0.35f)
-                        for (i in 0..20) {
-                            val cx = size.width * (0.05f + (i * 0.37f % 1f) * 0.9f)
-                            val cy = size.height * (0.05f + (i * 0.53f % 1f) * 0.9f)
-                            val r = 4f + (i % 4).toFloat() * 3f
-                            drawCircle(if (i % 3 == 0) mottle1 else mottle2, radius = r, center = Offset(cx, cy))
-                        }
-                    }
-                    "terrazzo" -> {
-                        val chipColors = listOf(
-                            Color(0xFFC49A6C).copy(alpha = 0.7f),
-                            Color(0xFF8B7355).copy(alpha = 0.6f),
-                            Color(0xFFA0522D).copy(alpha = 0.65f),
-                            Color(0xFF6B8E6B).copy(alpha = 0.55f),
-                            Color(0xFF9E8B7E).copy(alpha = 0.5f),
-                        )
-                        for (i in 0..18) {
-                            val cx = size.width * (0.06f + (i * 0.29f % 1f) * 0.88f)
-                            val cy = size.height * (0.08f + (i * 0.43f % 1f) * 0.84f)
-                            val r = 3f + (i % 5).toFloat() * 2f
-                            drawCircle(chipColors[i % chipColors.size], radius = r, center = Offset(cx, cy))
-                        }
-                    }
-                    "tile" -> {
-                        val gridColor = baseColor.copy(alpha = 0.55f)
-                        val cols = 3
-                        val rows = 4
-                        val cellW = size.width / cols
-                        val cellH = size.height / rows
-                        for (c in 1 until cols) {
-                            drawLine(gridColor, start = Offset(c * cellW, 0f), end = Offset(c * cellW, size.height), strokeWidth = 2f)
-                        }
-                        for (r in 1 until rows) {
-                            drawLine(gridColor, start = Offset(0f, r * cellH), end = Offset(size.width, r * cellH), strokeWidth = 2f)
-                        }
-                        val shadeColor = baseColor.copy(alpha = 0.15f)
-                        for (c in 0 until cols) {
-                            for (r in 0 until rows) {
-                                drawRect(shadeColor, topLeft = Offset(c * cellW + 2f, r * cellH + 2f), size = Size(cellW - 4f, cellH - 4f))
-                            }
-                        }
-                    }
-                    else -> {
-                        val gradient = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.08f),
-                                Color.Black.copy(alpha = 0.12f),
-                            )
-                        )
-                        drawRect(gradient, size = size)
-                    }
-                }
-            }
-
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .align(Alignment.BottomStart)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f)),
-                        ),
-                    ),
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(baseColor)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
             )
 
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(horizontal = 10.dp, vertical = 8.dp)
-                    .fillMaxWidth(),
-            ) {
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (materialId in listOf("carrara-marble", "limewash", "white-tile", "warm-beige"))
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                label,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, lineHeight = 17.sp),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
 
             if (isSelected) {
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(22.dp),
+                    modifier = Modifier.size(20.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Rounded.Check,
                             contentDescription = null,
-                            modifier = Modifier.size(13.dp),
+                            modifier = Modifier.size(12.dp),
                             tint = Color.White,
                         )
                     }
@@ -4491,6 +4450,7 @@ private fun WizardTrustRow(
 // Bottom Bar
 // ---------------------------------------------------------------------------
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WizardBottomBar(
     state: WizardState,
@@ -4511,7 +4471,7 @@ private fun WizardBottomBar(
         WizardStep.Refine -> true
         WizardStep.Material -> state.selectedMaterial != null
         WizardStep.Goals -> state.selectedGoals.isNotEmpty()
-        WizardStep.Mask -> maskEditorState?.hasMask == true
+        WizardStep.Mask -> maskEditorState?.isMaskValid == true
         WizardStep.ReplacementPrompt -> state.replacementPrompt.length >= 3
         WizardStep.TransferStrength -> state.selectedTransferStrength != null
         WizardStep.PaintColor -> state.selectedPaintColor != null
@@ -4573,7 +4533,18 @@ private fun WizardBottomBar(
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                if (!showGenerate) {
+
+                // Next button — NEVER hidden; disabled + tooltip when can't proceed
+                val nextTooltipText = validationHint
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = {
+                        PlainTooltip {
+                            Text(nextTooltipText)
+                        }
+                    },
+                    state = rememberTooltipState(),
+                ) {
                     Surface(
                         onClick = onNext,
                         shape = HomeDecorShape.Pill,
@@ -4605,7 +4576,11 @@ private fun WizardBottomBar(
                             )
                         }
                     }
-                } else {
+                }
+
+                // Generate button (shown on Review step only, next to Next button)
+                if (showGenerate) {
+                    Spacer(Modifier.width(8.dp))
                     Surface(
                         onClick = { if (generateEnabled) onGenerate() },
                         shape = HomeDecorShape.Pill,
@@ -4629,7 +4604,7 @@ private fun WizardBottomBar(
                                 when {
                                     state.isGenerating -> Strings.wizardGenerating
                                     state.generationComplete -> Strings.wizardResultReady
-                                    else -> "Generate Design \u00B7 1 \uD83D\uDC8E"
+                                    else -> "Generate design \u00B7 1 credit"
                                 },
                                 style = MaterialTheme.typography.labelMedium,
                                 color = Color.White,
@@ -4641,17 +4616,34 @@ private fun WizardBottomBar(
             }
 
             AnimatedVisibility(visible = validationHint.isNotEmpty()) {
-                Text(
-                    validationHint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = HomeDecorSpacing.Base)
                         .padding(bottom = 6.dp)
                         .testTag(Strings.TestTags.wizardFooterHint),
-                    textAlign = TextAlign.Center,
-                )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                        Text(
+                            validationHint,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
             }
         }
     }

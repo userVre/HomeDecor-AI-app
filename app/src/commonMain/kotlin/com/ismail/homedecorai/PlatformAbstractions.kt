@@ -25,3 +25,7 @@ expect fun goBack()
 expect fun getPersistedDarkTheme(): Boolean
 
 expect fun persistDarkTheme(isDark: Boolean)
+
+expect fun getGuestCredits(): Int
+
+expect fun setGuestCredits(count: Int)

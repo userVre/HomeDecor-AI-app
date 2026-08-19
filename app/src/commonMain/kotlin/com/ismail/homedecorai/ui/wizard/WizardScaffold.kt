@@ -37,11 +37,19 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -141,6 +149,8 @@ fun WizardScaffold(
     ) {
         WizardHeader(
             tool = tool,
+            currentStep = currentStep,
+            steps = steps,
             onBack = onBack,
             onClose = onClose,
         )
@@ -209,9 +219,12 @@ fun WizardScaffold(
 @Composable
 private fun WizardHeader(
     tool: ToolItem,
+    currentStep: WizardStep,
+    steps: List<WizardStep>,
     onBack: () -> Unit,
     onClose: () -> Unit,
 ) {
+    val currentIndex = steps.indexOf(currentStep)
     Surface(
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
@@ -241,6 +254,12 @@ private fun WizardHeader(
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.semantics { heading() },
+                )
+                Text(
+                    "Step ${currentIndex + 1} of ${steps.size}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium,
                 )
             }
 
@@ -300,108 +319,65 @@ private fun WizardProgressBar(
                 .padding(horizontal = HomeDecorSpacing.Base, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                "Step ${currentIndex + 1} of ${steps.size}",
-                style = MaterialTheme.typography.labelSmall,
+            // Linear progress indicator
+            LinearProgressIndicator(
+                progress = { (currentIndex + 1).toFloat() / steps.size.toFloat() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
+                trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
             )
-            Spacer(Modifier.height(6.dp))
 
+            Spacer(Modifier.height(4.dp))
+
+            // Step dots centered below with equal weight
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 steps.forEachIndexed { index, step ->
                     val isCompleted = index < currentIndex
                     val isActive = index == currentIndex
 
-                    if (index > 0) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(3.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(3.dp)
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(
-                                        if (isCompleted || isActive)
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-                                        else
-                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                    ),
-                            )
-                        }
-                    }
-
                     Box(
-                        modifier = Modifier
-                            .size(if (isActive) 12.dp else 10.dp)
-                            .graphicsLayer {
-                                if (isActive) {
-                                    val scale = 1f + pulseAnim.value * 0.18f
-                                    scaleX = scale
-                                    scaleY = scale
-                                    alpha = 0.85f + pulseAnim.value * 0.15f
-                                }
-                            }
-                            .clip(CircleShape)
-                            .background(
-                                when {
-                                    isCompleted -> MaterialTheme.colorScheme.primary
-                                    isActive -> MaterialTheme.colorScheme.primary
-                                    else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                }
-                            ),
+                        modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (isCompleted) {
-                            Icon(
-                                Icons.Rounded.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(6.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-                    }
-
-                    if (index < steps.size - 1) {
                         Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .height(3.dp),
+                                .size(if (isActive) 10.dp else 8.dp)
+                                .graphicsLayer {
+                                    if (isActive) {
+                                        val scale = 1f + pulseAnim.value * 0.18f
+                                        scaleX = scale
+                                        scaleY = scale
+                                        alpha = 0.85f + pulseAnim.value * 0.15f
+                                    }
+                                }
+                                .clip(CircleShape)
+                                .background(
+                                    when {
+                                        isCompleted -> MaterialTheme.colorScheme.primary
+                                        isActive -> MaterialTheme.colorScheme.primary
+                                        else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                    }
+                                ),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(3.dp)
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(
-                                        if (isCompleted)
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-                                        else
-                                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                    ),
-                            )
+                            if (isCompleted) {
+                                Icon(
+                                    Icons.Rounded.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(5.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                )
+                            }
                         }
                     }
                 }
             }
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                stepTitle(currentStep, toolId),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium,
-            )
         }
     }
 }
@@ -410,6 +386,7 @@ private fun WizardProgressBar(
 // Footer
 // ---------------------------------------------------------------------------
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WizardFooter(
     currentStep: WizardStep,
@@ -447,78 +424,68 @@ private fun WizardFooter(
             ) {
                 // Back button (hidden on first step)
                 if (!isFirstStep) {
-                    Surface(
+                    TextButton(
                         onClick = onBack,
-                        shape = HomeDecorShape.Medium,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier
                             .height(44.dp)
                             .testTag(Strings.TestTags.wizardBackStepButton),
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = null,
-                                modifier = Modifier.size(HomeDecorIconSize.Small),
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                Strings.wizardBack,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Medium,
-                            )
-                        }
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = null,
+                            modifier = Modifier.size(HomeDecorIconSize.Small),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            Strings.wizardBack,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium,
+                        )
                     }
                 }
 
                 Spacer(Modifier.weight(1f))
 
-                // Next button (shown when not last step)
-                if (!isLastStep) {
-                    Surface(
+                // Next button — NEVER hidden; disabled + tooltip when can't proceed
+                val nextTooltipText = validationHintForStep(currentStep)
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = {
+                        PlainTooltip {
+                            Text(nextTooltipText)
+                        }
+                    },
+                    state = rememberTooltipState(),
+                ) {
+                    Button(
                         onClick = onNext,
-                        shape = HomeDecorShape.Pill,
-                        color = if (canProceed) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surfaceContainerHigh,
                         enabled = canProceed,
                         interactionSource = interactionSource,
                         modifier = Modifier
                             .height(48.dp)
+                            .graphicsLayer { alpha = if (canProceed) 1f else 0.5f }
                             .testTag(Strings.TestTags.wizardNextStepButton)
                             .scale(scale),
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 24.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Rounded.ArrowForward,
-                                contentDescription = null,
-                                modifier = Modifier.size(HomeDecorIconSize.Small),
-                                tint = if (canProceed) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                Strings.wizardNext,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (canProceed) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(HomeDecorIconSize.Small),
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            Strings.wizardNext,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
-                } else {
-                    Spacer(Modifier.weight(1f))
                 }
 
-                // Generate button (shown on Review step only)
+                // Generate button (shown on Review step only, next to Next button)
                 if (showGenerate) {
                     val generateEnabled = !isGenerating && !generationComplete
                     val generateInteractionSource = remember { MutableInteractionSource() }
@@ -528,6 +495,8 @@ private fun WizardFooter(
                         animationSpec = spring(stiffness = Spring.StiffnessHigh),
                         label = "footerGenScale",
                     )
+
+                    Spacer(Modifier.width(8.dp))
 
                     Surface(
                         onClick = { if (generateEnabled) onGenerate() },
@@ -553,7 +522,7 @@ private fun WizardFooter(
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                "Generate Redesign \u00B7 10 \uD83D\uDC8E",
+                                "Generate design \u00B7 1 credit",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = Color.White,
                                 fontWeight = FontWeight.SemiBold,
@@ -563,22 +532,39 @@ private fun WizardFooter(
                 }
             }
 
-            // Inline validation hint when a required field is missing
+            // Inline validation hint — always show when on a required step and not yet satisfied
             AnimatedVisibility(
                 visible = !canProceed && !isLastStep,
             ) {
                 val hint = validationHintForStep(currentStep)
-                Text(
-                    hint,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = HomeDecorSpacing.Base)
                         .padding(bottom = 6.dp)
                         .testTag(Strings.TestTags.wizardFooterHint),
-                    textAlign = TextAlign.Center,
-                )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            Icons.Rounded.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                        Text(
+                            hint,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
             }
         }
     }
@@ -663,7 +649,7 @@ fun stepTitle(step: WizardStep, toolId: String?): String = when (step) {
     WizardStep.FloorStyle -> "Floor Style"
     WizardStep.FurnitureType -> "Furniture Type"
     WizardStep.ReplacementStyle -> "Replacement Style"
-    WizardStep.ReferenceImage -> "Reference Image"
+    WizardStep.ReferenceImage -> "Reference Style"
     WizardStep.Review -> "Review"
 }
 
@@ -700,6 +686,7 @@ fun stepsForTool(toolId: String?): List<WizardStep> = when (toolId) {
     "floor" -> listOf(WizardStep.Upload, WizardStep.Material, WizardStep.FloorStyle, WizardStep.Review)
     "layout" -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Goals, WizardStep.Review)
     "replace" -> listOf(WizardStep.Upload, WizardStep.FurnitureType, WizardStep.Mask, WizardStep.ReplacementStyle, WizardStep.ReplacementPrompt, WizardStep.Review)
+    "remove" -> listOf(WizardStep.Upload, WizardStep.Mask, WizardStep.Review)
     "reference" -> listOf(WizardStep.Upload, WizardStep.ReferenceImage, WizardStep.TransferStrength, WizardStep.Review)
     else -> listOf(WizardStep.Upload, WizardStep.RoomType, WizardStep.Style, WizardStep.Palette, WizardStep.Refine, WizardStep.Review)
 }

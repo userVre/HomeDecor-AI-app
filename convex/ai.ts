@@ -1,4 +1,4 @@
-import { actionGeneric, internalMutationGeneric } from "convex/server";
+import { actionGeneric, internalMutationGeneric, queryGeneric } from "convex/server";
 import { ConvexError, v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -9,6 +9,9 @@ import {
   GLOBAL_MASTERPIECE_QUALITY_INSTRUCTION,
   GLOBAL_PERSPECTIVE_LOCK_INSTRUCTION,
 } from "../lib/design-prompt-builder";
+
+const RATE_LIMIT_PER_MINUTE = 5;
+const RATE_LIMIT_PER_HOUR = 50;
 
 const AZURE_BRAIN_REQUEST_TIMEOUT_MS = 25_000;
 const AZURE_BRAIN_MAX_DIMENSION = 1152;
@@ -750,6 +753,63 @@ export async function requestAzureDesignOrchestration(args: {
   }
 }
 
+export const recordRateLimitHit = internalMutationGeneric({
+  args: {
+    userId: v.string(),
+    action: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("rateLimits", {
+      userId: args.userId,
+      action: args.action,
+      timestamp: Date.now(),
+    });
+  },
+});
+
+async function enforceRateLimit(ctx: any, userId: string, action: string) {
+  const now = Date.now();
+  const oneMinuteAgo = now - 60_000;
+  const oneHourAgo = now - 3_600_000;
+
+  const recentHits = await ctx.runQuery((internal as any).ai.queryRateLimitCount, {
+    userId,
+    action,
+    since: oneHourAgo,
+  });
+
+  const lastMinuteCount = recentHits.filter((t: number) => t > oneMinuteAgo).length;
+  if (lastMinuteCount >= RATE_LIMIT_PER_MINUTE) {
+    const retryAfter = Math.ceil((oneMinuteAgo + 60_000 - now) / 1000);
+    throw new ConvexError(`Rate limit exceeded. Try again in ${retryAfter} seconds.`);
+  }
+
+  const lastHourCount = recentHits.length;
+  if (lastHourCount >= RATE_LIMIT_PER_HOUR) {
+    const retryAfter = Math.ceil((oneHourAgo + 3_600_000 - now) / 1000);
+    throw new ConvexError(`Hourly rate limit exceeded. Try again in ${retryAfter} seconds.`);
+  }
+
+  await ctx.runMutation((internal as any).ai.recordRateLimitHit, { userId, action });
+}
+
+export const queryRateLimitCount = queryGeneric({
+  args: {
+    userId: v.string(),
+    action: v.string(),
+    since: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const rows = await ctx.db
+      .query("rateLimits")
+      .withIndex("by_userId_action_ts", (q: any) =>
+        q.eq("userId", args.userId).eq("action", args.action).gte("timestamp", args.since)
+      )
+      .collect();
+    return rows.map((r) => r.timestamp);
+  },
+});
+
 export const suggestDesignOptions: any = actionGeneric({
   args: {
     imageStorageId: v.id("_storage"),
@@ -759,6 +819,12 @@ export const suggestDesignOptions: any = actionGeneric({
     availablePalettes: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+    await enforceRateLimit(ctx, identity.subject, "suggestDesignOptions");
+
     const fallback = buildFallbackSuggestion(args);
     const serviceType = canonicalizeServiceType(args.serviceType as IncomingServiceType);
     const sourceBlob = await ctx.storage.get(args.imageStorageId);
@@ -854,6 +920,12 @@ export const detectEditMask: any = actionGeneric({
     target: v.union(v.literal("paint"), v.literal("floor")),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError("Unauthorized");
+    }
+    await enforceRateLimit(ctx, identity.subject, "detectEditMask");
+
     const fallback = heuristicDetection(args.target);
     const sourceBlob = await ctx.storage.get(args.imageStorageId);
     const detection = sourceBlob

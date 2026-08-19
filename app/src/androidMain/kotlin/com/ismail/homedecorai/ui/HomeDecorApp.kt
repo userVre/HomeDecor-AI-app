@@ -62,6 +62,7 @@ import com.ismail.homedecorai.R
 import com.ismail.homedecorai.model.HomeDecorUiState
 import com.ismail.homedecorai.HomeDecorViewModel
 import com.ismail.homedecorai.model.MainTab
+import com.ismail.homedecorai.openUrl
 import com.ismail.homedecorai.ui.auth.AuthSheet
 import com.clerk.ui.auth.AuthView
 import com.ismail.homedecorai.ui.board.MyBoardScreen
@@ -72,6 +73,7 @@ import com.ismail.homedecorai.ui.paywall.PaywallSheet
 import com.ismail.homedecorai.ui.profile.ProfileScreen
 import com.ismail.homedecorai.ui.settings.SettingsSheet
 import com.ismail.homedecorai.ui.store.DiamondStoreSheet
+import com.ismail.homedecorai.ui.store.PricingScreen
 import com.ismail.homedecorai.ui.theme.*
 import com.ismail.homedecorai.ui.tools.CreateScreen
 import com.ismail.homedecorai.ui.tools.ToolsScreen
@@ -157,6 +159,7 @@ private fun AppScaffold(
     val context = LocalContext.current
     val modalVisible = state.storeVisible ||
         state.paywallVisible ||
+        state.pricingVisible ||
         state.authVisible ||
         state.settingsVisible ||
         state.designViewerVisible ||
@@ -167,6 +170,9 @@ private fun AppScaffold(
     }
     BackHandler(enabled = state.paywallVisible) {
         viewModel.closePaywall()
+    }
+    BackHandler(enabled = state.pricingVisible) {
+        viewModel.closePricing()
     }
     BackHandler(enabled = state.authVisible) {
         viewModel.closeAuth()
@@ -228,6 +234,15 @@ private fun AppScaffold(
                         onSubscription = viewModel::syncSubscriptionFromRevenueCat,
                         onRetrySync = viewModel::retryPurchaseSync,
                         onStore = viewModel::openDiamondStore,
+                    )
+                }
+                state.pricingVisible -> {
+                    PricingScreen(
+                        onBack = viewModel::closePricing,
+                        onPlanSelected = { planId ->
+                            viewModel.closePricing()
+                            openUrl("https://whop.com/checkout/$planId")
+                        },
                     )
                 }
                 state.authVisible -> {

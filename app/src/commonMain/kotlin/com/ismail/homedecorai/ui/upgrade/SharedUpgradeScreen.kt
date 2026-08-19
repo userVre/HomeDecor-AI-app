@@ -212,7 +212,7 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
     )
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
-    var selectedPlan by remember { mutableStateOf("yearly") }
+    var isYearly by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
@@ -243,20 +243,27 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
 
             Spacer(Modifier.height(HomeDecorSpacing.Xl))
 
-            // ── Plan Cards ────────────────────────────────────────────────
+            // ── Monthly / Annual Toggle ───────────────────────────────────
+            PricingToggle(
+                isYearly = isYearly,
+                onToggle = { isYearly = it },
+                colors = colors,
+            )
+
+            Spacer(Modifier.height(HomeDecorSpacing.Base))
+
+            // ── 4-Tier Plan Cards ─────────────────────────────────────────
             if (isDesktop) {
-                UpgradePlanCardsDesktop(
+                UpgradeFourTierDesktop(
                     colors = colors,
-                    selectedPlan = selectedPlan,
-                    onPlanSelected = { selectedPlan = it },
-                    onSelectPlan = { scope.launch { scrollState.animateScrollTo(scrollState.maxValue) } },
+                    isYearly = isYearly,
+                    onSelectPlan = { onOpenPaywall() },
                 )
             } else {
-                UpgradePlanCardsMobile(
+                UpgradeFourTierMobile(
                     colors = colors,
-                    selectedPlan = selectedPlan,
-                    onPlanSelected = { selectedPlan = it },
-                    onSelectPlan = { scope.launch { scrollState.animateScrollTo(scrollState.maxValue) } },
+                    isYearly = isYearly,
+                    onSelectPlan = { onOpenPaywall() },
                 )
             }
 
@@ -264,6 +271,11 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
 
             // ── Comparison Table ──────────────────────────────────────────
             UpgradeComparisonTable(colors = colors)
+
+            Spacer(Modifier.height(HomeDecorSpacing.Xl))
+
+            // ── Free Trial Trust ──────────────────────────────────────────
+            FreeTrialTrustBanner(colors = colors)
 
             Spacer(Modifier.height(HomeDecorSpacing.Xl))
 
@@ -275,7 +287,6 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
 
         // ── Sticky CTA Bar ──────────────────────────────────────────────
         Column {
-            // Gradient scrim at top of sticky bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -327,6 +338,11 @@ private fun SharedUpgradeV3Screen(onOpenPaywall: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                         )
                     }
+                    Text(
+                        text = Strings.freeTrialTrust,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.textMuted,
+                    )
                 }
             }
         }
@@ -432,111 +448,345 @@ private fun UpgradeMobileHero(colors: SharedUpgradeColors) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Monthly / Annual Toggle
+// ---------------------------------------------------------------------------
+
 @Composable
-private fun UpgradePlanCardsDesktop(
+private fun PricingToggle(
+    isYearly: Boolean,
+    onToggle: (Boolean) -> Unit,
     colors: SharedUpgradeColors,
-    selectedPlan: String,
-    onPlanSelected: (String) -> Unit,
-    onSelectPlan: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+    Surface(
+        shape = HomeDecorShape.PillMedium,
+        color = colors.cardSurface,
+        border = BorderStroke(1.dp, colors.border),
     ) {
-        // Monthly Plan
-        PlanCard(
-            colors = colors,
-            title = Strings.upgradePlanMonthly,
-            price = Strings.upgradePlanMonthlyPrice,
-            period = Strings.upgradePlanMonthlyPeriod,
-            subtitle = null,
-            description = Strings.upgradePlanMonthlyDesc,
-            isRecommended = false,
-            isSelected = selectedPlan == "monthly",
-            onSelect = { onPlanSelected("monthly"); onSelectPlan() },
-            modifier = Modifier.weight(1f),
-        )
-
-        // Yearly Plan (Recommended)
-        PlanCard(
-            colors = colors,
-            title = Strings.upgradePlanYearly,
-            price = Strings.upgradePlanYearlyPrice,
-            period = Strings.upgradePlanYearlyPeriod,
-            subtitle = Strings.upgradePlanYearlySave,
-            description = Strings.upgradePlanYearlyDesc,
-            isRecommended = true,
-            isSelected = selectedPlan == "yearly",
-            onSelect = { onPlanSelected("yearly"); onSelectPlan() },
-            modifier = Modifier.weight(1f),
-        )
-
-        // Family / Team Plan
-        PlanCard(
-            colors = colors,
-            title = Strings.upgradePlanFamily,
-            price = Strings.upgradePlanFamilyPrice,
-            period = Strings.upgradePlanFamilyPeriod,
-            subtitle = Strings.upgradePlanFamilySeats,
-            description = Strings.upgradePlanFamilyDesc,
-            isRecommended = false,
-            isSelected = selectedPlan == "family",
-            onSelect = { onPlanSelected("family"); onSelectPlan() },
-            modifier = Modifier.weight(1f),
+        Row {
+            listOf(
+                "Monthly" to false,
+                "Annual" to true,
+            ).forEach { (label, yearly) ->
+                val selected = isYearly == yearly
+                Surface(
+                    onClick = { onToggle(yearly) },
+                    shape = HomeDecorShape.PillMedium,
+                    color = if (selected) colors.accent else Color.Transparent,
+                    modifier = Modifier.padding(4.dp),
+                ) {
+                    Text(
+                        label,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                        color = if (selected) HomeDecorExtra.onGradientText else colors.textMuted,
+                    )
+                }
+            }
+        }
+    }
+    if (isYearly) {
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "Save up to 33% with annual billing",
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.checkGreen,
+            fontWeight = FontWeight.Medium,
         )
     }
 }
 
+// ---------------------------------------------------------------------------
+// 4-Tier Plan Data
+// ---------------------------------------------------------------------------
+
+private data class PricingPlan(
+    val name: String,
+    val monthlyPrice: String,
+    val monthlyPerCredit: String,
+    val monthlyCredits: String,
+    val yearlyPrice: String,
+    val yearlyPerCredit: String,
+    val yearlyCredits: String,
+    val description: String,
+    val monthlyPlanId: String,
+    val yearlyPlanId: String,
+    val isPopular: Boolean = false,
+)
+
+private val fourTierPlans = listOf(
+    PricingPlan(
+        name = Strings.upgradePlanEssential,
+        monthlyPrice = Strings.upgradePlanEssentialMonthlyPrice,
+        monthlyPerCredit = Strings.upgradePlanEssentialMonthlyPerCredit,
+        monthlyCredits = Strings.upgradePlanEssentialCredits,
+        yearlyPrice = Strings.upgradePlanEssentialYearlyPrice,
+        yearlyPerCredit = Strings.upgradePlanEssentialYearlyPerCredit,
+        yearlyCredits = Strings.upgradePlanEssentialYearlyCredits,
+        description = Strings.upgradePlanEssentialDesc,
+        monthlyPlanId = Strings.upgradePlanEssentialMonthlyId,
+        yearlyPlanId = Strings.upgradePlanEssentialYearlyId,
+    ),
+    PricingPlan(
+        name = Strings.upgradePlanPro,
+        monthlyPrice = Strings.upgradePlanProMonthlyPrice,
+        monthlyPerCredit = Strings.upgradePlanProMonthlyPerCredit,
+        monthlyCredits = Strings.upgradePlanProCredits,
+        yearlyPrice = Strings.upgradePlanProYearlyPrice,
+        yearlyPerCredit = Strings.upgradePlanProYearlyPerCredit,
+        yearlyCredits = Strings.upgradePlanProYearlyCredits,
+        description = Strings.upgradePlanProDesc,
+        monthlyPlanId = Strings.upgradePlanProMonthlyId,
+        yearlyPlanId = Strings.upgradePlanProYearlyId,
+        isPopular = true,
+    ),
+    PricingPlan(
+        name = Strings.upgradePlanStudio,
+        monthlyPrice = Strings.upgradePlanStudioMonthlyPrice,
+        monthlyPerCredit = Strings.upgradePlanStudioMonthlyPerCredit,
+        monthlyCredits = Strings.upgradePlanStudioCredits,
+        yearlyPrice = Strings.upgradePlanStudioYearlyPrice,
+        yearlyPerCredit = Strings.upgradePlanStudioYearlyPerCredit,
+        yearlyCredits = Strings.upgradePlanStudioYearlyCredits,
+        description = Strings.upgradePlanStudioDesc,
+        monthlyPlanId = Strings.upgradePlanStudioMonthlyId,
+        yearlyPlanId = Strings.upgradePlanStudioYearlyId,
+    ),
+    PricingPlan(
+        name = Strings.upgradePlanAgency,
+        monthlyPrice = Strings.upgradePlanAgencyMonthlyPrice,
+        monthlyPerCredit = Strings.upgradePlanAgencyMonthlyPerCredit,
+        monthlyCredits = Strings.upgradePlanAgencyCredits,
+        yearlyPrice = Strings.upgradePlanAgencyYearlyPrice,
+        yearlyPerCredit = Strings.upgradePlanAgencyYearlyPerCredit,
+        yearlyCredits = Strings.upgradePlanAgencyYearlyCredits,
+        description = Strings.upgradePlanAgencyDesc,
+        monthlyPlanId = Strings.upgradePlanAgencyMonthlyId,
+        yearlyPlanId = Strings.upgradePlanAgencyYearlyId,
+    ),
+)
+
+// ---------------------------------------------------------------------------
+// Desktop 4-Tier Plan Cards (2x2 grid)
+// ---------------------------------------------------------------------------
+
 @Composable
-private fun UpgradePlanCardsMobile(
+private fun UpgradeFourTierDesktop(
     colors: SharedUpgradeColors,
-    selectedPlan: String,
-    onPlanSelected: (String) -> Unit,
+    isYearly: Boolean,
+    onSelectPlan: () -> Unit,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        // Row 1: Essential + Pro
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            FourTierPlanCard(
+                plan = fourTierPlans[0],
+                isYearly = isYearly,
+                colors = colors,
+                onSelect = onSelectPlan,
+                modifier = Modifier.weight(1f),
+            )
+            FourTierPlanCard(
+                plan = fourTierPlans[1],
+                isYearly = isYearly,
+                colors = colors,
+                onSelect = onSelectPlan,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        // Row 2: Studio + Agency
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            FourTierPlanCard(
+                plan = fourTierPlans[2],
+                isYearly = isYearly,
+                colors = colors,
+                onSelect = onSelectPlan,
+                modifier = Modifier.weight(1f),
+            )
+            FourTierPlanCard(
+                plan = fourTierPlans[3],
+                isYearly = isYearly,
+                colors = colors,
+                onSelect = onSelectPlan,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Mobile 4-Tier Plan Cards (vertical stack)
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun UpgradeFourTierMobile(
+    colors: SharedUpgradeColors,
+    isYearly: Boolean,
     onSelectPlan: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        PlanCard(
-            colors = colors,
-            title = Strings.upgradePlanMonthly,
-            price = Strings.upgradePlanMonthlyPrice,
-            period = Strings.upgradePlanMonthlyPeriod,
-            subtitle = null,
-            description = Strings.upgradePlanMonthlyDesc,
-            isRecommended = false,
-            isSelected = selectedPlan == "monthly",
-            onSelect = { onPlanSelected("monthly"); onSelectPlan() },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        PlanCard(
-            colors = colors,
-            title = Strings.upgradePlanYearly,
-            price = Strings.upgradePlanYearlyPrice,
-            period = Strings.upgradePlanYearlyPeriod,
-            subtitle = Strings.upgradePlanYearlySave,
-            description = Strings.upgradePlanYearlyDesc,
-            isRecommended = true,
-            isSelected = selectedPlan == "yearly",
-            onSelect = { onPlanSelected("yearly"); onSelectPlan() },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        PlanCard(
-            colors = colors,
-            title = Strings.upgradePlanFamily,
-            price = Strings.upgradePlanFamilyPrice,
-            period = Strings.upgradePlanFamilyPeriod,
-            subtitle = Strings.upgradePlanFamilySeats,
-            description = Strings.upgradePlanFamilyDesc,
-            isRecommended = false,
-            isSelected = selectedPlan == "family",
-            onSelect = { onPlanSelected("family"); onSelectPlan() },
-            modifier = Modifier.fillMaxWidth(),
-        )
+        fourTierPlans.forEach { plan ->
+            FourTierPlanCard(
+                plan = plan,
+                isYearly = isYearly,
+                colors = colors,
+                onSelect = onSelectPlan,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Four-Tier Plan Card
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun FourTierPlanCard(
+    plan: PricingPlan,
+    isYearly: Boolean,
+    colors: SharedUpgradeColors,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressedScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessHigh),
+        label = "plan_pressed_scale",
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = when {
+            plan.isPopular && isHovered -> colors.gold
+            plan.isPopular -> colors.gold.copy(alpha = 0.8f)
+            isHovered -> colors.accent.copy(alpha = 0.5f)
+            else -> colors.border
+        },
+        animationSpec = tween(200),
+        label = "plan_border",
+    )
+    val borderWidth = if (plan.isPopular) 2.dp else 1.dp
+
+    val price = if (isYearly) plan.yearlyPrice else plan.monthlyPrice
+    val period = if (isYearly) "/year" else "/month"
+    val perCredit = if (isYearly) plan.yearlyPerCredit else plan.monthlyPerCredit
+    val credits = if (isYearly) plan.yearlyCredits else plan.monthlyCredits
+
+    Box(modifier = modifier) {
+        if (plan.isPopular) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = colors.gold,
+                shadowElevation = 3.dp,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-10).dp),
+            ) {
+                Row(
+                    Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        tint = HomeDecorExtra.onGradientText,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Text(
+                        Strings.upgradePlanPopular,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = HomeDecorExtra.onGradientText,
+                    )
+                }
+            }
+        }
+
+        Surface(
+            shape = HomeDecorShape.CardLarge,
+            color = when {
+                plan.isPopular -> colors.accentSurface.copy(alpha = 0.3f)
+                isHovered -> colors.accentSurface.copy(alpha = 0.2f)
+                else -> colors.cardSurface
+            },
+            border = BorderStroke(borderWidth, borderColor),
+            shadowElevation = if (plan.isPopular) 6.dp else 0.dp,
+            modifier = Modifier
+                .then(if (plan.isPopular) Modifier.padding(top = 10.dp) else Modifier)
+                .scale(pressedScale)
+                .testTag(Strings.formatTestTag(Strings.TestTags.upgradePlanCard, plan.name.lowercase()))
+                .clickable(interactionSource = interactionSource, indication = null) { onSelect() },
+        ) {
+            Column(
+                modifier = Modifier.padding(HomeDecorSpacing.Base),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Plan name + description
+                Text(
+                    plan.name,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.textPrimary,
+                )
+                Text(
+                    plan.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                )
+
+                // Price + period
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        price,
+                        style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+                        color = if (plan.isPopular) colors.accent else colors.textPrimary,
+                    )
+                    Text(
+                        period,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textMuted,
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    )
+                }
+
+                // Credits count
+                Text(
+                    "$credits credits${if (isYearly) "/year" else "/month"}",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.textPrimary,
+                )
+
+                // Per-credit price
+                Text(
+                    "$$perCredit ${Strings.perCreditSuffix}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                )
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Old plan card functions removed — replaced by 4-tier above
+// ---------------------------------------------------------------------------
 
 @Composable
 private fun PlanCard(
@@ -710,7 +960,7 @@ private fun PlanCard(
 private data class FeatureRow(val name: String, val freeValue: String, val proValue: String)
 
 private val featureRows = listOf(
-    FeatureRow(Strings.upgradeFeatureGenerations, freeValue = "1/day", proValue = "300/month"),
+    FeatureRow(Strings.upgradeFeatureGenerations, freeValue = "5 free", proValue = "40\u20131,000/mo"),
     FeatureRow(Strings.upgradeFeatureResolution, freeValue = Strings.upgradeFeatureFreeResolution, proValue = Strings.upgradeFeatureProResolution),
     FeatureRow(Strings.upgradeFeatureNoWatermark, freeValue = "No", proValue = "Yes"),
     FeatureRow(Strings.upgradeFeatureQueue, freeValue = "Standard", proValue = "Priority"),
@@ -878,6 +1128,46 @@ private fun UpgradeBottomCta(
                 style = MaterialTheme.typography.bodyLarge,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Free Trial Trust Banner
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun FreeTrialTrustBanner(colors: SharedUpgradeColors) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = colors.cardSurface,
+        border = BorderStroke(1.dp, colors.border),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = colors.checkGreen.copy(alpha = 0.12f),
+                modifier = Modifier.size(40.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = colors.checkGreen,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+            Text(
+                Strings.freeTrialTrust,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = colors.textPrimary,
             )
         }
     }

@@ -6,7 +6,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -41,13 +43,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.SearchOff
-import androidx.compose.material.icons.rounded.Spa
+import androidx.compose.material.icons.rounded.SingleBed
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,6 +77,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -508,21 +514,27 @@ private fun DiscoverFilterRow(
                             modifier = Modifier.size(18.dp),
                         )
                     },
-                    trailingIcon = if (isActive && selectedValues.isNotEmpty()) {
+                    trailingIcon = if (isActive) {
                         {
-                            Text(
-                                "${selectedValues.size}",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                            Icon(
+                                Icons.Rounded.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
                             )
                         }
                     } else null,
                     shape = HomeDecorShape.Chip,
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                        selectedTrailingIconColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        borderColor = MaterialTheme.colorScheme.outline,
+                        selectedBorderColor = MaterialTheme.colorScheme.primary,
+                        enabled = true,
+                        selected = isActive,
                     ),
                     modifier = Modifier.testTag(
                         Strings.formatTestTag(Strings.TestTags.discoverFilterChip, category.name)
@@ -575,10 +587,26 @@ private fun DiscoverFilterRow(
                                     maxLines = 1,
                                 )
                             },
+                            trailingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
+                            } else null,
                             shape = HomeDecorShape.Chip,
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                selectedTrailingIconColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                borderColor = MaterialTheme.colorScheme.outline,
+                                selectedBorderColor = MaterialTheme.colorScheme.primary,
+                                enabled = true,
+                                selected = isSelected,
                             ),
                         )
                     }
@@ -589,8 +617,8 @@ private fun DiscoverFilterRow(
 }
 
 private fun FilterCategory.icon(): ImageVector = when (this) {
-    FilterCategory.Room -> Icons.Rounded.Image
-    FilterCategory.Style -> Icons.Rounded.Spa
+    FilterCategory.Room -> Icons.Rounded.SingleBed
+    FilterCategory.Style -> Icons.Rounded.Palette
     FilterCategory.Color -> Icons.Rounded.Palette
     FilterCategory.Mood -> Icons.Rounded.Star
 }
@@ -670,6 +698,7 @@ fun DiscoverSectionRow(
                 onPreview = onPreview,
                 favoriteSources = favoriteSources,
                 onFavorite = onFavorite,
+                onUseStyle = onUseStyle,
             )
         }
     }
@@ -681,30 +710,53 @@ private fun DiscoverSectionMobileRow(
     onPreview: (GalleryCardItem) -> Unit,
     favoriteSources: Set<String>,
     onFavorite: (GalleryCardItem) -> Unit,
+    onUseStyle: ((GalleryCardItem) -> Unit)? = null,
 ) {
     val sectionTitle = Strings.discoverSectionTitle(section.id)
     val availableWidth = getScreenWidthDp().dp - HomeDecorSpacing.ScreenHorizontal * 2
     val cardWidth = ((availableWidth - HomeDecorSpacing.Sm) / 2.15f).coerceAtMost(160.dp).coerceAtLeast(120.dp)
 
-    LazyRow(
-        contentPadding = PaddingValues(
-            start = HomeDecorSpacing.Base,
-            end = HomeDecorSpacing.Base,
-        ),
-        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        items(section.items, key = { it.id }) { item ->
-            GalleryCard(
-                item = item,
-                sectionTitle = sectionTitle,
-                isFavorite = item.id in favoriteSources,
-                isDesktop = false,
-                modifier = Modifier.width(cardWidth),
-                onClick = { onPreview(item) },
-                onFavorite = { onFavorite(item) },
-            )
+    Box(modifier = Modifier.fillMaxWidth()) {
+        val listState = rememberLazyListState()
+
+        LazyRow(
+            state = listState,
+            contentPadding = PaddingValues(
+                start = HomeDecorSpacing.Base,
+                end = HomeDecorSpacing.Xl,
+            ),
+            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            items(section.items, key = { it.id }) { item ->
+                GalleryCard(
+                    item = item,
+                    sectionTitle = sectionTitle,
+                    isFavorite = item.id in favoriteSources,
+                    isDesktop = false,
+                    modifier = Modifier.width(cardWidth),
+                    onClick = { onPreview(item) },
+                    onFavorite = { onFavorite(item) },
+                    onUseStyle = onUseStyle?.let { fn -> { fn(item) } },
+                )
+            }
         }
+
+        // Fade gradient at right edge to indicate more content
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .width(32.dp)
+                .height(cardWidth * 0.75f)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background,
+                        ),
+                    ),
+                ),
+        )
     }
 }
 
@@ -810,16 +862,9 @@ fun DiscoverDetailScreen(
             }
         }
 
-        // Responsive grid: 4 desktop, 2 tablet, 1 mobile
-        val columns = when {
-            isDesktop && getScreenWidthDp() >= 1200 -> GridCells.Fixed(4)
-            isDesktop && getScreenWidthDp() >= 900 -> GridCells.Fixed(3)
-            isDesktop -> GridCells.Fixed(3)
-            getScreenWidthDp() >= 600 -> GridCells.Fixed(2)
-            else -> GridCells.Fixed(1)
-        }
+        // Responsive grid: adaptive min 280dp
         LazyVerticalGrid(
-            columns = columns,
+            columns = GridCells.Adaptive(minSize = 280.dp),
             contentPadding = PaddingValues(
                 start = if (isDesktop) HomeDecorSpacing.ScreenHorizontal else HomeDecorSpacing.Base,
                 end = if (isDesktop) HomeDecorSpacing.ScreenHorizontal else HomeDecorSpacing.Base,
@@ -1028,19 +1073,25 @@ fun GalleryCard(
 
     ElevatedCard(
         onClick = onClick,
-        shape = HomeDecorShape.Card,
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = if (isHovered) 3.dp else 1.dp,
-            pressedElevation = 2.dp,
-        ),
-        interactionSource = interactionSource,
         modifier = modifier
+            .shadow(
+                elevation = 1.dp,
+                shape = HomeDecorShape.Card,
+                ambientColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                spotColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f),
+            )
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f), HomeDecorShape.Card)
             .testTag(Strings.formatTestTag(Strings.TestTags.discoverSectionCard, item.id))
             .semantics {
                 contentDescription = cardDescription
                 role = Role.Button
             },
+        shape = HomeDecorShape.Card,
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = if (isHovered) 3.dp else 2.dp,
+            pressedElevation = 2.dp,
+        ),
     ) {
         Box(
             Modifier
@@ -1073,6 +1124,26 @@ fun GalleryCard(
                     )
                 }
             }
+            // Category label — below style badge
+            if (sectionTitle.isNotBlank()) {
+                Surface(
+                    shape = HomeDecorShape.Chip,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = HomeDecorSpacing.Sm, top = if (item.styleType.isNotBlank()) 36.dp else HomeDecorSpacing.Sm),
+                ) {
+                    Text(
+                        text = sectionTitle,
+                        modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
             // Favorite badge — top-end
             if (isFavorite) {
                 Surface(
@@ -1093,57 +1164,59 @@ fun GalleryCard(
                     }
                 }
             }
-            // Desktop hover overlay with quick actions
-            if (isDesktop && isHovered) {
-                Box(
+            // Action buttons — always visible at bottom
+            if (onUseStyle != null || onFavorite != null) {
+                Row(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.08f))
-                )
-                // Quick action buttons — bottom-right
-                if (onMoodboard != null || onUseStyle != null) {
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(HomeDecorSpacing.Sm),
-                        horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
-                    ) {
-                        if (onMoodboard != null) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                shadowElevation = 2.dp,
+                        .align(Alignment.BottomEnd)
+                        .padding(HomeDecorSpacing.Sm),
+                    horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
+                ) {
+                    if (onUseStyle != null) {
+                        Surface(
+                            onClick = onUseStyle,
+                            shape = HomeDecorShape.Button,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.92f),
+                            shadowElevation = 2.dp,
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = HomeDecorSpacing.Sm, vertical = HomeDecorSpacing.Xs),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
                             ) {
-                                IconButton(
-                                    onClick = onMoodboard,
-                                    modifier = Modifier.size(32.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Bookmark,
-                                        contentDescription = Strings.addToMoodboard,
-                                        modifier = Modifier.size(HomeDecorIconSize.Small),
-                                        tint = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
+                                Icon(
+                                    Icons.Rounded.Palette,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                )
+                                Text(
+                                    Strings.useThisStyle,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                )
                             }
                         }
-                        if (onUseStyle != null) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                                shadowElevation = 2.dp,
+                    }
+                    if (onFavorite != null) {
+                        Surface(
+                            shape = CircleShape,
+                            color = if (isFavorite) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.9f)
+                            else MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                            shadowElevation = 2.dp,
+                        ) {
+                            IconButton(
+                                onClick = onFavorite,
+                                modifier = Modifier.size(28.dp),
                             ) {
-                                IconButton(
-                                    onClick = onUseStyle,
-                                    modifier = Modifier.size(32.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Rounded.Palette,
-                                        contentDescription = Strings.createWithStyle,
-                                        modifier = Modifier.size(HomeDecorIconSize.Small),
-                                        tint = MaterialTheme.colorScheme.onPrimary,
-                                    )
-                                }
+                                Icon(
+                                    if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                    contentDescription = if (isFavorite) Strings.favorited else Strings.discoverSave,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = if (isFavorite) MaterialTheme.colorScheme.error
+                                    else MaterialTheme.colorScheme.primary,
+                                )
                             }
                         }
                     }
@@ -1166,35 +1239,88 @@ fun GalleryImageCard(
         Strings.a11yInspirationImage(sectionTitle)
     }
 
-    ImageCard(
-        imageUrl = item.imageUrl,
-        contentDescription = cardDescription,
-        modifier = modifier,
-        scrimIntensity = ScrimIntensity.Standard,
-    ) {
+    Box(modifier = modifier) {
+        // Single image, 4:3 aspect ratio
+        NetworkImage(
+            url = item.imageUrl,
+            contentDescription = cardDescription,
+            modifier = Modifier
+                .fillMaxSize()
+                .aspectRatio(4f / 3f),
+        )
+
+        // Scrim gradient: bottom 40% black 60% to transparent
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .height(40.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.6f),
+                        ),
+                    ),
+                ),
+        )
+
+        // Tags top-left 8dp margin
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(8.dp),
+        ) {
+            if (item.styleType.isNotBlank()) {
+                Surface(
+                    shape = HomeDecorShape.Chip,
+                    color = HomeDecorColors.PrimaryContainer.copy(alpha = 0.85f),
+                ) {
+                    Text(
+                        text = item.styleType,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = HomeDecorColors.OnPrimaryContainer,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            if (item.room.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Surface(
+                    shape = HomeDecorShape.Chip,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                ) {
+                    Text(
+                        text = item.room,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+
+        // Title text at bottom
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = HomeDecorSpacing.Lg, vertical = HomeDecorSpacing.Lg),
+                .align(Alignment.BottomStart)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (item.styleType.isNotBlank()) {
-                Spacer(Modifier.height(HomeDecorSpacing.Xxs))
-                Text(
-                    text = item.styleType,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.85f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
     }
 }

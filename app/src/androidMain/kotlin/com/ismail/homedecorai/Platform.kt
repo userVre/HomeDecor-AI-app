@@ -94,6 +94,22 @@ actual fun persistDarkTheme(isDark: Boolean) {
     } catch (_: Exception) {}
 }
 
+actual fun getGuestCredits(): Int {
+    val context = getApplicationContext() ?: return 5
+    return try {
+        val prefs = context.getSharedPreferences("hd_credits_prefs", Context.MODE_PRIVATE)
+        if (prefs.contains("guest_credits")) prefs.getInt("guest_credits", 5) else 5
+    } catch (_: Exception) { 5 }
+}
+
+actual fun setGuestCredits(count: Int) {
+    val context = getApplicationContext() ?: return
+    try {
+        val prefs = context.getSharedPreferences("hd_credits_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("guest_credits", count).apply()
+    } catch (_: Exception) {}
+}
+
 actual fun browserDownloadFile(url: String, filename: String) {
     val context = getApplicationContext() ?: return
     try {

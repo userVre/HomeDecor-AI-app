@@ -110,10 +110,14 @@ fun Application.module() {
             get("/urls") {
                 call.respond(
                     mapOf(
-                        "monthly" to WhopConfig.CHECKOUT_URL_MONTHLY,
-                        "yearly" to WhopConfig.CHECKOUT_URL_YEARLY,
-                        "family" to WhopConfig.CHECKOUT_URL_PRO,
-                        "pro" to WhopConfig.CHECKOUT_URL_PRO
+                        "essential_monthly" to WhopConfig.CHECKOUT_URL_ESSENTIAL_MONTHLY,
+                        "essential_yearly" to WhopConfig.CHECKOUT_URL_ESSENTIAL_YEARLY,
+                        "pro_monthly" to WhopConfig.CHECKOUT_URL_PRO_MONTHLY,
+                        "pro_yearly" to WhopConfig.CHECKOUT_URL_PRO_YEARLY,
+                        "studio_monthly" to WhopConfig.CHECKOUT_URL_STUDIO_MONTHLY,
+                        "studio_yearly" to WhopConfig.CHECKOUT_URL_STUDIO_YEARLY,
+                        "agency_monthly" to WhopConfig.CHECKOUT_URL_AGENCY_MONTHLY,
+                        "agency_yearly" to WhopConfig.CHECKOUT_URL_AGENCY_YEARLY,
                     )
                 )
             }

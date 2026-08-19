@@ -20,14 +20,37 @@ object WhopConfig {
 
     // ── Product & Plan IDs ───────────────────────────────────────────────
     val PRODUCT_ID: String = dotenv["WHOP_PRODUCT_ID"] ?: "prod_D4BOQ5mBcS8EX"
-    val YEARLY_PLAN_ID: String = dotenv["WHOP_YEARLY_PLAN_ID"] ?: "plan_FCAl4pKNoaC3X"
-    val PRO_PLAN_ID: String = dotenv["WHOP_PRO_PLAN_ID"] ?: "plan_cBvc9Qkwr476O"
-    val MONTHLY_PLAN_ID: String = dotenv["WHOP_MONTHLY_PLAN_ID"] ?: "plan_MONTHLY_PLAN_ID"
+
+    // Essential
+    val ESSENTIAL_MONTHLY_PLAN_ID: String = dotenv["WHOP_ESSENTIAL_MONTHLY_PLAN_ID"] ?: "plan_01R6HzQwtM2sN"
+    val ESSENTIAL_YEARLY_PLAN_ID: String = dotenv["WHOP_ESSENTIAL_YEARLY_PLAN_ID"] ?: "plan_rJLH5wJVSrZzq"
+
+    // Pro
+    val PRO_MONTHLY_PLAN_ID: String = dotenv["WHOP_PRO_MONTHLY_PLAN_ID"] ?: "plan_gFcWfrHIqYPuY"
+    val PRO_YEARLY_PLAN_ID: String = dotenv["WHOP_PRO_YEARLY_PLAN_ID"] ?: "plan_bOQkU9fDeBx45"
+
+    // Studio
+    val STUDIO_MONTHLY_PLAN_ID: String = dotenv["WHOP_STUDIO_MONTHLY_PLAN_ID"] ?: "plan_mcNP3brC8NK4w"
+    val STUDIO_YEARLY_PLAN_ID: String = dotenv["WHOP_STUDIO_YEARLY_PLAN_ID"] ?: "plan_lrUcmLZUyyNOW"
+
+    // Agency
+    val AGENCY_MONTHLY_PLAN_ID: String = dotenv["WHOP_AGENCY_MONTHLY_PLAN_ID"] ?: "plan_LlmFu3YvuXbHx"
+    val AGENCY_YEARLY_PLAN_ID: String = dotenv["WHOP_AGENCY_YEARLY_PLAN_ID"] ?: "plan_dMjSL0Dy9T2nn"
 
     // ── Checkout URLs ────────────────────────────────────────────────────
-    val CHECKOUT_URL_MONTHLY: String = "https://whop.com/checkout/$MONTHLY_PLAN_ID/"
-    val CHECKOUT_URL_YEARLY: String = "https://whop.com/checkout/$YEARLY_PLAN_ID/"
-    val CHECKOUT_URL_PRO: String = "https://whop.com/checkout/$PRO_PLAN_ID/"
+    val CHECKOUT_URL_ESSENTIAL_MONTHLY: String = "https://whop.com/checkout/$ESSENTIAL_MONTHLY_PLAN_ID/"
+    val CHECKOUT_URL_ESSENTIAL_YEARLY: String = "https://whop.com/checkout/$ESSENTIAL_YEARLY_PLAN_ID/"
+    val CHECKOUT_URL_PRO_MONTHLY: String = "https://whop.com/checkout/$PRO_MONTHLY_PLAN_ID/"
+    val CHECKOUT_URL_PRO_YEARLY: String = "https://whop.com/checkout/$PRO_YEARLY_PLAN_ID/"
+    val CHECKOUT_URL_STUDIO_MONTHLY: String = "https://whop.com/checkout/$STUDIO_MONTHLY_PLAN_ID/"
+    val CHECKOUT_URL_STUDIO_YEARLY: String = "https://whop.com/checkout/$STUDIO_YEARLY_PLAN_ID/"
+    val CHECKOUT_URL_AGENCY_MONTHLY: String = "https://whop.com/checkout/$AGENCY_MONTHLY_PLAN_ID/"
+    val CHECKOUT_URL_AGENCY_YEARLY: String = "https://whop.com/checkout/$AGENCY_YEARLY_PLAN_ID/"
+
+    // Legacy aliases
+    val CHECKOUT_URL_MONTHLY: String = CHECKOUT_URL_PRO_MONTHLY
+    val CHECKOUT_URL_YEARLY: String = CHECKOUT_URL_PRO_YEARLY
+    val CHECKOUT_URL_PRO: String = CHECKOUT_URL_PRO_MONTHLY
 
     // ── Webhook ──────────────────────────────────────────────────────────
     const val WEBHOOK_PATH: String = "/webhooks/whop"

@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -616,6 +617,27 @@ fun ReferenceImagesStep(
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
+            AnimatedVisibility(visible = state.errorMessage != null) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                        Text(
+                            state.errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
             ReferenceDualImagePicker(
                 title = stringResource(R.string.your_room),
                 body = stringResource(R.string.your_room_body),
@@ -1009,7 +1031,7 @@ fun ChoiceStep(
         if (visualStyleCards || visualBuildingCards) {
             val columns = if (visualBuildingCards) GridCells.Fixed(2) else GridCells.Fixed(3)
             val rows = if (visualBuildingCards) (copy.options.size + 1) / 2 else (copy.options.size + 2) / 3
-            val gridHeight = rows * 140 + (rows - 1) * 8 + 32
+            val gridHeight = rows * 72 + (rows - 1) * 8 + 32
             LazyVerticalGrid(
                 columns = columns,
                 modifier = Modifier.fillMaxWidth().height(gridHeight.dp),
@@ -1927,6 +1949,27 @@ fun ReferencePhotoStep(
         onButton = viewModel::nextStage,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Base)) {
+            AnimatedVisibility(visible = state.errorMessage != null) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                        Text(
+                            state.errorMessage ?: "",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
             ReferenceImagePicker(
                 selectedUri = state.selectedReferenceUri,
                 selectedExample = state.selectedReferenceExampleLabel,

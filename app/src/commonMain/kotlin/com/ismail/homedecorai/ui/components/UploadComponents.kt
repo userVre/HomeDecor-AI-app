@@ -68,6 +68,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ismail.homedecorai.Strings
 import com.ismail.homedecorai.ui.theme.HomeDecorColors
 import com.ismail.homedecorai.ui.theme.HomeDecorIconSize
@@ -174,6 +175,10 @@ fun PhotoUploadStep(
                 onDrop = onDrop,
             )
 
+            // Helper text
+            Spacer(Modifier.height(8.dp))
+            UploadHelperText()
+
             // Photo tips
             Spacer(Modifier.height(16.dp))
             UploadTips()
@@ -222,7 +227,7 @@ fun UploadDropZone(
     val borderColor = if (highlightBorder)
         MaterialTheme.colorScheme.primary
     else
-        MaterialTheme.colorScheme.outlineVariant
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
 
     val bgColor = if (highlightBorder)
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
@@ -231,12 +236,12 @@ fun UploadDropZone(
 
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(16.dp),
         color = Color.Transparent,
         interactionSource = interactionSource,
         modifier = modifier
             .fillMaxWidth()
-            .height(220.dp)
+            .height(320.dp)
             .testTag(Strings.TestTags.wizardUploadDropZone)
             .semantics {
                 role = Role.Button
@@ -245,10 +250,8 @@ fun UploadDropZone(
             .scale(scale)
             .border(
                 width = 2.dp,
-                brush = Brush.linearGradient(
-                    listOf(borderColor, borderColor.copy(alpha = 0.3f))
-                ),
-                shape = RoundedCornerShape(20.dp),
+                color = borderColor,
+                shape = RoundedCornerShape(16.dp),
             ),
     ) {
         Column(
@@ -262,41 +265,35 @@ fun UploadDropZone(
             Surface(
                 shape = CircleShape,
                 color = if (highlightBorder) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(56.dp),
+                modifier = Modifier.size(64.dp),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Rounded.CloudUpload,
                         contentDescription = null,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(48.dp),
                         tint = if (highlightBorder) HomeDecorExtra.onGradientText else MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             Text(
                 if (isDragging) Strings.wizardDropHere else Strings.wizardChooseImage,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                Strings.wizardAcceptedTypes,
-                style = MaterialTheme.typography.bodySmall,
+                "${Strings.wizardAcceptedTypes} ${Strings.wizardDragAndDrop}",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
-                Strings.wizardDragAndDrop,
-                style = MaterialTheme.typography.bodySmall,
+                "or Take a photo on mobile",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                Strings.wizardMaxFileSize,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
             )
         }
     }
@@ -321,13 +318,12 @@ fun UploadedPhotoPreview(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(16.dp))
             .heightIn(max = 420.dp),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Image content
             previewContent()
 
-            // ── Photo actions (top-right) ─────────────────────────────────
             PhotoActions(
                 onChange = onChange,
                 onRemove = onRemove,
@@ -336,7 +332,6 @@ fun UploadedPhotoPreview(
                     .padding(HomeDecorSpacing.Sm),
             )
 
-            // ── Status badge (bottom-left) ────────────────────────────────
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -364,7 +359,6 @@ fun UploadedPhotoPreview(
                 }
             }
 
-            // ── Example badge (bottom-left, overrides status) ─────────────
             if (isUsingExample) {
                 Surface(
                     modifier = Modifier
@@ -507,6 +501,7 @@ fun UploadTips(
         UploadTipRow(Strings.wizardUploadPhotoTip1)
         UploadTipRow(Strings.wizardUploadPhotoTip2)
         UploadTipRow(Strings.wizardUploadPhotoTip3)
+        UploadTipRow(Strings.wizardUploadPhotoTip4)
     }
 }
 
@@ -655,6 +650,21 @@ fun UploadWorkflowExplainer(
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// UploadHelperText  –  Helper text below drop zone
+// ---------------------------------------------------------------------------
+
+@Composable
+fun UploadHelperText(modifier: Modifier = Modifier) {
+    Text(
+        "For best results, show entire room, good lighting, avoid blur",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+        textAlign = TextAlign.Center,
+        modifier = modifier.fillMaxWidth(),
+    )
 }
 
 // ---------------------------------------------------------------------------

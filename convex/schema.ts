@@ -169,4 +169,10 @@ export default defineSchema({
     timestamp: numberLike,
     balanceAfter: numberLike,
   }).index("by_userId", ["userId"]),
+
+  rateLimits: defineTable({
+    userId: v.string(),
+    action: v.string(),
+    timestamp: numberLike,
+  }).index("by_userId_action_ts", ["userId", "action", "timestamp"]),
 });

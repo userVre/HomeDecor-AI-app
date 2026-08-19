@@ -3,6 +3,18 @@ package com.ismail.homedecorai.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ---------------------------------------------------------------------------
+// PremiumPalette  –  Single design language (light only)
+// ---------------------------------------------------------------------------
+
+object PremiumPalette {
+    val Primary = Color(0xFF0F4C4C)
+    val OnPrimary = Color(0xFFFFFFFF)
+    val PrimaryContainer = Color(0xFFCDE8E8)
+    val Surface = Color(0xFFFBF8F5)
+    val OutlineVariant = Color(0xFFE7E0D8)
+}
+
+// ---------------------------------------------------------------------------
 // HomeDecor AI  –  Material 3 Expressive Design Foundation
 // ---------------------------------------------------------------------------
 // Palette philosophy (v2 — intentional contrast & role diversity)
@@ -144,6 +156,8 @@ object HomeDecorColors {
     val ToolGradientReplaceEnd      = Color(0xFF6A2E18)
     val ToolGradientReferenceStart  = Color(0xFF1A3050)
     val ToolGradientReferenceEnd    = Color(0xFF0C1E35)
+    val ToolGradientRemoveStart     = Color(0xFF6B4E3D)
+    val ToolGradientRemoveEnd       = Color(0xFF3D2E24)
 
     // -- Diamond store pack accents --
     val DiamondStoreTeal   = Color(0xFF3AAFA0)   // muted teal — less neon

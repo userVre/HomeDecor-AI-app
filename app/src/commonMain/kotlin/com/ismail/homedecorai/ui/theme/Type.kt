@@ -115,6 +115,14 @@ object HomeDecorType {
         lineHeight = 14.sp,
         letterSpacing = 0.4.sp,
     )
+
+    // -- Card-specific --
+    val CardSubtitle = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.1.sp,
+    )
 }
 
 val HomeDecorTypography = Typography(

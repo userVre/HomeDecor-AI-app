@@ -1123,15 +1123,12 @@ export const setPlanFromRevenueCat = mutationGeneric({
     subscriptionEnd: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    console.warn("DEPRECATED: setPlanFromRevenueCat called from client. Subscription changes must go through the RevenueCat webhook.", args);
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       return { ok: true, skipped: true, reason: "unauthenticated" };
     }
-
-    const user = await getUserByClerkId(ctx, identity.subject);
-    await persistRevenueCatPlanForUser(ctx, user, args);
-
-    return { ok: true, clerkId: identity.subject };
+    return { ok: true, skipped: true, reason: "deprecated_use_webhook_only" };
   },
 });
 
@@ -1148,14 +1145,8 @@ export const setViewerPlanFromRevenueCat = mutationGeneric({
     pricingCurrencyCode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const viewer = await ensureViewerUser(ctx, args.anonymousId);
-    await persistRevenueCatPlanForUser(ctx, viewer.user, args);
-    await ctx.db.patch(viewer.user._id, omitUndefined({
-      pricingTier: args.pricingTier,
-      pricingCountryCode: args.pricingCountryCode,
-      pricingCurrencyCode: args.pricingCurrencyCode,
-    }));
-    return { ok: true, viewerKind: viewer.kind };
+    console.warn("DEPRECATED: setViewerPlanFromRevenueCat called from client. Subscription changes must go through the RevenueCat webhook.", args);
+    return { ok: true, skipped: true, reason: "deprecated_use_webhook_only" };
   },
 });
 

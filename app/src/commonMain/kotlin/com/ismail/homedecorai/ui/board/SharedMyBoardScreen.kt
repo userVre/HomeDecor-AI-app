@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -59,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -121,8 +123,16 @@ fun SharedMyBoardScreen(
         BoardHeader(isDesktop = isDesktop)
 
         if (isGuest) {
-            GuestHero(onSignIn = onSignIn, isDesktop = isDesktop)
-            GuestLocalBanner(isDesktop = isDesktop)
+            val hasLocalDesigns = state.localGuestDesigns.isNotEmpty()
+            GuestHero(
+                onSignIn = onSignIn,
+                onNavigateToTools = onNavigateToTools,
+                isDesktop = isDesktop,
+                isCompact = hasLocalDesigns,
+            )
+            if (!hasLocalDesigns) {
+                GuestLocalBanner(isDesktop = isDesktop)
+            }
         }
 
         BoardTabRow(selectedTab = selectedTab, onTabSelected = { selectedTab = it })
@@ -153,6 +163,7 @@ fun SharedMyBoardScreen(
                 )
                 BoardTab.Favorites -> FavoritesTab(
                     items = state.favoriteItems,
+                    localItems = state.localGuestDesigns.filter { it.isFavorite },
                     isGuest = isGuest,
                     isDesktop = isDesktop,
                     onSignIn = onSignIn,
@@ -165,6 +176,7 @@ fun SharedMyBoardScreen(
                 )
                 BoardTab.Projects -> ProjectsTab(
                     items = state.projectItems,
+                    localItems = state.localGuestDesigns,
                     isGuest = isGuest,
                     isDesktop = isDesktop,
                     onSignIn = onSignIn,
@@ -221,7 +233,12 @@ private fun BoardHeader(isDesktop: Boolean) {
 }
 
 @Composable
-private fun GuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
+private fun GuestHero(
+    onSignIn: () -> Unit,
+    onNavigateToTools: () -> Unit,
+    isDesktop: Boolean,
+    isCompact: Boolean = false,
+) {
     Surface(
         shape = HomeDecorShape.ExtraExtraLarge,
         color = MaterialTheme.colorScheme.surface,
@@ -242,7 +259,7 @@ private fun GuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
             verticalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Sm),
         ) {
             Text(
-                Strings.boardSignInSaveSync,
+                Strings.boardGuestLocalSync,
                 style = if (isDesktop) MaterialTheme.typography.titleLarge
                 else MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
@@ -251,52 +268,34 @@ private fun GuestHero(onSignIn: () -> Unit, isDesktop: Boolean) {
                 maxLines = 2,
                 softWrap = true,
             )
-            Text(
-                Strings.boardGuestSubtitle,
-                style = if (isDesktop) MaterialTheme.typography.bodyMedium
-                else MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                softWrap = true,
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(
-                    if (isDesktop) HomeDecorSpacing.Md else HomeDecorSpacing.Sm,
-                ),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                GuestBenefitChip(
-                    icon = Icons.Rounded.Save,
-                    label = Strings.boardGuestBenefitSaved,
-                    modifier = Modifier.weight(1f),
-                )
-                GuestBenefitChip(
-                    icon = Icons.Rounded.FolderOpen,
-                    label = Strings.boardGuestBenefitProjects,
-                    modifier = Modifier.weight(1f),
-                )
-                GuestBenefitChip(
-                    icon = Icons.Rounded.Add,
-                    label = Strings.boardGuestBenefitFavorites,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Button(
-                onClick = onSignIn,
-                shape = HomeDecorShape.Button,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-                modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight)
-                    .testTag(Strings.TestTags.boardSignInButton),
-            ) {
-                Text(
-                    Strings.boardGuestCta,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.labelLarge,
-                )
+            if (!isCompact) {
+                Button(
+                    onClick = onSignIn,
+                    shape = HomeDecorShape.Button,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight)
+                        .testTag(Strings.TestTags.boardSignInButton),
+                ) {
+                    Text(
+                        Strings.boardGuestCta,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+                TextButton(
+                    onClick = onNavigateToTools,
+                    shape = HomeDecorShape.Button,
+                    modifier = Modifier.fillMaxWidth().height(HomeDecorSpacing.ButtonHeight),
+                ) {
+                    Text(
+                        Strings.openTools,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
             }
         }
     }
@@ -322,43 +321,11 @@ private fun GuestLocalBanner(isDesktop: Boolean) {
                 modifier = Modifier.size(HomeDecorIconSize.Small),
                 tint = MaterialTheme.colorScheme.primary,
             )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    Strings.boardGuestLocalNote,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    Strings.boardGuestSyncNote,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun GuestBenefitChip(icon: ImageVector, label: String, modifier: Modifier = Modifier) {
-    Surface(
-        shape = HomeDecorShape.Chip,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = modifier,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = HomeDecorSpacing.Md, vertical = HomeDecorSpacing.Sm),
-            horizontalArrangement = Arrangement.spacedBy(HomeDecorSpacing.Xs),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(HomeDecorIconSize.Small), tint = MaterialTheme.colorScheme.primary)
             Text(
-                label,
+                Strings.boardGuestLocalSync,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }
@@ -511,6 +478,7 @@ private fun GeneratedTab(
 @Composable
 private fun FavoritesTab(
     items: List<BoardItem>,
+    localItems: List<BoardItem> = emptyList(),
     isGuest: Boolean,
     isDesktop: Boolean,
     onSignIn: () -> Unit,
@@ -521,7 +489,9 @@ private fun FavoritesTab(
     onRename: (BoardItem) -> Unit,
     onDelete: (BoardItem) -> Unit,
 ) {
-    if (items.isEmpty()) {
+    val displayItems = if (isGuest) (items + localItems).distinctBy { it.id } else items
+
+    if (displayItems.isEmpty()) {
         TabEmptyState(
             icon = Icons.Rounded.FavoriteBorder,
             title = Strings.boardEmptyFavorites,
@@ -534,17 +504,29 @@ private fun FavoritesTab(
         )
     } else {
         Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(Strings.favoritesSection, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Text("${items.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (isGuest && localItems.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(Strings.favoritesSection, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("${displayItems.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(Strings.favoritesSection, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("${items.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
             }
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
             BoardGrid(
-                items = items,
+                items = displayItems,
                 tab = BoardTab.Favorites,
                 isGuest = isGuest,
                 isDesktop = isDesktop,
@@ -560,6 +542,7 @@ private fun FavoritesTab(
 @Composable
 private fun ProjectsTab(
     items: List<BoardItem>,
+    localItems: List<BoardItem> = emptyList(),
     isGuest: Boolean,
     isDesktop: Boolean,
     onSignIn: () -> Unit,
@@ -569,7 +552,9 @@ private fun ProjectsTab(
     onRename: (BoardItem) -> Unit,
     onDelete: (BoardItem) -> Unit,
 ) {
-    if (items.isEmpty()) {
+    val displayItems = if (isGuest) (items + localItems).distinctBy { it.id } else items
+
+    if (displayItems.isEmpty()) {
         TabEmptyState(
             icon = Icons.Rounded.FolderOpen,
             title = Strings.boardEmptyProjects,
@@ -582,17 +567,29 @@ private fun ProjectsTab(
         )
     } else {
         Column(Modifier.padding(top = HomeDecorSpacing.Sm)) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(Strings.savedProjects, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Text("${items.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (isGuest && localItems.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(Strings.savedProjects, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("${displayItems.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = HomeDecorSpacing.Base),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(Strings.savedProjects, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("${items.size}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(HomeDecorSpacing.Sm))
             }
-            Spacer(Modifier.height(HomeDecorSpacing.Sm))
             BoardGrid(
-                items = items,
+                items = displayItems,
                 tab = BoardTab.Projects,
                 isGuest = isGuest,
                 isDesktop = isDesktop,
@@ -621,7 +618,7 @@ private fun BoardGrid(
     onDelete: (BoardItem) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = if (isDesktop) 280.dp else 240.dp),
+        columns = GridCells.Adaptive(minSize = 280.dp),
         contentPadding = PaddingValues(
             start = HomeDecorSpacing.Base,
             end = HomeDecorSpacing.Base,
@@ -676,9 +673,16 @@ private fun BoardCard(
         onClick = onClick,
         shape = HomeDecorShape.Card,
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        modifier = Modifier.testTag(Strings.formatTestTag(testTag, item.id))
+        tonalElevation = 2.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.40f)),
+        modifier = Modifier
+            .shadow(
+                elevation = 1.dp,
+                shape = HomeDecorShape.Card,
+                ambientColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                spotColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.10f),
+            )
+            .testTag(Strings.formatTestTag(testTag, item.id))
             .semantics { contentDescription = Strings.a11yBoardCard(item.toolTitle.ifBlank { subtitle }, subtitle) },
     ) {
         Column {
@@ -801,8 +805,9 @@ private fun BoardCard(
                 if (subtitle.isNotBlank()) {
                     Text(
                         subtitle,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        style = HomeDecorType.CardSubtitle,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.heightIn(min = 36.dp),
                     )
                 }
             }

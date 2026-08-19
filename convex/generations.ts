@@ -739,27 +739,31 @@ export const startGeneration = mutationGeneric({
         .withIndex("by_idempotencyKey", (q: any) => q.eq("idempotencyKey", args.idempotencyKey))
         .unique();
       if (existing) {
-        const generatedStorageUrl = existing.storageId ? await ctx.storage.getUrl(existing.storageId) : null;
-        return {
-          generationId: existing._id,
-          prompt: existing.prompt ?? "",
-          reviewState: { count: 0, shouldPrompt: false, shouldPromptFirstDiamondRating: false },
-          creditsRemaining: 0,
-          planUsed: existing.planUsed,
-          generationPolicy: {
-            qualityTier: existing.qualityTier ?? "free",
-            outputResolution: existing.outputResolution ?? "1024x1024",
-            speedTier: existing.speedTier ?? "standard",
-            watermarkRequired: existing.watermarkRequired ?? true,
-            priorityProcessing: false,
-          },
-          imageUrl: generatedStorageUrl ?? existing.imageUrl ?? null,
-          isWatermarked: existing.watermarkRequired ?? false,
-          quality: existing.renderQuality === "high" ? "high" : "medium",
-          renderLabel: existing.qualityTier === "premium" ? "Premium 4K" : "Standard HD",
-          renderConfig: null,
-          duplicated: true,
-        };
+        const createdAt = typeof existing.createdAt === "number" ? existing.createdAt : 0;
+        const ageMs = Date.now() - createdAt;
+        if (ageMs < 60_000) {
+          const generatedStorageUrl = existing.storageId ? await ctx.storage.getUrl(existing.storageId) : null;
+          return {
+            generationId: existing._id,
+            prompt: existing.prompt ?? "",
+            reviewState: { count: 0, shouldPrompt: false, shouldPromptFirstDiamondRating: false },
+            creditsRemaining: 0,
+            planUsed: existing.planUsed,
+            generationPolicy: {
+              qualityTier: existing.qualityTier ?? "free",
+              outputResolution: existing.outputResolution ?? "1024x1024",
+              speedTier: existing.speedTier ?? "standard",
+              watermarkRequired: existing.watermarkRequired ?? true,
+              priorityProcessing: false,
+            },
+            imageUrl: generatedStorageUrl ?? existing.imageUrl ?? null,
+            isWatermarked: existing.watermarkRequired ?? false,
+            quality: existing.renderQuality === "high" ? "high" : "medium",
+            renderLabel: existing.qualityTier === "premium" ? "Premium 4K" : "Standard HD",
+            renderConfig: null,
+            duplicated: true,
+          };
+        }
       }
     }
     const requestedServiceType = inferRequestedServiceType(args as typeof args & { serviceType: RequestedServiceType });

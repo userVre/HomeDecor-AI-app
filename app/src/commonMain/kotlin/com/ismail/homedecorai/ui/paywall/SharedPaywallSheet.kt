@@ -370,6 +370,8 @@ private fun PaywallStep1ValueProp(
     selectedPlan: String,
     onPlanSelected: (String) -> Unit,
 ) {
+    var isYearly by remember { mutableStateOf(selectedPlan.endsWith("yearly")) }
+
     // Heading — brings the user to the decision immediately
     Text(
         Strings.pwS1Heading,
@@ -453,52 +455,103 @@ private fun PaywallStep1ValueProp(
 
     Spacer(Modifier.height(10.dp))
 
-    // Plan cards — the decision point
+    // ── Monthly / Annual Toggle ───────────────────────────────────────
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = colors.cardSurface,
+        border = BorderStroke(1.dp, colors.border),
+    ) {
+        Row {
+            listOf(
+                "Monthly" to false,
+                "Annual" to true,
+            ).forEach { (label, yearly) ->
+                val selected = isYearly == yearly
+                Surface(
+                    onClick = { isYearly = yearly },
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (selected) colors.accent else Color.Transparent,
+                    modifier = Modifier.padding(4.dp),
+                ) {
+                    Text(
+                        label,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                        color = if (selected) Color.White else colors.textMuted,
+                    )
+                }
+            }
+        }
+    }
+    if (isYearly) {
+        Spacer(Modifier.height(4.dp))
+        Text(
+            Strings.pricingDiscountPill + " with annual billing",
+            style = MaterialTheme.typography.labelSmall,
+            color = ProCheckGreen,
+            fontWeight = FontWeight.Medium,
+        )
+    }
+
+    Spacer(Modifier.height(10.dp))
+
+    // ── 4-Tier Plan Cards ─────────────────────────────────────────────
     PaywallPlanCard(
         colors = colors,
-        title = Strings.pwS4PlanYearlyTitle,
-        price = Strings.pwS4PlanYearlyPrice,
-        pricePer = Strings.pwS4PlanYearlyPer,
-        detail = Strings.pwS4PlanYearlyDetail,
-        badge = Strings.pwS4PlanYearlyBadge,
-        savings = Strings.pwS4PlanYearlySavings,
-        selected = selectedPlan == "yearly",
-        onClick = { onPlanSelected("yearly") },
+        title = Strings.upgradePlanEssential,
+        price = if (isYearly) Strings.upgradePlanEssentialYearlyPrice else Strings.upgradePlanEssentialMonthlyPrice,
+        pricePer = "/${if (isYearly) "year" else "month"}",
+        detail = if (isYearly) "${Strings.upgradePlanEssentialYearlyCredits} credits \u00B7 ${Strings.upgradePlanEssentialYearlyPerCredit} per credit" else "${Strings.upgradePlanEssentialCredits} credits \u00B7 ${Strings.upgradePlanEssentialMonthlyPerCredit} per credit",
+        badge = null,
+        selected = selectedPlan == if (isYearly) "essential_yearly" else "essential_monthly",
+        onClick = { onPlanSelected(if (isYearly) "essential_yearly" else "essential_monthly") },
     )
 
     Spacer(Modifier.height(6.dp))
 
     PaywallPlanCard(
         colors = colors,
-        title = Strings.pwS4PlanMonthlyTitle,
-        price = Strings.pwS4PlanMonthlyPrice,
-        pricePer = Strings.pwS4PlanMonthlyPer,
-        detail = "",
-        badge = null,
-        savings = null,
-        selected = selectedPlan == "monthly",
-        onClick = { onPlanSelected("monthly") },
+        title = Strings.upgradePlanPro,
+        price = if (isYearly) Strings.upgradePlanProYearlyPrice else Strings.upgradePlanProMonthlyPrice,
+        pricePer = "/${if (isYearly) "year" else "month"}",
+        detail = if (isYearly) "${Strings.upgradePlanProYearlyCredits} credits \u00B7 ${Strings.upgradePlanProYearlyPerCredit} per credit" else "${Strings.upgradePlanProCredits} credits \u00B7 ${Strings.upgradePlanProMonthlyPerCredit} per credit",
+        badge = Strings.upgradePlanPopular,
+        isPopular = true,
+        selected = selectedPlan == if (isYearly) "pro_yearly" else "pro_monthly",
+        onClick = { onPlanSelected(if (isYearly) "pro_yearly" else "pro_monthly") },
     )
 
     Spacer(Modifier.height(6.dp))
 
     PaywallPlanCard(
         colors = colors,
-        title = Strings.pwS4PlanFamilyTitle,
-        price = Strings.pwS4PlanFamilyPrice,
-        pricePer = Strings.pwS4PlanFamilyPer,
-        detail = Strings.pwS4PlanFamilyDetail,
+        title = Strings.upgradePlanStudio,
+        price = if (isYearly) Strings.upgradePlanStudioYearlyPrice else Strings.upgradePlanStudioMonthlyPrice,
+        pricePer = "/${if (isYearly) "year" else "month"}",
+        detail = if (isYearly) "${Strings.upgradePlanStudioYearlyCredits} credits \u00B7 ${Strings.upgradePlanStudioYearlyPerCredit} per credit" else "${Strings.upgradePlanStudioCredits} credits \u00B7 ${Strings.upgradePlanStudioMonthlyPerCredit} per credit",
         badge = null,
-        savings = null,
-        selected = selectedPlan == "family",
-        onClick = { onPlanSelected("family") },
+        selected = selectedPlan == if (isYearly) "studio_yearly" else "studio_monthly",
+        onClick = { onPlanSelected(if (isYearly) "studio_yearly" else "studio_monthly") },
+    )
+
+    Spacer(Modifier.height(6.dp))
+
+    PaywallPlanCard(
+        colors = colors,
+        title = Strings.upgradePlanAgency,
+        price = if (isYearly) Strings.upgradePlanAgencyYearlyPrice else Strings.upgradePlanAgencyMonthlyPrice,
+        pricePer = "/${if (isYearly) "year" else "month"}",
+        detail = if (isYearly) "${Strings.upgradePlanAgencyYearlyCredits} credits \u00B7 ${Strings.upgradePlanAgencyYearlyPerCredit} per credit" else "${Strings.upgradePlanAgencyCredits} credits \u00B7 ${Strings.upgradePlanAgencyMonthlyPerCredit} per credit",
+        badge = null,
+        selected = selectedPlan == if (isYearly) "agency_yearly" else "agency_monthly",
+        onClick = { onPlanSelected(if (isYearly) "agency_yearly" else "agency_monthly") },
     )
 
     Spacer(Modifier.height(8.dp))
 
-    // Trust line — supporting, not leading
+    // Trust line
     Text(
-        Strings.pwS4Trust,
+        Strings.pricingTrustCta,
         style = MaterialTheme.typography.bodySmall,
         color = colors.textMuted,
         textAlign = TextAlign.Center,
@@ -512,14 +565,16 @@ private fun PaywallPlanCard(
     price: String,
     pricePer: String,
     detail: String,
-    badge: String?,
-    savings: String?,
+    badge: String? = null,
+    savings: String? = null,
+    isPopular: Boolean = false,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
     val borderColor by animateColorAsState(
         targetValue = when {
-            badge != null && selected -> colors.gold
+            isPopular && selected -> colors.accent
+            isPopular -> colors.accent.copy(alpha = 0.6f)
             selected -> colors.accent
             else -> colors.border
         },
@@ -536,63 +591,93 @@ private fun PaywallPlanCard(
         label = "planCardScale",
     )
 
-    Surface(
-        shape = HomeDecorShape.Card,
-        color = when {
-            selected && badge != null -> colors.accentSurface
-            selected -> colors.accentSurface.copy(alpha = 0.5f)
-            isHovered -> colors.accentSurface.copy(alpha = 0.15f)
-            else -> colors.cardSurface
-        },
-        border = BorderStroke(if (selected) 2.dp else 1.dp, borderColor),
-        shadowElevation = if (selected && badge != null) 4.dp else 0.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(Strings.formatTestTag(Strings.TestTags.paywallPlanCard, title.lowercase()))
-            .semantics {
-                role = Role.RadioButton
-                contentDescription = Strings.a11yPaywallPlan(title, selected)
-            }
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .scale(cardScale),
-    ) {
-        Column(Modifier.padding(14.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+    Box {
+        // Popular badge floating above the card
+        if (isPopular && badge != null) {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = colors.gold,
+                shadowElevation = 3.dp,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = (-10).dp),
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (badge != null) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = colors.gold,
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Icon(
-                                    Icons.Rounded.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = HomeDecorExtra.onGradientText,
-                                    modifier = Modifier.size(10.dp),
-                                )
-                                Text(
-                                    badge,
-                                    color = HomeDecorExtra.onGradientText,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 10.sp,
-                                    ),
-                                )
-                            }
-                        }
-                    }
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        tint = HomeDecorExtra.onGradientText,
+                        modifier = Modifier.size(10.dp),
+                    )
+                    Text(
+                        badge,
+                        color = HomeDecorExtra.onGradientText,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
+            }
+        }
+
+        // Non-popular inline badge (e.g. "Save 40%")
+        if (!isPopular && badge != null) {
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = colors.gold,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        tint = HomeDecorExtra.onGradientText,
+                        modifier = Modifier.size(10.dp),
+                    )
+                    Text(
+                        badge,
+                        color = HomeDecorExtra.onGradientText,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                        ),
+                    )
+                }
+            }
+        }
+
+        Surface(
+            shape = HomeDecorShape.Card,
+            color = when {
+                isPopular && selected -> colors.accentSurface
+                isPopular -> colors.accentSurface.copy(alpha = 0.3f)
+                selected -> colors.accentSurface.copy(alpha = 0.5f)
+                isHovered -> colors.accentSurface.copy(alpha = 0.15f)
+                else -> colors.cardSurface
+            },
+            border = BorderStroke(if (isPopular) 2.dp else 1.dp, borderColor),
+            shadowElevation = if (isPopular) 8.dp else 0.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(Strings.formatTestTag(Strings.TestTags.paywallPlanCard, title.lowercase()))
+                .semantics {
+                    role = Role.RadioButton
+                    contentDescription = Strings.a11yPaywallPlan(title, selected)
+                }
+                .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+                .scale(cardScale),
+        ) {
+            Column(Modifier.padding(14.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         title,
                         style = MaterialTheme.typography.labelLarge.copy(
@@ -600,70 +685,70 @@ private fun PaywallPlanCard(
                         ),
                         color = colors.textPrimary,
                     )
-                }
 
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(if (selected) colors.accent else Color.Transparent)
-                        .then(
-                            if (!selected) Modifier.border(2.dp, colors.textMuted.copy(alpha = 0.4f), CircleShape) else Modifier
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (selected) {
-                        Icon(
-                            Icons.Rounded.Check,
-                            contentDescription = null,
-                            tint = HomeDecorExtra.onGradientText,
-                            modifier = Modifier.size(14.dp),
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(if (selected) colors.accent else Color.Transparent)
+                            .then(
+                                if (!selected) Modifier.border(2.dp, colors.textMuted.copy(alpha = 0.4f), CircleShape) else Modifier
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (selected) {
+                            Icon(
+                                Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = HomeDecorExtra.onGradientText,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(10.dp))
 
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    price,
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp,
-                    ),
-                    color = if (selected && badge != null) colors.accent else colors.textPrimary,
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    pricePer,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.textMuted,
-                    modifier = Modifier.padding(bottom = 4.dp),
-                )
-            }
-
-            if (detail.isNotEmpty()) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    detail,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.textMuted,
-                )
-            }
-
-            if (savings != null) {
-                Spacer(Modifier.height(6.dp))
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = colors.checkGreen.copy(alpha = 0.12f),
-                ) {
+                Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        savings,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        color = colors.checkGreen,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        price,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp,
+                        ),
+                        color = if (selected && isPopular) colors.accent else colors.textPrimary,
                     )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        pricePer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.textMuted,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                }
+
+                if (detail.isNotEmpty()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        detail,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textMuted,
+                    )
+                }
+
+                if (savings != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = colors.checkGreen.copy(alpha = 0.12f),
+                    ) {
+                        Text(
+                            savings,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            color = colors.checkGreen,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        )
+                    }
                 }
             }
         }
@@ -779,15 +864,15 @@ private fun PaywallStep5Checkout(
         ) {
             Column(Modifier.padding(14.dp)) {
                 val planTitle = when (selectedPlan) {
-                    "yearly" -> Strings.pwS4PlanYearlyTitle
-                    "monthly" -> Strings.pwS4PlanMonthlyTitle
-                    "family" -> Strings.pwS4PlanFamilyTitle
-                    else -> Strings.pwS4PlanYearlyTitle
+                    "essential_yearly", "essential_monthly" -> Strings.upgradePlanEssential
+                    "pro_yearly", "pro_monthly" -> Strings.upgradePlanPro
+                    "studio_yearly", "studio_monthly" -> Strings.upgradePlanStudio
+                    "agency_yearly", "agency_monthly" -> Strings.upgradePlanAgency
+                    else -> Strings.upgradePlanPro
                 }
                 val planSubtitle = when (selectedPlan) {
-                    "yearly" -> "Annual subscription"
-                    "monthly" -> "Monthly subscription"
-                    "family" -> "Family annual subscription"
+                    "essential_yearly", "pro_yearly", "studio_yearly", "agency_yearly" -> "Annual subscription"
+                    "essential_monthly", "pro_monthly", "studio_monthly", "agency_monthly" -> "Monthly subscription"
                     else -> "Annual subscription"
                 }
                 Text(
@@ -807,16 +892,20 @@ private fun PaywallStep5Checkout(
 
                 val summaryRows = listOf(
                     Strings.pwS5TrialPeriod to when (selectedPlan) {
-                        "yearly" -> "Yearly billing"
-                        "monthly" -> "Monthly billing"
-                        "family" -> "Family yearly billing"
-                        else -> "Yearly billing"
+                        "essential_yearly", "pro_yearly", "studio_yearly", "agency_yearly" -> "Annual billing"
+                        "essential_monthly", "pro_monthly", "studio_monthly", "agency_monthly" -> "Monthly billing"
+                        else -> "Annual billing"
                     },
                     Strings.pwS5Then to when (selectedPlan) {
-                        "yearly" -> "\$39.99 / year"
-                        "monthly" -> "\$7.99 / month"
-                        "family" -> "\$59.99 / year"
-                        else -> "\$39.99 / year"
+                        "essential_yearly" -> "${Strings.upgradePlanEssentialYearlyPrice} / year"
+                        "essential_monthly" -> "${Strings.upgradePlanEssentialMonthlyPrice} / month"
+                        "pro_yearly" -> "${Strings.upgradePlanProYearlyPrice} / year"
+                        "pro_monthly" -> "${Strings.upgradePlanProMonthlyPrice} / month"
+                        "studio_yearly" -> "${Strings.upgradePlanStudioYearlyPrice} / year"
+                        "studio_monthly" -> "${Strings.upgradePlanStudioMonthlyPrice} / month"
+                        "agency_yearly" -> "${Strings.upgradePlanAgencyYearlyPrice} / year"
+                        "agency_monthly" -> "${Strings.upgradePlanAgencyMonthlyPrice} / month"
+                        else -> "${Strings.upgradePlanProYearlyPrice} / year"
                     },
                     Strings.pwS5RenewalDate to run {
                         val now = kotlinx.datetime.Clock.System.now()

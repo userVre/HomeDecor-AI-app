@@ -33,6 +33,7 @@ class HomeDecorViewModel(
             progressMessage = text(R.string.progress_preparing_studio),
             elitePassSyncMessage = text(R.string.elite_pass_sync_initial),
             disclosureAccepted = preferences.getBoolean(KEY_DISCLOSURE_ACCEPTED, false),
+            guestCredits = getGuestCredits(),
         )
     )
     val uiState: StateFlow<HomeDecorUiState> = _uiState.asStateFlow()
@@ -427,9 +428,14 @@ class HomeDecorViewModel(
 
     fun setPhoto(uri: Uri?) {
         if (uri == null) return
+        val validation = validateImageUri(uri)
+        if (validation != null) {
+            _uiState.update { it.copy(errorMessage = validation) }
+            return
+        }
         _uiState.update { state ->
             val next = (state.selectedPhotos + SelectedPhoto(uri = uri)).take(3)
-            state.copy(selectedPhotos = next, selectedPhotoUri = next.firstOrNull()?.uri, selectedExampleLabel = next.firstOrNull()?.exampleLabel)
+            state.copy(selectedPhotos = next, selectedPhotoUri = next.firstOrNull()?.uri, selectedExampleLabel = next.firstOrNull()?.exampleLabel, errorMessage = null)
         }
     }
 
@@ -442,11 +448,17 @@ class HomeDecorViewModel(
 
     fun setPrimaryPhoto(uri: Uri?) {
         if (uri == null) return
+        val validation = validateImageUri(uri)
+        if (validation != null) {
+            _uiState.update { it.copy(errorMessage = validation) }
+            return
+        }
         _uiState.update {
             it.copy(
                 selectedPhotos = listOf(SelectedPhoto(uri = uri)),
                 selectedPhotoUri = uri,
                 selectedExampleLabel = null,
+                errorMessage = null,
             )
         }
     }
@@ -470,7 +482,31 @@ class HomeDecorViewModel(
 
     fun setReferencePhoto(uri: Uri?) {
         if (uri == null) return
-        _uiState.update { it.copy(selectedReferenceUri = uri, selectedReferenceExampleLabel = null, selectedReferenceDiscoverItemId = null) }
+        val validation = validateImageUri(uri)
+        if (validation != null) {
+            _uiState.update { it.copy(errorMessage = validation) }
+            return
+        }
+        _uiState.update { it.copy(selectedReferenceUri = uri, selectedReferenceExampleLabel = null, selectedReferenceDiscoverItemId = null, errorMessage = null) }
+    }
+
+    private fun validateImageUri(uri: Uri): String? {
+        return try {
+            val mimeType = appContext.contentResolver.getType(uri)
+            val validTypes = listOf("image/jpeg", "image/png", "image/webp")
+            if (mimeType != null && mimeType !in validTypes) {
+                return appContext.getString(R.string.error_unsupported_format)
+            }
+            appContext.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
+                val sizeBytes = pfd.statSize
+                if (sizeBytes > 10L * 1024 * 1024) {
+                    return appContext.getString(R.string.error_file_too_large)
+                }
+            }
+            null
+        } catch (_: Exception) {
+            null
+        }
     }
 
     fun selectReferenceExample(label: String) {
@@ -673,6 +709,22 @@ class HomeDecorViewModel(
 
     fun closePaywall() {
         _uiState.update { it.copy(paywallVisible = false) }
+    }
+
+    fun openPricing() {
+        _uiState.update {
+            it.copy(
+                pricingVisible = true,
+                paywallVisible = false,
+                storeVisible = false,
+                authVisible = false,
+                settingsVisible = false,
+            )
+        }
+    }
+
+    fun closePricing() {
+        _uiState.update { it.copy(pricingVisible = false) }
     }
 
     fun openAuth() {
@@ -1079,17 +1131,24 @@ class HomeDecorViewModel(
     fun generate() {
         val snapshot = _uiState.value
 
-        // Check diamonds
+        // Check diamonds and guest credits
         if (snapshot.diamonds <= 0 && !snapshot.isPro) {
-            _uiState.update {
-                it.copy(
-                    paywallVisible = true,
-                    storeVisible = false,
-                    authVisible = false,
-                    settingsVisible = false,
-                )
+            if (snapshot.guestCredits <= 0) {
+                _uiState.update {
+                    it.copy(
+                        pricingVisible = true,
+                        paywallVisible = false,
+                        storeVisible = false,
+                        authVisible = false,
+                        settingsVisible = false,
+                    )
+                }
+                return
             }
-            return
+            // Decrement guest credits for free generation
+            val newGuestCredits = snapshot.guestCredits - 1
+            _uiState.update { it.copy(guestCredits = newGuestCredits) }
+            setGuestCredits(newGuestCredits)
         }
 
         viewModelScope.launch {
@@ -1186,6 +1245,8 @@ class HomeDecorViewModel(
                 )
             }.onSuccess { result ->
                 val viewer = repository.viewerSummary(anonymousId)
+                val currentGuestCredits = _uiState.value.guestCredits
+                val usedGuestCredit = _uiState.value.diamonds <= 0 && !_uiState.value.isPro
                 workspaceStore.upsertGeneratedResult(result.toGeneratedResult(snapshot))
                 workspaceStore.recordRecentStyle(
                     toolId = snapshot.selectedTool.id,
@@ -1200,6 +1261,10 @@ class HomeDecorViewModel(
                         viewer = viewer,
                         board = listOf(result) + it.board.filterNot { boardItem -> boardItem.id == result.id },
                     )
+                }
+                if (usedGuestCredit && currentGuestCredits > 0) {
+                    val suffix = if (currentGuestCredits != 1) "s" else ""
+                    showToast("$currentGuestCredits credit$suffix remaining")
                 }
             }.onFailure { error ->
                 val message = friendlyGenerationError(error)

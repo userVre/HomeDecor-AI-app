@@ -4,6 +4,13 @@ import { api } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { BillingPlan, getGenerationLimit, getSubscriptionEndForType, SubscriptionType } from "./subscriptions";
 
+const ALLOWED_ORIGINS = ["https://homedecor.ai", "http://localhost:8081"];
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return true;
+  return ALLOWED_ORIGINS.some((allowed) => origin === allowed || origin.startsWith(`${allowed}/`));
+}
+
 const http = httpRouter();
 
 function normalizeHaystack(values: Array<string | null | undefined>) {
@@ -53,10 +60,21 @@ function inferPlan(event: any): BillingPlan {
   return "pro";
 }
 
+function rejectIfDisallowedOrigin(request: Request): Response | null {
+  const origin = request.headers.get("origin");
+  if (!isAllowedOrigin(origin)) {
+    return new Response("Forbidden", { status: 403 });
+  }
+  return null;
+}
+
 http.route({
   path: "/webhooks/revenuecat",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
+    const blocked = rejectIfDisallowedOrigin(request);
+    if (blocked) return blocked;
+
     const expectedAuth = process.env.REVENUECAT_WEBHOOK_AUTH;
     const authorization = request.headers.get("authorization");
     if (expectedAuth && authorization !== expectedAuth && authorization !== `Bearer ${expectedAuth}`) {
@@ -123,6 +141,9 @@ http.route({
   path: "/webhooks/revenuecat/refund",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
+    const blocked = rejectIfDisallowedOrigin(request);
+    if (blocked) return blocked;
+
     const expectedAuth = process.env.REVENUECAT_WEBHOOK_AUTH;
     const authorization = request.headers.get("authorization");
     if (expectedAuth && authorization !== expectedAuth && authorization !== `Bearer ${expectedAuth}`) {

@@ -52,6 +52,12 @@ kotlin {
             implementation(compose.components.resources)
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+            implementation("io.coil-kt.coil3:coil-compose:3.2.0")
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.2.0")
+        }
+
+        wasmJsMain.dependencies {
+            implementation("io.coil-kt.coil3:coil-network-ktor3:3.2.0")
         }
 
         commonTest.dependencies {

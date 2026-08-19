@@ -93,3 +93,18 @@ private external fun setDarkThemeJs(value: String)
 actual fun persistDarkTheme(isDark: Boolean) {
     setDarkThemeJs(if (isDark) "true" else "false")
 }
+
+@JsFun("() => { try { return localStorage.getItem('hd_guest_credits') || ''; } catch(e) { return ''; } }")
+private external fun getGuestCreditsJs(): String
+
+actual fun getGuestCredits(): Int {
+    val value = getGuestCreditsJs()
+    return if (value.isNotEmpty()) value.toIntOrNull() ?: 5 else 5
+}
+
+@JsFun("(value) => { try { localStorage.setItem('hd_guest_credits', value); } catch(e) {} }")
+private external fun setGuestCreditsJs(value: String)
+
+actual fun setGuestCredits(count: Int) {
+    setGuestCreditsJs(count.toString())
+}

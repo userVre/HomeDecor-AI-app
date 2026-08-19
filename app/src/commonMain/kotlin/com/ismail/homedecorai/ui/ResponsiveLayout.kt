@@ -7,13 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.ismail.homedecorai.getScreenWidthDp
+import com.ismail.homedecorai.ui.theme.AppTokens
 
 private val DesktopBreakpoint = 1024
 private val TabletBreakpoint = 768
 private val CompactBreakpoint = 600
-private val DesktopMaxWidth = 1200.dp
 
 @Composable
 fun rememberIsDesktop(): Boolean {
@@ -45,7 +44,7 @@ fun ResponsiveLayout(
             contentAlignment = Alignment.TopCenter,
         ) {
             Box(
-                modifier = Modifier.widthIn(max = DesktopMaxWidth),
+                modifier = Modifier.widthIn(max = AppTokens.MaxContentWidth),
             ) {
                 content()
             }

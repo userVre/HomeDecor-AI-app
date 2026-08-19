@@ -2,8 +2,8 @@ import { ConvexError } from "convex/values";
 
 import { FREE_DAILY_DIAMOND_CAP, FREE_IMAGE_LIMIT } from "./subscriptions";
 
-export const GUEST_STARTER_CREDITS = 1;
-export const ACCOUNT_STARTER_CREDITS = 1;
+export const GUEST_STARTER_CREDITS = 5;
+export const ACCOUNT_STARTER_CREDITS = 5;
 
 export function normalizeAnonymousId(value?: string | null) {
   const normalized = value?.trim();
