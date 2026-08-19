@@ -1356,29 +1356,77 @@
   <string name="upgrade_v3_before">Before</string>
   <string name="upgrade_v3_after">After</string>
 
-  <!-- Paywall v3 — single-screen, premium, no duplicate badges -->
-  <string name="paywall_v3_headline">Unlock Your Full\nDesign Studio</string>
-  <string name="paywall_v3_subtitle">Create more room makeovers, explore premium tools, and export cleaner results.</string>
-  <string name="paywall_v3_cta">Start 3-Day Free Trial</string>
-  <string name="paywall_v3_secondary">Maybe later</string>
-  <string name="paywall_v3_trial_note">3-day free trial. Cancel anytime before it ends.</string>
-  <string name="paywall_v3_trust">Secure Google Play checkout. Cancel anytime.</string>
-  <string name="paywall_v3_benefit_generations">More designs</string>
-  <string name="paywall_v3_benefit_export">Clean export</string>
-  <string name="paywall_v3_benefit_watermark">No watermark</string>
-  <string name="paywall_v3_benefit_speed">Priority speed</string>
-  <string name="paywall_v3_benefit_styles">Premium styles</string>
-  <string name="paywall_v3_benefit_history">Design history</string>
-  <string name="paywall_v3_plan_yearly">Annual</string>
-  <string name="paywall_v3_plan_weekly">Weekly</string>
-  <string name="paywall_v3_plan_best_value">BEST VALUE</string>
-  <string name="paywall_v3_plan_per_year">/ year</string>
-  <string name="paywall_v3_plan_per_week">/ week</string>
-  <string name="paywall_v3_plan_annual_detail">Billed annually \u2014 best per-room value</string>
-  <string name="paywall_v3_plan_weekly_detail">Billed weekly</string>
-  <string name="paywall_v3_restore">Restore purchase</string>
-  <string name="paywall_v3_checkout_processing">Setting up your Pro access\u2026</string>
-  <string name="paywall_v3_checkout_welcome">Welcome to Pro</string>
-  <string name="paywall_v3_before">Before</string>
-  <string name="paywall_v3_after">After</string>
+  <!-- Paywall 5-step flow -->
+  <string name="paywall_a11y_back">Go back</string>
+
+  <!-- Screen 1: Unlimited Room Makeovers -->
+  <string name="pw_s1_heading">Create unlimited\nroom makeovers</string>
+  <string name="pw_s1_heading_highlight">unlimited</string>
+  <string name="pw_s1_benefit_1">Unlimited redesign generations</string>
+  <string name="pw_s1_benefit_2">Unlimited style experiments</string>
+  <string name="pw_s1_benefit_3">Unlimited inspiration ideas</string>
+  <string name="pw_s1_benefit_4">Unlimited saved variations</string>
+  <string name="pw_s1_social_proof">Join thousands of homeowners redesigning with AI.</string>
+  <string name="pw_s1_cta">Try Premium for $0.00</string>
+
+  <!-- Screen 2: Trial Reminder -->
+  <string name="pw_s2_heading">When should we remind\nyou before your trial ends?</string>
+  <string name="pw_s2_option_1">2 days before</string>
+  <string name="pw_s2_option_2">3 days before</string>
+  <string name="pw_s2_info">Easy to cancel, no fees before trial ends.</string>
+  <string name="pw_s2_cta">Start free trial</string>
+
+  <!-- Screen 3: Free vs Premium Comparison -->
+  <string name="pw_s3_heading">Why upgrade?</string>
+  <string name="pw_s3_col_feature">Feature</string>
+  <string name="pw_s3_col_free">Free</string>
+  <string name="pw_s3_col_premium">Premium</string>
+  <string name="pw_s3_row1_feature">AI room redesigns</string>
+  <string name="pw_s3_row1_free">3 / day</string>
+  <string name="pw_s3_row1_premium">Unlimited</string>
+  <string name="pw_s3_row2_feature">HD exports</string>
+  <string name="pw_s3_row3_feature">No watermark</string>
+  <string name="pw_s3_row4_feature">Premium interior styles</string>
+  <string name="pw_s3_row4_free">Limited</string>
+  <string name="pw_s3_row5_feature">Faster generation</string>
+  <string name="pw_s3_row6_feature">Save unlimited projects</string>
+  <string name="pw_s3_recommendation">Most users upgrade for unlimited redesigns + HD exports.</string>
+  <string name="pw_s3_cta">Try Premium for $0.00</string>
+
+  <!-- Screen 4: Plan Selection / Pricing -->
+  <string name="pw_s4_heading">Choose the plan\nafter your 7-day free trial</string>
+  <string name="pw_s4_plan_yearly_title">Yearly\nPremium</string>
+  <string name="pw_s4_plan_yearly_price">$39.99 / year</string>
+  <string name="pw_s4_plan_yearly_detail">Only $3.33 / month</string>
+  <string name="pw_s4_plan_yearly_badge">MOST POPULAR</string>
+  <string name="pw_s4_plan_yearly_savings">Save 58%%</string>
+  <string name="pw_s4_plan_monthly_title">Monthly\nPremium</string>
+  <string name="pw_s4_plan_monthly_price">$7.99 / month</string>
+  <string name="pw_s4_plan_family_title">Family /\nTeam</string>
+  <string name="pw_s4_plan_family_price">$59.99 / year</string>
+  <string name="pw_s4_plan_family_detail">Up to 5 users</string>
+  <string name="pw_s4_cta">Start 7-day free trial</string>
+  <string name="pw_s4_trust">Cancel anytime on Google Play.</string>
+
+  <!-- Screen 5: Secure Google Play Checkout -->
+  <string name="pw_s5_badge">Secure checkout</string>
+  <string name="pw_s5_heading">Your subscription is handled\nsecurely by Google Play.</string>
+  <string name="pw_s5_plan_title">Yearly Premium</string>
+  <string name="pw_s5_plan_subtitle">7-day free trial</string>
+  <string name="pw_s5_trial_period">Trial period</string>
+  <string name="pw_s5_trial_value">7 days free</string>
+  <string name="pw_s5_then">Then</string>
+  <string name="pw_s5_renewal_date">Renewal date</string>
+  <string name="pw_s5_payment">Payment</string>
+  <string name="pw_s5_payment_value">Google Play</string>
+  <string name="pw_s5_benefits_title">What\'s included</string>
+  <string name="pw_s5_benefit_1">Unlimited AI redesigns</string>
+  <string name="pw_s5_benefit_2">HD exports</string>
+  <string name="pw_s5_benefit_3">No watermark</string>
+  <string name="pw_s5_benefit_4">Premium styles</string>
+  <string name="pw_s5_benefit_5">Unlimited saved projects</string>
+  <string name="pw_s5_benefit_6">Faster processing</string>
+  <string name="pw_s5_trust_row">Your payment information is securely managed by Google Play.</string>
+  <string name="pw_s5_legal">Cancel anytime before the trial ends to avoid charges.</string>
+  <string name="pw_s5_cta">Start Free Trial</string>
 </resources>
