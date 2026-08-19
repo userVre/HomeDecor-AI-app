@@ -1,0 +1,67 @@
+asset 074734f128532fde0fd6.wasm 28.3 MiB [emitted] [immutable] [from: kotlin/HomeDecorAI-app.wasm] (auxiliary name: main)
+asset 6e23e5428398b92da386.wasm 8.25 MiB [emitted] [immutable] [from: kotlin/skiko.wasm] (auxiliary name: main)
+asset app.js 3.78 MiB [emitted] (name: main)
+runtime modules 30.1 KiB 13 modules
+javascript modules 1.41 MiB
+  modules by path ../../ 506 KiB
+    modules by path ../../../../../../.kotlin/kotlin-npm-tooling/yarn/e49be039833f93cd8352f956b90315...(truncated) 90.2 KiB 8 modules
+    modules by path ../../../../../../.kotlin/kotlin-npm-tooling/yarn/e49be039833f93cd8352f956b90315...(truncated) 5.17 KiB 4 modules
+    + 3 modules
+  modules by path ./kotlin/ 942 KiB
+    modules with warnings 434 KiB [true warnings] 2 modules
+    ./kotlin/custom-formatters.js 5.13 KiB [built] [code generated]
+    ./kotlin/skiko.mjs 501 KiB [built] [code generated]
+    ./kotlin/HomeDecorAI-app.js-builtins.mjs 2.05 KiB [built] [code generated]
+asset modules 36.5 MiB (asset) 84 bytes (javascript)
+  ./kotlin/HomeDecorAI-app.wasm 28.3 MiB (asset) 42 bytes (javascript) [built] [code generated]
+  ./kotlin/skiko.wasm 8.25 MiB (asset) 42 bytes (javascript) [built] [code generated]
+assets by status 8.25 MiB [cached] 1 asset
+assets by info 28.3 MiB [immutable]
+  asset 460cc296c0346ab9b40f.wasm 28.3 MiB [emitted] [immutable] [from: kotlin/HomeDecorAI-app.wasm] [hmr] (name: main) (auxiliary name: main)
+  asset main.43ca075153222f81ace3.hot-update.js 1.14 KiB [emitted] [immutable] [hmr] (name: main)
+  asset main.43ca075153222f81ace3.hot-update.json 28 bytes [emitted] [immutable] [hmr]
+asset app.js 3.78 MiB [emitted] (name: main)
+Entrypoint main 32 MiB (36.5 MiB) = app.js 3.78 MiB main.43ca075153222f81ace3.hot-update.js 1.14 KiB 460cc296c0346ab9b40f.wasm 28.3 MiB 2 auxiliary assets
+cached modules 1.41 MiB (javascript) 8.25 MiB (asset) [cached] 21 modules
+runtime modules 30.1 KiB 13 modules
+./kotlin/HomeDecorAI-app.wasm 28.3 MiB (asset) 42 bytes (javascript) [built] [code generated]
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:wasmJsBrowserDevelopmentRun'.
+> asset 074734f128532fde0fd6.wasm 28.3 MiB [emitted] [immutable] [from: kotlin/HomeDecorAI-app.wasm] (auxiliary name: main)
+  asset 6e23e5428398b92da386.wasm 8.25 MiB [emitted] [immutable] [from: kotlin/skiko.wasm] (auxiliary name: main)
+  asset app.js 3.78 MiB [emitted] (name: main)
+  runtime modules 30.1 KiB 13 modules
+  javascript modules 1.41 MiB
+    modules by path ../../ 506 KiB
+      modules by path ../../../../../../.kotlin/kotlin-npm-tooling/yarn/e49be039833f93cd8352f956b90315...(truncated) 90.2 KiB 8 modules
+      modules by path ../../../../../../.kotlin/kotlin-npm-tooling/yarn/e49be039833f93cd8352f956b90315...(truncated) 5.17 KiB 4 modules
+      + 3 modules
+    modules by path ./kotlin/ 942 KiB
+      modules with warnings 434 KiB [true warnings] 2 modules
+      ./kotlin/custom-formatters.js 5.13 KiB [built] [code generated]
+      ./kotlin/skiko.mjs 501 KiB [built] [code generated]
+      ./kotlin/HomeDecorAI-app.js-builtins.mjs 2.05 KiB [built] [code generated]
+  asset modules 36.5 MiB (asset) 84 bytes (javascript)
+    ./kotlin/HomeDecorAI-app.wasm 28.3 MiB (asset) 42 bytes (javascript) [built] [code generated]
+    ./kotlin/skiko.wasm 8.25 MiB (asset) 42 bytes (javascript) [built] [code generated]
+  assets by status 8.25 MiB [cached] 1 asset
+  assets by info 28.3 MiB [immutable]
+    asset 460cc296c0346ab9b40f.wasm 28.3 MiB [emitted] [immutable] [from: kotlin/HomeDecorAI-app.wasm] [hmr] (name: main) (auxiliary name: main)
+    asset main.43ca075153222f81ace3.hot-update.js 1.14 KiB [emitted] [immutable] [hmr] (name: main)
+    asset main.43ca075153222f81ace3.hot-update.json 28 bytes [emitted] [immutable] [hmr]
+  asset app.js 3.78 MiB [emitted] (name: main)
+  Entrypoint main 32 MiB (36.5 MiB) = app.js 3.78 MiB main.43ca075153222f81ace3.hot-update.js 1.14 KiB 460cc296c0346ab9b40f.wasm 28.3 MiB 2 auxiliary assets
+  cached modules 1.41 MiB (javascript) 8.25 MiB (asset) [cached] 21 modules
+  runtime modules 30.1 KiB 13 modules
+  ./kotlin/HomeDecorAI-app.wasm 28.3 MiB (asset) 42 bytes (javascript) [built] [code generated]
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4h 3m 13s

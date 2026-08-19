@@ -103,7 +103,11 @@ export default defineSchema({
     feedbackReason: v.optional(v.string()),
     retryGranted: v.optional(v.boolean()),
     projectId: v.optional(v.id("projects")),
-  }).index("by_userId", ["userId"]),
+    idempotencyKey: v.optional(v.string()),
+    diamondRefunded: v.optional(v.boolean()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_idempotencyKey", ["idempotencyKey"]),
 
   projects: defineTable({
     userId: v.string(),
@@ -142,6 +146,8 @@ export default defineSchema({
     pricingTier: v.optional(v.string()),
     purchasedAt: numberLike,
     createdAt: numberLike,
+    orderId: v.optional(v.string()),
+    receiptData: v.optional(v.string()),
   })
     .index("by_transactionId", ["transactionId"])
     .index("by_userId", ["userId"]),
@@ -155,4 +161,18 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_timestamp", ["timestamp"]),
+
+  diamondUsageHistory: defineTable({
+    userId: v.string(),
+    generationId: v.id("generations"),
+    diamondSource: v.union(v.literal("daily_free"), v.literal("purchased_pack"), v.literal("referral")),
+    timestamp: numberLike,
+    balanceAfter: numberLike,
+  }).index("by_userId", ["userId"]),
+
+  rateLimits: defineTable({
+    userId: v.string(),
+    action: v.string(),
+    timestamp: numberLike,
+  }).index("by_userId_action_ts", ["userId", "action", "timestamp"]),
 });

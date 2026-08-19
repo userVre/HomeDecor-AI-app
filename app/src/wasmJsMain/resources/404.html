@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeDecor AI - AI-Powered Interior & Exterior Design Tool</title>
+    <meta name="description" content="AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.">
+    <meta name="theme-color" content="#1D5C5F">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="HomeDecor AI - AI-Powered Interior & Exterior Design Tool">
+    <meta property="og:description" content="AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.">
+    <meta property="og:url" content="https://homedecor-ai.com">
+    <meta property="og:site_name" content="HomeDecor AI">
+    <meta property="og:image" content="https://homedecor-ai.com/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HomeDecor AI - AI-Powered Interior & Exterior Design Tool">
+    <meta name="twitter:description" content="AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.">
+    <meta name="twitter:image" content="https://homedecor-ai.com/og-image.png">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://homedecor-ai.com">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "HomeDecor AI",
+        "url": "https://homedecor-ai.com",
+        "description": "AI-powered interior and exterior design tool. Upload a photo and explore AI-generated design concepts for your home.",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #composeApp {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Skip navigation link - visible on focus for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 16px;
+            z-index: 10000;
+            padding: 12px 24px;
+            background: #1D5C5F;
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: top 0.15s cubic-bezier(0.2, 0, 0, 1);
+        }
+        .skip-link:focus {
+            top: 0;
+            outline: 3px solid #1D5C5F;
+            outline-offset: 2px;
+        }
+
+        /* Visible focus ring for all interactive elements */
+        *:focus-visible {
+            outline: 3px solid #1D5C5F;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Screen reader only utility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip navigation for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ARIA live region for dynamic announcements -->
+    <div id="a11y-announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+    <!-- Main application mount point with ARIA landmark -->
+    <div id="composeApp" role="application" aria-label="HomeDecor AI application">
+        <!-- Skeleton loading screen shown while WASM binary downloads -->
+        <div id="app-loader" role="status" aria-label="Loading HomeDecor AI application" aria-live="polite" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:20px;font-family:system-ui,-apple-system,sans-serif;background:#F5F0EA;padding:32px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                <div style="width:40px;height:40px;background:#1D5C5F;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                    <span style="color:#fff;font-size:20px;font-weight:700;">H</span>
+                </div>
+                <h1 style="margin:0;font-size:24px;font-weight:700;color:#1D5C5F;letter-spacing:-0.5px;">HomeDecor AI</h1>
+            </div>
+            <div style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:16px;">
+                <div style="width:100%;height:48px;background:rgba(29,92,95,0.08);border-radius:12px;animation:skeletonPulse 1.8s ease-in-out infinite;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.1s infinite;"></div>
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.2s infinite;"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.3s infinite;"></div>
+                    <div style="height:120px;background:rgba(29,92,95,0.06);border-radius:16px;animation:skeletonPulse 1.8s ease-in-out 0.4s infinite;"></div>
+                </div>
+                <div style="width:100%;height:56px;background:rgba(29,92,95,0.05);border-radius:14px;animation:skeletonPulse 1.8s ease-in-out 0.5s infinite;"></div>
+            </div>
+            <div style="width:200px;display:flex;flex-direction:column;gap:6px;align-items:center;">
+                <div style="width:100%;height:4px;background:#E5E0D9;border-radius:4px;overflow:hidden;">
+                    <div id="loader-progress-fill" style="width:0%;height:100%;background:linear-gradient(90deg,#1D5C5F,#2A8A8D);border-radius:4px;transition:width 0.3s ease-out;"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;width:100%;">
+                    <p id="loader-status" style="margin:0;color:#4A4540;font-size:12px;font-weight:500;">Downloading design engine…</p>
+                    <p id="loader-percent" style="margin:0;color:#1D5C5F;font-size:12px;font-weight:600;">0%</p>
+                </div>
+            </div>
+        </div>
+        <div id="app-error" role="alert" aria-label="Failed to load application" style="display:none;align-items:center;justify-content:center;width:100%;height:100%;flex-direction:column;gap:16px;font-family:system-ui,-apple-system,sans-serif;background:#F5F0EA;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#BA1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <h2 style="margin:0;font-size:18px;color:#1A1714;">Something went wrong</h2>
+            <p style="margin:0;color:#4A4540;font-size:14px;text-align:center;max-width:340px;">The application failed to load. Please check your connection and try again.</p>
+            <button id="app-retry-btn" style="margin-top:8px;padding:10px 28px;background:#1D5C5F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#154A4D'" onmouseout="this.style.background='#1D5C5F'">Retry</button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        @keyframes fadeOutLoader {
+            to { opacity: 0; }
+        }
+        #app-loader.fade-out,
+        #app-error.fade-out {
+            animation: fadeOutLoader 0.35s cubic-bezier(0.2, 0, 0, 1) forwards;
+        }
+        #app-retry-btn {
+            transition: background-color 150ms cubic-bezier(0.2, 0, 0, 1),
+                        box-shadow 150ms cubic-bezier(0.2, 0, 0, 1),
+                        transform 100ms cubic-bezier(0.2, 0, 0, 1);
+        }
+        #app-retry-btn:hover {
+            background-color: #154A4D;
+            box-shadow: 0 2px 8px rgba(29, 92, 95, 0.3);
+        }
+        #app-retry-btn:active {
+            transform: scale(0.98);
+        }
+        #app-retry-btn:focus-visible {
+            outline: 3px solid #1D5C5F;
+            outline-offset: 2px;
+        }
+    </style>
+
+    <script src="hd-bridge.js"></script>
+    <script>
+        (function() {
+            var progressFill = document.getElementById('loader-progress-fill');
+            var statusEl = document.getElementById('loader-status');
+            var percentEl = document.getElementById('loader-percent');
+            if (!progressFill) return;
+            var phases = [
+                { pct: 10, text: 'Downloading design engine…' },
+                { pct: 30, text: 'Loading AI models…' },
+                { pct: 60, text: 'Preparing image processor…' },
+                { pct: 85, text: 'Almost ready…' },
+                { pct: 95, text: 'Finalizing…' },
+            ];
+            var phaseIdx = 0, progress = 0;
+            var timer = setInterval(function() {
+                if (phaseIdx < phases.length) {
+                    progress = Math.min(progress + 2, phases[phaseIdx].pct);
+                    progressFill.style.width = progress + '%';
+                    percentEl.textContent = progress + '%';
+                    statusEl.textContent = phases[phaseIdx].text;
+                    if (progress >= phases[phaseIdx].pct) phaseIdx++;
+                }
+                if (progress >= 95) clearInterval(timer);
+            }, 200);
+            window._hdLoadComplete = function() {
+                clearInterval(timer);
+                progressFill.style.width = '100%';
+                percentEl.textContent = '100%';
+                statusEl.textContent = 'Ready!';
+            };
+        })();
+    </script>
+    <script src="app.js"></script>
+
+    <script>
+        // SPA 404 fallback: when served as 404.html (e.g. GitHub Pages),
+        // redirect to the same path but served from index.html so the app loads.
+        (function() {
+            var path = window.location.pathname;
+            if (path && path !== '/' && path !== '/index.html' && path !== '/404.html') {
+                // Push the current path into history so the app reads it correctly
+                history.replaceState({ path: path }, document.title, path);
+            }
+        })();
+
+        // Browser history integration helpers for Kotlin/JS interop
+        window.a11yHelpers = {
+            setPageTitle: function(title) {
+                document.title = title;
+            },
+            pushState: function(path, title) {
+                if (window.location.pathname !== path) {
+                    history.pushState({ path: path }, title, path);
+                    document.title = title;
+                }
+            },
+            replaceState: function(path, title) {
+                history.replaceState({ path: path }, title, path);
+                document.title = title;
+            },
+            announce: function(message) {
+                var el = document.getElementById('a11y-announcer');
+                if (el) {
+                    el.textContent = '';
+                    requestAnimationFrame(function() {
+                        el.textContent = message;
+                    });
+                }
+            },
+            getHash: function() {
+                return window.location.hash || '';
+            },
+            isReducedMotion: function() {
+                return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            }
+        };
+
+        // Handle browser back/forward buttons AND initial deep-link loads.
+        // On popstate, event.state may be null (initial load or state cleared).
+        // In that case we fall back to window.location.pathname so the Kotlin
+        // app still receives the correct route.
+        window.addEventListener('popstate', function(event) {
+            var path = (event.state && event.state.path) ? event.state.path : window.location.pathname;
+            if (path) {
+                window.dispatchEvent(new CustomEvent('navigation-change', {
+                    detail: { path: path }
+                }));
+            }
+        });
+
+        // Ensure the history state always carries the current path so that
+        // back/forward navigation works even after a full-page reload.
+        (function() {
+            var path = window.location.pathname;
+            if (path && path !== '/' && path !== '') {
+                history.replaceState({ path: path }, document.title, path);
+            }
+        })();
+
+        // Hide loading spinner once Compose app mounts (with smooth fade-out)
+        (function() {
+            var loader = document.getElementById('app-loader');
+            var errorEl = document.getElementById('app-error');
+            var retryBtn = document.getElementById('app-retry-btn');
+            if (!loader) return;
+
+            function fadeOutAndHide(el) {
+                el.classList.add('fade-out');
+                setTimeout(function() { el.style.display = 'none'; }, 350);
+            }
+
+            // Retry button reloads the page
+            if (retryBtn) {
+                retryBtn.addEventListener('click', function() { window.location.reload(); });
+            }
+
+            var observer = new MutationObserver(function(mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    var nodes = mutations[i].addedNodes;
+                    for (var j = 0; j < nodes.length; j++) {
+                        var node = nodes[j];
+                        if (node.nodeName === 'CANVAS' || (node.nodeName === 'DIV' && node.id !== 'app-loader' && node.id !== 'app-error')) {
+                            fadeOutAndHide(loader);
+                            observer.disconnect();
+                            return;
+                        }
+                    }
+                }
+            });
+            observer.observe(document.getElementById('composeApp'), { childList: true, subtree: true });
+
+            // Show error after 10s if still loading
+            setTimeout(function() {
+                if (loader && loader.style.display !== 'none') {
+                    fadeOutAndHide(loader);
+                    if (errorEl) errorEl.style.display = 'flex';
+                }
+            }, 10000);
+        })();
+    </script>
+</body>
+</html>

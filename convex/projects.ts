@@ -1,17 +1,18 @@
 import { mutationGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
+import { resolveViewer } from "./viewer";
 
 export const list = queryGeneric({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
+  args: {
+    anonymousId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const viewer = await resolveViewer(ctx, { anonymousId: args.anonymousId });
+    if (!viewer) return [];
 
     return await ctx.db
       .query("projects")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_userId", (q) => q.eq("userId", viewer.userId))
       .order("desc")
       .collect();
   },
@@ -20,12 +21,11 @@ export const list = queryGeneric({
 export const create = mutationGeneric({
   args: {
     name: v.string(),
+    anonymousId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
+    const viewer = await resolveViewer(ctx, { anonymousId: args.anonymousId });
+    if (!viewer) throw new Error("Unauthorized");
 
     const name = args.name.trim();
     if (name.length < 2) {
@@ -33,7 +33,7 @@ export const create = mutationGeneric({
     }
 
     const id = await ctx.db.insert("projects", {
-      userId: identity.subject,
+      userId: viewer.userId,
       name,
       createdAt: Date.now(),
     });

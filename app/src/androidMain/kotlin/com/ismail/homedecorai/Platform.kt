@@ -1,0 +1,141 @@
+package com.ismail.homedecorai
+
+import android.content.Context
+import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
+import android.widget.Toast
+
+actual fun platformName(): String = "Android ${android.os.Build.VERSION.SDK_INT}"
+
+actual fun hasNetworkConnectivity(): Boolean {
+    val context = getApplicationContext()
+    val connectivity = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        ?: return true
+    val network = connectivity.activeNetwork ?: return false
+    val capabilities = connectivity.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+}
+
+actual fun openUrl(url: String) {
+    val context = getApplicationContext() ?: return
+    runCatching {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+}
+
+actual fun showToast(message: String) {
+    val context = getApplicationContext() ?: return
+    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+actual fun getScreenWidthDp(): Int {
+    val context = getApplicationContext() ?: return 360
+    return (context.resources.displayMetrics.widthPixels /
+        context.resources.displayMetrics.density).toInt()
+}
+
+actual fun setPageTitle(title: String) {
+    // No-op on Android: activity title is managed by the Activity itself
+}
+
+actual fun pushHistoryState(path: String, title: String) {
+    // No-op on Android: navigation is handled by Compose Navigation
+}
+
+actual fun replaceHistoryState(path: String, title: String) {
+    // No-op on Android: navigation is handled by Compose Navigation
+}
+
+actual fun isReducedMotionEnabled(): Boolean {
+    val context = getApplicationContext() ?: return false
+    return try {
+        val resolver = context.contentResolver
+        val value = android.provider.Settings.Global.getFloat(
+            resolver,
+            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f
+        )
+        value == 0f
+    } catch (_: Exception) {
+        false
+    }
+}
+
+actual fun announceToScreenReader(message: String) {
+    // On Android, Compose semantics handles screen reader announcements
+}
+
+actual fun getCurrentPathname(): String = ""
+
+actual fun subscribeToNavigationChanges(onNavigate: (String) -> Unit): () -> Unit = { }
+
+actual fun goBack() {
+    // No-op on Android: navigation is handled by Compose Navigation
+}
+
+actual fun getPersistedDarkTheme(): Boolean {
+    val context = getApplicationContext() ?: return false
+    return try {
+        val prefs = context.getSharedPreferences("hd_theme_prefs", Context.MODE_PRIVATE)
+        prefs.getBoolean("dark_theme", false)
+    } catch (_: Exception) {
+        false
+    }
+}
+
+actual fun persistDarkTheme(isDark: Boolean) {
+    val context = getApplicationContext() ?: return
+    try {
+        val prefs = context.getSharedPreferences("hd_theme_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("dark_theme", isDark).apply()
+    } catch (_: Exception) {}
+}
+
+actual fun getGuestCredits(): Int {
+    val context = getApplicationContext() ?: return 5
+    return try {
+        val prefs = context.getSharedPreferences("hd_credits_prefs", Context.MODE_PRIVATE)
+        if (prefs.contains("guest_credits")) prefs.getInt("guest_credits", 5) else 5
+    } catch (_: Exception) { 5 }
+}
+
+actual fun setGuestCredits(count: Int) {
+    val context = getApplicationContext() ?: return
+    try {
+        val prefs = context.getSharedPreferences("hd_credits_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("guest_credits", count).apply()
+    } catch (_: Exception) {}
+}
+
+actual fun browserDownloadFile(url: String, filename: String) {
+    val context = getApplicationContext() ?: return
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
+    } catch (_: Exception) {}
+}
+
+actual fun browserShareContent(title: String, url: String) {
+    val context = getApplicationContext() ?: return
+    try {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, url)
+            putExtra(Intent.EXTRA_SUBJECT, title)
+        }
+        context.startActivity(Intent.createChooser(intent, title))
+    } catch (_: Exception) {}
+}
+
+private fun getApplicationContext(): Context? {
+    return try {
+        val activityThread = Class.forName("android.app.ActivityThread")
+        val currentApplication = activityThread.getMethod("currentApplication").invoke(null)
+        currentApplication as? Context
+    } catch (_: Exception) {
+        null
+    }
+}

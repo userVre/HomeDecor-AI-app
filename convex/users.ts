@@ -109,9 +109,9 @@ function computeReviewPrompt(nextCount: number, lastPromptAt: number, ignoreCool
 
 const DIAMOND_PACK_COUNTS = {
   starter: 10,
-  designer: 30,
-  architect: 100,
-  estate: 300,
+  creator: 30,
+  pro: 75,
+  studio: 180,
 } as const;
 const TEST_DIAMOND_GRANT_COUNT = 10;
 const REFERRAL_INSTALL_REWARD_DIAMONDS = 1;
@@ -1123,15 +1123,12 @@ export const setPlanFromRevenueCat = mutationGeneric({
     subscriptionEnd: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    console.warn("DEPRECATED: setPlanFromRevenueCat called from client. Subscription changes must go through the RevenueCat webhook.", args);
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       return { ok: true, skipped: true, reason: "unauthenticated" };
     }
-
-    const user = await getUserByClerkId(ctx, identity.subject);
-    await persistRevenueCatPlanForUser(ctx, user, args);
-
-    return { ok: true, clerkId: identity.subject };
+    return { ok: true, skipped: true, reason: "deprecated_use_webhook_only" };
   },
 });
 
@@ -1148,14 +1145,8 @@ export const setViewerPlanFromRevenueCat = mutationGeneric({
     pricingCurrencyCode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const viewer = await ensureViewerUser(ctx, args.anonymousId);
-    await persistRevenueCatPlanForUser(ctx, viewer.user, args);
-    await ctx.db.patch(viewer.user._id, omitUndefined({
-      pricingTier: args.pricingTier,
-      pricingCountryCode: args.pricingCountryCode,
-      pricingCurrencyCode: args.pricingCurrencyCode,
-    }));
-    return { ok: true, viewerKind: viewer.kind };
+    console.warn("DEPRECATED: setViewerPlanFromRevenueCat called from client. Subscription changes must go through the RevenueCat webhook.", args);
+    return { ok: true, skipped: true, reason: "deprecated_use_webhook_only" };
   },
 });
 
@@ -1165,12 +1156,14 @@ export const fulfillDiamondPurchase = mutationGeneric({
     transactionId: v.string(),
     productIdentifier: v.string(),
     packageIdentifier: v.optional(v.string()),
-    packId: v.union(v.literal("starter"), v.literal("designer"), v.literal("architect"), v.literal("estate")),
+    packId: v.union(v.literal("starter"), v.literal("creator"), v.literal("pro"), v.literal("studio")),
     purchasedAt: v.optional(v.number()),
     amount: v.number(),
     currencyCode: v.string(),
     pricingTier: v.optional(v.string()),
     countryCode: v.optional(v.string()),
+    orderId: v.optional(v.string()),
+    receiptData: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const viewer = await ensureViewerUser(ctx, args.anonymousId);
@@ -1190,8 +1183,15 @@ export const fulfillDiamondPurchase = mutationGeneric({
     }
 
     const diamondsAdded = DIAMOND_PACK_COUNTS[args.packId];
-    const nextCredits = Math.max(toFiniteNumber(viewer.user.credits, INITIAL_FREE_DIAMONDS), 0) + diamondsAdded;
-    const nextPremiumCredits = Math.max(toFiniteNumber(viewer.user.premiumCredits), 0) + diamondsAdded;
+    const currentCredits = Math.max(toFiniteNumber(viewer.user.credits, INITIAL_FREE_DIAMONDS), 0);
+    const nextCredits = currentCredits + diamondsAdded;
+    const currentPremiumCredits = Math.max(toFiniteNumber(viewer.user.premiumCredits), 0);
+    const nextPremiumCredits = currentPremiumCredits + diamondsAdded;
+
+    const MAX_BALANCE = 99999;
+    if (nextCredits > MAX_BALANCE) {
+      throw new ConvexError("Diamond balance would exceed maximum. Please use some diamonds before purchasing more.");
+    }
 
     await ctx.db.patch(viewer.user._id, {
       credits: nextCredits,
@@ -1215,6 +1215,8 @@ export const fulfillDiamondPurchase = mutationGeneric({
       pricingTier: args.pricingTier,
       purchasedAt: args.purchasedAt ?? Date.now(),
       createdAt: Date.now(),
+      orderId: args.orderId,
+      receiptData: args.receiptData,
     });
 
     return {
@@ -1393,7 +1395,7 @@ async function consumeAllowance(ctx: any, anonymousId?: string, ignoreCooldown?:
       ? `${remaining} Diamonds left`
       : state.plan === "trial"
         ? "Unlimited generations during your active trial"
-        : "Unlimited generations";
+        : `${remaining} generations remaining this period`;
 
   return {
     count: nextGenerationCount,
@@ -1469,7 +1471,7 @@ export const releaseGenerationAllowance = mutationGeneric({
           ? `${remaining} Diamonds left`
           : state.plan === "trial"
             ? "Unlimited generations during your active trial"
-            : "Unlimited generations",
+            : `${remaining} generations remaining this period`,
     };
   },
 });
